@@ -5,6 +5,6 @@ az deployment group create `
 --resource-group rg-ig-common-uat-westeurope `
 --mode Incremental `
 --confirm-with-what-if `
--f bicep/main.bicep `
+-f architecture/bicep/main.bicep `
 --parameters pm_environment=uat 
 #-p bicep/main.bicepparam

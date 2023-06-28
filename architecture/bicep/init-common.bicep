@@ -116,7 +116,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     enabledForDeployment: true
     enabledForTemplateDeployment: true
     enabledForDiskEncryption: true
-    tenantId: '2d8d56ea-19bd-47d6-903a-28cbac75d572'
+    tenantId: '375313bf-8b9b-44af-97cd-fc2e258a968e'
     enableRbacAuthorization : true
     sku: {
       name: 'standard'

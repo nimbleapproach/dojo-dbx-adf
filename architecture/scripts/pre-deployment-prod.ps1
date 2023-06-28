@@ -5,6 +5,6 @@ az deployment group create `
 --resource-group rg-ig-common-prod-westeurope `
 --mode Incremental `
 --confirm-with-what-if `
--f bicep/main.bicep `
+-f architecture/bicep/main.bicep `
 --parameters pm_environment=prod 
 #-p bicep/main.bicepparam
