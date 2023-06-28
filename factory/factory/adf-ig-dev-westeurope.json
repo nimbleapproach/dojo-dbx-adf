@@ -1,0 +1,9 @@
+{
+	"name": "adf-ig-dev-westeurope",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "a5650107-baf9-435b-a130-d658798ffa6a",
+		"tenantId": "375313bf-8b9b-44af-97cd-fc2e258a968e"
+	}
+}
