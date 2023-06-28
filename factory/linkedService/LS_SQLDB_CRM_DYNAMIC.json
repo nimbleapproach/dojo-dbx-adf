@@ -1,0 +1,53 @@
+{
+	"name": "LS_SQLDB_CRM_DYNAMIC",
+	"properties": {
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_DatabaseName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@linkedService().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": {
+					"value": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring",
+					"type": "Expression"
+				}
+			},
+			"userName": "IG\\inf_svc_azsql_sync01",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@linkedService().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": "secret-igsql03-sql-password"
+			}
+		},
+		"connectVia": {
+			"referenceName": "shir-igapphost02-shared",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
