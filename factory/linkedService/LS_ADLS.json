@@ -1,0 +1,19 @@
+{
+	"name": "LS_ADLS",
+	"properties": {
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
+		},
+		"connectVia": {
+			"referenceName": "ir-ig-managed-dev-westeurope",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

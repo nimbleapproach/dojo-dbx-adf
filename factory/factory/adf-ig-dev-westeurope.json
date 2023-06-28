@@ -1,5 +1,13 @@
 {
 	"name": "adf-ig-dev-westeurope",
+	"properties": {
+		"globalParameters": {
+			"gpm_Environment": {
+				"type": "string",
+				"value": "dev"
+			}
+		}
+	},
 	"location": "westeurope",
 	"identity": {
 		"type": "SystemAssigned",

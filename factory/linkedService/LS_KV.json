@@ -1,0 +1,15 @@
+{
+	"name": "LS_KV",
+	"properties": {
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
+		}
+	}
+}

@@ -1,0 +1,19 @@
+{
+	"name": "LS_SQLDB_METADATA",
+	"properties": {
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
+		},
+		"connectVia": {
+			"referenceName": "ir-ig-managed-dev-westeurope",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
