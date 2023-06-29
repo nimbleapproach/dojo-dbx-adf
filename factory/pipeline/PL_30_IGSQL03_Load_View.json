@@ -54,7 +54,7 @@
 									},
 									"formatSettings": {
 										"type": "ParquetWriteSettings",
-										"maxRowsPerFile": 100000,
+										"maxRowsPerFile": 1000000,
 										"fileNamePrefix": {
 											"value": "bronze-igsql03-@{pipeline().parameters.pm_ViewName}-@{pipeline().parameters.pm_DatabaseName}-@{utcNow()}",
 											"type": "Expression"
@@ -174,7 +174,7 @@
 									},
 									"formatSettings": {
 										"type": "ParquetWriteSettings",
-										"maxRowsPerFile": 100000,
+										"maxRowsPerFile": 1000000,
 										"fileNamePrefix": {
 											"value": "bronze-igsql03-@{pipeline().parameters.pm_ViewName}-@{pipeline().parameters.pm_DatabaseName}-@{utcNow()}",
 											"type": "Expression"
