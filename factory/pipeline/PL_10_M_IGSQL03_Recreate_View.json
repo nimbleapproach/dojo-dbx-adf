@@ -1,0 +1,89 @@
+{
+	"name": "PL_10_M_IGSQL03_Recreate_View",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get DatabasesControl Table",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_IGSQL03_DATABASES",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Database",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get DatabasesControl Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get DatabasesControl Table').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "PL_20_IGSQL03_Recreate_View",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_IGSQL03_Recreate_View",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_DatabaseName": {
+										"value": "@item().DATABASE_NAME",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "00 Technical/IGSQL03 [Navision]/Recreate View"
+		},
+		"annotations": []
+	}
+}

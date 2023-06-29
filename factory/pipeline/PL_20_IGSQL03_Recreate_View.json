@@ -1,0 +1,97 @@
+{
+	"name": "PL_20_IGSQL03_Recreate_View",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Columns Control Table",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT TABLE_NAME FROM [adf].[CT_IGSQL03_COLUMNS]\nWHERE  [ACTIVE] =1",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_IGSQL03_COLUMNS",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Columns Control Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Columns Control Table').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "PL_30_IGSQL03_Recreate_View",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_30_IGSQL03_Recreate_View",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_TableName": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"pm_DatabaseName": {
+										"value": "@pipeline().parameters.pm_DatabaseName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_DatabaseName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "00 Technical/IGSQL03 [Navision]/Recreate View"
+		},
+		"annotations": []
+	}
+}

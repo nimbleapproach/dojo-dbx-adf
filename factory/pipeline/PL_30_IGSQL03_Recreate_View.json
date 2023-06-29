@@ -1,5 +1,5 @@
 {
-	"name": "PL_IGSQL03_Recreate_View",
+	"name": "PL_30_IGSQL03_Recreate_View",
 	"properties": {
 		"activities": [
 			{
@@ -135,7 +135,7 @@
 			}
 		},
 		"folder": {
-			"name": "00 Technical/IGSQL03 [Navision]"
+			"name": "00 Technical/IGSQL03 [Navision]/Recreate View"
 		},
 		"annotations": []
 	}
