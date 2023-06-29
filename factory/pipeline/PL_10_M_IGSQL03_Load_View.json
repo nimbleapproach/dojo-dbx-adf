@@ -1,5 +1,5 @@
 {
-	"name": "PL_10_M_IGSQL03_Recreate_View",
+	"name": "PL_10_M_IGSQL03_Load_View",
 	"properties": {
 		"activities": [
 			{
@@ -7,7 +7,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get Columns Control Table",
+						"activity": "Get DatabasesControl Table",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,25 +16,29 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Columns Control Table').output.value",
+						"value": "@activity('Get DatabasesControl Table').output.value",
 						"type": "Expression"
 					},
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "PL_20_IGSQL03_Recreate_View",
+							"name": "PL_20_IGSQL03_Load_View",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_IGSQL03_Recreate_View",
+									"referenceName": "PL_20_IGSQL03_Load_View",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_TableName": {
-										"value": "@item().TABLE_NAME",
+									"pm_DatabaseName": {
+										"value": "@item().DATABASE_NAME",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									}
 								}
@@ -44,7 +48,7 @@
 				}
 			},
 			{
-				"name": "Get Columns Control Table",
+				"name": "Get DatabasesControl Table",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -59,7 +63,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT DISTINCT TABLE_NAME FROM [adf].[CT_IGSQL03_COLUMNS]\nWHERE  [ACTIVE] =1",
+							"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -70,7 +74,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_IGSQL03_COLUMNS",
+							"pm_TableName": "CT_IGSQL03_DATABASES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
@@ -81,8 +85,14 @@
 				}
 			}
 		],
+		"parameters": {
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
 		"folder": {
-			"name": "00 Technical/IGSQL03 [Navision]/Recreate View"
+			"name": "10 Ingestion/IGSQL03 [Navision]"
 		},
 		"annotations": []
 	}
