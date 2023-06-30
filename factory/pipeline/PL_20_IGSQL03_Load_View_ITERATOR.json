@@ -1,5 +1,5 @@
 {
-	"name": "PL_20_IGSQL03_Recreate_View",
+	"name": "PL_20_IGSQL03_Load_View_ITERATOR",
 	"properties": {
 		"activities": [
 			{
@@ -7,7 +7,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get DatabasesControl Table",
+						"activity": "Get EDW Views",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,28 +16,32 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get DatabasesControl Table').output.value",
+						"value": "@activity('Get EDW Views').output.value",
 						"type": "Expression"
 					},
 					"activities": [
 						{
-							"name": "PL_30_IGSQL03_Recreate_View",
+							"name": "PL_30_IGSQL03_Load_View",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_30_IGSQL03_Recreate_View",
+									"referenceName": "PL_30_IGSQL03_Load_View",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_TableName": {
-										"value": "@item().DATABASE_NAME",
+									"pm_DatabaseName": {
+										"value": "@pipeline().parameters.pm_DatabaseName",
 										"type": "Expression"
 									},
-									"pm_DatabaseName": {
-										"value": "@pipeline().parameters.pm_TableName",
+									"pm_ViewName": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									}
 								}
@@ -47,7 +51,7 @@
 				}
 			},
 			{
-				"name": "Get DatabasesControl Table",
+				"name": "Get EDW Views",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -60,22 +64,29 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "AzureSqlSource",
+						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
+							"value": "Select [TABLE_NAME] FROM INFORMATION_SCHEMA.TABLES\nwhere [TABLE_SCHEMA] = 'edw'\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
 					"dataset": {
-						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"referenceName": "DS_SQLDB_NAV_DYNAMIC",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_IGSQL03_DATABASES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_TableName": {
+								"value": "TABLES",
+								"type": "Expression"
+							},
+							"pm_SchemaName": "INFORMATION_SCHEMA",
+							"pm_DatabaseName": {
+								"value": "@pipeline().parameters.pm_DatabaseName",
 								"type": "Expression"
 							}
 						}
@@ -85,12 +96,16 @@
 			}
 		],
 		"parameters": {
-			"pm_TableName": {
+			"pm_DatabaseName": {
 				"type": "string"
+			},
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
 			}
 		},
 		"folder": {
-			"name": "00 Technical/IGSQL03 [Navision]/Recreate View"
+			"name": "10 Ingestion/IGSQL03 [Navision]"
 		},
 		"annotations": []
 	}

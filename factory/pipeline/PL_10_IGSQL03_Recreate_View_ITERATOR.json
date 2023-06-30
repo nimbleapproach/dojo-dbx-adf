@@ -1,5 +1,5 @@
 {
-	"name": "PL_10_M_IGSQL03_Recreate_View",
+	"name": "PL_10_IGSQL03_Recreate_View_ITERATOR",
 	"properties": {
 		"activities": [
 			{
@@ -28,7 +28,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_IGSQL03_Recreate_View",
+									"referenceName": "PL_20_IGSQL03_Recreate_View_ITERATOR",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
