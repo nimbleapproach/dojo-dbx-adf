@@ -50,7 +50,7 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_M_IGSQL03_Load_View')]",
+			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL03_Load_View_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -81,7 +81,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_20_IGSQL03_Load_View",
+											"referenceName": "PL_20_IGSQL03_Load_View_ITERATOR",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
@@ -155,11 +155,11 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Load_View')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Load_View_ITERATOR')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_M_IGSQL03_Recreate_View')]",
+			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL03_Recreate_View_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -190,7 +190,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_20_IGSQL03_Recreate_View",
+											"referenceName": "PL_20_IGSQL03_Recreate_View_ITERATOR",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
@@ -254,11 +254,11 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Recreate_View')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Recreate_View_ITERATOR')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Load_View')]",
+			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Load_View_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -380,7 +380,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Recreate_View')]",
+			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Recreate_View_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -416,11 +416,11 @@
 										"waitOnCompletion": true,
 										"parameters": {
 											"pm_TableName": {
-												"value": "@item().DATABASE_NAME",
+												"value": "@pipeline().parameters.pm_TableName",
 												"type": "Expression"
 											},
 											"pm_DatabaseName": {
-												"value": "@pipeline().parameters.pm_TableName",
+												"value": "@item().DATABASE_NAME",
 												"type": "Expression"
 											}
 										}
