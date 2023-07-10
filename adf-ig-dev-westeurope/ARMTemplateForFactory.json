@@ -506,7 +506,14 @@
 								{
 									"name": "Delta Load Navision View",
 									"type": "Copy",
-									"dependsOn": [],
+									"dependsOn": [
+										{
+											"activity": "SetNewWatermark",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
 									"policy": {
 										"timeout": "0.12:00:00",
 										"retry": 0,
@@ -692,12 +699,6 @@
 									"dependsOn": [
 										{
 											"activity": "Delta Load Navision View",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										},
-										{
-											"activity": "SetNewWatermark",
 											"dependencyConditions": [
 												"Succeeded"
 											]
