@@ -856,7 +856,7 @@
 						"type": "Script",
 						"dependsOn": [
 							{
-								"activity": "For Each Column",
+								"activity": "Drop View If Exist",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -889,7 +889,7 @@
 								{
 									"type": "Query",
 									"text": {
-										"value": "create view [edw].[@{replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-','')}]\nas\n\nSELECT \ncast([timestamp] as bigint)as [Sys_RowNumber],\n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]",
+										"value": "\ncreate view [edw].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\nas\n\nSELECT \ncast([timestamp] as bigint)as [Sys_RowNumber],\n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\n\n",
 										"type": "Expression"
 									}
 								}
@@ -961,12 +961,58 @@
 									"typeProperties": {
 										"variableName": "ColumnString",
 										"value": {
-											"value": "[[@{item().COLUMN_NAME}] as [@{replace(replace(join(split(item().COLUMN_NAME,' '),''),'_',''),'-','')}]",
+											"value": "[[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(join(split(item().COLUMN_NAME,' '),''),'_',''),'-',''),'(',''),')',''),'{',''),'}','')}]",
 											"type": "Expression"
 										}
 									}
 								}
 							]
+						}
+					},
+					{
+						"name": "Drop View If Exist",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "For Each Column",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_SQLDB_NAV_DYNAMIC",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_DatabaseName": {
+									"value": "@pipeline().parameters.pm_DatabaseName",
+									"type": "Expression"
+								},
+								"pm_Environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "if object_id('edw.@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}', 'V') \nis not null drop view [edw].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\n",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
 						}
 					}
 				],
