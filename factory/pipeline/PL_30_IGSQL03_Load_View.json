@@ -282,7 +282,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw].[@{pipeline().parameters.pm_ViewName}]\nwhere Sys_RowNumber > @{variables('v_Watermark')}\n",
+										"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw].[@{pipeline().parameters.pm_ViewName}]\nwhere Sys_RowNumber > @{variables('v_Watermark')} \n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -336,6 +336,160 @@
 									"type": "Expression"
 								}
 							}
+						},
+						{
+							"name": "AddLoggingEntryDelta",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delta Load Navision View",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[adf].[sp_igsql03_logging]",
+								"storedProcedureParameters": {
+									"database_name": {
+										"value": {
+											"value": "@pipeline().parameters.pm_DatabaseName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"table_name": {
+										"value": {
+											"value": "@pipeline().parameters.pm_ViewName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"dataread": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"datawritten": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.datawritten",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"fileswritten": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.fileswritten",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"sourcepeakconnections": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.sourcepeakconnections",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"sinkpeakconnections": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.sinkpeakconnections",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"rowsread": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.rowsread",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"rowscopied": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.rowscopied",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"copyduration": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.copyduration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"throughput": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.throughput",
+											"type": "Expression"
+										},
+										"type": "Decimal"
+									},
+									"usedparallelcopies": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.usedparallelcopies",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"queuingduration": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.executiondetails[0].detaileddurations.queuingduration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"timetofirstbyte": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.executiondetails[0].detaileddurations.timetofirstbyte",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"transferduration": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.executiondetails[0].detaileddurations.transferduration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"start": {
+										"value": {
+											"value": "@activity('Delta Load Navision View').output.executiondetails[0].start",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"full_load": {
+										"value": {
+											"value": "@pipeline().parameters.pm_FullLoad",
+											"type": "Expression"
+										},
+										"type": "Boolean"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
 						}
 					],
 					"ifTrueActivities": [
@@ -344,7 +498,7 @@
 							"type": "Copy",
 							"dependsOn": [
 								{
-									"activity": "GetNewWatermark_FullLoad",
+									"activity": "SetNewWatermark_FullLoad",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -469,12 +623,6 @@
 							"type": "SqlServerStoredProcedure",
 							"dependsOn": [
 								{
-									"activity": "SetNewWatermark_FullLoad",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								},
-								{
 									"activity": "Full Load Navision View",
 									"dependencyConditions": [
 										"Succeeded"
@@ -542,7 +690,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw].[@{pipeline().parameters.pm_ViewName}]\nwhere Sys_RowNumber > @{variables('v_Watermark')}\n",
+										"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw].[@{pipeline().parameters.pm_ViewName}]\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -594,6 +742,160 @@
 								"value": {
 									"value": "@string(\n    coalesce(\n        activity('GetNewWatermark_FullLoad').output.value[0].NewWatermark,\n        0\n        )\n    )",
 									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "AddLoggingEntryFull",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Full Load Navision View",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[adf].[sp_igsql03_logging]",
+								"storedProcedureParameters": {
+									"database_name": {
+										"value": {
+											"value": "@pipeline().parameters.pm_DatabaseName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"table_name": {
+										"value": {
+											"value": "@pipeline().parameters.pm_ViewName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"dataread": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"datawritten": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.datawritten",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"fileswritten": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.fileswritten",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"sourcepeakconnections": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.sourcepeakconnections",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"sinkpeakconnections": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.sinkpeakconnections",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"rowsread": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.rowsread",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"rowscopied": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.rowscopied",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"copyduration": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.copyduration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"throughput": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.throughput",
+											"type": "Expression"
+										},
+										"type": "Decimal"
+									},
+									"usedparallelcopies": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.usedparallelcopies",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"queuingduration": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.executiondetails[0].detaileddurations.queuingduration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"timetofirstbyte": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.executiondetails[0].detaileddurations.timetofirstbyte",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"transferduration": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.executiondetails[0].detaileddurations.transferduration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"start": {
+										"value": {
+											"value": "@activity('Full Load Navision View').output.executiondetails[0].start",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"full_load": {
+										"value": {
+											"value": "@pipeline().parameters.pm_FullLoad",
+											"type": "Expression"
+										},
+										"type": "Boolean"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
 								}
 							}
 						}
