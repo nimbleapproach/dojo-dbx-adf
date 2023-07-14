@@ -1,0 +1,131 @@
+{
+	"name": "PL_30_IGSQL03_Sync_Keys",
+	"properties": {
+		"activities": [
+			{
+				"name": "Extract all current Keys",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"additionalColumns": [
+							{
+								"name": "Sys_DataFactory_LoadDateTime_UTC",
+								"value": {
+									"value": "@utcNow()",
+									"type": "Expression"
+								}
+							},
+							{
+								"name": "Sys_DataFactory_DatabaseName",
+								"value": {
+									"value": "@pipeline().parameters.pm_DatabaseName",
+									"type": "Expression"
+								}
+							}
+						],
+						"sqlReaderQuery": {
+							"value": "Select DISTINCT @{join(pipeline().parameters.pm_BuinessKeys,',')} FROM [edw].[@{pipeline().parameters.pm_ViewName}]\n",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"validateDataConsistency": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_TableName": {
+								"value": "@pipeline().parameters.pm_ViewName",
+								"type": "Expression"
+							},
+							"pm_SchemaName": "edw",
+							"pm_DatabaseName": {
+								"value": "@pipeline().parameters.pm_DatabaseName",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_PARQUET_STATIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileSystem": "keys",
+							"pm_Directory": {
+								"value": "igsql03/@{pipeline().parameters.pm_ViewName}",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "@{pipeline().parameters.pm_ViewName}-@{pipeline().parameters.pm_DatabaseName}",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"pm_DatabaseName": {
+				"type": "string"
+			},
+			"pm_ViewName": {
+				"type": "string"
+			},
+			"pm_BuinessKeys": {
+				"type": "array"
+			}
+		},
+		"variables": {
+			"v_Watermark": {
+				"type": "String"
+			},
+			"v_NewWatermark": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/IGSQL03 [Navision]"
+		},
+		"annotations": []
+	}
+}
