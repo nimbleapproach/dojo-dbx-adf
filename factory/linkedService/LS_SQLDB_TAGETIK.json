@@ -28,5 +28,6 @@
 			"referenceName": "ir-ig-managed-dev-westeurope",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }
