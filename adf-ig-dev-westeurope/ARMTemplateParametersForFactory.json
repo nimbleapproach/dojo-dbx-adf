@@ -29,6 +29,9 @@
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-tagetikdbserver01-connectionstring"
 		},
+		"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_Load_View_MASTER_parameters_pm_FullLoad": {
+			"value": false
+		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
 		}

@@ -2762,9 +2762,6 @@
 					"cancelAfter": {}
 				},
 				"parameters": {
-					"pm_ViewName": {
-						"type": "string"
-					},
 					"pm_FullLoad": {
 						"type": "bool",
 						"defaultValue": false
