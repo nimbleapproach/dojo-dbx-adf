@@ -1,0 +1,36 @@
+{
+	"name": "PL_00_TAG02_Load_View_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_30_TAG02_Load_View_ITERATOR",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_30_TAG02_Load_View_ITERATOR",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_full_load": {
+							"value": "@pipeline().parameters.pm_full_load",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pm_full_load": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/TAG02 [TAGETIK]"
+		},
+		"annotations": []
+	}
+}

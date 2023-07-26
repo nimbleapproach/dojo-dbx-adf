@@ -1,0 +1,264 @@
+{
+	"name": "PL_10_TAG02_Load_View_Full_load",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get EDW Views",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT  * FROM INFORMATION_SCHEMA.views where table_SCHEMA='edw'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_TAGETIK_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "INFORMATION_SCHEMA",
+							"pm_TableName": "Views",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Table in Tagetik copy data in Full Load",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get EDW Views",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get EDW Views').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 8,
+					"activities": [
+						{
+							"name": "Copy data",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "GetNewWatermark_Pre_Full_Load",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT * FROM edw.@{item().TABLE_NAME}\n\nwhere DATEUPD<='@{activity('GetNewWatermark_Pre_Full_Load').output.value[0].WATERMARK}'",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings",
+										"maxRowsPerFile": 1000000,
+										"fileNamePrefix": {
+											"value": "bronze-tag02-@{item().TABLE_NAME}-@{utcNow()}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_SQLDB_TAGETIK_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_SchemaName": {
+											"value": "@item().TABLE_SCHEMA",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": {
+											"value": "bronze",
+											"type": "Expression"
+										},
+										"pm_Directory": {
+											"value": "tag02/@{item().table_name}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Update_Watermark_Tables",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "Copy data",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderStoredProcedureName": "[adf].[sp_tag02_tables_watermark_upsert]",
+									"storedProcedureParameters": {
+										"table_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().ITEM_NAME",
+												"type": "Expression"
+											}
+										},
+										"watermark": {
+											"type": "String",
+											"value": {
+												"value": "@{activity('GetNewWatermark_Pre_Full_Load').output.value[0].WATERMARK}",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									}
+								}
+							}
+						},
+						{
+							"name": "GetNewWatermark_Pre_Full_Load",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "table_name",
+									"value": "@item().TABLE_NAME"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "Select max([DATEUPD]) as WATERMARK ,'@{item().TABLE_NAME}' as TABLE_NAME\nFROM edw.@{item().TABLE_NAME}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLDB_TAGETIK_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_SchemaName": "edw",
+										"pm_TableName": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": false
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Ingestion/TAG02 [TAGETIK]"
+		},
+		"annotations": []
+	}
+}

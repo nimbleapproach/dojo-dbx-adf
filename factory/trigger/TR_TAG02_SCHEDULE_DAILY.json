@@ -1,0 +1,36 @@
+{
+	"name": "TR_TAG02_SCHEDULE_DAILY",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_00_TAG02_Load_View_MASTER",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"pm_full_load": "false"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2023-07-27T01:00:00",
+				"timeZone": "W. Europe Standard Time",
+				"schedule": {
+					"weekDays": [
+						"Monday",
+						"Tuesday",
+						"Wednesday",
+						"Thursday",
+						"Friday"
+					]
+				}
+			}
+		}
+	}
+}
