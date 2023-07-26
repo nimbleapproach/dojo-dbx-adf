@@ -199,6 +199,8 @@
 									"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
 									"type": "DatasetReference",
 									"parameters": {
+										"pm_SchemaName": "adf",
+										"pm_TableName": "CT_TAG02_TABLES",
 										"pm_Environment": {
 											"value": "@pipeline().globalParameters.gpm_Environment",
 											"type": "Expression"
