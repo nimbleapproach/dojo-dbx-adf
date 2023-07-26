@@ -44,6 +44,10 @@
 			"type": "bool",
 			"defaultValue": false
 		},
+		"TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load": {
+			"type": "bool",
+			"defaultValue": false
+		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"type": "string",
 			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
@@ -119,6 +123,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load": {
+						"value": "[parameters('TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load')]"
 					},
 					"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_Load_View_MASTER_parameters_pm_FullLoad": {
 						"value": "[parameters('TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_Load_View_MASTER_parameters_pm_FullLoad')]"
