@@ -531,6 +531,10 @@
 											}
 										}
 									],
+									"sqlReaderQuery": {
+										"value": "Select * FROM  edw.@{pipeline().parameters.pm_ViewName}\nwhere [Sys_RowNumber] <= '@{variables('v_NewWatermark')}'",
+										"type": "Expression"
+									},
 									"queryTimeout": "02:00:00",
 									"partitionOption": "None"
 								},
