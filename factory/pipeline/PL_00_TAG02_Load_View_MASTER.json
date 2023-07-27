@@ -3,18 +3,18 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "PL_30_TAG02_Load_View_ITERATOR",
+				"name": "PL_10_TAG02_Load_View_ITERATOR",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_30_TAG02_Load_View_ITERATOR",
+						"referenceName": "PL_10_TAG02_Load_View_ITERATOR",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"pm_full_load": {
+						"pm_FullLoad": {
 							"value": "@pipeline().parameters.pm_full_load",
 							"type": "Expression"
 						}
