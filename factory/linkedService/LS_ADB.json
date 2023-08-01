@@ -1,0 +1,32 @@
+{
+	"name": "LS_ADB",
+	"properties": {
+		"parameters": {
+			"pm_Databrick_Workspace_URL": {
+				"type": "string"
+			},
+			"pm_Databricks_Workspace_Resource_ID": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "@linkedService().pm_Databrick_Workspace_URL",
+			"authentication": "MSI",
+			"workspaceResourceId": "@linkedService().pm_Databricks_Workspace_Resource_ID",
+			"instancePoolId": "0801-072410-torso492-pool-b12ciy0i",
+			"newClusterNumOfWorker": "1",
+			"newClusterSparkEnvVars": {
+				"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+			},
+			"newClusterVersion": "12.2.x-scala2.12",
+			"newClusterInitScripts": [],
+			"clusterOption": "Fixed"
+		},
+		"connectVia": {
+			"referenceName": "ir-ig-managed-dev-westeurope",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

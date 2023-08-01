@@ -5,6 +5,14 @@
 			"gpm_Environment": {
 				"type": "string",
 				"value": "dev"
+			},
+			"gpm_Databrick_Workspace_URL": {
+				"type": "string",
+				"value": "https://adb-2715169315282147.7.azuredatabricks.net"
+			},
+			"gpm_Databricks_Workspace_Resource_ID": {
+				"type": "string",
+				"value": "/subscriptions/5c771a6b-7686-4067-a58d-95551c37bf46/resourceGroups/rg-ig-lakehouse-dev-westeurope/providers/Microsoft.Databricks/workspaces/abd-ig-lakehouse-dev-westeurope"
 			}
 		},
 		"globalConfigurations": {
