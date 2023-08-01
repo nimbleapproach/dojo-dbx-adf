@@ -55,7 +55,8 @@ mountHandler = MountHandle()
 # mountHandler.mount("bronze")
 # mountHandler.mount("silver")
 # mountHandler.mount("gold")
-# dbutils.fs.ls("mnt/bronze")
+# mountHandler.mount("checkpoints")
+# dbutils.fs.ls("mnt/checkpoints")
 
 # COMMAND ----------
 
