@@ -7,6 +7,9 @@
 			},
 			"pm_Databricks_Workspace_Resource_ID": {
 				"type": "string"
+			},
+			"pm_Databricks_Cluster_ID": {
+				"type": "string"
 			}
 		},
 		"annotations": [],
@@ -15,7 +18,7 @@
 			"domain": "@linkedService().pm_Databrick_Workspace_URL",
 			"authentication": "MSI",
 			"workspaceResourceId": "@linkedService().pm_Databricks_Workspace_Resource_ID",
-			"instancePoolId": "0801-072410-torso492-pool-b12ciy0i",
+			"instancePoolId": "@linkedService().pm_Databricks_Cluster_ID",
 			"newClusterNumOfWorker": "1",
 			"newClusterSparkEnvVars": {
 				"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
