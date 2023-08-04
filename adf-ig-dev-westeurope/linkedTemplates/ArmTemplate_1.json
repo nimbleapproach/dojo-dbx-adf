@@ -129,7 +129,7 @@
 									"typeProperties": {
 										"variableName": "ColumnString",
 										"value": {
-											"value": "[[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(join(split(item().COLUMN_NAME,' '),''),'_',''),'-',''),'(',''),')',''),'{',''),'}','')}]",
+											"value": "[[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(replace(item().COLUMN_NAME,' ',''),'(',''),')',''),',',''),';',''),'{',''),'}','')}]",
 											"type": "Expression"
 										}
 									}

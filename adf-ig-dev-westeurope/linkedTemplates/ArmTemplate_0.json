@@ -1993,7 +1993,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw].[@{pipeline().parameters.pm_ViewName}]\n",
+												"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -2359,7 +2359,7 @@
 									"typeProperties": {
 										"variableName": "ColumnString",
 										"value": {
-											"value": "[[@{item().COLUMN_NAME}] as [@{join(split(item().COLUMN_NAME,' '),'')}]",
+											"value": "[[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(replace(item().COLUMN_NAME,' ',''),'(',''),')',''),',',''),';',''),'{',''),'}','')}]",
 											"type": "Expression"
 										}
 									}
