@@ -759,7 +759,7 @@
 											"type": "AzureSqlSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
@@ -1053,7 +1053,7 @@
 											"type": "AzureSqlSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
@@ -1336,14 +1336,14 @@
 											"type": "SqlServerSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
 													}
 												},
 												{
-													"name": "Sys_DataFactory_DatabaseName",
+													"name": "Sys_DatabaseName",
 													"value": {
 														"value": "@pipeline().parameters.pm_DatabaseName",
 														"type": "Expression"
@@ -1816,14 +1816,14 @@
 											"type": "SqlServerSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
 													}
 												},
 												{
-													"name": "Sys_DataFactory_DatabaseName",
+													"name": "Sys_DatabaseName",
 													"value": {
 														"value": "@pipeline().parameters.pm_DatabaseName",
 														"type": "Expression"

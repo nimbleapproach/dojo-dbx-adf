@@ -644,7 +644,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "Select [FOLDER_NAME],[BUSINESS_KEYS] from [adf].[CT_IGSQL03_KEYS]\nwhere [FOLDER_NAME] = '@{item().TABLE_NAME}'",
+												"value": "Select [TABLE_NAME],[BUSINESS_KEYS] from [adf].[CT_IGSQL03_KEYS]\nwhere [TABLE_NAME] = '@{item().TABLE_NAME}'",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -945,7 +945,7 @@
 											"type": "AzureSqlSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
@@ -1239,7 +1239,7 @@
 											"type": "AzureSqlSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
@@ -1522,14 +1522,14 @@
 											"type": "SqlServerSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
 													}
 												},
 												{
-													"name": "Sys_DataFactory_DatabaseName",
+													"name": "Sys_DatabaseName",
 													"value": {
 														"value": "@pipeline().parameters.pm_DatabaseName",
 														"type": "Expression"
@@ -2002,14 +2002,14 @@
 											"type": "SqlServerSource",
 											"additionalColumns": [
 												{
-													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
 														"value": "@utcNow()",
 														"type": "Expression"
 													}
 												},
 												{
-													"name": "Sys_DataFactory_DatabaseName",
+													"name": "Sys_DatabaseName",
 													"value": {
 														"value": "@pipeline().parameters.pm_DatabaseName",
 														"type": "Expression"
