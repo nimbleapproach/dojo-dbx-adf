@@ -40,7 +40,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "\ncreate view [edw].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\nas\n\nSELECT \ncast([timestamp] as bigint)as [Sys_RowNumber],\n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\n\n",
+								"value": "\ncreate view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_TableName}]\nas\n\nSELECT \ncast([timestamp] as bigint)as [Sys_RowNumber],\n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\n\n",
 								"type": "Expression"
 							}
 						}
@@ -112,7 +112,7 @@
 							"typeProperties": {
 								"variableName": "ColumnString",
 								"value": {
-									"value": "[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(join(split(item().COLUMN_NAME,' '),''),'_',''),'-',''),'(',''),')',''),'{',''),'}','')}]",
+									"value": "[@{item().COLUMN_NAME}] as [@{join(split(item().COLUMN_NAME,' '),'')}]",
 									"type": "Expression"
 								}
 							}
@@ -158,7 +158,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "if object_id('edw.@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}', 'V') \nis not null drop view [edw].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\n",
+								"value": "if object_id('[edw_@{pipeline().globalParameters.gpm_Environment}].@{pipeline().parameters.pm_TableName}', 'V') \nis not null drop view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_TableName}]\n",
 								"type": "Expression"
 							}
 						}

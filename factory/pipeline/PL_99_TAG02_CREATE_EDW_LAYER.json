@@ -1,0 +1,46 @@
+{
+	"name": "PL_99_TAG02_CREATE_EDW_LAYER",
+	"properties": {
+		"activities": [
+			{
+				"name": "Create EDW Schema",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "LS_SQLDB_TAGETIK",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@pipeline().globalParameters.gpm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "CREATE SCHEMA [edw_@{pipeline().globalParameters.gpm_Environment}]",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"folder": {
+			"name": "00 Technical/TAG02 [TAGETIK]"
+		},
+		"annotations": []
+	}
+}

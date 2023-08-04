@@ -164,7 +164,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "Select [TABLE_NAME] FROM INFORMATION_SCHEMA.TABLES\nwhere [TABLE_SCHEMA] = 'edw'\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}'",
+							"value": "Select [TABLE_NAME] FROM INFORMATION_SCHEMA.TABLES\nwhere [TABLE_SCHEMA] = 'edw_@{pipeline().globalParameters.gpm_Environment}'\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",

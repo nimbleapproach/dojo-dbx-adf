@@ -33,7 +33,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "create view [edw].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\nas\n\nSELECT \n@{concat(join(variables('ColumnString'),',' ) )} \nFROM dbo.[@{pipeline().parameters.pm_TableName}]",
+								"value": "create view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\nas\n\nSELECT \n@{concat(join(variables('ColumnString'),',' ) )} \nFROM dbo.[@{pipeline().parameters.pm_TableName}]",
 								"type": "Expression"
 							}
 						}
@@ -144,7 +144,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "if object_id('edw.@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}', 'V') \nis not null drop view [edw].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\n",
+								"value": "if object_id('[edw_@{pipeline().globalParameters.gpm_Environment}].@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}', 'V') \nis not null drop view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\n",
 								"type": "Expression"
 							}
 						}
