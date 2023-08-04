@@ -112,7 +112,7 @@
 							"typeProperties": {
 								"variableName": "ColumnString",
 								"value": {
-									"value": "[@{item().COLUMN_NAME}] as [@{join(split(item().COLUMN_NAME,' '),'')}]",
+									"value": "[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(replace(item().COLUMN_NAME,' ',''),'(',''),')',''),',',''),';',''),'{',''),'}','')}]",
 									"type": "Expression"
 								}
 							}
