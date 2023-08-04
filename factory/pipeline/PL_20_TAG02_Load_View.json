@@ -43,7 +43,7 @@
 									"type": "AzureSqlSource",
 									"additionalColumns": [
 										{
-											"name": "Sys_DataFactory_LoadDateTime_UTC",
+											"name": "Sys_Bronze_InsertDateTime_UTC",
 											"value": {
 												"value": "@utcNow()",
 												"type": "Expression"
@@ -337,7 +337,7 @@
 									"type": "AzureSqlSource",
 									"additionalColumns": [
 										{
-											"name": "Sys_DataFactory_LoadDateTime_UTC",
+											"name": "Sys_Bronze_InsertDateTime_UTC",
 											"value": {
 												"value": "@utcNow()",
 												"type": "Expression"
