@@ -51,7 +51,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "Select * FROM  edw.@{pipeline().parameters.pm_ViewName}\nwhere [DATEUPD] > '@{variables('v_WatermarkDelta')}'\nand [DATEUPD] <= '@{variables('v_WatermarkDeltaUpdate')}'\n",
+										"value": "Select * FROM  [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\nwhere [DATEUPD] > '@{variables('v_WatermarkDelta')}'\nand [DATEUPD] <= '@{variables('v_WatermarkDeltaUpdate')}'\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -217,7 +217,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "Select max([DATEUPD]) as WATERMARK ,'@{pipeline().parameters.pm_ViewName}' as TABLE_NAME\nFROM edw.@{pipeline().parameters.pm_ViewName} ",
+										"value": "Select max([DATEUPD]) as WATERMARK ,'@{pipeline().parameters.pm_ViewName}' as TABLE_NAME\nFROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -345,7 +345,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "Select * FROM  edw.@{pipeline().parameters.pm_ViewName}\nwhere [DATEUPD] <= '@{variables('v_WatermarkDeltaUpdate')}'",
+										"value": "Select * FROM  [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\nwhere [DATEUPD] <= '@{variables('v_WatermarkDeltaUpdate')}'",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -447,7 +447,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "Select max([DATEUPD]) as WATERMARK ,'@{pipeline().parameters.pm_ViewName}' as TABLE_NAME\nFROM edw.@{pipeline().parameters.pm_ViewName}",
+										"value": "Select max([DATEUPD]) as WATERMARK ,'@{pipeline().parameters.pm_ViewName}' as TABLE_NAME\nFROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",

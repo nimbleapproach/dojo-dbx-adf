@@ -52,7 +52,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "Select * FROM [edw].[@{pipeline().parameters.pm_ViewName}]\nwhere [Sys_RowNumber] > @{variables('v_Watermark')}\n",
+										"value": "Select * FROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\nwhere [Sys_RowNumber] > @{variables('v_Watermark')}\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -282,7 +282,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw].[@{pipeline().parameters.pm_ViewName}]\nwhere Sys_RowNumber > @{variables('v_Watermark')} \n",
+										"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\nwhere Sys_RowNumber > @{variables('v_Watermark')} \n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -532,7 +532,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "Select * FROM  edw.@{pipeline().parameters.pm_ViewName}\nwhere [Sys_RowNumber] <= '@{variables('v_NewWatermark')}'",
+										"value": "Select * FROM  [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\nwhere [Sys_RowNumber] <= '@{variables('v_NewWatermark')}'",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
