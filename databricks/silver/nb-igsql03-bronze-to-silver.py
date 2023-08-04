@@ -5,20 +5,6 @@ FULL_LOAD = eval(dbutils.widgets.get("fullLoad"))
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC -- Create an example catalog and schema to contain the new table
-# MAGIC CREATE CATALOG IF NOT EXISTS silver;
-# MAGIC USE CATALOG silver;
-# MAGIC CREATE SCHEMA IF NOT EXISTS igsql03;
-# MAGIC USE igsql03;
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC GRANT ALL PRIVILEGES on catalog bronze to az_edw_data_engineers
-
-# COMMAND ----------
-
 from pyspark.sql.functions import col, lit, first
 from delta.tables import *
 import datetime
