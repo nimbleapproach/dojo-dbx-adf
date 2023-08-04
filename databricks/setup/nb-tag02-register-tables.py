@@ -6,14 +6,15 @@
 # COMMAND ----------
 
 def registerTable(tableName : str, recreate : bool = False):
+    cleanedTableName = tableName.replace(" ", "")
     if recreate:
         spark.sql(f"""
-                  DROP TABLE IF EXISTS {tableName}
+                  DROP TABLE IF EXISTS {cleanedTableName}
                   """)
-    if not spark.catalog.tableExists(tableName):
+    if not spark.catalog.tableExists(cleanedTableName):
         df = spark.read.parquet(f'/mnt/bronze/tag02/{tableName}/*/*/*')
         schema = df.schema
-        spark.catalog.createTable(tableName = f"bronze.tag02.{tableName}",
+        spark.catalog.createTable(tableName = f"bronze.tag02.{cleanedTableName}",
                                 path=f"abfss://bronze@adls0ig0dev0westeurope.dfs.core.windows.net/tag02/{tableName}/",
                                 source='parquet',
                                 schema=schema)

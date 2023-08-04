@@ -12,6 +12,7 @@ import datetime
 
 
 def processBronzeTable(tableName : str, businessKeys : list , fullLoad : bool = False):
+    cleanedTableName = tableName.replace(" ", "")
     # ct stores current time
     ct = datetime.datetime.now()
 
@@ -33,10 +34,10 @@ def processBronzeTable(tableName : str, businessKeys : list , fullLoad : bool = 
     #set = updateDictonary
 
 
-    if not spark.catalog.tableExists(f'Silver.igsql03.{tableName}'):
-        spark.catalog.createTable(f"Silver.igsql03.{tableName}", schema=df.schema)
+    if not spark.catalog.tableExists(f'Silver.igsql03.{cleanedTableName}'):
+        spark.catalog.createTable(f"Silver.igsql03.{cleanedTableName}", schema=df.schema)
 
-    deltaTable = DeltaTable.forName(spark,tableOrViewName=f"Silver.igsql03.{tableName}")
+    deltaTable = DeltaTable.forName(spark,tableOrViewName=f"Silver.igsql03.{cleanedTableName}")
 
     # Function to upsert microBatchOutputDF into Delta table using merge
     def upsertToDelta(microBatchOutputDF, batchId):

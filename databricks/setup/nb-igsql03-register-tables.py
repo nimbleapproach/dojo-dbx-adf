@@ -6,12 +6,13 @@
 # COMMAND ----------
 
 def registerTable(tableName : str, recreate : bool = False):
+    cleanedTableName = tableName.replace(" ", "")
     if recreate:
         spark.sql(f"""
-                  DROP TABLE IF EXISTS {tableName}
+                  DROP TABLE IF EXISTS {cleanedTableName}
                   """)
     spark.sql(f"""
-                CREATE EXTERNAL TABLE IF NOT EXISTS bronze.igsql03.{tableName}
+                CREATE EXTERNAL TABLE IF NOT EXISTS bronze.igsql03.`{cleanedTableName}`
                 USING PARQUET
                 LOCATION 'abfss://bronze@adls0ig0dev0westeurope.dfs.core.windows.net/igsql03/{tableName}/'
               """)
