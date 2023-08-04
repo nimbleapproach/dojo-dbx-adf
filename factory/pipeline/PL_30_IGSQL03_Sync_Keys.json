@@ -34,7 +34,7 @@
 							}
 						],
 						"sqlReaderQuery": {
-							"value": "Select DISTINCT @{join(pipeline().parameters.pm_BuinessKeys,',')} FROM [edw].[@{pipeline().parameters.pm_ViewName}]\n",
+							"value": "Select DISTINCT @{join(pipeline().parameters.pm_BuinessKeys,',')} FROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\n",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
