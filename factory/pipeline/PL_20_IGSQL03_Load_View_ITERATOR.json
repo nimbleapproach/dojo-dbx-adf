@@ -71,7 +71,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "Select [FOLDER_NAME],[BUSINESS_KEYS] from [adf].[CT_IGSQL03_KEYS]\nwhere [FOLDER_NAME] = '@{item().TABLE_NAME}'",
+										"value": "Select [TABLE_NAME],[BUSINESS_KEYS] from [adf].[CT_IGSQL03_KEYS]\nwhere [TABLE_NAME] = '@{item().TABLE_NAME}'",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
