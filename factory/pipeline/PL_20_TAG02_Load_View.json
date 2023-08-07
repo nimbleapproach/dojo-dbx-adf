@@ -130,7 +130,7 @@
 										},
 										"pm_FileSystem": "bronze",
 										"pm_Directory": {
-											"value": "tag02/@{pipeline().parameters.pm_ViewName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+											"value": "tag02/@{pipeline().parameters.pm_ViewName}",
 											"type": "Expression"
 										}
 									}
@@ -424,7 +424,7 @@
 										},
 										"pm_FileSystem": "bronze",
 										"pm_Directory": {
-											"value": "tag02/@{pipeline().parameters.pm_ViewName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+											"value": "tag02/@{pipeline().parameters.pm_ViewName}",
 											"type": "Expression"
 										}
 									}
