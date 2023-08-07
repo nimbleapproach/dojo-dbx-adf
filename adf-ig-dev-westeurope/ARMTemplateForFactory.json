@@ -1326,7 +1326,7 @@
 												},
 												"pm_FileSystem": "bronze",
 												"pm_Directory": {
-													"value": "igsql03/@{pipeline().parameters.pm_ViewName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+													"value": "tag02/@{pipeline().parameters.pm_ViewName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
 													"type": "Expression"
 												}
 											}
@@ -2805,7 +2805,7 @@
 								{
 									"type": "Query",
 									"text": {
-										"value": "create view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\nas\n\nSELECT \n@{concat(join(variables('ColumnString'),',' ) )} \nFROM dbo.[@{pipeline().parameters.pm_TableName}]",
+										"value": "create view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_TableName}]\nas\n\nSELECT \n@{concat(join(variables('ColumnString'),',' ) )} \nFROM dbo.[@{pipeline().parameters.pm_TableName}]",
 										"type": "Expression"
 									}
 								}
@@ -2829,7 +2829,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "SELECT * FROM [adf].[CT_IGSQL03_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}'\nAND [ACTIVE] =1",
+									"value": "SELECT * FROM [adf].[CT_TAG02_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}'\nAND [ACTIVE] =1",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
@@ -2840,7 +2840,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_IGSQL03_COLUMNS",
+									"pm_TableName": "CT_TAG02_COLUMNS",
 									"pm_Environment": {
 										"value": "@pipeline().globalParameters.gpm_Environment",
 										"type": "Expression"
@@ -2931,8 +2931,7 @@
 				},
 				"parameters": {
 					"pm_TableName": {
-						"type": "string",
-						"defaultValue": "CT_TAG02_COLUMNS"
+						"type": "string"
 					}
 				},
 				"variables": {
