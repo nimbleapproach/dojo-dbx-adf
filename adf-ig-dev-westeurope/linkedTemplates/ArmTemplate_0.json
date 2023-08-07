@@ -877,7 +877,7 @@
 								"value": "@activity('Get Bronze Table Names').output.value",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_IGSQL03_Curate_Parquet_Files",
