@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "PL_00_IGSQL03_Load_View_MASTER",
+					"referenceName": "PL_00_IGSQL03_MASTER",
 					"type": "PipelineReference"
 				},
 				"parameters": {
