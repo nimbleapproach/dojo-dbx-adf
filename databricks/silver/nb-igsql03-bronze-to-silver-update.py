@@ -5,7 +5,7 @@ FULL_LOAD = eval(dbutils.widgets.get("fullLoad"))
 
 # COMMAND ----------
 
-from pyspark.sql.functions import col, lit, first
+from pyspark.sql.functions import col, lit, last
 from delta.tables import *
 import datetime
  
@@ -51,7 +51,7 @@ def processBronzeTable(tableName : str, businessKeys : list , fullLoad : bool = 
         .execute()
     )
 
-    aggColumns = [first(col(x)).alias(x) for x in df.columns if x not in businessKeys]
+    aggColumns = [last(col(x)).alias(x) for x in df.columns if x not in businessKeys]
 
     (df.groupBy(businessKeys).agg(*aggColumns).writeStream
     .option("checkpointLocation", checkpoint_path)
