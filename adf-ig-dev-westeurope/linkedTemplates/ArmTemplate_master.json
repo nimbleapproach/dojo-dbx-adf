@@ -40,7 +40,7 @@
 			"type": "string",
 			"defaultValue": "secret-tagetikdbserver01-connectionstring"
 		},
-		"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_Load_View_MASTER_parameters_pm_FullLoad": {
+		"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
 			"defaultValue": false
 		},
@@ -127,8 +127,8 @@
 					"TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load": {
 						"value": "[parameters('TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load')]"
 					},
-					"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_Load_View_MASTER_parameters_pm_FullLoad": {
-						"value": "[parameters('TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_Load_View_MASTER_parameters_pm_FullLoad')]"
+					"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_MASTER_parameters_pm_FullLoad": {
+						"value": "[parameters('TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_MASTER_parameters_pm_FullLoad')]"
 					}
 				}
 			},

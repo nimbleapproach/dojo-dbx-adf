@@ -29,7 +29,7 @@
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-tagetikdbserver01-connectionstring"
 		},
-		"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_Load_View_MASTER_parameters_pm_FullLoad": {
+		"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_MASTER_parameters_pm_FullLoad": {
 			"value": false
 		},
 		"TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load": {
