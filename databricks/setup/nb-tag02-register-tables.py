@@ -12,7 +12,7 @@ def registerTable(tableName : str, recreate : bool = False):
                   DROP TABLE IF EXISTS {cleanedTableName}
                   """)
     if not spark.catalog.tableExists(cleanedTableName):
-        df = spark.read.parquet(f'/mnt/bronze/tag02/{tableName}/*/*/*')
+        df = spark.read.parquet(f'/mnt/bronze/tag02/{tableName}/')
         schema = df.schema
         spark.catalog.createTable(tableName = f"bronze.tag02.{cleanedTableName}",
                                 path=f"abfss://bronze@adls0ig0dev0westeurope.dfs.core.windows.net/tag02/{tableName}/",
@@ -23,5 +23,5 @@ def registerTable(tableName : str, recreate : bool = False):
 
 for tableName in dbutils.fs.ls('mnt/bronze/tag02'):
     print(f"STARTING: Registering table '{tableName.name[:-1]}' to catalog 'bronze' in schema 'tag02'.")
-    registerTable(tableName.name[:-1],recreate = False)
+    registerTable(tableName.name[:-1],recreate = True)
     print(f"FINISHED: Registering table '{tableName.name[:-1]}' to catalog 'bronze' in schema 'tag02'.")

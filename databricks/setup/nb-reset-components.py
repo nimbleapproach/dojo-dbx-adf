@@ -4,6 +4,11 @@
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC use schema igsql03
+
+# COMMAND ----------
+
 for table in spark.catalog.listTables('igsql03'):
     spark.sql(f"""
               DROP TABLE {table.name}
@@ -11,7 +16,12 @@ for table in spark.catalog.listTables('igsql03'):
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC use schema tag02
+
+# COMMAND ----------
+
 for table in spark.catalog.listTables('tag02'):
     spark.sql(f"""
-              DROP TABLE IF EXISTS {table.name}
+              DROP TABLE {table.name}
               """)
