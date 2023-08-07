@@ -1,7 +1,22 @@
 # Databricks notebook source
+spark.conf.set("spark.sql.shuffle.partitions", 4)
+spark.conf.set("spark.sql.adaptive.enabled", True)
+
+# COMMAND ----------
+
 TABLE_NAME = dbutils.widgets.get("tableName")
 BUSINESS_KEYS = dbutils.widgets.get("businessKeys").split(',')
 FULL_LOAD = eval(dbutils.widgets.get("fullLoad"))
+
+# COMMAND ----------
+
+sc.setJobDescription(f"IGSQL03 Bronze to Silver: Load {TABLE_NAME} with Business Keys {BUSINESS_KEYS} in MODE {FULL_LOAD}")
+
+# COMMAND ----------
+
+#TABLE_NAME = 'Item Ledger Entry'
+#BUSINESS_KEYS = ['EntryNo_', 'Sys_DatabaseName']
+#FULL_LOAD = False
 
 # COMMAND ----------
 
@@ -25,6 +40,7 @@ def processBronzeTable(tableName : str, businessKeys : list , fullLoad : bool = 
     .format("cloudFiles")
     .option("cloudFiles.format", "parquet")
     .option("cloudFiles.schemaLocation", checkpoint_path)
+    .option('cloudFiles.useIncrementalListing', 'false')
     .load(f"/mnt/bronze/igsql03/{tableName}/")
     #.withColumn('Sys_Silver_InsertDateTime_UTC',lit(ct))
     .withColumn('Sys_Silver_ModifiedDateTime_UTC',lit(ct)))
@@ -53,7 +69,7 @@ def processBronzeTable(tableName : str, businessKeys : list , fullLoad : bool = 
 
     aggColumns = [last(col(x)).alias(x) for x in df.columns if x not in businessKeys]
 
-    (df.groupBy(businessKeys).agg(*aggColumns).writeStream
+    (df.repartition(4).groupBy(businessKeys).agg(*aggColumns).repartition(4).writeStream
     .option("checkpointLocation", checkpoint_path)
     .option("mergeSchema", "true")
     .trigger(availableNow=True)
