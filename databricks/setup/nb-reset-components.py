@@ -13,5 +13,5 @@ for table in spark.catalog.listTables('igsql03'):
 
 for table in spark.catalog.listTables('tag02'):
     spark.sql(f"""
-              DROP TABLE {table.name}
+              DROP TABLE IF EXISTS {table.name}
               """)
