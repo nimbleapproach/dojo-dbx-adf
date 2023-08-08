@@ -10,6 +10,10 @@
 			},
 			"pm_Databricks_Cluster_ID": {
 				"type": "string"
+			},
+			"pm_NumberOfWorkers": {
+				"type": "string",
+				"defaultValue": "1"
 			}
 		},
 		"annotations": [],
@@ -19,7 +23,7 @@
 			"authentication": "MSI",
 			"workspaceResourceId": "@linkedService().pm_Databricks_Workspace_Resource_ID",
 			"instancePoolId": "@linkedService().pm_Databricks_Cluster_ID",
-			"newClusterNumOfWorker": "1",
+			"newClusterNumOfWorker": "@linkedService().pm_NumberOfWorkers",
 			"newClusterSparkEnvVars": {
 				"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
 			},

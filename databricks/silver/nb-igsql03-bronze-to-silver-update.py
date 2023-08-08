@@ -1,5 +1,5 @@
 # Databricks notebook source
-spark.conf.set("spark.sql.shuffle.partitions", 8)
+spark.conf.set("spark.sql.shuffle.partitions", 32)
 spark.conf.set("spark.sql.adaptive.enabled", True)
 
 # COMMAND ----------
@@ -10,7 +10,9 @@ FULL_LOAD = eval(dbutils.widgets.get("fullLoad"))
 
 # COMMAND ----------
 
-sc.setJobDescription(f"IGSQL03 Bronze to Silver: Load {TABLE_NAME} with Business Keys {BUSINESS_KEYS} in MODE {FULL_LOAD}")
+#TABLE_NAME = 'Item Ledger Entry'
+#BUSINESS_KEYS = ['EntryNo_', 'Sys_DatabaseName']
+#FULL_LOAD = True
 
 # COMMAND ----------
 
