@@ -87,7 +87,7 @@
 		],
 		"parameters": {
 			"pm_FullLoad": {
-				"type": "string",
+				"type": "bool",
 				"defaultValue": "False"
 			}
 		},
