@@ -21,6 +21,10 @@
 			"gpm_Databricks_Cluster_ID_memory_optimized": {
 				"type": "string",
 				"value": "0808-091734-ninny846-pool-uwy414fm"
+			},
+			"gpm_Databricks_ClusterID_heavy_workloads": {
+				"type": "string",
+				"value": "0808-134315-husks839-pool-1yeq8loi"
 			}
 		},
 		"globalConfigurations": {

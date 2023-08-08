@@ -172,7 +172,7 @@
 							"typeProperties": {
 								"variableName": "v_Databricks_Cluster_ID",
 								"value": {
-									"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID_memory_optimized",
+									"value": "@pipeline().globalParameters.gpm_Databricks_ClusterID_heavy_workloads",
 									"type": "Expression"
 								}
 							}
