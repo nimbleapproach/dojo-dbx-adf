@@ -40,11 +40,7 @@
 			"type": "string",
 			"defaultValue": "secret-tagetikdbserver01-connectionstring"
 		},
-		"TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_MASTER_parameters_pm_FullLoad": {
-			"type": "bool",
-			"defaultValue": false
-		},
-		"TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load": {
+		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
 			"defaultValue": false
 		},
@@ -58,41 +54,15 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_IGSQL03_MASTER')]",
+			"name": "[concat(parameters('factoryName'), '/PL_00_IGSQL03_Curate_Parquet_Files_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "PL_10_IGSQL03_Load_View_ITERATOR",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_IGSQL03_Load_View_ITERATOR",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_FullLoad": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
 						"name": "PL_10_IGSQL03_Curate_Parquet_Files_ITERATOR",
 						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "PL_10_IGSQL03_Load_View_ITERATOR",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
+						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
 							"pipeline": {
@@ -120,13 +90,217 @@
 					}
 				},
 				"folder": {
-					"name": "00 Technical/IGSQL03 [Navision]"
+					"name": "20 Curation/IGSQL03 [Navision]"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL03_Load_View_ITERATOR')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL03_Curate_Parquet_Files_ITERATOR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_IGSQL03_Load_View_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_IGSQL03_Load_View_ITERATOR",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_IGSQL03_Load_View_ITERATOR",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_FullLoad": {
+									"value": "@pipeline().parameters.pm_FullLoad",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"folder": {
+					"name": "10 Ingestion/IGSQL03 [Navision]"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL03_Load_View_ITERATOR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_00_TAG02_Load_View_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_TAG02_Load_View_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_full_load": {
+									"value": "@pipeline().parameters.pm_FullLoad",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "PL_00_IGSQL03_Load_View_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_IGSQL03_Load_View_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_FullLoad": {
+									"value": "@pipeline().parameters.pm_FullLoad",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "PL_00_TAG02_Load_View_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "PL_00_IGSQL03_Load_View_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "PL_00_IGSQL03_Curate_Parquet_Files_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_IGSQL03_Curate_Parquet_Files_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"folder": {
+					"name": "00 Technical"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_00_TAG02_Load_View_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL03_Load_View_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_TAG02_Curate_Parquet_Files_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL03_Curate_Parquet_Files_MASTER')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_TAG02_Curate_Parquet_Files_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_TAG02_Curate_Parquet_Files_ITERATOR",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_TAG02_Curate_Parquet_Files_ITERATOR",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_FullLoad": {
+									"value": "@pipeline().parameters.pm_FullLoad",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"folder": {
+					"name": "20 Curation/TAG02 [Tagetik]"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_10_TAG02_Curate_Parquet_Files_ITERATOR')]"
 			]
 		},
 		{
@@ -494,6 +668,120 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Recreate_View_ITERATOR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_TAG02_Curate_Parquet_Files_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Bronze Table Names",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_TAG02_KEYS",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Bronze Table Names",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Bronze Table Names').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "PL_20_IGSQL03_Curate_Parquet_Files",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_TAG02_Curate_Parquet_Files",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											},
+											"pm_TableName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_BusinessKeys": {
+												"value": "@item().BUSINESS_KEYS",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"variables": {
+					"v_BusinessKeys": {
+						"type": "Array"
+					}
+				},
+				"folder": {
+					"name": "20 Curation/TAG02 [Tagetik]"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_20_TAG02_Curate_Parquet_Files')]"
 			]
 		},
 		{
@@ -1278,6 +1566,247 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_30_IGSQL03_Recreate_View')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_TAG02_Curate_Parquet_Files')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "nb-tag02-bronze-to-silver-update",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Add DatabaseName to BusinessKeys",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/ADO/inf-edw/databricks/silver/nb-tag02-bronze-to-silver-update",
+							"baseParameters": {
+								"tableName": {
+									"value": "@pipeline().parameters.pm_TableName",
+									"type": "Expression"
+								},
+								"businessKeys": {
+									"value": "@variables('v_BusinessKeys')",
+									"type": "Expression"
+								},
+								"fullLoad": {
+									"value": "@variables('v_FullLoad')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ADB",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Databrick_Workspace_URL": {
+									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+									"type": "Expression"
+								},
+								"pm_Databricks_Workspace_Resource_ID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+									"type": "Expression"
+								},
+								"pm_Databricks_Cluster_ID": {
+									"value": "@variables('v_Databricks_Cluster_ID')",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": {
+									"value": "@variables('v_NumberOfWorkers')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Add DatabaseName to BusinessKeys",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "If FullLoad",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "v_BusinessKeys",
+							"value": {
+								"value": "@if(startswith(concat(pipeline().parameters.pm_BusinessKeys,',','Sys_DatabaseName'),','),'Sys_DatabaseName',concat(pipeline().parameters.pm_BusinessKeys,',','Sys_DatabaseName'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "If FullLoad",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "NO FULL_LOAD Set NumberOfWorkers",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_NumberOfWorkers",
+										"value": "1"
+									}
+								},
+								{
+									"name": "NO FULL_LOAD Set Cluster ID",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_Databricks_Cluster_ID",
+										"value": {
+											"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "NO FULL_LOAD Set FullLoad",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_FullLoad",
+										"value": {
+											"value": "'False'",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "FULL_LOAD Set NumberOfWorkers",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_NumberOfWorkers",
+										"value": "2"
+									}
+								},
+								{
+									"name": "FULL_LOAD Set Cluster ID",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_Databricks_Cluster_ID",
+										"value": {
+											"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID_memory_optimized",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "FULL_LOAD Set FullLoad",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_FullLoad",
+										"value": {
+											"value": "'True'",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_BusinessKeys": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"v_BusinessKeys": {
+						"type": "String"
+					},
+					"v_FullLoad": {
+						"type": "String"
+					},
+					"v_Databricks_Cluster_ID": {
+						"type": "String"
+					},
+					"v_NumberOfWorkers": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "20 Curation/TAG02 [Tagetik]"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADB')]"
 			]
 		},
 		{
@@ -4082,7 +4611,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/TR_IGSQL03_SCHEDULE_DAILY')]",
+			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -4091,11 +4620,11 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "PL_00_IGSQL03_MASTER",
+							"referenceName": "PL_00_MASTER",
 							"type": "PipelineReference"
 						},
 						"parameters": {
-							"pm_FullLoad": "[parameters('TR_IGSQL03_SCHEDULE_DAILY_properties_PL_00_IGSQL03_MASTER_parameters_pm_FullLoad')]"
+							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
 						}
 					}
 				],
@@ -4119,48 +4648,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL03_MASTER')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TR_TAG02_SCHEDULE_DAILY')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "PL_00_TAG02_Load_View_MASTER",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"pm_full_load": "[parameters('TR_TAG02_SCHEDULE_DAILY_properties_PL_00_TAG02_Load_View_MASTER_parameters_pm_full_load')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Week",
-						"interval": 1,
-						"startTime": "2023-07-27T01:00:00",
-						"timeZone": "W. Europe Standard Time",
-						"schedule": {
-							"weekDays": [
-								"Monday",
-								"Tuesday",
-								"Wednesday",
-								"Thursday",
-								"Friday"
-							]
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_00_TAG02_Load_View_MASTER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
 			]
 		},
 		{
