@@ -116,6 +116,10 @@
 					},
 					"pm_Databricks_Cluster_ID": {
 						"type": "string"
+					},
+					"pm_NumberOfWorkers": {
+						"type": "string",
+						"defaultValue": "1"
 					}
 				},
 				"annotations": [],
@@ -125,7 +129,7 @@
 					"authentication": "MSI",
 					"workspaceResourceId": "@linkedService().pm_Databricks_Workspace_Resource_ID",
 					"instancePoolId": "@linkedService().pm_Databricks_Cluster_ID",
-					"newClusterNumOfWorker": "1",
+					"newClusterNumOfWorker": "@linkedService().pm_NumberOfWorkers",
 					"newClusterSparkEnvVars": {
 						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
 					},
@@ -383,7 +387,7 @@
 									"type": "Expression"
 								},
 								"fullLoad": {
-									"value": "@if(pipeline().parameters.pm_FullLoad,'True','False')",
+									"value": "@variables('v_FullLoad')",
 									"type": "Expression"
 								}
 							}
@@ -401,7 +405,11 @@
 									"type": "Expression"
 								},
 								"pm_Databricks_Cluster_ID": {
-									"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID",
+									"value": "@variables('v_Databricks_Cluster_ID')",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": {
+									"value": "@variables('v_NumberOfWorkers')",
 									"type": "Expression"
 								}
 							}
@@ -410,7 +418,14 @@
 					{
 						"name": "Add DatabaseName to BusinessKeys",
 						"type": "SetVariable",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "If FullLoad",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"secureOutput": false,
 							"secureInput": false
@@ -422,6 +437,118 @@
 								"value": "@if(startswith(concat(pipeline().parameters.pm_BusinessKeys,',','Sys_DatabaseName'),','),'Sys_DatabaseName',concat(pipeline().parameters.pm_BusinessKeys,',','Sys_DatabaseName'))",
 								"type": "Expression"
 							}
+						}
+					},
+					{
+						"name": "If FullLoad",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "NO FULL_LOAD Set NumberOfWorkers",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_NumberOfWorkers",
+										"value": "1"
+									}
+								},
+								{
+									"name": "NO FULL_LOAD Set Cluster ID",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_Databricks_Cluster_ID",
+										"value": {
+											"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "NO FULL_LOAD Set FullLoad",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_FullLoad",
+										"value": {
+											"value": "'False'",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "FULL_LOAD Set NumberOfWorkers",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_NumberOfWorkers",
+										"value": "2"
+									}
+								},
+								{
+									"name": "FULL_LOAD Set Cluster ID",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_Databricks_Cluster_ID",
+										"value": {
+											"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID_memory_optimized",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "FULL_LOAD Set FullLoad",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_FullLoad",
+										"value": {
+											"value": "'True'",
+											"type": "Expression"
+										}
+									}
+								}
+							]
 						}
 					}
 				],
@@ -443,6 +570,15 @@
 				},
 				"variables": {
 					"v_BusinessKeys": {
+						"type": "String"
+					},
+					"v_FullLoad": {
+						"type": "String"
+					},
+					"v_Databricks_Cluster_ID": {
+						"type": "String"
+					},
+					"v_NumberOfWorkers": {
 						"type": "String"
 					}
 				},

@@ -14,5 +14,9 @@
 	"gpm_Databricks_Cluster_ID": {
 		"type": "string",
 		"value": "0801-072410-torso492-pool-b12ciy0i"
+	},
+	"gpm_Databricks_Cluster_ID_memory_optimized": {
+		"type": "string",
+		"value": "0808-091734-ninny846-pool-uwy414fm"
 	}
 }
