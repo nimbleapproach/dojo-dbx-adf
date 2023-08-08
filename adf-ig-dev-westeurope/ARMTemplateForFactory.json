@@ -269,8 +269,8 @@
 				},
 				"parameters": {
 					"pm_FullLoad": {
-						"type": "string",
-						"defaultValue": "False"
+						"type": "bool",
+						"defaultValue": false
 					}
 				},
 				"variables": {
@@ -747,7 +747,7 @@
 									"type": "Expression"
 								},
 								"fullLoad": {
-									"value": "@pipeline().parameters.pm_FullLoad",
+									"value": "@if(pipeline().parameters.pm_FullLoad,'True','False')",
 									"type": "Expression"
 								}
 							}
@@ -795,8 +795,8 @@
 				},
 				"parameters": {
 					"pm_FullLoad": {
-						"type": "string",
-						"defaultValue": "False"
+						"type": "bool",
+						"defaultValue": false
 					},
 					"pm_TableName": {
 						"type": "string"
