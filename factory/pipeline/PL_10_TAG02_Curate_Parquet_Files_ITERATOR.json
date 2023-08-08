@@ -1,0 +1,104 @@
+{
+	"name": "PL_10_TAG02_Curate_Parquet_Files_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Bronze Table Names",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_TAG02_KEYS",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Bronze Table Names",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Bronze Table Names').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "PL_20_IGSQL03_Curate_Parquet_Files",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_TAG02_Curate_Parquet_Files",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"pm_BusinessKeys": {
+										"value": "@item().BUSINESS_KEYS",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"variables": {
+			"v_BusinessKeys": {
+				"type": "Array"
+			}
+		},
+		"folder": {
+			"name": "20 Curation/TAG02 [Tagetik]"
+		},
+		"annotations": []
+	}
+}

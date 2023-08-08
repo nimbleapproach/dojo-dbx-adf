@@ -1,0 +1,101 @@
+{
+	"name": "PL_00_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_00_TAG02_Load_View_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_TAG02_Load_View_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_full_load": {
+							"value": "@pipeline().parameters.pm_FullLoad",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "PL_00_IGSQL03_Load_View_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_IGSQL03_Load_View_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_FullLoad": {
+							"value": "@pipeline().parameters.pm_FullLoad",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_00_TAG02_Load_View_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "PL_00_IGSQL03_Load_View_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_00_IGSQL03_Curate_Parquet_Files_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_IGSQL03_Curate_Parquet_Files_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"parameters": {
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"folder": {
+			"name": "00 Technical"
+		},
+		"annotations": []
+	}
+}

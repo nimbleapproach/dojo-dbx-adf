@@ -1,12 +1,12 @@
 {
-	"name": "TR_IGSQL03_SCHEDULE_DAILY",
+	"name": "TR_SCHEDULE_DAILY",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "PL_00_IGSQL03_MASTER",
+					"referenceName": "PL_00_MASTER",
 					"type": "PipelineReference"
 				},
 				"parameters": {
