@@ -1,5 +1,5 @@
 # Databricks notebook source
-spark.conf.set("spark.sql.shuffle.partitions", 32)
+spark.conf.set("spark.sql.shuffle.partitions", 128)
 spark.conf.set("spark.sql.adaptive.enabled", True)
 
 # COMMAND ----------
