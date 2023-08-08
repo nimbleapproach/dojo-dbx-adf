@@ -40,6 +40,9 @@ def processBronzeTable(tableName : str, businessKeys : list , fullLoad : bool = 
     #.withColumn('Sys_Silver_InsertDateTime_UTC',lit(ct))
     .withColumn('Sys_Silver_ModifiedDateTime_UTC',lit(ct)))
 
+    if businessKeys is None:
+        businessKeys = [column for column in  df.columns if not (column.startswith("Sys_") or column.startswith("_"))]
+
     #updateDictonary = dict(zip(df.columns,[f"s.{column}" for column in df.columns]))
     #del updateDictonary['Sys_Silver_InsertDateTime_UTC']
     #set = updateDictonary
