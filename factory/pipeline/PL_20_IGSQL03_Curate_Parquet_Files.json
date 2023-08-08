@@ -157,7 +157,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"variableName": "v_NumberOfWorkers",
-								"value": "2"
+								"value": "1"
 							}
 						},
 						{
