@@ -404,7 +404,8 @@
 								"value": "@activity('Get Bronze Table Names').output.value",
 								"type": "Expression"
 							},
-							"isSequential": true,
+							"isSequential": false,
+							"batchCount": 2,
 							"activities": [
 								{
 									"name": "PL_20_IGSQL03_Curate_Parquet_Files",
@@ -726,7 +727,8 @@
 								"value": "@activity('Get Bronze Table Names').output.value",
 								"type": "Expression"
 							},
-							"isSequential": true,
+							"isSequential": false,
+							"batchCount": 2,
 							"activities": [
 								{
 									"name": "PL_20_IGSQL03_Curate_Parquet_Files",
@@ -1124,7 +1126,7 @@
 									"typeProperties": {
 										"variableName": "v_Databricks_Cluster_ID",
 										"value": {
-											"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID",
+											"value": "@pipeline().globalParameters.gpm_IGSQL03_Databricks_Cluster_ID_DAILY_LOAD",
 											"type": "Expression"
 										}
 									}
@@ -1174,7 +1176,7 @@
 									"typeProperties": {
 										"variableName": "v_Databricks_Cluster_ID",
 										"value": {
-											"value": "@pipeline().globalParameters.gpm_Databricks_ClusterID_heavy_workloads",
+											"value": "@pipeline().globalParameters.gpm_IGSQL03_Databricks_ClusterID_INITIAL_LOAD",
 											"type": "Expression"
 										}
 									}
@@ -1694,7 +1696,7 @@
 									"typeProperties": {
 										"variableName": "v_Databricks_Cluster_ID",
 										"value": {
-											"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID",
+											"value": "@pipeline().globalParameters.gpm_TAG02_Databricks_Cluster_ID_DAILY_LOAD",
 											"type": "Expression"
 										}
 									}
@@ -1744,7 +1746,7 @@
 									"typeProperties": {
 										"variableName": "v_Databricks_Cluster_ID",
 										"value": {
-											"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID_memory_optimized",
+											"value": "@pipeline().globalParameters.gpm_TAG02_Databricks_Cluster_ID_INITIAL_LOAD",
 											"type": "Expression"
 										}
 									}
