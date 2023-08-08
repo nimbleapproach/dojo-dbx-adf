@@ -1,22 +1,11 @@
 # Databricks notebook source
-spark.conf.set("spark.sql.shuffle.partitions", 32)
-spark.conf.set("spark.sql.adaptive.enabled", True)
-
-# COMMAND ----------
-
 TABLE_NAME = dbutils.widgets.get("tableName")
-BUSINESS_KEYS = dbutils.widgets.get("businessKeys").split(',')
+BUSINESS_KEYS = dbutils.widgets.get("businessKeys").replace("[","").replace("]","").split(',')
 FULL_LOAD = eval(dbutils.widgets.get("fullLoad"))
 
 # COMMAND ----------
 
-#TABLE_NAME = 'Item Ledger Entry'
-#BUSINESS_KEYS = ['EntryNo_', 'Sys_DatabaseName']
-#FULL_LOAD = True
-
-# COMMAND ----------
-
-from pyspark.sql.functions import col, lit, last
+from pyspark.sql.functions import col, lit, first
 from delta.tables import *
 import datetime
  
@@ -62,7 +51,7 @@ def processBronzeTable(tableName : str, businessKeys : list , fullLoad : bool = 
         .execute()
     )
 
-    aggColumns = [last(col(x)).alias(x) for x in df.columns if x not in businessKeys]
+    aggColumns = [first(col(x)).alias(x) for x in df.columns if x not in businessKeys]
 
     (df.groupBy(businessKeys).agg(*aggColumns).writeStream
     .option("checkpointLocation", checkpoint_path)
