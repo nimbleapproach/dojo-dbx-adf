@@ -1,4 +1,9 @@
 # Databricks notebook source
+spark.conf.set("spark.sql.shuffle.partitions", 32)
+spark.conf.set("spark.sql.adaptive.enabled", True)
+
+# COMMAND ----------
+
 TABLE_NAME = dbutils.widgets.get("tableName")
 BUSINESS_KEYS = dbutils.widgets.get("businessKeys").replace("[","").replace("]","").split(',')
 FULL_LOAD = eval(dbutils.widgets.get("fullLoad"))
