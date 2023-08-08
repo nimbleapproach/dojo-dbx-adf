@@ -78,7 +78,7 @@
 		"parameters": {
 			"pm_FullLoad": {
 				"type": "bool",
-				"defaultValue": "False"
+				"defaultValue": false
 			},
 			"pm_TableName": {
 				"type": "string"
