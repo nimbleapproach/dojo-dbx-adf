@@ -122,7 +122,7 @@
 							"typeProperties": {
 								"variableName": "v_Databricks_Cluster_ID",
 								"value": {
-									"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID",
+									"value": "@pipeline().globalParameters.gpm_TAG02_Databricks_Cluster_ID_DAILY_LOAD",
 									"type": "Expression"
 								}
 							}
@@ -172,7 +172,7 @@
 							"typeProperties": {
 								"variableName": "v_Databricks_Cluster_ID",
 								"value": {
-									"value": "@pipeline().globalParameters.gpm_Databricks_Cluster_ID_memory_optimized",
+									"value": "@pipeline().globalParameters.gpm_TAG02_Databricks_Cluster_ID_INITIAL_LOAD",
 									"type": "Expression"
 								}
 							}
