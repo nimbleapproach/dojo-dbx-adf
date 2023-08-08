@@ -1652,7 +1652,7 @@
 						"typeProperties": {
 							"variableName": "v_BusinessKeys",
 							"value": {
-								"value": "@if(startswith(concat(pipeline().parameters.pm_BusinessKeys,',','Sys_DatabaseName'),','),'Sys_DatabaseName',concat(pipeline().parameters.pm_BusinessKeys,',','Sys_DatabaseName'))",
+								"value": "@pipeline().parameters.pm_BusinessKeys",
 								"type": "Expression"
 							}
 						}
