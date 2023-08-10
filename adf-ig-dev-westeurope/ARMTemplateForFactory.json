@@ -190,6 +190,8 @@
 					{
 						"name": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
 						"type": "ExecutePipeline",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Skipped",
 						"dependsOn": [
 							{
 								"activity": "PL_00_TAG02_Load_View_MASTER",
@@ -217,6 +219,8 @@
 					{
 						"name": "PL_00_IGSQL03_Curate_Parquet_Files_MASTER",
 						"type": "ExecutePipeline",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Skipped",
 						"dependsOn": [
 							{
 								"activity": "PL_00_TAG02_Curate_Parquet_Files_MASTER",
