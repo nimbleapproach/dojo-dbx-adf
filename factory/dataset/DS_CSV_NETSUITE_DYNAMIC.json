@@ -1,0 +1,43 @@
+{
+	"name": "DS_CSV_NETSUITE_DYNAMIC",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": {
+					"value": "@dataset().pm_environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_environment": {
+				"type": "string"
+			},
+			"pm_directory": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/NETSUITE"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().pm_directory",
+					"type": "Expression"
+				},
+				"fileSystem": "netsuite"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
