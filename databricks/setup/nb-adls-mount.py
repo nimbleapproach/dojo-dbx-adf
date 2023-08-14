@@ -48,14 +48,13 @@ class MountHandle:
 
 # COMMAND ----------
 
-mountHandler = MountHandle()
+# mountHandler = MountHandle()
 
 # COMMAND ----------
 
 # mountHandler.mount("bronze")
-# mountHandler.mount("silver")
-# mountHandler.mount("gold")
 # mountHandler.mount("checkpoints")
+# mountHandler.mount("keys")
 # dbutils.fs.ls("mnt/checkpoints")
 
 # COMMAND ----------

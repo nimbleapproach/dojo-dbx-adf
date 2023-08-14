@@ -1,6 +1,17 @@
 # Databricks notebook source
+try:
+    ENVIRONMENT = dbutils.widgets.get("wg_environment")
+except:
+    dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices =  ['dev','uat','prod'])
+    ENVIRONMENT = dbutils.widgets.get("wg_environment")
+
+# COMMAND ----------
+
+spark.catalog.setCurrentCatalog(f"bronze_{ENVIRONMENT}")
+
+# COMMAND ----------
+
 # MAGIC %sql
-# MAGIC use catalog bronze;
 # MAGIC use schema tag02;
 
 # COMMAND ----------
@@ -14,8 +25,8 @@ def registerTable(tableName : str, recreate : bool = False):
     if not spark.catalog.tableExists(cleanedTableName):
         df = spark.read.parquet(f'/mnt/bronze/tag02/{tableName}/')
         schema = df.schema
-        spark.catalog.createTable(tableName = f"bronze.tag02.{cleanedTableName}",
-                                path=f"abfss://bronze@adls0ig0dev0westeurope.dfs.core.windows.net/tag02/{tableName}/",
+        spark.catalog.createTable(tableName = cleanedTableName,
+                                path=f"abfss://bronze@adls0ig0{ENVIRONMENT}0westeurope.dfs.core.windows.net/tag02/{tableName}/",
                                 source='parquet',
                                 schema=schema)
 
