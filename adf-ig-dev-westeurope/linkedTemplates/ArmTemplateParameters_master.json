@@ -17,6 +17,9 @@
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"value": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
 		},
+		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-cloudblue-commerce-oss-connectionsstring"
+		},
 		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
 		},
@@ -37,6 +40,9 @@
 		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
+		},
+		"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-jumpbi01-shared"
 		},
 		"containerUri": {
 			"value": ""
