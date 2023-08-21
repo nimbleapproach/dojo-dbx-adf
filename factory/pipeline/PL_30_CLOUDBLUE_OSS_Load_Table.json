@@ -1,0 +1,17 @@
+{
+	"name": "PL_30_CLOUDBLUE_OSS_Load_Table",
+	"properties": {
+		"parameters": {
+			"pm_TableName": {
+				"type": "string"
+			},
+			"pm_SchemaName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/CLOUDBLUE/OSS"
+		},
+		"annotations": []
+	}
+}
