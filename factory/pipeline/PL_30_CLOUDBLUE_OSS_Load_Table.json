@@ -1,6 +1,17 @@
 {
 	"name": "PL_30_CLOUDBLUE_OSS_Load_Table",
 	"properties": {
+		"activities": [
+			{
+				"name": "Wait1",
+				"type": "Wait",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 1
+				}
+			}
+		],
 		"parameters": {
 			"pm_TableName": {
 				"type": "string"
