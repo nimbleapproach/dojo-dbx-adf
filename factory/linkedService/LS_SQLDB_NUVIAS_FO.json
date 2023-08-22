@@ -1,0 +1,39 @@
+{
+	"name": "LS_SQLDB_NUVIAS_FO",
+	"properties": {
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_DatabaseType": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@linkedService().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": {
+					"value": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring",
+					"type": "Expression"
+				}
+			}
+		},
+		"connectVia": {
+			"referenceName": "ir-ig-managed-dev-westeurope",
+			"type": "IntegrationRuntimeReference"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
+}

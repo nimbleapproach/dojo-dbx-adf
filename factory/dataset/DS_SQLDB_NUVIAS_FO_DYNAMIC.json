@@ -1,0 +1,128 @@
+{
+	"name": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQLDB_NUVIAS_FO",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_Environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				},
+				"pm_DatabaseType": {
+					"value": "@dataset().pm_DatabaseType",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_DatabaseType": {
+				"type": "string"
+			},
+			"pm_SchemaName": {
+				"type": "string"
+			},
+			"pm_TableName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/NUVIAS/FO"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "DEFINITIONGROUP",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EXECUTIONID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ISSELECTED",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "TRANSFERSTATUS",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "EXCHANGERATEFORSTORAGE",
+				"type": "decimal",
+				"precision": 32,
+				"scale": 16
+			},
+			{
+				"name": "STARTDATE",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "ENDDATE",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "CONVERSIONFACTOR",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FROMCURRENCY",
+				"type": "nvarchar"
+			},
+			{
+				"name": "TOCURRENCY",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RATETYPEDESCRIPTION",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RATETYPENAME",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RATE",
+				"type": "decimal",
+				"precision": 32,
+				"scale": 16
+			},
+			{
+				"name": "PARTITION",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SYNCSTARTDATETIME",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "RECID",
+				"type": "bigint",
+				"precision": 19
+			}
+		],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().pm_SchemaName",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().pm_TableName",
+				"type": "Expression"
+			}
+		}
+	}
+}

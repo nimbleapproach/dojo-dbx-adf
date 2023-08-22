@@ -20,7 +20,7 @@
 			}
 		},
 		"folder": {
-			"name": "Sources/NETSUITE"
+			"name": "Sources/STARLINK/NETSUITE"
 		},
 		"annotations": [],
 		"type": "DelimitedText",
