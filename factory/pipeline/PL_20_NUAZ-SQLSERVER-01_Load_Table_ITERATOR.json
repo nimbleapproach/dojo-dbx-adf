@@ -29,7 +29,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_30_NUAZ-SQLSERVER-01_Load_Table_",
+									"referenceName": "PL_30_NUAZ-SQLSERVER-01_Load_Table",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -39,7 +39,7 @@
 										"type": "Expression"
 									},
 									"pm_TableName": {
-										"value": "@item().TABLE_NAME",
+										"value": "@item().Table",
 										"type": "Expression"
 									},
 									"pm_FullLoad": {
@@ -47,7 +47,7 @@
 										"type": "Expression"
 									},
 									"pm_SchemaName": {
-										"value": "@item().SCHEMA_NAME",
+										"value": "@item().Schema_Name",
 										"type": "Expression"
 									}
 								}
