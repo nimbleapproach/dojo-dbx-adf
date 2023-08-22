@@ -39,7 +39,7 @@
 										"type": "Expression"
 									},
 									"pm_TableName": {
-										"value": "@item().Table",
+										"value": "@item().Table_Name",
 										"type": "Expression"
 									},
 									"pm_FullLoad": {
