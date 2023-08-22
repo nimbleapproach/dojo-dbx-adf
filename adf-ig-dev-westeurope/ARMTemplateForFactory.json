@@ -1787,7 +1787,7 @@
 												"type": "Expression"
 											},
 											"pm_TableName": {
-												"value": "@item().TABLE_NAME",
+												"value": "@item().Table",
 												"type": "Expression"
 											},
 											"pm_FullLoad": {
@@ -1795,7 +1795,7 @@
 												"type": "Expression"
 											},
 											"pm_SchemaName": {
-												"value": "@item().SCHEMA_NAME",
+												"value": "@item().Schema_Name",
 												"type": "Expression"
 											}
 										}
@@ -4019,6 +4019,123 @@
 				"activities": [
 					{
 						"name": "Full Load Nuivas FO Table",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE",
+								"type": "DataFlowReference",
+								"parameters": {
+									"pm_TableSchema": {
+										"value": "'@{pipeline().parameters.pm_SchemaName}'",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "'@{pipeline().parameters.pm_TableName}'",
+										"type": "Expression"
+									},
+									"pm_DatabaseName": {
+										"value": "'@{pipeline().parameters.pm_DatabaseName}'",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"GetSQLTable": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_DatabaseType": {
+											"value": "@split(pipeline().parameters.pm_DatabaseName,'_')[1]",
+											"type": "Expression"
+										},
+										"pm_SchemaName": {
+											"value": "@pipeline().parameters.pm_SchemaName",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@pipeline().parameters.pm_TableName",
+											"type": "Expression"
+										}
+									},
+									"WriteToBronzeADLS": {}
+								},
+								"linkedServiceParameters": {
+									"WriteToBronzeADLS": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"pm_DatabaseName": {
+						"type": "string"
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"pm_SchemaName": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"v_Watermark": {
+						"type": "String"
+					},
+					"v_NewWatermark": {
+						"type": "String"
+					},
+					"v_SelectionString": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Ingestion/NUVIAS/NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_30_NUAZ-SQLSERVER-01_Load_Table_UNUSED')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Full Load Nuivas FO Table",
 						"type": "Copy",
 						"dependsOn": [
 							{
@@ -5695,6 +5812,129 @@
 						"resourceId": "[parameters('shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId')]",
 						"authorizationType": "Rbac"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "NUVIAS/NUAZ_SQLSERVER-01 [FO]"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
+								"type": "DatasetReference"
+							},
+							"name": "GetSQLTable"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteToBronzeADLS"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ApplyParquetName"
+						},
+						{
+							"name": "AddCurrentUTC"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_TableSchema as string,",
+						"     pm_TableName as string,",
+						"     pm_DatabaseName as string",
+						"}",
+						"source(output(",
+						"          DEFINITIONGROUP as string,",
+						"          EXECUTIONID as string,",
+						"          ISSELECTED as integer,",
+						"          TRANSFERSTATUS as integer,",
+						"          EXCHANGERATEFORSTORAGE as decimal(32,16),",
+						"          STARTDATE as timestamp,",
+						"          ENDDATE as timestamp,",
+						"          CONVERSIONFACTOR as integer,",
+						"          FROMCURRENCY as string,",
+						"          TOCURRENCY as string,",
+						"          RATETYPEDESCRIPTION as string,",
+						"          RATETYPENAME as string,",
+						"          RATE as decimal(32,16),",
+						"          PARTITION as string,",
+						"          SYNCSTARTDATETIME as timestamp,",
+						"          RECID as long",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> GetSQLTable",
+						"GetSQLTable select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ApplyParquetName",
+						"ApplyParquetName derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddCurrentUTC",
+						"AddCurrentUTC sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: ('bronze'),",
+						"     folderPath: ('nuaz-sqlserver-01/'+$pm_DatabaseName+'/'+$pm_TableSchema+'/'+$pm_TableName),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteToBronzeADLS"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/General')]",
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NUVIAS_FO_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/General')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "UDFLibrary",
+				"typeProperties": {
+					"sources": [],
+					"sinks": [],
+					"transformations": [],
+					"scriptLines": [
+						"applyParquetNaming(string) as string = replace(replace(replace(replace(replace(replace(replace(replace(i1,' ',''),'(',''),')',''),']',''),'[',''),';',''),'{',''),'}','')"
+					]
 				}
 			},
 			"dependsOn": []
