@@ -91,7 +91,7 @@
 								"type": "Expression"
 							},
 							"pm_DatabaseType": {
-								"value": "@split(pipeline().parameters.pm_DatabaseName,'_')[2]",
+								"value": "@split(pipeline().parameters.pm_DatabaseName,'_')[1]",
 								"type": "Expression"
 							},
 							"pm_SchemaName": {
@@ -116,7 +116,7 @@
 							},
 							"pm_FileSystem": "bronze",
 							"pm_Directory": {
-								"value": "nuaz-sqlserver-01/@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+								"value": "nuaz-sqlserver-01/@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
 								"type": "Expression"
 							}
 						}
