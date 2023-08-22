@@ -15,13 +15,35 @@
 					"name": "GetSQLTable"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteToBronzeADLS"
+				}
+			],
 			"transformations": [
 				{
-					"name": "select1"
+					"name": "ApplyParquetName"
+				},
+				{
+					"name": "AddCurrentUTC"
+				}
+			],
+			"udfLibraries": [
+				{
+					"referenceName": "General",
+					"type": "DataFlowReference"
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     pm_TableSchema as string,",
+				"     pm_TableName as string,",
+				"     pm_DatabaseName as string",
+				"}",
 				"source(output(",
 				"          DEFINITIONGROUP as string,",
 				"          EXECUTIONID as string,",
@@ -45,11 +67,32 @@
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> GetSQLTable",
 				"GetSQLTable select(mapColumn(",
-				"          each(match(ERROR_FUNCTION('')),",
-				"               ERROR_FUNCTION('') = $$)",
+				"          each(match(true()),",
+				"               applyParquetNaming($$) = $$)",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1"
+				"     skipDuplicateMapOutputs: true) ~> ApplyParquetName",
+				"ApplyParquetName derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddCurrentUTC",
+				"AddCurrentUTC sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: ('bronze'),",
+				"     folderPath: ('nuaz-sqlserver-01/'+$pm_DatabaseName+'/'+$pm_TableSchema+'/'+$pm_TableName),",
+				"     mergeSchema: true,",
+				"     autoCompact: true,",
+				"     optimizedWrite: true,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteToBronzeADLS"
 			]
 		}
 	}
