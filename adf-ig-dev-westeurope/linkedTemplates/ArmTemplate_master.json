@@ -44,6 +44,10 @@
 			"type": "string",
 			"defaultValue": "IG\\inf_svc_azsql_sync01"
 		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-tagetikdbserver01-connectionstring"
@@ -119,6 +123,9 @@
 					},
 					"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
 						"value": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName')]"
+					},
+					"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]"
 					},
 					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"

@@ -52,6 +52,10 @@
 			"type": "string",
 			"defaultValue": "IG\\inf_svc_azsql_sync01"
 		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-tagetikdbserver01-connectionstring"
@@ -433,6 +437,50 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/shir-igapphost02-shared')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_NUVIAS_FO')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": {
+							"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]",
+							"type": "Expression"
+						}
+					}
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
 				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
 			]
 		},
@@ -1144,7 +1192,7 @@
 					}
 				},
 				"folder": {
-					"name": "Sources/NETSUITE"
+					"name": "Sources/STARLINK/NETSUITE"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -1166,53 +1214,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_DV')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_PGSQL_CLOUDBLUE_OSS",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_TableSchema": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/CLOUDBLUE/OSS"
-				},
-				"annotations": [],
-				"type": "PostgreSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().pm_TableSchema",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_PGSQL_CLOUDBLUE_OSS')]"
 			]
 		}
 	]

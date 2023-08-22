@@ -32,6 +32,9 @@
 		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
 			"value": "IG\\inf_svc_azsql_sync01"
 		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-tagetikdbserver01-connectionstring"
 		},
