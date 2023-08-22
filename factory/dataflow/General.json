@@ -1,0 +1,14 @@
+{
+	"name": "General",
+	"properties": {
+		"type": "UDFLibrary",
+		"typeProperties": {
+			"sources": [],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"applyParquetNaming(string) as string = replace(replace(replace(replace(replace(replace(replace(replace(i1,' ',''),'(',''),')',''),']',''),'[',''),';',''),'{',''),'}','')"
+			]
+		}
+	}
+}

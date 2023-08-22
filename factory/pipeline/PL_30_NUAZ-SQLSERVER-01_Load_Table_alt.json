@@ -1,0 +1,61 @@
+{
+	"name": "PL_30_NUAZ-SQLSERVER-01_Load_Table_alt",
+	"properties": {
+		"activities": [
+			{
+				"name": "Full Load Nuivas FO Table",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE",
+						"type": "DataFlowReference"
+					},
+					"integrationRuntime": {
+						"referenceName": "ir-ig-managed-dev-westeurope",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"pm_DatabaseName": {
+				"type": "string"
+			},
+			"pm_TableName": {
+				"type": "string"
+			},
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			},
+			"pm_SchemaName": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"v_Watermark": {
+				"type": "String"
+			},
+			"v_NewWatermark": {
+				"type": "String"
+			},
+			"v_SelectionString": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/NUVIAS/NUAZ-SQLSERVER-01 [FO]"
+		},
+		"annotations": []
+	}
+}

@@ -1,0 +1,56 @@
+{
+	"name": "DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE",
+	"properties": {
+		"folder": {
+			"name": "NUVIAS/NUAZ_SQLSERVER-01 [FO]"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
+						"type": "DatasetReference"
+					},
+					"name": "GetSQLTable"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          DEFINITIONGROUP as string,",
+				"          EXECUTIONID as string,",
+				"          ISSELECTED as integer,",
+				"          TRANSFERSTATUS as integer,",
+				"          EXCHANGERATEFORSTORAGE as decimal(32,16),",
+				"          STARTDATE as timestamp,",
+				"          ENDDATE as timestamp,",
+				"          CONVERSIONFACTOR as integer,",
+				"          FROMCURRENCY as string,",
+				"          TOCURRENCY as string,",
+				"          RATETYPEDESCRIPTION as string,",
+				"          RATETYPENAME as string,",
+				"          RATE as decimal(32,16),",
+				"          PARTITION as string,",
+				"          SYNCSTARTDATETIME as timestamp,",
+				"          RECID as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> GetSQLTable",
+				"GetSQLTable select(mapColumn(",
+				"          each(match(ERROR_FUNCTION('')),",
+				"               ERROR_FUNCTION('') = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1"
+			]
+		}
+	}
+}
