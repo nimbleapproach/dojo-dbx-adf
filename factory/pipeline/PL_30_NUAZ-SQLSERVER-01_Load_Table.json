@@ -5,7 +5,14 @@
 			{
 				"name": "Full Load Nuivas FO Table",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "GetSelectionString",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -33,6 +40,10 @@
 								}
 							}
 						],
+						"sqlReaderQuery": {
+							"value": "@activity('GetSelectionString').output.firstRow.SelectionString",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -122,6 +133,50 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "GetSelectionString",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "DECLARE @@s VARCHAR(MAX) \n\nDECLARE @@tablename VARCHAR(500) ='@{pipeline().parameters.pm_TableName}' \nDECLARE @@schemaname VARCHAR(500) ='@{pipeline().parameters.pm_SchemaName}' \n\n \n\nSELECT @@s = ISNULL(@@s+', ','') + '[' + c.name + ']' + ' as ['+replace(replace(replace(c.name,' ',''),'(',''),')','') +'] ' \n\nFROM sys.all_columns c, sys.tables t, sys.schemas s\n\nwhere c.object_id = t.object_id \nand t.schema_id  = s.schema_id\n\n \n\nSELECT 'select ' + @@s + ' from ' + @@tablename as SelectionString",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_DatabaseType": "@split(pipeline().parameters.pm_DatabaseName,'_')[1]",
+							"pm_SchemaName": {
+								"value": "@pipeline().parameters.pm_SchemaName",
+								"type": "Expression"
+							},
+							"pm_TableName": {
+								"value": "@pipeline().parameters.pm_TableName",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": true
+				}
 			}
 		],
 		"parameters": {
@@ -144,6 +199,9 @@
 				"type": "String"
 			},
 			"v_NewWatermark": {
+				"type": "String"
+			},
+			"v_SelectionString": {
 				"type": "String"
 			}
 		},
