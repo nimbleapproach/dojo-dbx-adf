@@ -14,6 +14,8 @@ spark.catalog.setCurrentCatalog(f"bronze_{ENVIRONMENT}")
 # MAGIC %sql
 # MAGIC CREATE SCHEMA IF NOT EXISTS igsql03;
 # MAGIC CREATE SCHEMA IF NOT EXISTS tag02;
+# MAGIC CREATE SCHEMA IF NOT EXISTS NUAV_PRODTRANS_SQLBYOD;
+# MAGIC CREATE SCHEMA IF NOT EXISTS NUAV_PROD_SQLBYOD;
 
 # COMMAND ----------
 
@@ -36,6 +38,30 @@ for table in spark.catalog.listTables('tag02'):
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC use schema NUAV_PRODTRANS_SQLBYOD
+
+# COMMAND ----------
+
+for table in spark.catalog.listTables('NUAV_PRODTRANS_SQLBYOD'):
+    spark.sql(f"""
+              DROP TABLE {table.name}
+              """)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC use schema NUAV_PROD_SQLBYOD
+
+# COMMAND ----------
+
+for table in spark.catalog.listTables('NUAV_PROD_SQLBYOD'):
+    spark.sql(f"""
+              DROP TABLE {table.name}
+              """)
+
+# COMMAND ----------
+
 spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # COMMAND ----------
@@ -43,3 +69,5 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC %sql
 # MAGIC CREATE SCHEMA IF NOT EXISTS igsql03;
 # MAGIC CREATE SCHEMA IF NOT EXISTS tag02;
+# MAGIC CREATE SCHEMA IF NOT EXISTS NUAV_PRODTRANS_SQLBYOD;
+# MAGIC CREATE SCHEMA IF NOT EXISTS NUAV_PROD_SQLBYOD;
