@@ -1820,7 +1820,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "Select * from adf.[CT_NUAZ-SQLSERVER-01_TABLES] where ShouldBeLoaded = 1",
+									"value": "Select * from adf.[CT_NUAZ-SQLSERVER-01_TABLES] where [DATABASE_NAME] = '@{pipeline().parameters.pm_DatabaseName}' and ShouldBeLoaded = 1",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
