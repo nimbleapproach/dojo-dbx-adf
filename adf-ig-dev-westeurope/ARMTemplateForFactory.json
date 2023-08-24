@@ -1956,7 +1956,7 @@
 												{
 													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
-														"value": "utcNow()",
+														"value": "@utcNow()",
 														"type": "Expression"
 													}
 												}
@@ -2048,7 +2048,7 @@
 												{
 													"name": "Sys_Bronze_InsertDateTime_UTC",
 													"value": {
-														"value": "utcNow()",
+														"value": "@utcNow()",
 														"type": "Expression"
 													}
 												}
