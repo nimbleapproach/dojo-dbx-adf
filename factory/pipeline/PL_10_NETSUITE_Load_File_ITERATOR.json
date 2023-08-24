@@ -1,13 +1,13 @@
 {
-	"name": "PL_20_NUAZ-SQLSERVER-01_Load_Table_ITERATOR",
+	"name": "PL_10_NETSUITE_Load_File_ITERATOR",
 	"properties": {
 		"activities": [
 			{
-				"name": "For Each Table",
+				"name": "ForEachView",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get EDW Tables",
+						"activity": "Get File Names",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,38 +16,29 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get EDW Tables').output.value",
+						"value": "@activity('Get File Names').output.value",
 						"type": "Expression"
 					},
 					"isSequential": false,
-					"batchCount": 4,
 					"activities": [
 						{
-							"name": "PL_30_NUAZ-SQLSERVER-01_Load_Table",
+							"name": "PL_20_NETSUITE_Load_File",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_30_NUAZ-SQLSERVER-01_Load_Table",
+									"referenceName": "PL_20_NETSUITE_Load_File",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_DatabaseName": {
-										"value": "@pipeline().parameters.pm_DatabaseName",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "@item().Table_Name",
+									"pm_FileName": {
+										"value": "@item().FILE_NAME",
 										"type": "Expression"
 									},
 									"pm_FullLoad": {
 										"value": "@pipeline().parameters.pm_FullLoad",
-										"type": "Expression"
-									},
-									"pm_SchemaName": {
-										"value": "@item().Schema_Name",
 										"type": "Expression"
 									}
 								}
@@ -57,7 +48,7 @@
 				}
 			},
 			{
-				"name": "Get EDW Tables",
+				"name": "Get File Names",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -71,10 +62,6 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": {
-							"value": "Select * from adf.[CT_NUAZ-SQLSERVER-01_TABLES] where [DATABASE_NAME] = '@{pipeline().parameters.pm_DatabaseName}' and ShouldBeLoaded = 1",
-							"type": "Expression"
-						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -83,7 +70,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_NUAZ-SQLSERVER-01_TABLES",
+							"pm_TableName": "CT_NETSUITE_FILES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
@@ -95,16 +82,13 @@
 			}
 		],
 		"parameters": {
-			"pm_DatabaseName": {
-				"type": "string"
-			},
 			"pm_FullLoad": {
 				"type": "bool",
 				"defaultValue": false
 			}
 		},
 		"folder": {
-			"name": "10 Ingestion/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+			"name": "10 Ingestion/NETSUITE"
 		},
 		"annotations": []
 	}

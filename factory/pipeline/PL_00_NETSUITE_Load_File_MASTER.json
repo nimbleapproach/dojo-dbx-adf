@@ -1,15 +1,15 @@
 {
-	"name": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
+	"name": "PL_00_NETSUITE_Load_File_MASTER",
 	"properties": {
 		"activities": [
 			{
-				"name": "PL_10_NUAZ-SQLSERVER-01_Load_Table_ITERATOR",
+				"name": "PL_10_NETSUITE_Load_File_ITERATOR",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_10_NUAZ-SQLSERVER-01_Load_Table_ITERATOR",
+						"referenceName": "PL_10_NETSUITE_Load_File_ITERATOR",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true,
@@ -29,7 +29,7 @@
 			}
 		},
 		"folder": {
-			"name": "10 Ingestion/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+			"name": "10 Ingestion/NETSUITE"
 		},
 		"annotations": []
 	}

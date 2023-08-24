@@ -15,7 +15,7 @@
 			"pm_environment": {
 				"type": "string"
 			},
-			"pm_directory": {
+			"pm_FileName": {
 				"type": "string"
 			}
 		},
@@ -27,8 +27,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": {
-					"value": "@dataset().pm_directory",
+				"fileName": {
+					"value": "@{dataset().pm_FileName}.csv",
 					"type": "Expression"
 				},
 				"fileSystem": "netsuite"
