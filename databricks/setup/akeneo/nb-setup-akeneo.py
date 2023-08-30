@@ -89,8 +89,7 @@ class Products:
         if '_embedded' in list(jsonDataRaw.keys()):
             jsonData = jsonDataRaw["_embedded"]["items"]
             
-            if jsonData != []:
-                jsonDataUnion = [json.dumps(jsonData)]        
+            if jsonData != []:      
                 currentSku = jsonData[-1]['identifier']
 
                 jsonData = self.getData(indexSku = currentSku,updatedAfter = updatedAfter,limit=limit)["_embedded"]["items"]
@@ -98,8 +97,6 @@ class Products:
                 if onlyFirstPage == False:
                     while jsonData != []:
                         spark.read.json(sc.parallelize([json.dumps(jsonData)])).write.mode('append').option("mergeSchema", "true").saveAsTable('products')
-
-                        jsonDataUnion.append(json.dumps(jsonData))
 
                         currentSku =  currentSku = jsonData[-1]['identifier']
                         jsonData = self.getData(indexSku = currentSku,updatedAfter = updatedAfter,limit=limit)["_embedded"]["items"]
