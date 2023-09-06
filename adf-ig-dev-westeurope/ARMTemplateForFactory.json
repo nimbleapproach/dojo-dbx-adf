@@ -28,6 +28,10 @@
 			"type": "string",
 			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
 		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
+		},
 		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
@@ -5313,6 +5317,53 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_PGSQL_CLOUDBLUE_PBA",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_TableSchema": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/CLOUDBLUE/PBA"
+				},
+				"annotations": [],
+				"type": "PostgreSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().pm_TableSchema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().pm_TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_PGSQL_CLOUDBLUE_PBA')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_CRM_DYNAMIC')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -5704,6 +5755,44 @@
 							}
 						},
 						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-jumpbi01-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_PBA')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "PostgreSql",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					}
 				},
 				"connectVia": {

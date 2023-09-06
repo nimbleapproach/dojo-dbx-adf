@@ -20,6 +20,9 @@
 		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-cloudblue-commerce-oss-connectionsstring"
 		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-cloudblue-commerce-pba-connectionsstring"
+		},
 		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
 		},

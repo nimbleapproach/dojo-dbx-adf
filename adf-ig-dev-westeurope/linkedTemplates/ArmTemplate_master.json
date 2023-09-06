@@ -28,6 +28,10 @@
 			"type": "string",
 			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
 		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
+		},
 		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
@@ -111,6 +115,9 @@
 					},
 					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					},
 					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]"
