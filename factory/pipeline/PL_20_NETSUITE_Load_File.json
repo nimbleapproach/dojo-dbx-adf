@@ -56,6 +56,28 @@
 									}
 								},
 								"enableStaging": false,
+								"enableSkipIncompatibleRow": true,
+								"validateDataConsistency": true,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Warning",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								},
 								"translator": {
 									"type": "TabularTranslator",
 									"typeConversion": true,
@@ -148,6 +170,28 @@
 									}
 								},
 								"enableStaging": false,
+								"enableSkipIncompatibleRow": true,
+								"validateDataConsistency": true,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Warning",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								},
 								"translator": {
 									"type": "TabularTranslator",
 									"typeConversion": true,
