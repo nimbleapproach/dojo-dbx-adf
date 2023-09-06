@@ -1,0 +1,32 @@
+{
+	"name": "LS_PGSQL_CLOUDBLUE_PBA",
+	"properties": {
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "PostgreSql",
+		"typeProperties": {
+			"connectionString": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@linkedService().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": "secret-cloudblue-commerce-pba-connectionsstring"
+			}
+		},
+		"connectVia": {
+			"referenceName": "shir-jumpbi01-shared",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
