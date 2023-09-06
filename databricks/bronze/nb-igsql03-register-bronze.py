@@ -23,12 +23,13 @@ def registerTable(tableName : str, recreate : bool = False):
                   DROP TABLE IF EXISTS {cleanedTableName}
                   """)
     if not spark.catalog.tableExists(cleanedTableName):
-        df = spark.read.parquet(f'/mnt/bronze/igsql03/{tableName}/')
-        schema = df.schema
-        spark.catalog.createTable(tableName = cleanedTableName,
-                                path=f"abfss://bronze@adls0ig0{ENVIRONMENT}0westeurope.dfs.core.windows.net/igsql03/{tableName}/",
-                                source='parquet',
-                                schema=schema)
+        #df = spark.read.parquet(f'/mnt/bronze/igsql03/{tableName}/')
+        #schema = df.schema
+        spark.sql(f"""
+        Create table {cleanedTableName}
+        using parquet
+        Location 'abfss://bronze@adls0ig0dev0westeurope.dfs.core.windows.net/igsql03/{tableName}/'
+        """)
 
 # COMMAND ----------
 
