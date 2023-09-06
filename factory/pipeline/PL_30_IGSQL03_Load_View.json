@@ -135,7 +135,7 @@
 										},
 										"pm_FileSystem": "bronze",
 										"pm_Directory": {
-											"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+											"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
 											"type": "Expression"
 										}
 									}
@@ -615,7 +615,7 @@
 										},
 										"pm_FileSystem": "bronze",
 										"pm_Directory": {
-											"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+											"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
 											"type": "Expression"
 										}
 									}
