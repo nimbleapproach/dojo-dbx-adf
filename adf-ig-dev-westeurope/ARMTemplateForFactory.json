@@ -1984,6 +1984,28 @@
 											}
 										},
 										"enableStaging": false,
+										"enableSkipIncompatibleRow": true,
+										"validateDataConsistency": true,
+										"logSettings": {
+											"enableCopyActivityLog": true,
+											"copyActivityLogSettings": {
+												"logLevel": "Warning",
+												"enableReliableLogging": false
+											},
+											"logLocationSettings": {
+												"linkedServiceName": {
+													"referenceName": "LS_ADLS",
+													"type": "LinkedServiceReference",
+													"parameters": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"path": "logging/adf"
+											}
+										},
 										"translator": {
 											"type": "TabularTranslator",
 											"typeConversion": true,
@@ -2076,6 +2098,28 @@
 											}
 										},
 										"enableStaging": false,
+										"enableSkipIncompatibleRow": true,
+										"validateDataConsistency": true,
+										"logSettings": {
+											"enableCopyActivityLog": true,
+											"copyActivityLogSettings": {
+												"logLevel": "Warning",
+												"enableReliableLogging": false
+											},
+											"logLocationSettings": {
+												"linkedServiceName": {
+													"referenceName": "LS_ADLS",
+													"type": "LinkedServiceReference",
+													"parameters": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"path": "logging/adf"
+											}
+										},
 										"translator": {
 											"type": "TabularTranslator",
 											"typeConversion": true,
@@ -2147,7 +2191,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_CSV_NETSUITE_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]"
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
 			]
 		},
 		{
@@ -3269,7 +3314,7 @@
 												},
 												"pm_FileSystem": "bronze",
 												"pm_Directory": {
-													"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+													"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
 													"type": "Expression"
 												}
 											}
@@ -3749,7 +3794,7 @@
 												},
 												"pm_FileSystem": "bronze",
 												"pm_Directory": {
-													"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+													"value": "igsql03/@{pipeline().parameters.pm_ViewName}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
 													"type": "Expression"
 												}
 											}
