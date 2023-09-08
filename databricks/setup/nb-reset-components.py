@@ -19,6 +19,7 @@ spark.catalog.setCurrentCatalog(f"bronze_{ENVIRONMENT}")
 # MAGIC CREATE SCHEMA IF NOT EXISTS netsuite;
 # MAGIC CREATE SCHEMA IF NOT EXISTS akeneo;
 # MAGIC CREATE SCHEMA IF NOT EXISTS cloudblue_pba;
+# MAGIC CREATE SCHEMA IF NOT EXISTS nuvias_operations;
 
 # COMMAND ----------
 
@@ -77,3 +78,4 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC CREATE SCHEMA IF NOT EXISTS netsuite;
 # MAGIC CREATE SCHEMA IF NOT EXISTS akeneo;
 # MAGIC CREATE SCHEMA IF NOT EXISTS cloudblue_pba;
+# MAGIC CREATE SCHEMA IF NOT EXISTS nuvias_operations;
