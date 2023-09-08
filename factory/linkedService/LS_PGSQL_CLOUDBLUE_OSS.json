@@ -28,5 +28,6 @@
 			"referenceName": "shir-jumpbi01-shared",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }

@@ -1,0 +1,498 @@
+{
+	"name": "PL_20_CLOUDBLUE_PBA_Copy_Data",
+	"properties": {
+		"activities": [
+			{
+				"name": "IfFullLoad",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@pipeline().parameters.pm_full_load",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Delta Load Cloudblue PBA",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Watermark_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Watermark_delta_source",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "PostgreSqlSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										}
+									],
+									"query": {
+										"value": "SELECT * FROM public.\"@{pipeline().parameters.pm_TableName}\" WHERE \"@{pipeline().parameters.pm_ColumnName}\"<= @{variables('Watermark_int')} and \"@{pipeline().parameters.pm_ColumnName}\" >= @{variables('Watermark_int_delta')}",
+										"type": "Expression"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings",
+										"maxRowsPerFile": 1000000,
+										"fileNamePrefix": {
+											"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-startOfDay()}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableStaging": false,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": true
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								}
+							},
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "cloudblue/pba/@{pipeline().parameters.pm_TableName}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Get Watermark data for Delta",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT \n      [TABLE_NAME]\n      ,[COLUMN_NAME]\n \n      ,[WATERMARK_NUM] as WATERMARK_NEW\n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_SchemaName": "adf",
+										"pm_TableName": "CT_CLOUDBLUE_PBA_TABLES",
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Watermark_delta",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Get Watermark data for Delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Watermark_int",
+								"value": {
+									"value": "@activity('Get Watermark data for Delta').output[0].WATERMARK_NEW",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "UpdateWatermark_FullLoad_copy1",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delta Load Cloudblue PBA",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[adf].[sp_cloudblue_pba_tables_watermark_upsert]",
+								"storedProcedureParameters": {
+									"table_name": {
+										"value": {
+											"value": "@{pipeline().parameters.pm_TableName}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"watermark": {
+										"value": {
+											"value": "@variables('Watermark_int')",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Get Watermark data source",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "PostgreSqlSource",
+									"query": {
+										"value": "SELECT MAX(\"@{pipeline().parameters.pm_ColumnName}\") AS WATERMARK_NEW FROM \"@{pipeline().parameters.pm_TableName}\"",
+										"type": "Expression"
+									}
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Watermark_delta_source",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Get Watermark data source",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Watermark_int_delta",
+								"value": {
+									"value": "@activity('Get Watermark data source').output[0].WATERMARK_NEW",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Full Load Cloudblue PBA",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Watermark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "PostgreSqlSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										}
+									],
+									"query": {
+										"value": "SELECT * FROM public.\"@{pipeline().parameters.pm_TableName}\" WHERE \"@{pipeline().parameters.pm_ColumnName}\"<= @{variables('Watermark_int')}",
+										"type": "Expression"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings",
+										"maxRowsPerFile": 1000000,
+										"fileNamePrefix": {
+											"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-startOfDay()}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableStaging": false,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": true
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								}
+							},
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "cloudblue/pba/@{pipeline().parameters.pm_TableName}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Get Watermark data",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "PostgreSqlSource",
+									"query": {
+										"value": "SELECT MAX(\"@{pipeline().parameters.pm_ColumnName}\") AS WATERMARK_NEW FROM \"@{pipeline().parameters.pm_TableName}\"",
+										"type": "Expression"
+									}
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Watermark",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Get Watermark data",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Watermark_int",
+								"value": {
+									"value": "@activity('Get Watermark data').output.value[0].WATERMARK_NEW",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "UpdateWatermark_FullLoad",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Full Load Cloudblue PBA",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[adf].[sp_cloudblue_pba_tables_watermark_upsert]",
+								"storedProcedureParameters": {
+									"table_name": {
+										"value": {
+											"value": "@{pipeline().parameters.pm_TableName}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"watermark": {
+										"value": {
+											"value": "@variables('Watermark_int')",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_full_load": {
+				"type": "bool",
+				"defaultValue": true
+			},
+			"pm_TableName": {
+				"type": "string"
+			},
+			"pm_WaterMark": {
+				"type": "int"
+			},
+			"pm_ColumnName": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"v_watermark_update_meta_source": {
+				"type": "Integer"
+			},
+			"v_Column_Name_update_meta_source": {
+				"type": "String"
+			},
+			"v_Table_Name_update_meta_source": {
+				"type": "String"
+			},
+			"Watermark_int": {
+				"type": "Integer"
+			},
+			"Watermark_int_delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/CLOUDBLUE/PBA"
+		},
+		"annotations": []
+	}
+}

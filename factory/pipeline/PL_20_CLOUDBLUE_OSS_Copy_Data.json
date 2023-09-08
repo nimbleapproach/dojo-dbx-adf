@@ -1,0 +1,166 @@
+{
+	"name": "PL_20_CLOUDBLUE_OSS_Copy_Data",
+	"properties": {
+		"activities": [
+			{
+				"name": "IfFullLoad",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@pipeline().parameters.pm_full_load",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Full Load Cloudblue PBA",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "PostgreSqlSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										}
+									],
+									"query": {
+										"value": "SELECT * FROM public.\"@{pipeline().parameters.pm_TableName}\" ",
+										"type": "Expression"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings",
+										"maxRowsPerFile": 1000000,
+										"fileNamePrefix": {
+											"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-startOfDay()}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": true
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@pipeline().parameters.pm_TableName",
+											"type": "Expression"
+										},
+										"pm_TableSchema": "public"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "cloudblue/oss/@{pipeline().parameters.pm_TableName}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_full_load": {
+				"type": "bool",
+				"defaultValue": true
+			},
+			"pm_TableName": {
+				"type": "string"
+			},
+			"pm_WaterMark": {
+				"type": "int"
+			},
+			"pm_ColumnName": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"v_watermark_update_meta_source": {
+				"type": "Integer"
+			},
+			"v_Column_Name_update_meta_source": {
+				"type": "String"
+			},
+			"v_Table_Name_update_meta_source": {
+				"type": "String"
+			},
+			"Watermark_int": {
+				"type": "Integer"
+			},
+			"Watermark_int_delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/CLOUDBLUE/OSS"
+		},
+		"annotations": []
+	}
+}

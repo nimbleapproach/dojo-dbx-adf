@@ -1,0 +1,35 @@
+{
+	"name": "PL_00_CLOUDBLUE_OSS_Load_Table",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_CLOUDBLUE_OSS_Load_Table_Copy_copy1",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_CLOUDBLUE_OSS_Load_Table_Copy_copy1",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"parameters": {
+			"pm_full_load": {
+				"type": "bool",
+				"defaultValue": true
+			}
+		},
+		"variables": {
+			"Watermark_int_delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/CLOUDBLUE/OSS"
+		},
+		"annotations": []
+	}
+}

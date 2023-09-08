@@ -1,9 +1,9 @@
 {
-	"name": "PL_10_TAG02_Load_View_ITERATOR",
+	"name": "PL_10_CLOUDBLUE_PBA_Load_Table_Copy",
 	"properties": {
 		"activities": [
 			{
-				"name": "Get EDW Views",
+				"name": "Get EDW Tables",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -17,25 +17,16 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": {
-							"value": "SELECT  * FROM INFORMATION_SCHEMA.views\nwhere table_SCHEMA='edw_@{pipeline().globalParameters.gpm_Environment}' \n",
-							"type": "Expression"
-						},
+						"sqlReaderQuery": "SELECT DISTINCT [TABLE_NAME] as tablename,[COLUMN_NAME] AS columnname, [WATERMARK_NUM] as watermark\n   \n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
 					"dataset": {
-						"referenceName": "DS_SQLDB_TAGETIK_DYNAMIC",
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_SchemaName": {
-								"value": "INFORMATION_SCHEMA",
-								"type": "Expression"
-							},
-							"pm_TableName": {
-								"value": "VIEWS",
-								"type": "Expression"
-							},
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_CLOUDBLUE_PBA_TABLES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
@@ -50,7 +41,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get EDW Views",
+						"activity": "Get EDW Tables",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -59,29 +50,34 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get EDW Views').output.value",
+						"value": "@activity('Get EDW Tables').output.value",
 						"type": "Expression"
 					},
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "PL_20_TAG02_Load_View",
+							"name": "PL_20_CLOUDBLUE_Copy_Data",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_TAG02_Load_View",
+									"referenceName": "PL_20_CLOUDBLUE_PBA_Copy_Data",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_ViewName": {
-										"value": "@item().TABLE_NAME",
+									"pm_full_load": true,
+									"pm_TableName": {
+										"value": "@item().tablename",
 										"type": "Expression"
 									},
-									"pm_FullLoad": {
-										"value": "@pipeline().parameters.pm_FullLoad",
+									"pm_WaterMark": {
+										"value": "@item().watermark",
+										"type": "Expression"
+									},
+									"pm_ColumnName": {
+										"value": "@item().columnname",
 										"type": "Expression"
 									}
 								}
@@ -92,13 +88,20 @@
 			}
 		],
 		"parameters": {
-			"pm_FullLoad": {
-				"type": "bool",
-				"defaultValue": false
+			"pm_full_load": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"v_tabelnames": {
+				"type": "String"
+			},
+			"Watermark_int_delta": {
+				"type": "String"
 			}
 		},
 		"folder": {
-			"name": "10 Ingestion/TAG02 [TAGETIK]"
+			"name": "10 Ingestion/CLOUDBLUE/PBA"
 		},
 		"annotations": []
 	}
