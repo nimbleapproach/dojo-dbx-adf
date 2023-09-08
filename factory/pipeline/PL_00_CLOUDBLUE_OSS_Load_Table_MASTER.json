@@ -1,5 +1,5 @@
 {
-	"name": "PL_00_CLOUDBLUE_OSS_Load_Table",
+	"name": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
 	"properties": {
 		"activities": [
 			{
@@ -9,17 +9,23 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_10_CLOUDBLUE_OSS_Load_Table_Copy_copy1",
+						"referenceName": "PL_10_CLOUDBLUE_OSS_Load_Table_ITERATOR",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_full_load": {
+							"value": "@pipeline().parameters.pm_full_load",
+							"type": "Expression"
+						}
+					}
 				}
 			}
 		],
 		"parameters": {
 			"pm_full_load": {
 				"type": "bool",
-				"defaultValue": true
+				"defaultValue": false
 			}
 		},
 		"variables": {

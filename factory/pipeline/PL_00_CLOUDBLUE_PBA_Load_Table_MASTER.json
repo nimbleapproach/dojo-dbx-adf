@@ -1,25 +1,31 @@
 {
-	"name": "PL_00_CLOUDBLUE_PBA_Load_Table",
+	"name": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
 	"properties": {
 		"activities": [
 			{
-				"name": "PL_10_CLOUDBLUE_PBA_Load_Table_Copy",
+				"name": "PL_10_CLOUDBLUE_PBA_Load_Table_Iterator",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_10_CLOUDBLUE_PBA_Load_Table_Copy",
+						"referenceName": "PL_10_CLOUDBLUE_PBA_Load_Table_ITERATOR",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_full_load": {
+							"value": "@pipeline().parameters.pm_full_load",
+							"type": "Expression"
+						}
+					}
 				}
 			}
 		],
 		"parameters": {
 			"pm_full_load": {
 				"type": "bool",
-				"defaultValue": true
+				"defaultValue": false
 			}
 		},
 		"variables": {

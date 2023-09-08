@@ -1,5 +1,5 @@
 {
-	"name": "PL_10_CLOUDBLUE_PBA_Load_Table_Copy",
+	"name": "PL_10_CLOUDBLUE_OSS_Load_Table_ITERATOR",
 	"properties": {
 		"activities": [
 			{
@@ -17,7 +17,10 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "SELECT DISTINCT [TABLE_NAME] as tablename,[COLUMN_NAME] AS columnname, [WATERMARK_NUM] as watermark\n   \n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT [TABLE_NAME] as tablename\nFROM [adf].[CT_CLOUDBLUE_OSS_TABLES]",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -26,7 +29,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_CLOUDBLUE_PBA_TABLES",
+							"pm_TableName": "CT_CLOUDBLUE_OSS_TABLES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
@@ -54,6 +57,7 @@
 						"type": "Expression"
 					},
 					"isSequential": false,
+					"batchCount": 4,
 					"activities": [
 						{
 							"name": "PL_20_CLOUDBLUE_Copy_Data",
@@ -62,22 +66,17 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_CLOUDBLUE_PBA_Copy_Data",
+									"referenceName": "PL_20_CLOUDBLUE_OSS_Copy_Data",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_full_load": true,
+									"pm_full_load": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
 									"pm_TableName": {
-										"value": "@item().tablename",
-										"type": "Expression"
-									},
-									"pm_WaterMark": {
-										"value": "@item().watermark",
-										"type": "Expression"
-									},
-									"pm_ColumnName": {
-										"value": "@item().columnname",
+										"value": "@item().TABLE_NAME",
 										"type": "Expression"
 									}
 								}
@@ -89,7 +88,8 @@
 		],
 		"parameters": {
 			"pm_full_load": {
-				"type": "string"
+				"type": "bool",
+				"defaultValue": false
 			}
 		},
 		"variables": {
@@ -101,7 +101,7 @@
 			}
 		},
 		"folder": {
-			"name": "10 Ingestion/CLOUDBLUE/PBA"
+			"name": "10 Ingestion/CLOUDBLUE/OSS"
 		},
 		"annotations": []
 	}

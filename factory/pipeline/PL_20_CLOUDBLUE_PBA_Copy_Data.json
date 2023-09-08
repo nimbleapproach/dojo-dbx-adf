@@ -64,7 +64,7 @@
 										"type": "ParquetWriteSettings",
 										"maxRowsPerFile": 1000000,
 										"fileNamePrefix": {
-											"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-startOfDay()}",
+											"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
 											"type": "Expression"
 										}
 									}
@@ -89,8 +89,36 @@
 										},
 										"path": "logging/adf"
 									}
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
 								}
 							},
+							"inputs": [
+								{
+									"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@pipeline().parameters.pm_TableName",
+											"type": "Expression"
+										},
+										"pm_TableSchema": {
+											"value": "'public'",
+											"type": "Expression"
+										}
+									}
+								}
+							],
 							"outputs": [
 								{
 									"referenceName": "DS_ADLS_PARQUET",
@@ -125,7 +153,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "SELECT \n      [TABLE_NAME]\n      ,[COLUMN_NAME]\n \n      ,[WATERMARK_NUM] as WATERMARK_NEW\n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
+										"value": "SELECT \n      [TABLE_NAME]\n      ,[COLUMN_NAME]\n \n      ,[WATERMARK] as WATERMARK_current\n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]\n  where [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}'\n  and COLUMN_NAME = '@{pipeline().parameters.pm_ColumnName}'",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -165,13 +193,13 @@
 							"typeProperties": {
 								"variableName": "Watermark_int",
 								"value": {
-									"value": "@activity('Get Watermark data for Delta').output[0].WATERMARK_NEW",
+									"value": "@activity('Get Watermark data for Delta').output[0].WATERMARK_current",
 									"type": "Expression"
 								}
 							}
 						},
 						{
-							"name": "UpdateWatermark_FullLoad_copy1",
+							"name": "UpdateWatermark_DeltaLoad",
 							"type": "SqlServerStoredProcedure",
 							"dependsOn": [
 								{
@@ -237,6 +265,24 @@
 									"query": {
 										"value": "SELECT MAX(\"@{pipeline().parameters.pm_ColumnName}\") AS WATERMARK_NEW FROM \"@{pipeline().parameters.pm_TableName}\"",
 										"type": "Expression"
+									}
+								},
+								"dataset": {
+									"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@pipeline().parameters.pm_TableName",
+											"type": "Expression"
+										},
+										"pm_TableSchema": {
+											"value": "'public'",
+											"type": "Expression"
+										}
 									}
 								},
 								"firstRowOnly": false
@@ -338,8 +384,36 @@
 										},
 										"path": "logging/adf"
 									}
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
 								}
 							},
+							"inputs": [
+								{
+									"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@pipeline().parameters.pm_TableName",
+											"type": "Expression"
+										},
+										"pm_TableSchema": {
+											"value": "'public'",
+											"type": "Expression"
+										}
+									}
+								}
+							],
 							"outputs": [
 								{
 									"referenceName": "DS_ADLS_PARQUET",
@@ -376,6 +450,24 @@
 									"query": {
 										"value": "SELECT MAX(\"@{pipeline().parameters.pm_ColumnName}\") AS WATERMARK_NEW FROM \"@{pipeline().parameters.pm_TableName}\"",
 										"type": "Expression"
+									}
+								},
+								"dataset": {
+									"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@pipeline().parameters.pm_TableName",
+											"type": "Expression"
+										},
+										"pm_TableSchema": {
+											"value": "'public'",
+											"type": "Expression"
+										}
 									}
 								},
 								"firstRowOnly": false
@@ -461,7 +553,7 @@
 		"parameters": {
 			"pm_full_load": {
 				"type": "bool",
-				"defaultValue": true
+				"defaultValue": false
 			},
 			"pm_TableName": {
 				"type": "string"
