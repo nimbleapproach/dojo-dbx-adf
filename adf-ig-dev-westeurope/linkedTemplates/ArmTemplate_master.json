@@ -20,6 +20,10 @@
 			"type": "string",
 			"defaultValue": "https://dv0ig0@{linkedService().pm_environment}0westeurope.dfs.core.windows.net/"
 		},
+		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
@@ -113,6 +117,9 @@
 					"LS_ADLS_DV_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_DV_properties_typeProperties_url')]"
 					},
+					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
+					},
 					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
 					},
@@ -174,6 +181,26 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-westeurope_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-westeurope_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 						"value": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
@@ -181,7 +208,7 @@
 				}
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-westeurope_ArmTemplate_1')]"
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-westeurope_ArmTemplate_2')]"
 			]
 		}
 	]

@@ -14,6 +14,9 @@
 		"LS_ADLS_DV_properties_typeProperties_url": {
 			"value": "https://dv0ig0@{linkedService().pm_environment}0westeurope.dfs.core.windows.net/"
 		},
+		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+			"value": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"value": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
 		},
