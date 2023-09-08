@@ -1,0 +1,104 @@
+{
+	"name": "PL_10_NUVIAS_OPERATIONS_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetControlTable",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_NUVIAS_OPERATIONS_ENTITIES",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachEntity",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetControlTable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetControlTable').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_Entity": {
+										"value": "@item().ENTITY_NAME",
+										"type": "Expression"
+									},
+									"pm_ManifestPath": {
+										"value": "@item().MANIFEST_PATH",
+										"type": "Expression"
+									},
+									"pm_ManifestFile": {
+										"value": "@item().MANIFEST_FILE",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"folder": {
+			"name": "10 Ingestion/NUVIAS/OPERATIONS"
+		},
+		"annotations": []
+	}
+}

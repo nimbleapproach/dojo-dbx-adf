@@ -1,0 +1,79 @@
+{
+	"name": "DF_NUVIAS_FO_CDM_TO_BRONZE",
+	"properties": {
+		"folder": {
+			"name": "NUVIAS/Dynamics"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "GetCDMEnity"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteDeltaTable"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddBronzeLoadDate"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     pm_Entity as string,",
+				"     pm_ManifestPath as string,",
+				"     pm_ManifestFile as string,",
+				"     pm_FullLoad as boolean (false())",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: true,",
+				"     enableCdc: ($pm_FullLoad),",
+				"     mode: 'read',",
+				"     skipInitialLoad: false,",
+				"     entity: ($pm_Entity),",
+				"     format: 'cdm',",
+				"     manifestType: 'manifest',",
+				"     manifestName: ($pm_ManifestFile),",
+				"     entityPath: ($pm_ManifestPath),",
+				"     local: true,",
+				"     folderPath: 'nuvias.operations.dynamics.com',",
+				"     fileSystem: 'dynamics365-financeandoperations',",
+				"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss']) ~> GetCDMEnity",
+				"GetCDMEnity derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
+				"     mergeSchema: true,",
+				"     autoCompact: true,",
+				"     optimizedWrite: true,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+			]
+		}
+	}
+}
