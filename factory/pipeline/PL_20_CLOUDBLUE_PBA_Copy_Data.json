@@ -566,9 +566,6 @@
 			}
 		},
 		"variables": {
-			"v_watermark_update_meta_source": {
-				"type": "Integer"
-			},
 			"v_Column_Name_update_meta_source": {
 				"type": "String"
 			},
@@ -579,7 +576,7 @@
 				"type": "Integer"
 			},
 			"Watermark_int_delta": {
-				"type": "String"
+				"type": "Integer"
 			}
 		},
 		"folder": {
