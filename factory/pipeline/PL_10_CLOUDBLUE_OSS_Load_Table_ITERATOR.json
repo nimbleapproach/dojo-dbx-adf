@@ -72,7 +72,7 @@
 								"waitOnCompletion": true,
 								"parameters": {
 									"pm_full_load": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
+										"value": "@pipeline().parameters.pm_full_load",
 										"type": "Expression"
 									},
 									"pm_TableName": {

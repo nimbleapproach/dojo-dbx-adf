@@ -20,6 +20,7 @@
 						"type": "Expression"
 					},
 					"isSequential": false,
+					"batchCount": 4,
 					"activities": [
 						{
 							"name": "PL_30_IGSQL03_Load_View",
