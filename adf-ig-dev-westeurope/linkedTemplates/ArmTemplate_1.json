@@ -451,7 +451,110 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE')]",
+			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "NUVIAS/Dynamics"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetCDMEnity"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetBronzeData"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaTable"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddBronzeLoadDate"
+						},
+						{
+							"name": "GetMaxModifiedDate"
+						},
+						{
+							"name": "Increment"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_Entity as string,",
+						"     pm_ManifestPath as string,",
+						"     pm_ManifestFile as string,",
+						"     pm_FullLoad as boolean (false())",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: true,",
+						"     entity: ($pm_Entity),",
+						"     format: 'cdm',",
+						"     manifestType: 'manifest',",
+						"     manifestName: ($pm_ManifestFile),",
+						"     entityPath: ($pm_ManifestPath),",
+						"     local: true,",
+						"     folderPath: 'nuvias.operations.dynamics.com',",
+						"     fileSystem: 'dynamics365-financeandoperations',",
+						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
+						"     mode: 'read') ~> GetCDMEnity",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
+						"Increment derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+						"GetBronzeData aggregate(MAXMODIFIEDDATETIME = max(toTimestamp(byName('MODIFIEDDATETIME')))) ~> GetMaxModifiedDate",
+						"GetCDMEnity filter(coalesce(toTimestamp(byName('MODIFIEDDATETIME')) > toTimestamp(byName('MAXMODIFIEDDATETIME','GetMaxModifiedDate')),true())) ~> Increment",
+						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -494,9 +597,6 @@
 						"     validateSchema: false,",
 						"     inferDriftedColumnTypes: true,",
 						"     ignoreNoFilesFound: true,",
-						"     enableCdc: ($pm_FullLoad),",
-						"     mode: 'read',",
-						"     skipInitialLoad: false,",
 						"     entity: ($pm_Entity),",
 						"     format: 'cdm',",
 						"     manifestType: 'manifest',",
@@ -505,7 +605,8 @@
 						"     local: true,",
 						"     folderPath: 'nuvias.operations.dynamics.com',",
 						"     fileSystem: 'dynamics365-financeandoperations',",
-						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss']) ~> GetCDMEnity",
+						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
+						"     mode: 'read') ~> GetCDMEnity",
 						"GetCDMEnity derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
 						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
@@ -1906,71 +2007,161 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Load CDM Entity to Bronze Delta",
-						"type": "ExecuteDataFlow",
+						"name": "IfFullLoad",
+						"type": "IfCondition",
 						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
 						"userProperties": [],
 						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_NUVIAS_FO_CDM_TO_BRONZE",
-								"type": "DataFlowReference",
-								"parameters": {
-									"pm_Entity": {
-										"value": "'@{pipeline().parameters.pm_Entity}'",
-										"type": "Expression"
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Load CDM Entity to Bronze Delta",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
 									},
-									"pm_ManifestPath": {
-										"value": "'@{pipeline().parameters.pm_ManifestPath}'",
-										"type": "Expression"
-									},
-									"pm_ManifestFile": {
-										"value": "'@{pipeline().parameters.pm_ManifestFile}'",
-										"type": "Expression"
-									},
-									"pm_FullLoad": {
-										"value": "@pipeline().parameters.pm_FullLoad",
-										"type": "Expression"
-									}
-								},
-								"datasetParameters": {
-									"GetCDMEnity": {},
-									"WriteDeltaTable": {}
-								},
-								"linkedServiceParameters": {
-									"GetCDMEnity": {
-										"linkedService": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD",
+											"type": "DataFlowReference",
+											"parameters": {
+												"pm_Entity": {
+													"value": "'@{pipeline().parameters.pm_Entity}'",
+													"type": "Expression"
+												},
+												"pm_ManifestPath": {
+													"value": "'@{pipeline().parameters.pm_ManifestPath}'",
+													"type": "Expression"
+												},
+												"pm_ManifestFile": {
+													"value": "'@{pipeline().parameters.pm_ManifestFile}'",
+													"type": "Expression"
+												},
+												"pm_FullLoad": {
+													"value": "@pipeline().parameters.pm_FullLoad",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"GetCDMEnity": {},
+												"GetBronzeData": {},
+												"WriteDeltaTable": {}
+											},
+											"linkedServiceParameters": {
+												"GetCDMEnity": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"GetBronzeData": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"WriteDeltaTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												}
 											}
-										}
-									},
-									"WriteDeltaTable": {
-										"linkedService": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
+										},
+										"staging": {},
+										"integrationRuntime": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"traceLevel": "Fine",
+										"continuationSettings": {
+											"customizedCheckpointKey": "9a19c2d3-7dbd-478f-b20d-20b33fa02f01"
 										}
 									}
 								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "ir-ig-managed-dev-westeurope",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine",
-							"continuationSettings": {
-								"customizedCheckpointKey": "9a19c2d3-7dbd-478f-b20d-20b33fa02f01"
-							}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Load CDM Entity to Bronze Full",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD",
+											"type": "DataFlowReference",
+											"parameters": {
+												"pm_Entity": {
+													"value": "'@{pipeline().parameters.pm_Entity}'",
+													"type": "Expression"
+												},
+												"pm_ManifestPath": {
+													"value": "'@{pipeline().parameters.pm_ManifestPath}'",
+													"type": "Expression"
+												},
+												"pm_ManifestFile": {
+													"value": "'@{pipeline().parameters.pm_ManifestFile}'",
+													"type": "Expression"
+												},
+												"pm_FullLoad": "false()"
+											},
+											"datasetParameters": {
+												"GetCDMEnity": {},
+												"WriteDeltaTable": {}
+											},
+											"linkedServiceParameters": {
+												"GetCDMEnity": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"WriteDeltaTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										},
+										"staging": {},
+										"integrationRuntime": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"traceLevel": "Fine",
+										"continuationSettings": {
+											"customizedCheckpointKey": "4e72946d-00da-4e11-955c-06d57b8fe563"
+										}
+									}
+								}
+							]
 						}
 					}
 				],
@@ -1999,7 +2190,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE')]"
+				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
+				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]"
 			]
 		},
 		{
@@ -3722,147 +3914,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_30_IGSQL03_Sync_Keys')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Extract all current Keys",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"additionalColumns": [
-									{
-										"name": "Sys_DataFactory_LoadDateTime_UTC",
-										"value": {
-											"value": "@utcNow()",
-											"type": "Expression"
-										}
-									},
-									{
-										"name": "Sys_DataFactory_DatabaseName",
-										"value": {
-											"value": "@pipeline().parameters.pm_DatabaseName",
-											"type": "Expression"
-										}
-									}
-								],
-								"sqlReaderQuery": {
-									"value": "Select DISTINCT @{join(pipeline().parameters.pm_BuinessKeys,',')} FROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\n",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "@pipeline().parameters.pm_ViewName",
-										"type": "Expression"
-									},
-									"pm_SchemaName": "edw",
-									"pm_DatabaseName": {
-										"value": "@pipeline().parameters.pm_DatabaseName",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_ADLS_PARQUET_STATIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileSystem": "keys",
-									"pm_Directory": {
-										"value": "igsql03/@{pipeline().parameters.pm_ViewName}",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@{pipeline().parameters.pm_ViewName}-@{pipeline().parameters.pm_DatabaseName}",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"parameters": {
-					"pm_DatabaseName": {
-						"type": "string"
-					},
-					"pm_ViewName": {
-						"type": "string"
-					},
-					"pm_BuinessKeys": {
-						"type": "array"
-					}
-				},
-				"variables": {
-					"v_Watermark": {
-						"type": "String"
-					},
-					"v_NewWatermark": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "10 Ingestion/IGSQL03 [Navision]"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]"
 			]
 		}
 	]
