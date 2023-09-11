@@ -1229,7 +1229,7 @@
 									"typeProperties": {
 										"variableName": "Watermark_int",
 										"value": {
-											"value": "@activity('Get Watermark data for Delta').output[0].WATERMARK_current",
+											"value": "@activity('Get Watermark data for Delta').output.value[0].WATERMARK_current",
 											"type": "Expression"
 										}
 									}
@@ -1343,7 +1343,7 @@
 									"typeProperties": {
 										"variableName": "Watermark_int_delta",
 										"value": {
-											"value": "@activity('Get Watermark data source').output[0].WATERMARK_NEW",
+											"value": "@activity('Get Watermark data source').output.value[0].WATERMARK_NEW",
 											"type": "Expression"
 										}
 									}

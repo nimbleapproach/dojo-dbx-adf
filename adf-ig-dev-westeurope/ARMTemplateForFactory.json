@@ -792,7 +792,7 @@
 										"waitOnCompletion": true,
 										"parameters": {
 											"pm_full_load": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
+												"value": "@pipeline().parameters.pm_full_load",
 												"type": "Expression"
 											},
 											"pm_TableName": {
@@ -2411,7 +2411,7 @@
 									"typeProperties": {
 										"variableName": "Watermark_int",
 										"value": {
-											"value": "@activity('Get Watermark data for Delta').output[0].WATERMARK_current",
+											"value": "@activity('Get Watermark data for Delta').output.value[0].WATERMARK_current",
 											"type": "Expression"
 										}
 									}
@@ -2525,7 +2525,7 @@
 									"typeProperties": {
 										"variableName": "Watermark_int_delta",
 										"value": {
-											"value": "@activity('Get Watermark data source').output[0].WATERMARK_NEW",
+											"value": "@activity('Get Watermark data source').output.value[0].WATERMARK_NEW",
 											"type": "Expression"
 										}
 									}
@@ -3082,6 +3082,7 @@
 								"type": "Expression"
 							},
 							"isSequential": false,
+							"batchCount": 4,
 							"activities": [
 								{
 									"name": "PL_30_IGSQL03_Load_View",
