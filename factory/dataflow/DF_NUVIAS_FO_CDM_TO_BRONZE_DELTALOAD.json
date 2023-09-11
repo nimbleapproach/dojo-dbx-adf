@@ -29,6 +29,9 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "WriteDeltaTable"
+				},
+				{
+					"name": "CacheWaterMark"
 				}
 			],
 			"transformations": [
@@ -73,7 +76,7 @@
 				"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
 				"Increment derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
 				"GetBronzeData aggregate(MAXMODIFIEDDATETIME = max(toTimestamp(byName('MODIFIEDDATETIME')))) ~> GetMaxModifiedDate",
-				"GetCDMEnity filter(coalesce(toTimestamp(byName('MODIFIEDDATETIME')) > toTimestamp(byName('MAXMODIFIEDDATETIME','GetMaxModifiedDate')),true())) ~> Increment",
+				"GetCDMEnity filter(coalesce(toTimestamp(byName('MODIFIEDDATETIME')) > CacheWaterMark#output().MAXMODIFIEDDATETIME,true())) ~> Increment",
 				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delta',",
@@ -93,7 +96,14 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable",
+				"GetMaxModifiedDate sink(validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     store: 'cache',",
+				"     format: 'inline',",
+				"     output: false,",
+				"     saveOrder: 1) ~> CacheWaterMark"
 			]
 		}
 	}
