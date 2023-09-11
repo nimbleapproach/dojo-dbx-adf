@@ -717,7 +717,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "SELECT DISTINCT [TABLE_NAME] as tablename\nFROM [adf].[CT_CLOUDBLUE_OSS_TABLES]",
+									"value": "SELECT DISTINCT [TABLE_NAME]\nFROM [adf].[CT_CLOUDBLUE_OSS_TABLES]",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
@@ -832,7 +832,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "SELECT DISTINCT [TABLE_NAME] as tablename,[COLUMN_NAME] AS columnname, [WATERMARK] as watermark\n   \n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
+									"value": "SELECT DISTINCT [TABLE_NAME] ,[COLUMN_NAME] , [WATERMARK] \n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
