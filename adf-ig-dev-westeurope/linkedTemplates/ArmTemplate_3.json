@@ -341,7 +341,7 @@
 											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__7",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": false,
+										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FullLoad": {
 												"value": "@pipeline().parameters.pm_FullLoad",
@@ -789,7 +789,7 @@
 											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__6",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": false,
+										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FullLoad": {
 												"value": "@pipeline().parameters.pm_FullLoad",
@@ -1013,7 +1013,7 @@
 											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__5",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": false,
+										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FullLoad": {
 												"value": "@pipeline().parameters.pm_FullLoad",
@@ -1192,7 +1192,7 @@
 											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__4",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": false,
+										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FullLoad": {
 												"value": "@pipeline().parameters.pm_FullLoad",
@@ -1371,7 +1371,7 @@
 											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__3",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": false,
+										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FullLoad": {
 												"value": "@pipeline().parameters.pm_FullLoad",
@@ -1550,7 +1550,7 @@
 											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__2",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": false,
+										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FullLoad": {
 												"value": "@pipeline().parameters.pm_FullLoad",
