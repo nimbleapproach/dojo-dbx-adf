@@ -326,7 +326,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -375,7 +375,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -774,7 +774,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -823,7 +823,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -998,7 +998,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -1047,7 +1047,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -1177,7 +1177,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -1226,7 +1226,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -1356,7 +1356,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -1405,7 +1405,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,[])",
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
 							"isSequential": false,
