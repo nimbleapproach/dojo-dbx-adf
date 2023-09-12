@@ -1565,7 +1565,7 @@
 								"value": "@activity('GetManifest').output.firstRow.subManifests",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
@@ -2015,7 +2015,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__2",
@@ -2064,7 +2064,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
@@ -2196,7 +2196,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__3",
@@ -2245,7 +2245,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
@@ -2377,7 +2377,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__4",
@@ -2426,7 +2426,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
@@ -2558,7 +2558,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__5",
@@ -2607,7 +2607,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
@@ -2739,7 +2739,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__6",
@@ -2788,7 +2788,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
@@ -2920,7 +2920,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__7",
@@ -2969,7 +2969,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
@@ -3101,7 +3101,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "FoundOneMoreDepth",
@@ -3133,7 +3133,7 @@
 								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,array(''))",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
