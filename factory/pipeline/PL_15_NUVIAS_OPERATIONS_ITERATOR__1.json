@@ -1,5 +1,5 @@
 {
-	"name": "PL_10_NUVIAS_OPERATIONS_ITERATOR",
+	"name": "PL_15_NUVIAS_OPERATIONS_ITERATOR__1",
 	"properties": {
 		"activities": [
 			{
@@ -35,11 +35,11 @@
 								"type": "Expression"
 							},
 							"pm_ManifestPath": {
-								"value": "Tables",
+								"value": "@pipeline().parameters.pm_ManifestPath",
 								"type": "Expression"
 							},
 							"pm_ManifestName": {
-								"value": "Tables",
+								"value": "@pipeline().parameters.pm_ManifestFile",
 								"type": "Expression"
 							}
 						}
@@ -61,33 +61,86 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('GetManifest').output.firstRow.subManifests",
+						"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,[])",
 						"type": "Expression"
 					},
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
+							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__2",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__1",
+									"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__2",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true,
+								"waitOnCompletion": false,
 								"parameters": {
 									"pm_FullLoad": {
 										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									},
 									"pm_ManifestPath": {
-										"value": "Tables/@{item().manifestName}",
+										"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
 										"type": "Expression"
 									},
 									"pm_ManifestFile": {
 										"value": "@item().manifestName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "ForEachEntities",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetManifest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,[])",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_Entity": {
+										"value": "@item().entityName",
+										"type": "Expression"
+									},
+									"pm_ManifestPath": {
+										"value": "@pipeline().parameters.pm_ManifestPath",
+										"type": "Expression"
+									},
+									"pm_ManifestFile": {
+										"value": "@pipeline().parameters.pm_ManifestFile",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									}
 								}
@@ -101,6 +154,12 @@
 			"pm_FullLoad": {
 				"type": "bool",
 				"defaultValue": false
+			},
+			"pm_ManifestPath": {
+				"type": "string"
+			},
+			"pm_ManifestFile": {
+				"type": "string"
 			}
 		},
 		"folder": {

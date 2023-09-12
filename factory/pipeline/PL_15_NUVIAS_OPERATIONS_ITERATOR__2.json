@@ -1,5 +1,5 @@
 {
-	"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
+	"name": "PL_15_NUVIAS_OPERATIONS_ITERATOR__2",
 	"properties": {
 		"activities": [
 			{
@@ -78,13 +78,13 @@
 								"isSequential": false,
 								"activities": [
 									{
-										"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__2",
+										"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
 										"type": "ExecutePipeline",
 										"dependsOn": [],
 										"userProperties": [],
 										"typeProperties": {
 											"pipeline": {
-												"referenceName": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__2",
+												"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__1",
 												"type": "PipelineReference"
 											},
 											"waitOnCompletion": false,
