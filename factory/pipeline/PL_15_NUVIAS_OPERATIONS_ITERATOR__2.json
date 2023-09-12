@@ -76,7 +76,7 @@
 									"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__3",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": false,
+								"waitOnCompletion": true,
 								"parameters": {
 									"pm_FullLoad": {
 										"value": "@pipeline().parameters.pm_FullLoad",
