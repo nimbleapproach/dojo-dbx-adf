@@ -1127,12 +1127,12 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_ADLS_PARQUET')]",
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "LS_ADLS",
+					"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
 					"type": "LinkedServiceReference",
 					"parameters": {
 						"pm_Environment": {
@@ -1145,36 +1145,36 @@
 					"pm_Environment": {
 						"type": "string"
 					},
-					"pm_FileSystem": {
+					"pm_ManifestPath": {
 						"type": "string"
 					},
-					"pm_Directory": {
+					"pm_ManifestName": {
 						"type": "string"
 					}
 				},
 				"folder": {
-					"name": "ADLS"
+					"name": "Sources/NUVIAS/FO"
 				},
 				"annotations": [],
-				"type": "Parquet",
+				"type": "Json",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "@dataset().pm_Directory",
+						"fileName": {
+							"value": "@{dataset().pm_ManifestName}.manifest.cdm.json",
 							"type": "Expression"
 						},
-						"fileSystem": {
-							"value": "@dataset().pm_FileSystem",
+						"folderPath": {
+							"value": "nuvias.operations.dynamics.com/@{dataset().pm_ManifestPath}",
 							"type": "Expression"
-						}
-					},
-					"compressionCodec": "snappy"
+						},
+						"fileSystem": "dynamics365-financeandoperations"
+					}
 				},
-				"schema": []
+				"schema": {}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_NUVIAS_DYNAMICS')]"
 			]
 		}
 	]
