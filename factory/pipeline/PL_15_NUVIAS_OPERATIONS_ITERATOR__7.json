@@ -1,5 +1,5 @@
 {
-	"name": "PL_15_NUVIAS_OPERATIONS_ITERATOR__2",
+	"name": "PL_15_NUVIAS_OPERATIONS_ITERATOR__7",
 	"properties": {
 		"activities": [
 			{
@@ -67,30 +67,13 @@
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__3",
-							"type": "ExecutePipeline",
+							"name": "FoundOneMoreDepth",
+							"type": "Fail",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
-								"pipeline": {
-									"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__3",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": false,
-								"parameters": {
-									"pm_FullLoad": {
-										"value": "@pipeline().parameters.pm_FullLoad",
-										"type": "Expression"
-									},
-									"pm_ManifestPath": {
-										"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
-										"type": "Expression"
-									},
-									"pm_ManifestFile": {
-										"value": "@{item().manifestName}",
-										"type": "Expression"
-									}
-								}
+								"message": "Found more depths then 7.",
+								"errorCode": "400"
 							}
 						}
 					]
