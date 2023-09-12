@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "GetControlTable",
+				"name": "GetManifest",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -16,31 +16,43 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "AzureSqlSource",
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
 					},
 					"dataset": {
-						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_NUVIAS_OPERATIONS_ENTITIES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_ManifestPath": {
+								"value": "Tables",
+								"type": "Expression"
+							},
+							"pm_ManifestName": {
+								"value": "Tables.manifest.cdm.json",
 								"type": "Expression"
 							}
 						}
 					},
-					"firstRowOnly": false
+					"firstRowOnly": true
 				}
 			},
 			{
-				"name": "ForEachEntity",
+				"name": "ForEachSubmanifest",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "GetControlTable",
+						"activity": "GetManifest",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -49,38 +61,33 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('GetControlTable').output.value",
+						"value": "@activity('GetManifest').output.firstRow.subManifests",
 						"type": "Expression"
 					},
 					"isSequential": false,
-					"batchCount": 4,
 					"activities": [
 						{
-							"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+									"referenceName": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_Entity": {
-										"value": "@item().ENTITY_NAME",
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									},
 									"pm_ManifestPath": {
-										"value": "@item().MANIFEST_PATH",
+										"value": "Tables/@{item().manifestName}",
 										"type": "Expression"
 									},
 									"pm_ManifestFile": {
-										"value": "@item().MANIFEST_FILE",
-										"type": "Expression"
-									},
-									"pm_FullLoad": {
-										"value": "@pipeline().parameters.pm_FullLoad",
+										"value": "@item().manifestName",
 										"type": "Expression"
 									}
 								}

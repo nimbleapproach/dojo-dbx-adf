@@ -1,0 +1,46 @@
+{
+	"name": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_Environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_ManifestPath": {
+				"type": "string"
+			},
+			"pm_ManifestName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/NUVIAS/FO"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@{dataset().pm_ManifestName}.manifest.cdm.json",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "nuvias.operations.dynamics.com/@{dataset().pm_ManifestPath}",
+					"type": "Expression"
+				},
+				"fileSystem": "dynamics365-financeandoperations"
+			}
+		},
+		"schema": {}
+	}
+}
