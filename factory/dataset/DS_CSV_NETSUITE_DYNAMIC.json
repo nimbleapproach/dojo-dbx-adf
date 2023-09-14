@@ -28,7 +28,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@{dataset().pm_FileName}",
+					"value": "@{dataset().pm_FileName}.csv",
 					"type": "Expression"
 				},
 				"fileSystem": "netsuite"
