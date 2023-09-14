@@ -40,6 +40,9 @@
 				},
 				{
 					"name": "Increment"
+				},
+				{
+					"name": "AddCurrentWatermark"
 				}
 			],
 			"scriptLines": [
@@ -73,7 +76,12 @@
 				"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
 				"Increment derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
 				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('MODIFIEDDATETIME')))) ~> GetMaxWatermark",
-				"GetCDMEnity filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('MODIFIEDDATETIME')) > CurrentWatermark)) ~> Increment",
+				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('MODIFIEDDATETIME')) > CurrentWatermark)) ~> Increment",
+				"GetCDMEnity, GetMaxWatermark join(true(),",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'right')~> AddCurrentWatermark",
 				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delta',",
