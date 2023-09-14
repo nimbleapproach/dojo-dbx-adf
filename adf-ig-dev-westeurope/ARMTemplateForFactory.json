@@ -1294,7 +1294,7 @@
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Get File Names",
+								"activity": "GetFileNames",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -1303,7 +1303,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('Get File Names').output.value",
+								"value": "@activity('GetFileNames').output.childItems",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -1321,7 +1321,7 @@
 										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FileName": {
-												"value": "@item().FILE_NAME",
+												"value": "@item().name",
 												"type": "Expression"
 											},
 											"pm_FullLoad": {
@@ -1335,8 +1335,8 @@
 						}
 					},
 					{
-						"name": "Get File Names",
-						"type": "Lookup",
+						"name": "GetFileNames",
+						"type": "GetMetadata",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -1347,24 +1347,27 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
 							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"referenceName": "DS_BINARY_NETSUITE",
 								"type": "DatasetReference",
 								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_NETSUITE_FILES",
 									"pm_Environment": {
 										"value": "@pipeline().globalParameters.gpm_Environment",
 										"type": "Expression"
 									}
 								}
 							},
-							"firstRowOnly": false
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
 						}
 					}
 				],
@@ -1384,7 +1387,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/datasets/DS_BINARY_NETSUITE')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_20_NETSUITE_Load_File')]"
 			]
 		},
@@ -8196,6 +8199,42 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_BINARY_NETSUITE')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/STARLINK/NETSUITE"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "netsuite"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_DV')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_CSV_NETSUITE_DYNAMIC')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -8227,7 +8266,7 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@{dataset().pm_FileName}.csv",
+							"value": "@{dataset().pm_FileName}",
 							"type": "Expression"
 						},
 						"fileSystem": "netsuite"
