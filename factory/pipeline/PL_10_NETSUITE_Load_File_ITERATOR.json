@@ -7,7 +7,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get File Names",
+						"activity": "GetFileNames",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get File Names').output.value",
+						"value": "@activity('GetFileNames').output.childItems",
 						"type": "Expression"
 					},
 					"isSequential": false,
@@ -34,7 +34,7 @@
 								"waitOnCompletion": true,
 								"parameters": {
 									"pm_FileName": {
-										"value": "@item().FILE_NAME",
+										"value": "@item().name",
 										"type": "Expression"
 									},
 									"pm_FullLoad": {
@@ -48,8 +48,8 @@
 				}
 			},
 			{
-				"name": "Get File Names",
-				"type": "Lookup",
+				"name": "GetFileNames",
+				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -60,24 +60,26 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"source": {
-						"type": "AzureSqlSource",
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
 					"dataset": {
-						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"referenceName": "DS_BINARY_NETSUITE",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_NETSUITE_FILES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
 							}
 						}
 					},
-					"firstRowOnly": false
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
 				}
 			}
 		],

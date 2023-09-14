@@ -1,21 +1,18 @@
 {
-	"name": "DS_CSV_NETSUITE_DYNAMIC",
+	"name": "DS_BINARY_NETSUITE",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_ADLS_DV",
 			"type": "LinkedServiceReference",
 			"parameters": {
 				"pm_environment": {
-					"value": "@dataset().pm_environment",
+					"value": "@dataset().pm_Environment",
 					"type": "Expression"
 				}
 			}
 		},
 		"parameters": {
-			"pm_environment": {
-				"type": "string"
-			},
-			"pm_FileName": {
+			"pm_Environment": {
 				"type": "string"
 			}
 		},
@@ -23,21 +20,12 @@
 			"name": "Sources/STARLINK/NETSUITE"
 		},
 		"annotations": [],
-		"type": "DelimitedText",
+		"type": "Binary",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@{dataset().pm_FileName}",
-					"type": "Expression"
-				},
 				"fileSystem": "netsuite"
-			},
-			"columnDelimiter": ",",
-			"escapeChar": "\"",
-			"firstRowAsHeader": true,
-			"quoteChar": "\""
-		},
-		"schema": []
+			}
+		}
 	}
 }
