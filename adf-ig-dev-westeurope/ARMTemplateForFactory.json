@@ -5090,8 +5090,7 @@
 											"datasetParameters": {
 												"GetCDMEnity": {},
 												"GetBronzeData": {},
-												"WriteDeltaTable": {},
-												"CacheWaterMark": {}
+												"WriteDeltaTable": {}
 											},
 											"linkedServiceParameters": {
 												"GetCDMEnity": {
@@ -9293,9 +9292,6 @@
 								"type": "LinkedServiceReference"
 							},
 							"name": "WriteDeltaTable"
-						},
-						{
-							"name": "CacheWaterMark"
 						}
 					],
 					"transformations": [
@@ -9303,10 +9299,13 @@
 							"name": "AddBronzeLoadDate"
 						},
 						{
-							"name": "GetMaxModifiedDate"
+							"name": "GetMaxWatermark"
 						},
 						{
 							"name": "Increment"
+						},
+						{
+							"name": "AddCurrentWatermark"
 						}
 					],
 					"scriptLines": [
@@ -9339,8 +9338,13 @@
 						"     fileSystem: 'bronze',",
 						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
 						"Increment derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"GetBronzeData aggregate(MAXMODIFIEDDATETIME = max(toTimestamp(byName('MODIFIEDDATETIME')))) ~> GetMaxModifiedDate",
-						"GetCDMEnity filter(coalesce(toTimestamp(byName('MODIFIEDDATETIME')) > CacheWaterMark#output().MAXMODIFIEDDATETIME,true())) ~> Increment",
+						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('MODIFIEDDATETIME')))) ~> GetMaxWatermark",
+						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('MODIFIEDDATETIME')) > CurrentWatermark)) ~> Increment",
+						"GetCDMEnity, GetMaxWatermark join(true(),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> AddCurrentWatermark",
 						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'delta',",
@@ -9360,14 +9364,7 @@
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable",
-						"GetMaxModifiedDate sink(validateSchema: false,",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     store: 'cache',",
-						"     format: 'inline',",
-						"     output: false,",
-						"     saveOrder: 1) ~> CacheWaterMark"
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
 					]
 				}
 			},
