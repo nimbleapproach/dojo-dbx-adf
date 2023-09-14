@@ -1321,7 +1321,7 @@
 										"waitOnCompletion": true,
 										"parameters": {
 											"pm_FileName": {
-												"value": "@item().name",
+												"value": "@split(item().name,'.')[0]",
 												"type": "Expression"
 											},
 											"pm_FullLoad": {
@@ -8266,7 +8266,7 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@{dataset().pm_FileName}",
+							"value": "@{dataset().pm_FileName}.csv",
 							"type": "Expression"
 						},
 						"fileSystem": "netsuite"
