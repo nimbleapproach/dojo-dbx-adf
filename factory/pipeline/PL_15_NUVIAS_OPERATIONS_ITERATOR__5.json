@@ -61,7 +61,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,array(''))",
+						"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
 						"type": "Expression"
 					},
 					"isSequential": true,
