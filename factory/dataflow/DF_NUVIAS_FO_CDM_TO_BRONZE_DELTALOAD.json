@@ -43,6 +43,9 @@
 				},
 				{
 					"name": "AddCurrentWatermark"
+				},
+				{
+					"name": "DropCurrentWatermark"
 				}
 			],
 			"scriptLines": [
@@ -74,14 +77,19 @@
 				"     compressionLevel: 'Fastest',",
 				"     fileSystem: 'bronze',",
 				"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
-				"Increment derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('MODIFIEDDATETIME')))) ~> GetMaxWatermark",
-				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('MODIFIEDDATETIME')) > CurrentWatermark)) ~> Increment",
+				"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('DataLakeModified_DateTime')))) ~> GetMaxWatermark",
+				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('DataLakeModified_DateTime')) > CurrentWatermark)) ~> Increment",
 				"GetCDMEnity, GetMaxWatermark join(true(),",
 				"     joinType:'cross',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'right')~> AddCurrentWatermark",
+				"Increment select(mapColumn(",
+				"          each(match(name != 'CurrentWatermark'))",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
 				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delta',",
