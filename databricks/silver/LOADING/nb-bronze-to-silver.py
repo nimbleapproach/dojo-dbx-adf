@@ -1,4 +1,12 @@
 # Databricks notebook source
+# MAGIC %md This Notebook serves as a general loading solution for ALL tables.
+# MAGIC
+# MAGIC This ideal is the following:
+# MAGIC
+# MAGIC ![Medallion Architecture](documentation/assets/images/medallion.png "Medallion Architecture")
+
+# COMMAND ----------
+
 try:
     ENVIRONMENT = dbutils.widgets.get("wg_environment")
 except:
@@ -55,6 +63,13 @@ target_df = spark.read.table(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}'
 
 # COMMAND ----------
 
+# MAGIC %md Here we are using the unity catalog inbuilt system tables to get the information which columns in the silver layer forming together a primary key. In this way we dont need to tell this script manually which columns to use.
+# MAGIC
+# MAGIC The business keys are then those but without the watermark column.
+# MAGIC
+
+# COMMAND ----------
+
 SILVER_PRIMARY_KEYS = [key['column_name'] for key in spark.sql(f"""
 SELECT a.column_name FROM information_schema.constraint_column_usage a
 join information_schema.table_constraints b
@@ -66,6 +81,11 @@ and b.constraint_type = 'PRIMARY KEY'
 
 BUSINESS_KEYS = SILVER_PRIMARY_KEYS
 BUSINESS_KEYS.remove(WATERMARK_COLUMN)
+
+# COMMAND ----------
+
+# MAGIC %md Calculating the current watermark to only load newly arrived data at bronze.
+# MAGIC
 
 # COMMAND ----------
 
@@ -82,8 +102,20 @@ currentWatermark = (
 
 # COMMAND ----------
 
+# MAGIC %md For our column selection we get the target columns to do a select on.
+# MAGIC
+
+# COMMAND ----------
+
 target_columns = target_df.columns
 hash_columns = [col(column) for column in target_columns if not (column.startswith('Sys_') or column == f'{WATERMARK_COLUMN}')]
+
+# COMMAND ----------
+
+# MAGIC %md Read new bronze data in and enrich with a few sys columns.
+# MAGIC
+# MAGIC Since we are selecting columns we need to drop duplicates.
+# MAGIC
 
 # COMMAND ----------
 
@@ -101,13 +133,22 @@ source_df = (
 
 # COMMAND ----------
 
+# MAGIC %md Based now on the business keys as well as the watermark column we are again dropping duplicates.
+
+# COMMAND ----------
+
 deduped_df = source_df.dropDuplicates(SILVER_PRIMARY_KEYS)
 
 # COMMAND ----------
 
-target_update_columns = [column for column in target_columns if column != 'Sys_Silver_InsertDateTime_UTC']
+target_update_columns = [f'`{column}`' for column in target_columns if column != 'Sys_Silver_InsertDateTime_UTC']
 source_update_columns = [f's.{column}' for column in target_update_columns]
 updateDict = dict(zip(target_update_columns,source_update_columns))
+
+# COMMAND ----------
+
+# MAGIC %md Merge on business keys and watermark column to preserve history.
+# MAGIC
 
 # COMMAND ----------
 
@@ -126,6 +167,10 @@ condition)
 
 # COMMAND ----------
 
+# MAGIC %md Vacuum to clean up older data.
+
+# COMMAND ----------
+
 spark.sql(f"""
           VACUUM {TABLE_NAME}
           """)
@@ -135,6 +180,10 @@ spark.sql(f"""
 currentVersion = spark.sql(f"""
           DESCRIBE HISTORY {TABLE_NAME}
           """).agg(max('version').alias('current_version')).collect()[0]['current_version']
+
+# COMMAND ----------
+
+# MAGIC %md Every 5 loadings we want to use liquid clustering to optimzie our silver table.
 
 # COMMAND ----------
 

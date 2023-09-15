@@ -1,5 +1,5 @@
 -- Databricks notebook source
--- DBTITLE 1,Define Sales Invoice Header at Silver
+-- DBTITLE 1,Define Sales Invoice Line at Silver
 -- MAGIC %md
 -- MAGIC Widgets are used to give Data Factory a way to hand over parameters. In that we we can control the environment.
 -- MAGIC If there is no widget defined, Data Factory will automatically create them.
@@ -30,19 +30,37 @@ USE SCHEMA igsql03;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales_invoice_header
+CREATE OR REPLACE TABLE sales_invoice_line
   ( 
-    No_ STRING NOT NULL 
+    DocumentNo_ STRING NOT NULL 
       COMMENT 'Business Key'
-    ,OrderDate TIMESTAMP NOT NULL
-      COMMENT 'The timestamp off the ordering.'
-    ,`Sell-toCustomerName` STRING
+    ,LineNo_ STRING NOT NULL 
+      COMMENT 'Business Key'
+    ,ShipmentDate TIMESTAMP NOT NULL
       COMMENT 'TODO'
-    ,`Sell-toCustomerNo_` STRING
+    ,OrderNo_ STRING 
       COMMENT 'TODO'
-    ,`Sell-toCity` STRING
+    ,`Buy-fromVendorNo_` STRING 
       COMMENT 'TODO'
-    ,`Sell-toCountry_RegionCode` STRING
+    ,ItemCategoryCode STRING 
+      COMMENT 'TODO'
+    ,Amount DECIMAL 
+      COMMENT 'TODO'
+    ,AmountIncludingVAT DECIMAL 
+      COMMENT 'TODO'
+    ,Description STRING 
+      COMMENT 'TODO'
+    ,Description2 STRING 
+      COMMENT 'TODO'
+    ,UnitofMeasure STRING 
+      COMMENT 'TODO'
+    ,No_ STRING 
+      COMMENT 'TODO'
+    ,`Sell-toCustomerNo_` STRING 
+      COMMENT 'TODO'
+    ,Quantity DECIMAL 
+      COMMENT 'TODO'
+    ,UnitPrice DECIMAL 
       COMMENT 'TODO'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
@@ -58,14 +76,14 @@ CREATE OR REPLACE TABLE sales_invoice_header
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
-,CONSTRAINT sales_invoice_header_pk PRIMARY KEY(No_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT sales_invoice_line_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
-COMMENT 'This table contains the header data for sales invoices. \n' 
+COMMENT 'This table contains the line data for sales invoices. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (No_,Sys_DatabaseName)
+CLUSTER BY (DocumentNo_,LineNo_,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_line ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_line ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_line ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
