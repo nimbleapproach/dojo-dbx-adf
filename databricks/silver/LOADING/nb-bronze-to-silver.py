@@ -2,13 +2,23 @@
 try:
     ENVIRONMENT = dbutils.widgets.get("wg_environment")
     TABLE_NAME = dbutils.widgets.get("wg_tableName")
-    BUSINESS_KEYS = dbutils.widgets.get("wg_businessKeys").replace("[","").replace("]","").split(',')
+    TABLE_SCHEMA = dbutils.widgets.get("wg_tableSchema")
+    WATERMARK_COLUMN = dbutils.widgets.get("wg_watermarkColumn")
 except:
     dbutils.widgets.text(name = "wg_tableName", defaultValue = 'AZIENDA')
+    dbutils.widgets.text(name = "wg_tableSchema", defaultValue = 'tag02')
     dbutils.widgets.text(name = "wg_businessKeys", defaultValue = 'COD_AZIENDA')
+    dbutils.widgets.text(name = "wg_watermarkColumn", defaultValue = 'DATEUPD')
+    dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices = ['dev','uat','prod'])
     ENVIRONMENT = dbutils.widgets.get("wg_environment")
     TABLE_NAME = dbutils.widgets.get("wg_tableName")
-    BUSINESS_KEYS = dbutils.widgets.get("wg_businessKeys").replace("[","").replace("]","").split(',')
+    WATERMARK_COLUMN = dbutils.widgets.get("wg_watermarkColumn")
+    TABLE_SCHEMA = dbutils.widgets.get("wg_tableSchema")
+
+# COMMAND ----------
+
+TABLE_NAME = TABLE_NAME.lower()
+TABLE_SCHEMA = TABLE_SCHEMA.lower()
 
 # COMMAND ----------
 
@@ -16,14 +26,34 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC USE SCHEMA tag02;
+spark.sql(f"""
+          USE SCHEMA {TABLE_SCHEMA}
+          """)
+
 
 # COMMAND ----------
 
 from pyspark.sql.functions import *
 
-target_df = spark.read.table(f'silver_{ENVIRONMENT}.tag02.{TABLE_NAME}')
+# COMMAND ----------
+
+target_df = spark.read.table(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}')
+
+# COMMAND ----------
+
+SILVER_PRIMARY_KEYS = [key['column_name'] for key in spark.sql(f"""
+SELECT a.column_name FROM information_schema.constraint_column_usage a
+join information_schema.table_constraints b
+on a.constraint_name = b.constraint_name
+where a.table_schema = '{TABLE_SCHEMA}'
+and a.table_name = '{TABLE_NAME}'
+and b.constraint_type = 'PRIMARY KEY'
+""").collect()]
+
+BUSINESS_KEYS = SILVER_PRIMARY_KEYS
+BUSINESS_KEYS.remove(WATERMARK_COLUMN)
+
+# COMMAND ----------
 
 currentWatermark = (
                     target_df
@@ -36,7 +66,12 @@ currentWatermark = (
                     .collect()[0]['current_watermark']
                     )
 
+# COMMAND ----------
+
 target_columns = target_df.columns
+hash_columns = [col(column) for column in target_columns if not (column.startswith('Sys_') or column == f'{WATERMARK_COLUMN}')]
+
+# COMMAND ----------
 
 source_df = (
             spark
@@ -44,40 +79,31 @@ source_df = (
             .table(f'bronze_{ENVIRONMENT}.tag02.{TABLE_NAME}')
             .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+            .withColumn('Sys_Silver_HashKey', hash(*hash_columns))
             .select(target_columns)
             .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
+            .dropDuplicates()
             )
-
-updates_df = source_df
 
 # COMMAND ----------
 
-# MAGIC %python
-# MAGIC from pyspark.sql.window import Window
-# MAGIC window = Window.orderBy(col("Sys_Bronze_InsertDateTime_UTC").desc()).partitionBy(BUSINESS_KEYS)
-# MAGIC
-# MAGIC for column in source_df.columns:
-# MAGIC     updates_df = updates_df.withColumn(column, first(column).over(window))
+deduped_df = source_df.dropDuplicates(SILVER_PRIMARY_KEYS)
 
 # COMMAND ----------
 
 target_update_columns = [column for column in target_columns if column != 'Sys_Silver_InsertDateTime_UTC']
 source_update_columns = [f's.{column}' for column in target_update_columns]
-
-# COMMAND ----------
-
 updateDict = dict(zip(target_update_columns,source_update_columns))
 
 # COMMAND ----------
 
 from delta.tables import *
 
-deltaTable = DeltaTable.forName(spark,tableOrViewName=f"silver_{ENVIRONMENT}.tag02.{TABLE_NAME}")
+deltaTable = DeltaTable.forName(spark,tableOrViewName=f"silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}")
 
-condition = " AND ".join([f's.{BUSINESS_KEYS[i]} = t.{BUSINESS_KEYS[i]}' for i in range(len(BUSINESS_KEYS))])
-
+condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[i]}' for i in range(len(SILVER_PRIMARY_KEYS))])
 (deltaTable.alias("t").merge(
-updates_df.alias("s"),
+deduped_df.alias("s"),
 condition)
 .whenMatchedUpdate(set = updateDict)
 .whenNotMatchedInsertAll()
@@ -100,8 +126,11 @@ currentVersion = spark.sql(f"""
 
 print(f'The current table version is: {currentVersion}')
 if currentVersion % 5 == 0:
-    print(f'We are optimizing the table by using bin packing and z-orderin on {BUSINESS_KEYS}')
-    deltaTable.optimize().executeCompaction()
-    deltaTable.optimize().executeZOrderBy(BUSINESS_KEYS)
+    print(f'We are optimizing the table by using liquid clustering on {BUSINESS_KEYS}')
+    spark.sql(
+        f"""
+        OPTIMIZE {TABLE_NAME}
+        """
+    )
 else:
     print(f'Since {currentVersion} is not divisible by 5 we are not optimizing.')

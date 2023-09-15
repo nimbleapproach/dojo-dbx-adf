@@ -1,10 +1,22 @@
 -- Databricks notebook source
+-- MAGIC %md
+-- MAGIC Widgets are used to give Data Factory a way to hand over parameters. In that we we can control the environment.
+-- MAGIC If there is no widget defined, Data Factory will automatically create them.
+-- MAGIC For us while developing we can use the try and excep trick here.
+
+-- COMMAND ----------
+
 -- MAGIC %python
 -- MAGIC try:
 -- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
 -- MAGIC except:
 -- MAGIC     dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices =  ['dev','uat','prod'])
 -- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC The target catalog depens on the enivronment. Since we are using Unity Catalog we need to use a unqiue name for the catalog. This is the reason why we name the dev silver catalog "silver_dev" for example.
 
 -- COMMAND ----------
 
@@ -17,11 +29,10 @@ USE SCHEMA tag02;
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS azienda
+CREATE OR REPLACE TABLE azienda
   ( 
     COD_AZIENDA STRING NOT NULL 
       COMMENT 'Entity Code'
-      CONSTRAINT azienda_pk PRIMARY KEY
     ,RAGIONE_SOCIALE STRING
       COMMENT 'Business Name'
     ,FLAG_AZIENDA TINYINT
@@ -40,6 +51,8 @@ CREATE TABLE IF NOT EXISTS azienda
       P: Proportional \n
       C: Cost \n
       E: Equity \n'
+    ,DATEUPD TIMESTAMP
+      COMMENT 'Last Update Timestamp'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
       COMMENT 'The timestamp when this entry landed in bronze.'
     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
@@ -48,6 +61,9 @@ CREATE TABLE IF NOT EXISTS azienda
     ,Sys_Silver_ModifedDateTime_UTC TIMESTAMP
       DEFAULT current_timestamp()
       COMMENT 'The timestamp when this entry was last modifed in silver.'
+    ,Sys_Silver_HashKey BIGINT NOT NULL
+      COMMENT 'HashKey over all but Sys and DATEUPD columns.'
+,CONSTRAINT azienda_pk PRIMARY KEY(COD_AZIENDA, DATEUPD)
   )
 COMMENT 'This table contains the "entity". \n
   The Entity dimension in Tagetik can be used to represent the Legal Entity (since the legal structure is represented through relationships between
@@ -56,7 +72,10 @@ COMMENT 'This table contains the "entity". \n
   • in case of having to operate a consolidation process, the Entity or a "part" of the Entity should be added to the Entity dimension \n
   • otherwise, the list of Entities to submit can be added on the Entity dimension' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
+CLUSTER BY (COD_AZIENDA)
 
 -- COMMAND ----------
 
---ALTER TABLE azienda ADD CONSTRAINT dateWithinRange CHECK (birthDate > '1900-01-01');
+ALTER TABLE azienda ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE azienda ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE azienda ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
