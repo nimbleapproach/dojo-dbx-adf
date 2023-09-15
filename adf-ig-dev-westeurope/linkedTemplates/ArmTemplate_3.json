@@ -17,6 +17,54 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_CLOUDBLUE_PBA_Load_Table_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_CLOUDBLUE_PBA_Load_Table_Iterator",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_CLOUDBLUE_PBA_Load_Table_ITERATOR",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_full_load": {
+									"value": "@pipeline().parameters.pm_full_load",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"variables": {
+					"Watermark_int_delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Ingestion/CLOUDBLUE/PBA"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_NETSUITE_Load_File_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1908,31 +1956,7 @@
 						"onInactiveMarkAs": "Skipped",
 						"dependsOn": [
 							{
-								"activity": "PL_00_TAG02_Load_View_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_IGSQL03_Load_View_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_NETSUITE_Load_File_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_NUVIAS_OPERATIONS_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
+								"activity": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
 								"dependencyConditions": [
 									"Completed"
 								]
@@ -2053,6 +2077,51 @@
 								}
 							}
 						}
+					},
+					{
+						"name": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "PL_00_TAG02_Load_View_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "PL_00_IGSQL03_Load_View_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "PL_00_NUVIAS_OPERATIONS_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "PL_00_NETSUITE_Load_File_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -2074,7 +2143,8 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_TAG02_Load_View_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL03_Load_View_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NETSUITE_Load_File_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_NUVIAS_OPERATIONS_MASTER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_00_NUVIAS_OPERATIONS_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_CLOUDBLUE_PBA_Load_Table_MASTER')]"
 			]
 		},
 		{
