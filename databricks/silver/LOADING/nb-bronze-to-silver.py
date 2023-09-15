@@ -1,19 +1,33 @@
 # Databricks notebook source
 try:
     ENVIRONMENT = dbutils.widgets.get("wg_environment")
-    TABLE_NAME = dbutils.widgets.get("wg_tableName")
-    TABLE_SCHEMA = dbutils.widgets.get("wg_tableSchema")
-    WATERMARK_COLUMN = dbutils.widgets.get("wg_watermarkColumn")
 except:
-    dbutils.widgets.text(name = "wg_tableName", defaultValue = 'AZIENDA')
-    dbutils.widgets.text(name = "wg_tableSchema", defaultValue = 'tag02')
-    dbutils.widgets.text(name = "wg_businessKeys", defaultValue = 'COD_AZIENDA')
-    dbutils.widgets.text(name = "wg_watermarkColumn", defaultValue = 'DATEUPD')
     dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices = ['dev','uat','prod'])
     ENVIRONMENT = dbutils.widgets.get("wg_environment")
+
+# COMMAND ----------
+
+try:
     TABLE_NAME = dbutils.widgets.get("wg_tableName")
-    WATERMARK_COLUMN = dbutils.widgets.get("wg_watermarkColumn")
+except:
+    dbutils.widgets.text(name = "wg_tableName", defaultValue = 'AZIENDA')
+    TABLE_NAME = dbutils.widgets.get("wg_tableName")
+
+# COMMAND ----------
+
+try:
     TABLE_SCHEMA = dbutils.widgets.get("wg_tableSchema")
+except:
+    dbutils.widgets.text(name = "wg_tableSchema", defaultValue = 'tag02')
+    TABLE_SCHEMA = dbutils.widgets.get("wg_tableSchema")
+
+# COMMAND ----------
+
+try:
+    WATERMARK_COLUMN = dbutils.widgets.get("wg_watermarkColumn")
+except:
+    dbutils.widgets.text(name = "wg_watermarkColumn", defaultValue = 'DATEUPD')
+    WATERMARK_COLUMN = dbutils.widgets.get("wg_watermarkColumn")
 
 # COMMAND ----------
 
