@@ -90,7 +90,7 @@ hash_columns = [col(column) for column in target_columns if not (column.startswi
 source_df = (
             spark
             .read
-            .table(f'bronze_{ENVIRONMENT}.tag02.{TABLE_NAME}')
+            .table(f'bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}')
             .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_HashKey', hash(*hash_columns))
