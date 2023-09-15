@@ -29,6 +29,10 @@
 			"gpm_TAG02_Databricks_Cluster_ID_INITIAL_LOAD": {
 				"type": "string",
 				"value": "0808-145612-flesh843-pool-a7us3o36"
+			},
+			"gpm_lightweight_jobs_Databricks_ClusterID": {
+				"type": "string",
+				"value": "0915-095651-good16-pool-r70v24z6"
 			}
 		},
 		"globalConfigurations": {

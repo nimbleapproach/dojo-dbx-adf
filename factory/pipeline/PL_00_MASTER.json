@@ -47,31 +47,7 @@
 				"onInactiveMarkAs": "Skipped",
 				"dependsOn": [
 					{
-						"activity": "PL_00_TAG02_Load_View_MASTER",
-						"dependencyConditions": [
-							"Completed"
-						]
-					},
-					{
-						"activity": "PL_00_IGSQL03_Load_View_MASTER",
-						"dependencyConditions": [
-							"Completed"
-						]
-					},
-					{
-						"activity": "PL_00_NETSUITE_Load_File_MASTER",
-						"dependencyConditions": [
-							"Completed"
-						]
-					},
-					{
-						"activity": "PL_00_NUVIAS_OPERATIONS_MASTER",
-						"dependencyConditions": [
-							"Completed"
-						]
-					},
-					{
-						"activity": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
+						"activity": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
 						"dependencyConditions": [
 							"Completed"
 						]
@@ -189,6 +165,50 @@
 							"type": "Expression"
 						}
 					}
+				}
+			},
+			{
+				"name": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "PL_00_TAG02_Load_View_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "PL_00_IGSQL03_Load_View_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "PL_00_NUVIAS_OPERATIONS_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					},
+					{
+						"activity": "PL_00_NETSUITE_Load_File_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
 				}
 			}
 		],
