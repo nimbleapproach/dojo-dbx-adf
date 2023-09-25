@@ -77,10 +77,6 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
-					"pipeline": {
-						"referenceName": "PL_00_IGSQL03_Curate_Parquet_Files_MASTER",
-						"type": "PipelineReference"
-					},
 					"waitOnCompletion": true
 				}
 			},
@@ -219,7 +215,7 @@
 			}
 		},
 		"folder": {
-			"name": "00 Technical"
+			"name": "00 Setup"
 		},
 		"annotations": []
 	}

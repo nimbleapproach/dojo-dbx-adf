@@ -91,7 +91,7 @@
 			}
 		},
 		"folder": {
-			"name": "10 Ingestion/NETSUITE"
+			"name": "10 Bronze/NETSUITE"
 		},
 		"annotations": []
 	}

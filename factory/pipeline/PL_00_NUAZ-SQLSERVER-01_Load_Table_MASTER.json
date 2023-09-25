@@ -29,7 +29,7 @@
 			}
 		},
 		"folder": {
-			"name": "10 Ingestion/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+			"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 		},
 		"annotations": []
 	}

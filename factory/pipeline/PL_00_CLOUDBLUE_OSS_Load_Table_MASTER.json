@@ -34,7 +34,7 @@
 			}
 		},
 		"folder": {
-			"name": "10 Ingestion/CLOUDBLUE/OSS"
+			"name": "10 Bronze/CLOUDBLUE/OSS"
 		},
 		"annotations": []
 	}
