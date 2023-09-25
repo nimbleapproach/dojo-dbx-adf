@@ -7,11 +7,9 @@
 
 # COMMAND ----------
 
-try:
-    ENVIRONMENT = dbutils.widgets.get("wg_environment")
-except:
-    dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices = ['dev','uat','prod'])
-    ENVIRONMENT = dbutils.widgets.get("wg_environment")
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
