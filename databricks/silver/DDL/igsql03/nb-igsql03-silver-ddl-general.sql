@@ -8,11 +8,9 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC try:
--- MAGIC     TABLE_NAME = dbutils.widgets.get("wg_tableName")
--- MAGIC except:
--- MAGIC     dbutils.widgets.text(name = "wg_tableName", defaultValue = 'AZIENDA')
--- MAGIC     TABLE_NAME = dbutils.widgets.get("wg_tableName")
+-- MAGIC import os
+-- MAGIC
+-- MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 -- COMMAND ----------
 

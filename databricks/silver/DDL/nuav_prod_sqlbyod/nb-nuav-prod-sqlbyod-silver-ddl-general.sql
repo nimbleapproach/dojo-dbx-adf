@@ -17,11 +17,9 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC try:
--- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
--- MAGIC except:
--- MAGIC     dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices =  ['dev','uat','prod'])
--- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
+-- MAGIC import os
+-- MAGIC
+-- MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 -- COMMAND ----------
 
