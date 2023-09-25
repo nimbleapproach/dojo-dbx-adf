@@ -37,7 +37,22 @@ except:
 
 # COMMAND ----------
 
-TABLE_NAME_SOURCE = TABLE_NAME.replace('_copy', '').lower()
+try:
+    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true' )
+except:
+    dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
+    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload")== 'true')
+
+# COMMAND ----------
+
+try:
+    TRUNCATE = bool(dbutils.widgets.get("wg_truncate") == 'true')
+except:
+    dbutils.widgets.dropdown(name = "wg_truncate", defaultValue = 'false', choices =   ['false','true'])
+    TRUNCATE = bool(dbutils.widgets.get("wg_truncate") == 'true')
+
+# COMMAND ----------
+
 TABLE_NAME = TABLE_NAME.lower()
 TABLE_SCHEMA = TABLE_SCHEMA.lower()
 
@@ -51,6 +66,14 @@ spark.sql(f"""
           USE SCHEMA {TABLE_SCHEMA}
           """)
 
+
+# COMMAND ----------
+
+if TRUNCATE :
+    print(f'Truncating {TABLE_NAME}...')
+    spark.sql(f"""
+              TRUNCATE TABLE {TABLE_NAME}
+              """)
 
 # COMMAND ----------
 
@@ -91,16 +114,21 @@ except:
 
 # COMMAND ----------
 
-currentWatermark = (
-                    target_df
-                    .agg(
-                        coalesce(
-                            max(col('Sys_Bronze_InsertDateTime_UTC').cast('TIMESTAMP')),
-                            lit('1900-01-01').cast('TIMESTAMP')
-                            )
-                        .alias('current_watermark'))
-                    .collect()[0]['current_watermark']
-                    )
+from datetime import datetime
+
+if FULL_LOAD:
+    currentWatermark = datetime.strptime('01-01-1900', '%m-%d-%Y').date()
+else:
+    currentWatermark = (
+                        target_df
+                        .agg(
+                            coalesce(
+                                max(col('Sys_Bronze_InsertDateTime_UTC').cast('TIMESTAMP')),
+                                lit('1900-01-01').cast('TIMESTAMP')
+                                )
+                            .alias('current_watermark'))
+                        .collect()[0]['current_watermark']
+                        )
 
 # COMMAND ----------
 
@@ -124,13 +152,13 @@ hash_columns = [col(column) for column in target_columns if not (column.startswi
 source_df = (
             spark
             .read
-            .table(f'bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME_SOURCE}')
+            .table(f'bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}')
             .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_HashKey', hash(*hash_columns))
             .select(target_columns)
             .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
-            .dropDuplicates()
+            .dropDuplicates(['Sys_Silver_HashKey'])
             )
 
 # COMMAND ----------
@@ -162,7 +190,7 @@ condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[
 (deltaTable.alias("t").merge(
 deduped_df.alias("s"),
 condition)
-.whenMatchedUpdate(set = updateDict)
+.whenMatchedUpdate('s.Sys_Silver_HashKey <> t.Sys_Silver_HashKey',set = updateDict)
 .whenNotMatchedInsertAll()
 .execute()
 )
@@ -199,11 +227,3 @@ if currentVersion % 5 == 0:
     )
 else:
     print(f'Since {currentVersion} is not divisible by 5 we are not optimizing.')
-
-# COMMAND ----------
-
-spark.sql(f"""
-          SELECT COUNT(*) FROM  silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
-          """).display()
-print(TABLE_NAME)
-

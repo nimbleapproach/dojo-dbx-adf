@@ -6,10 +6,10 @@ ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 # COMMAND ----------
 
 try:
-    REREGISTER = bool(dbutils.widgets.get("wg_reregister"))
+    REREGISTER = bool(dbutils.widgets.get("wg_reregister") == 'true')
 except:
     dbutils.widgets.dropdown(name = "wg_reregister", defaultValue = 'false', choices =  ['false','true'])
-    REREGISTER = bool(dbutils.widgets.get("wg_reregister"))
+    REREGISTER = bool(dbutils.widgets.get("wg_reregister") == 'true')
 
 # COMMAND ----------
 
