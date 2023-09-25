@@ -1,5 +1,5 @@
 -- Databricks notebook source
--- DBTITLE 1,Define Sales Invoice Line at Silver
+-- DBTITLE 1,Define Sales Credit Memo Line at Silver
 -- MAGIC %md
 -- MAGIC Widgets are used to give Data Factory a way to hand over parameters. In that we we can control the environment.
 -- MAGIC If there is no widget defined, Data Factory will automatically create them.
@@ -8,9 +8,11 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC import os
--- MAGIC
--- MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+-- MAGIC try:
+-- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
+-- MAGIC except:
+-- MAGIC     dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices =  ['dev','uat','prod'])
+-- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
 
 -- COMMAND ----------
 
@@ -28,7 +30,7 @@ USE SCHEMA igsql03;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales_invoice_line_copy
+CREATE OR REPLACE TABLE sales_cr_memo_line
   ( 
     DocumentNo_ STRING NOT NULL 
       COMMENT 'Business Key'
@@ -64,14 +66,14 @@ CREATE OR REPLACE TABLE sales_invoice_line_copy
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
-,CONSTRAINT sales_invoice_line_copy_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT sales_cr_memo_line_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
-COMMENT 'This table contains the line data for sales invoices line. \n' 
+COMMENT 'This table contains the line data for sales credit memo line. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
 CLUSTER BY (DocumentNo_,LineNo_,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_cr_memo_line ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_cr_memo_line ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_cr_memo_line ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');

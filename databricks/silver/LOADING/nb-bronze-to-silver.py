@@ -37,6 +37,7 @@ except:
 
 # COMMAND ----------
 
+TABLE_NAME_SOURCE = TABLE_NAME.replace('_copy', '').lower()
 TABLE_NAME = TABLE_NAME.lower()
 TABLE_SCHEMA = TABLE_SCHEMA.lower()
 
@@ -78,7 +79,10 @@ and b.constraint_type = 'PRIMARY KEY'
 """).collect()]
 
 BUSINESS_KEYS = SILVER_PRIMARY_KEYS
-BUSINESS_KEYS.remove(WATERMARK_COLUMN)
+try :
+    BUSINESS_KEYS.remove(WATERMARK_COLUMN)
+except:
+    BUSINESS_KEYS = SILVER_PRIMARY_KEYS
 
 # COMMAND ----------
 
@@ -120,7 +124,7 @@ hash_columns = [col(column) for column in target_columns if not (column.startswi
 source_df = (
             spark
             .read
-            .table(f'bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}')
+            .table(f'bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME_SOURCE}')
             .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_HashKey', hash(*hash_columns))
@@ -195,3 +199,11 @@ if currentVersion % 5 == 0:
     )
 else:
     print(f'Since {currentVersion} is not divisible by 5 we are not optimizing.')
+
+# COMMAND ----------
+
+spark.sql(f"""
+          SELECT COUNT(*) FROM  silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
+          """).display()
+print(TABLE_NAME)
+

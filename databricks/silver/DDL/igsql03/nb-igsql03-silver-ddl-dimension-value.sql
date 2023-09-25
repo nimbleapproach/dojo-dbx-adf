@@ -1,5 +1,5 @@
 -- Databricks notebook source
--- DBTITLE 1,Define Sales Invoice Line at Silver
+-- DBTITLE 1,Define Dimension Value at Silver
 -- MAGIC %md
 -- MAGIC Widgets are used to give Data Factory a way to hand over parameters. In that we we can control the environment.
 -- MAGIC If there is no widget defined, Data Factory will automatically create them.
@@ -8,9 +8,11 @@
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC import os
--- MAGIC
--- MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+-- MAGIC try:
+-- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
+-- MAGIC except:
+-- MAGIC     dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices =  ['dev','uat','prod'])
+-- MAGIC     ENVIRONMENT = dbutils.widgets.get("wg_environment")
 
 -- COMMAND ----------
 
@@ -28,27 +30,15 @@ USE SCHEMA igsql03;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales_invoice_line_copy
+CREATE OR REPLACE TABLE dimension_value
   ( 
-    DocumentNo_ STRING NOT NULL 
+    Code STRING NOT NULL 
       COMMENT 'Business Key'
-    ,LineNo_ STRING NOT NULL 
-      COMMENT 'Business Key'
-    ,No_ STRING 
+    ,Name STRING 
       COMMENT 'TODO'
-    ,Amount DECIMAL 
+    ,DimensionCode STRING 
       COMMENT 'TODO'
-    ,AmountIncludingVAT DECIMAL 
-      COMMENT 'TODO'
-    ,CostAmountLCY DECIMAL 
-      COMMENT 'TODO'
-    ,Quantity DECIMAL 
-      COMMENT 'TODO'
-    ,UnitPrice DECIMAL 
-      COMMENT 'TODO'
-    ,UnitCostLCY DECIMAL 
-      COMMENT 'TODO'
-    ,ShortcutDimension1Code STRING 
+    ,DimensionValueType BIGINT 
       COMMENT 'TODO'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
@@ -64,14 +54,14 @@ CREATE OR REPLACE TABLE sales_invoice_line_copy
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
-,CONSTRAINT sales_invoice_line_copy_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT dimension_value_pk PRIMARY KEY(Code,Sys_DatabaseName,Sys_RowNumber)
   )
-COMMENT 'This table contains the line data for sales invoices line. \n' 
+COMMENT 'This table contains the line data for dimension value. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (DocumentNo_,LineNo_,Sys_DatabaseName)
+CLUSTER BY (Code,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE dimension_value ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE dimension_value ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE dimension_value ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
