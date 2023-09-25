@@ -11,24 +11,12 @@
 		"type": "string",
 		"value": "/subscriptions/5c771a6b-7686-4067-a58d-95551c37bf46/resourceGroups/rg-ig-lakehouse-dev-westeurope/providers/Microsoft.Databricks/workspaces/abd-ig-lakehouse-dev-westeurope"
 	},
-	"gpm_IGSQL03_Databricks_Cluster_ID_DAILY_LOAD": {
-		"type": "string",
-		"value": "0808-145347-slog946-pool-h2qnxtwy"
-	},
-	"gpm_TAG02_Databricks_Cluster_ID_DAILY_LOAD": {
-		"type": "string",
-		"value": "0808-145440-egg841-pool-vcwrf8oi"
-	},
-	"gpm_IGSQL03_Databricks_ClusterID_INITIAL_LOAD": {
-		"type": "string",
-		"value": "0808-145416-flint841-pool-k6xxcwj6"
-	},
-	"gpm_TAG02_Databricks_Cluster_ID_INITIAL_LOAD": {
-		"type": "string",
-		"value": "0808-145612-flesh843-pool-a7us3o36"
-	},
 	"gpm_lightweight_jobs_Databricks_ClusterID": {
 		"type": "string",
 		"value": "0915-095651-good16-pool-r70v24z6"
+	},
+	"gpm_silver_default_workloads_Databricks_ClusterID": {
+		"type": "string",
+		"value": "0925-145452-rouse19-pool-pklmhhgy"
 	}
 }
