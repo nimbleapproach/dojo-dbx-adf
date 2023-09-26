@@ -108,7 +108,7 @@
 									},
 									"pm_FileSystem": "keys",
 									"pm_Directory": {
-										"value": "igsql03/@{replace(pipeline().parameters.pm_ViewName,' ','_')}",
+										"value": "igsql03/@{toLower(replace(pipeline().parameters.pm_ViewName,' ','_'))}",
 										"type": "Expression"
 									},
 									"pm_FileName": {
