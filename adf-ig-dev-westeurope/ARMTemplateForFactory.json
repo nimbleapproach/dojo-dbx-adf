@@ -3860,7 +3860,7 @@
 												"type": "ParquetWriteSettings",
 												"maxRowsPerFile": 1000000,
 												"fileNamePrefix": {
-													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-startOfDay()}",
+													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
 													"type": "Expression"
 												}
 											}
