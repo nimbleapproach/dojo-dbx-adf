@@ -30,7 +30,10 @@ USE SCHEMA igsql03;
 
 CREATE OR REPLACE TABLE sales_cr_memo_line
   ( 
-    DocumentNo_ STRING NOT NULL 
+        SID bigint
+        GENERATED ALWAYS AS IDENTITY
+        COMMENT 'Surrogate Key'
+    ,DocumentNo_ STRING NOT NULL 
       COMMENT 'Business Key'
     ,LineNo_ STRING NOT NULL 
       COMMENT 'Business Key'

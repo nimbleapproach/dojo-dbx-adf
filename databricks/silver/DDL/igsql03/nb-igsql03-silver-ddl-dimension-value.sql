@@ -30,7 +30,10 @@ USE SCHEMA igsql03;
 
 CREATE OR REPLACE TABLE dimension_value
   ( 
-    Code STRING NOT NULL 
+        SID bigint
+        GENERATED ALWAYS AS IDENTITY
+        COMMENT 'Surrogate Key'
+    ,Code STRING NOT NULL 
       COMMENT 'Business Key'
     ,Name STRING 
       COMMENT 'TODO'

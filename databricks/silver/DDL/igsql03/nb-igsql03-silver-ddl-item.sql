@@ -30,7 +30,10 @@ USE SCHEMA igsql03;
 
 CREATE OR REPLACE TABLE item
   ( 
-    No_ STRING NOT NULL 
+        SID bigint
+        GENERATED ALWAYS AS IDENTITY
+        COMMENT 'Surrogate Key'
+    ,No_ STRING NOT NULL 
       COMMENT 'Business Key'
     ,Description STRING 
       COMMENT 'TODO'

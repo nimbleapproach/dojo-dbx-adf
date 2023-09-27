@@ -1,9 +1,8 @@
 # Databricks notebook source
-try:
-    ENVIRONMENT = dbutils.widgets.get("wg_environment")
-except:
-    dbutils.widgets.dropdown(name = "wg_environment", defaultValue = 'dev', choices =  ['dev','uat','prod'])
-    ENVIRONMENT = dbutils.widgets.get("wg_environment")
+# MAGIC %python
+# MAGIC import os
+# MAGIC
+# MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
@@ -20,7 +19,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC
 # MAGIC CREATE OR REPLACE TABLE salesorder
 # MAGIC   ( 
-# MAGIC     OrderID	INT NOT NULL
+# MAGIC         SID bigint
+# MAGIC         GENERATED ALWAYS AS IDENTITY
+# MAGIC         COMMENT 'Surrogate Key'
+# MAGIC     ,OrderID	INT NOT NULL
 # MAGIC       COMMENT 'Business Key' 
 # MAGIC     ,DateArc TIMESTAMP NOT NULL
 # MAGIC       COMMENT 'WATERMARK'
@@ -65,7 +67,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for salesorder. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (OrderID,DateArc)
+# MAGIC CLUSTER BY (OrderID)
 
 # COMMAND ----------
 

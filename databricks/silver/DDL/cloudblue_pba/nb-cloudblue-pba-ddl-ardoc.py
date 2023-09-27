@@ -1,7 +1,8 @@
 # Databricks notebook source
-import os
-
-ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+# MAGIC %python
+# MAGIC import os
+# MAGIC
+# MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
@@ -18,8 +19,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC
 # MAGIC CREATE OR REPLACE TABLE ardoc
 # MAGIC   ( 
-# MAGIC     DocID BIGINT NOT NULL 
+# MAGIC         SID bigint
+# MAGIC         GENERATED ALWAYS AS IDENTITY
+# MAGIC         COMMENT 'Surrogate Key'
+# MAGIC     ,DocID BIGINT NOT NULL 
 # MAGIC       COMMENT 'Business Key'
+# MAGIC     ,DateArc TIMESTAMP NOT NULL
+# MAGIC       COMMENT 'Water mark'
 # MAGIC     ,DocNum	    string
 # MAGIC         COMMENT 'TODO'    
 # MAGIC     ,DocType	BIGINT
@@ -52,7 +58,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT ardoc_pk PRIMARY KEY(DocID)
+# MAGIC ,CONSTRAINT ardoc_pk PRIMARY KEY(DocID, DateArc)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ardoc. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')

@@ -30,7 +30,10 @@ USE SCHEMA igsql03;
 
 CREATE OR REPLACE TABLE sales_cr_memo_header
   ( 
-    No_ STRING NOT NULL 
+        SID bigint
+        GENERATED ALWAYS AS IDENTITY
+        COMMENT 'Surrogate Key'
+    ,No_ STRING NOT NULL 
       COMMENT 'Business Key'
     ,PostingDate TIMESTAMP NOT NULL
       COMMENT 'The timestamp off the posting.'
