@@ -178,7 +178,7 @@ deduped_df = fillnas(source_df.dropDuplicates(SILVER_PRIMARY_KEYS))
 
 target_insert_columns = [f'`{column}`' for column in target_columns if column not in ['SID']]
 source_insert_columns = [f's.{column}' for column in target_insert_columns]
-insertDict = dict(zip(target_update_columns,source_update_columns))
+insertDict = dict(zip(target_insert_columns,source_insert_columns))
 
 # COMMAND ----------
 
