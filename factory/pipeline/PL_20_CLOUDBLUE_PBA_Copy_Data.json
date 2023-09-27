@@ -62,7 +62,7 @@
 									},
 									"formatSettings": {
 										"type": "ParquetWriteSettings",
-										"maxRowsPerFile": 1000000,
+										"maxRowsPerFile": 500000,
 										"fileNamePrefix": {
 											"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
 											"type": "Expression"
@@ -357,7 +357,7 @@
 									},
 									"formatSettings": {
 										"type": "ParquetWriteSettings",
-										"maxRowsPerFile": 1000000,
+										"maxRowsPerFile": 500000,
 										"fileNamePrefix": {
 											"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
 											"type": "Expression"
