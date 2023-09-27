@@ -1148,8 +1148,7 @@
 								"value": "@activity('Get EDW Tables').output.value",
 								"type": "Expression"
 							},
-							"isSequential": false,
-							"batchCount": 4,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_CLOUDBLUE_Copy_Data",
@@ -3563,7 +3562,7 @@
 											},
 											"formatSettings": {
 												"type": "ParquetWriteSettings",
-												"maxRowsPerFile": 1000000,
+												"maxRowsPerFile": 500000,
 												"fileNamePrefix": {
 													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
 													"type": "Expression"
@@ -3858,7 +3857,7 @@
 											},
 											"formatSettings": {
 												"type": "ParquetWriteSettings",
-												"maxRowsPerFile": 1000000,
+												"maxRowsPerFile": 500000,
 												"fileNamePrefix": {
 													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
 													"type": "Expression"
