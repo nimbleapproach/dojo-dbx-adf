@@ -7,6 +7,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run  ../../library/nb-silver-library
+
+# COMMAND ----------
+
 import os
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
@@ -138,7 +142,8 @@ else:
 # COMMAND ----------
 
 target_columns = target_df.columns
-hash_columns = [col(column) for column in target_columns if not (column.startswith('Sys_') or column == f'{WATERMARK_COLUMN}')]
+selection_column = [col(column) for column in target_columns if column not in ['SID']]
+hash_columns = [col(column) for column in target_columns if not column in ['SID' ,'Sys_Bronze_InsertDateTime_UTC','Sys_Silver_InsertDateTime_UTC','Sys_Silver_ModifedDateTime_UTC','Sys_Silver_HashKey',f'{WATERMARK_COLUMN}']]
 
 # COMMAND ----------
 
@@ -156,7 +161,7 @@ source_df = (
             .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_HashKey', hash(*hash_columns))
-            .select(target_columns)
+            .select(selection_column)
             .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
             .dropDuplicates(['Sys_Silver_HashKey'])
             )
@@ -167,11 +172,17 @@ source_df = (
 
 # COMMAND ----------
 
-deduped_df = source_df.dropDuplicates(SILVER_PRIMARY_KEYS)
+deduped_df = fillnas(source_df.dropDuplicates(SILVER_PRIMARY_KEYS))
 
 # COMMAND ----------
 
-target_update_columns = [f'`{column}`' for column in target_columns if column != 'Sys_Silver_InsertDateTime_UTC']
+target_insert_columns = [f'`{column}`' for column in target_columns if column not in ['SID']]
+source_insert_columns = [f's.{column}' for column in target_insert_columns]
+insertDict = dict(zip(target_update_columns,source_update_columns))
+
+# COMMAND ----------
+
+target_update_columns = [f'`{column}`' for column in target_columns if column not in ['SID' , 'Sys_Silver_InsertDateTime_UTC']]
 source_update_columns = [f's.{column}' for column in target_update_columns]
 updateDict = dict(zip(target_update_columns,source_update_columns))
 
@@ -191,7 +202,7 @@ condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[
 deduped_df.alias("s"),
 condition)
 .whenMatchedUpdate('s.Sys_Silver_HashKey <> t.Sys_Silver_HashKey',set = updateDict)
-.whenNotMatchedInsertAll()
+.whenNotMatchedInsert(values  = insertDict)
 .execute()
 )
 
