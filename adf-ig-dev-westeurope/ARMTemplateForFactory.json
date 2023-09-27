@@ -3552,7 +3552,7 @@
 												}
 											],
 											"query": {
-												"value": "SELECT * FROM public.\"@{pipeline().parameters.pm_TableName}\" WHERE \"@{pipeline().parameters.pm_ColumnName}\"<= @{variables('Watermark_int')} and \"@{pipeline().parameters.pm_ColumnName}\" >= @{variables('Watermark_int_delta')}",
+												"value": "SELECT * FROM public.\"@{pipeline().parameters.pm_TableName}\" WHERE \"@{pipeline().parameters.pm_ColumnName}\"<= @{variables('Watermark_int_delta')} and \"@{pipeline().parameters.pm_ColumnName}\" > @{variables('Watermark_int')}",
 												"type": "Expression"
 											}
 										},
@@ -3730,7 +3730,7 @@
 											},
 											"watermark": {
 												"value": {
-													"value": "@variables('Watermark_int')",
+													"value": "@variables('Watermark_int_delta')",
 													"type": "Expression"
 												},
 												"type": "String"
