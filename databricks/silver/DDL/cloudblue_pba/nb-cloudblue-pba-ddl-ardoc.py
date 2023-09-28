@@ -24,7 +24,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,DocID BIGINT NOT NULL 
 # MAGIC       COMMENT 'Business Key'
-# MAGIC     ,DateArc TIMESTAMP NOT NULL
+# MAGIC     ,DateArc INT NOT NULL
 # MAGIC       COMMENT 'Water mark'
 # MAGIC     ,DocNum	    string
 # MAGIC         COMMENT 'TODO'    
@@ -38,11 +38,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'TODO'    
 # MAGIC     ,Customer_AccountID	BIGINT
 # MAGIC         COMMENT 'TODO'    
-# MAGIC     ,DocDATE	timestamp
+# MAGIC     ,DocDATE	INT
 # MAGIC         COMMENT 'TODO'    
-# MAGIC     ,DueDate	timestamp
+# MAGIC     ,DueDate	INT
 # MAGIC         COMMENT 'TODO'    
-# MAGIC     ,CloseDate	timestamp
+# MAGIC     ,CloseDate	INT
 # MAGIC         COMMENT 'TODO'    
 # MAGIC     ,Description string
 # MAGIC         COMMENT 'TODO'    

@@ -17,40 +17,38 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE salesorder
+# MAGIC CREATE OR REPLACE TABLE planrate
 # MAGIC   ( 
 # MAGIC         SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
-# MAGIC     ,OrderID	INT	
+# MAGIC     ,PlanID	INT	
+# MAGIC       COMMENT 'Business key'
+# MAGIC     ,resourceID	INT	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Descr	STRING	
+# MAGIC     ,recurringFee	DECIMAL	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,ReasonID	INT	
+# MAGIC     ,SetupFeeDescr	STRING	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,OrderDate	TIMESTAMP
+# MAGIC     ,setupFee	DECIMAL	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,OrderStatusID	STRING	
+# MAGIC     ,costForAdditional	DECIMAL	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,OrderTypeID	STRING	
+# MAGIC     ,MSRPcostForAdditional	DECIMAL	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,ExpDate	INT	
+# MAGIC     ,MSRPrecurringFee	DECIMAL	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,CurrencyID	STRING	
+# MAGIC     ,PlanRateID	INT	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Customer_AccountID	INT	
+# MAGIC     ,MSRPsetupFee	DECIMAL	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Vendor_AccountID	INT	
+# MAGIC     ,IsVisible	INT	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,OrderNbr	STRING	
+# MAGIC     ,RecurrFeeDescr	STRING	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,MerchTotal_Value	DECIMAL	
+# MAGIC     ,OveruseFeeDescr	STRING	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Total_Value	DECIMAL	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,TaxTotal_Value	DECIMAL	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,DateArc INT
+# MAGIC     ,DateArc	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -62,16 +60,16 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT salesorder_pk PRIMARY KEY(OrderID,DateArc)
+# MAGIC ,CONSTRAINT planrate_pk PRIMARY KEY(PlanID,DateArc)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the line data for salesorder. \n' 
+# MAGIC COMMENT 'This table contains the line data for planrate. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (OrderID)
+# MAGIC CLUSTER BY (PlanID)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE salesorder ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE salesorder ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE salesorder ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE planrate ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE planrate ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE planrate ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
