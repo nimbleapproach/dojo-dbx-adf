@@ -14,8 +14,8 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "Full Load Netsuite File_delta",
-							"type": "Copy",
+							"name": "DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD",
+							"type": "ExecuteDataFlow",
 							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
@@ -26,110 +26,58 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"additionalColumns": [
-										{
-											"name": "Sys_Bronze_InsertDateTime_UTC",
-											"value": {
-												"value": "@utcNow()",
+								"dataflow": {
+									"referenceName": "DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD",
+									"type": "DataFlowReference",
+									"parameters": {
+										"pm_FileName": {
+											"value": "'@{pipeline().parameters.pm_FileName}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"GetFile": {
+											"pm_environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											},
+											"pm_FileName": {
+												"value": "@pipeline().parameters.pm_FileName",
 												"type": "Expression"
 											}
 										}
-									],
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": true,
-										"enablePartitionDiscovery": false
 									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
-								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false,
-								"enableSkipIncompatibleRow": true,
-								"validateDataConsistency": true,
-								"logSettings": {
-									"enableCopyActivityLog": true,
-									"copyActivityLogSettings": {
-										"logLevel": "Warning",
-										"enableReliableLogging": false
-									},
-									"logLocationSettings": {
-										"linkedServiceName": {
-											"referenceName": "LS_ADLS",
-											"type": "LinkedServiceReference",
-											"parameters": {
+									"linkedServiceParameters": {
+										"GetBronzeData": {
+											"linkedService": {
 												"pm_Environment": {
 													"value": "@pipeline().globalParameters.gpm_Environment",
 													"type": "Expression"
 												}
 											}
 										},
-										"path": "logging/adf"
+										"WriteDeltaTable": {
+											"linkedService": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										}
 									}
 								},
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										},
-										"pm_FileName": {
-											"value": "@pipeline().parameters.pm_FileName",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "DS_ADLS_PARQUET_STATIC",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										},
-										"pm_FileSystem": "bronze",
-										"pm_Directory": {
-											"value": "netsuite/@{pipeline().parameters.pm_FileName}",
-											"type": "Expression"
-										},
-										"pm_FileName": {
-											"value": "bronze-netsuite-@{pipeline().parameters.pm_FileName}-@{utcNow()}",
-											"type": "Expression"
-										}
-									}
-								}
-							]
+								"integrationRuntime": {
+									"referenceName": "ir-ig-managed-dev-westeurope",
+									"type": "IntegrationRuntimeReference"
+								},
+								"traceLevel": "Fine"
+							}
 						}
 					],
 					"ifTrueActivities": [
 						{
-							"name": "Full Load Netsuite File",
-							"type": "Copy",
+							"name": "DF_NETSUITE_CDM_TO_BRONZE_FULLLOAD",
+							"type": "ExecuteDataFlow",
 							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
@@ -140,104 +88,44 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"additionalColumns": [
-										{
-											"name": "Sys_Bronze_InsertDateTime_UTC",
-											"value": {
-												"value": "@utcNow()",
+								"dataflow": {
+									"referenceName": "DF_NETSUITE_CDM_TO_BRONZE_FULLLOAD",
+									"type": "DataFlowReference",
+									"parameters": {
+										"pm_FileName": {
+											"value": "'@{pipeline().parameters.pm_FileName}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"GetFile": {
+											"pm_environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											},
+											"pm_FileName": {
+												"value": "@pipeline().parameters.pm_FileName",
 												"type": "Expression"
 											}
 										}
-									],
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": true,
-										"enablePartitionDiscovery": false
 									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
-								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false,
-								"enableSkipIncompatibleRow": true,
-								"validateDataConsistency": true,
-								"logSettings": {
-									"enableCopyActivityLog": true,
-									"copyActivityLogSettings": {
-										"logLevel": "Warning",
-										"enableReliableLogging": false
-									},
-									"logLocationSettings": {
-										"linkedServiceName": {
-											"referenceName": "LS_ADLS",
-											"type": "LinkedServiceReference",
-											"parameters": {
+									"linkedServiceParameters": {
+										"WriteDeltaTable": {
+											"linkedService": {
 												"pm_Environment": {
 													"value": "@pipeline().globalParameters.gpm_Environment",
 													"type": "Expression"
 												}
 											}
-										},
-										"path": "logging/adf"
+										}
 									}
 								},
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										},
-										"pm_FileName": {
-											"value": "@pipeline().parameters.pm_FileName",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "DS_ADLS_PARQUET_STATIC",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										},
-										"pm_FileSystem": "bronze",
-										"pm_Directory": {
-											"value": "netsuite/@{pipeline().parameters.pm_FileName}",
-											"type": "Expression"
-										},
-										"pm_FileName": {
-											"value": "bronze-netsuite-@{pipeline().parameters.pm_FileName}-@{utcNow()}",
-											"type": "Expression"
-										}
-									}
-								}
-							]
+								"integrationRuntime": {
+									"referenceName": "ir-ig-managed-dev-westeurope",
+									"type": "IntegrationRuntimeReference"
+								},
+								"traceLevel": "Fine"
+							}
 						}
 					]
 				}

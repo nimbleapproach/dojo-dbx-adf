@@ -1,0 +1,108 @@
+{
+	"name": "DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD",
+	"properties": {
+		"folder": {
+			"name": "Starlink/NETSUITE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
+						"type": "DatasetReference"
+					},
+					"name": "GetFile"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "GetBronzeData"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteDeltaTable"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddBronzeLoadDate"
+				},
+				{
+					"name": "GetMaxWatermark"
+				},
+				{
+					"name": "Increment"
+				},
+				{
+					"name": "AddCurrentWatermark"
+				},
+				{
+					"name": "DropCurrentWatermark"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     pm_FileName as string",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: true,",
+				"     multiLineRow: true,",
+				"     dateFormats: ['dd/MM/yyyy'],",
+				"     timestampFormats: ['dd/MM/yyyy','MM/dd/yyyy hh:mm:ss a','MM/dd/yyyy HH:mm:ss'],",
+				"     manifestType: 'manifest',",
+				"     mode: 'read') ~> GetFile",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: ('netsuite/'+ $pm_FileName)) ~> GetBronzeData",
+				"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('Last_Modified')))) ~> GetMaxWatermark",
+				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('DataLakeModified_DateTime')) > CurrentWatermark)) ~> Increment",
+				"GetFile, GetMaxWatermark join(true(),",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'right')~> AddCurrentWatermark",
+				"Increment select(mapColumn(",
+				"          each(match(name!='CurrentWatermark'))",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
+				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: ('netsuite/'+ $pm_FileName),",
+				"     mergeSchema: true,",
+				"     autoCompact: true,",
+				"     optimizedWrite: true,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+			]
+		}
+	}
+}
