@@ -17,7 +17,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE subscriptionparam
+# MAGIC CREATE OR REPLACE TABLE subscrparam
 # MAGIC   ( 
 # MAGIC         SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
