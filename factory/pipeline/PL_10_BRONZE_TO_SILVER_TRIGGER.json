@@ -3,36 +3,21 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Trigger Job Run Bronze to Silver",
-				"type": "WebActivity",
+				"name": "PL_99_TRIGGER_JOB",
+				"type": "ExecutePipeline",
 				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
 				"userProperties": [],
 				"typeProperties": {
-					"url": {
-						"value": "@{pipeline().globalParameters.gpm_Databrick_Workspace_URL}/api/2.0/jobs/run-now",
-						"type": "Expression"
+					"pipeline": {
+						"referenceName": "PL_99_TRIGGER_JOB",
+						"type": "PipelineReference"
 					},
-					"connectVia": {
-						"referenceName": "ir-ig-managed-dev-westeurope",
-						"type": "IntegrationRuntimeReference"
-					},
-					"method": "POST",
-					"headers": {
-						"Authorization": {
-							"value": "Bearer dapi981457f8473eac25b55fd131d351d845-2",
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_JobID": {
+							"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Bronze_to_Silver",
 							"type": "Expression"
 						}
-					},
-					"body": {
-						"value": "{\n  \"job_id\": 199200608148764\n}",
-						"type": "Expression"
 					}
 				}
 			}

@@ -18,9 +18,9 @@
 				"type": "string",
 				"value": "0915-095651-good16-pool-r70v24z6"
 			},
-			"gpm_silver_default_workloads_Databricks_ClusterID": {
+			"gpm_Databricks_JobID_Bronze_to_Silver": {
 				"type": "string",
-				"value": "0925-145452-rouse19-pool-pklmhhgy"
+				"value": "199200608148764"
 			}
 		},
 		"globalConfigurations": {
