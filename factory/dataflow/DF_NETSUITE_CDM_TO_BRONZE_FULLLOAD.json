@@ -39,7 +39,7 @@
 				"     ignoreNoFilesFound: true,",
 				"     multiLineRow: true,",
 				"     dateFormats: ['dd/MM/yyyy'],",
-				"     timestampFormats: ['dd/MM/yyyy','MM/dd/yyyy hh:mm:ss a','MM/dd/yyyy HH:mm:ss'],",
+				"     timestampFormats: ['dd/MM/yyyy hh:mm a'],",
 				"     manifestType: 'manifest',",
 				"     mode: 'read') ~> GetFile",
 				"GetFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
