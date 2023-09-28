@@ -989,7 +989,7 @@
 								},
 								"wg_bronzeSchema": "netsuite",
 								"wg_rootPath": "netsuite",
-								"wg_tableFormat": "parquet"
+								"wg_tableFormat": "delta"
 							}
 						},
 						"linkedServiceName": {
