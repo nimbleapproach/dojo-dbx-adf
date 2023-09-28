@@ -1,0 +1,40 @@
+{
+	"name": "LS_HTTP_ADB",
+	"properties": {
+		"parameters": {
+			"pm_environment": {
+				"type": "string"
+			},
+			"pm_Databrick_Workspace_URL": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "@{linkedService().pm_Databrick_Workspace_URL}",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous",
+			"authHeaders": {
+				"Authorization": {
+					"type": "AzureKeyVaultSecret",
+					"store": {
+						"referenceName": "LS_KV",
+						"type": "LinkedServiceReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@linkedService().pm_environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"secretName": "secret-databricks-token-adf"
+				}
+			}
+		},
+		"connectVia": {
+			"referenceName": "ir-ig-managed-dev-westeurope",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

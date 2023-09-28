@@ -1,0 +1,45 @@
+{
+	"name": "PL_10_BRONZE_TO_SILVER_TRIGGER",
+	"properties": {
+		"activities": [
+			{
+				"name": "Trigger Job Run Bronze to Silver",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@{pipeline().globalParameters.gpm_Databrick_Workspace_URL}/api/2.0/jobs/run-now",
+						"type": "Expression"
+					},
+					"connectVia": {
+						"referenceName": "ir-ig-managed-dev-westeurope",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "POST",
+					"headers": {
+						"Authorization": {
+							"value": "Bearer dapi981457f8473eac25b55fd131d351d845-2",
+							"type": "Expression"
+						}
+					},
+					"body": {
+						"value": "{\n  \"job_id\": 199200608148764\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "20 Silver"
+		},
+		"annotations": []
+	}
+}
