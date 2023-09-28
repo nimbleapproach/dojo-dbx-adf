@@ -24,10 +24,6 @@
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
-		"LS_HTTP_ADB_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "@{linkedService().pm_Databrick_Workspace_URL}"
-		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
@@ -123,9 +119,6 @@
 					},
 					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
-					},
-					"LS_HTTP_ADB_properties_typeProperties_url": {
-						"value": "[parameters('LS_HTTP_ADB_properties_typeProperties_url')]"
 					},
 					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"

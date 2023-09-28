@@ -36,10 +36,6 @@
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
-		"LS_HTTP_ADB_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "@{linkedService().pm_Databrick_Workspace_URL}"
-		},
 		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
@@ -163,13 +159,13 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_BRONZE_TO_SILVER_TRIGGER')]",
+			"name": "[concat(parameters('factoryName'), '/PL_99_TRIGGER_JOB')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Trigger Job Run Bronze to Silver",
+						"name": "Execute Jobs API",
 						"type": "WebActivity",
 						"dependsOn": [],
 						"policy": {
@@ -190,16 +186,109 @@
 								"type": "IntegrationRuntimeReference"
 							},
 							"method": "POST",
-							"headers": {
-								"Authorization": {
-									"value": "Bearer dapi981457f8473eac25b55fd131d351d845-2",
-									"type": "Expression"
-								}
-							},
+							"headers": {},
 							"body": {
-								"value": "{\n  \"job_id\": 199200608148764\n}",
+								"value": "{\n  \"job_id\": @{pipeline().parameters.pm_JobID}\n}",
 								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
 							}
+						}
+					},
+					{
+						"name": "Wait Until Job is done",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Execute Jobs API",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(equals(variables('v_JobStatus'),'Running'))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Check Job Run API",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"url": {
+											"value": "@{pipeline().globalParameters.gpm_Databrick_Workspace_URL}/api/2.0/jobs/runs/get?run_id=@{activity('Execute Jobs API').output.run_id}",
+											"type": "Expression"
+										},
+										"connectVia": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"method": "GET",
+										"headers": {},
+										"authentication": {
+											"type": "MSI",
+											"resource": "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+										}
+									}
+								},
+								{
+									"name": "Set Job Status",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Check Job Run API",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_JobStatus",
+										"value": {
+											"value": "@if(\nor(\nequals(activity('Check Job Run API').output.state.life_cycle_state, 'PENDING'), equals(activity('Check Job Run API').output.state.life_cycle_state, 'RUNNING')\n),\n'Running',\nactivity('Check Job Run API').output.state.result_state\n)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Wait to Recheck API",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "Set Job Status",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": {
+											"value": "@pipeline().parameters.pm_WaitSeconds",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
 						}
 					}
 				],
@@ -207,8 +296,23 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
+				"parameters": {
+					"pm_JobID": {
+						"type": "string"
+					},
+					"pm_WaitSeconds": {
+						"type": "int",
+						"defaultValue": 60
+					}
+				},
+				"variables": {
+					"v_JobStatus": {
+						"type": "String",
+						"defaultValue": "Running"
+					}
+				},
 				"folder": {
-					"name": "20 Silver"
+					"name": "00 Setup/Databricks"
 				},
 				"annotations": []
 			},
@@ -335,52 +439,6 @@
 							}
 						},
 						"secretName": "secret-adls-nuvias-dynamics-key"
-					}
-				},
-				"connectVia": {
-					"referenceName": "ir-ig-managed-dev-westeurope",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_HTTP_ADB')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_environment": {
-						"type": "string"
-					},
-					"pm_Databrick_Workspace_URL": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "HttpServer",
-				"typeProperties": {
-					"url": "[parameters('LS_HTTP_ADB_properties_typeProperties_url')]",
-					"enableServerCertificateValidation": true,
-					"authenticationType": "Anonymous",
-					"authHeaders": {
-						"Authorization": {
-							"type": "AzureKeyVaultSecret",
-							"store": {
-								"referenceName": "LS_KV",
-								"type": "LinkedServiceReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@linkedService().pm_environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"secretName": "secret-databricks-token-adf"
-						}
 					}
 				},
 				"connectVia": {
@@ -1026,14 +1084,53 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_50_BRONZE_TO_SILVER_Load_Table')]",
+			"name": "[concat(parameters('factoryName'), '/PL_10_BRONZE_TO_SILVER_TRIGGER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Load Table from Bronze to Silver",
-						"type": "DatabricksNotebook",
+						"name": "PL_99_TRIGGER_JOB",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_99_TRIGGER_JOB",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_JobID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Bronze_to_Silver",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "20 Silver"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_99_TAG02_CREATE_EDW_LAYER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Create EDW Schema",
+						"type": "Script",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -1043,52 +1140,27 @@
 							"secureInput": false
 						},
 						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": {
-								"value": "/Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver",
-								"type": "Expression"
-							},
-							"baseParameters": {
-								"wg_tableName": {
-									"value": "@pipeline().parameters.pm_TableName",
-									"type": "Expression"
-								},
-								"wg_tableSchema": {
-									"value": "@pipeline().parameters.pm_TableSchema",
-									"type": "Expression"
-								},
-								"wg_watermarkColumn": {
-									"value": "@pipeline().parameters.pm_WatermarkColumn",
-									"type": "Expression"
-								},
-								"wg_fullload": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								},
-								"wg_truncate": {
-									"value": "@pipeline().parameters.pm_Truncate",
+						"linkedServiceName": {
+							"referenceName": "LS_SQLDB_TAGETIK",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
 									"type": "Expression"
 								}
 							}
 						},
-						"linkedServiceName": {
-							"referenceName": "LS_ADB",
-							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Databrick_Workspace_URL": {
-									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
-									"type": "Expression"
-								},
-								"pm_Databricks_Workspace_Resource_ID": {
-									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
-									"type": "Expression"
-								},
-								"pm_Databricks_Cluster_ID": {
-									"value": "@pipeline().globalParameters.gpm_silver_default_workloads_Databricks_ClusterID",
-									"type": "Expression"
-								},
-								"pm_NumberOfWorkers": "1"
-							}
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "CREATE SCHEMA [edw_@{pipeline().globalParameters.gpm_Environment}]",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
 						}
 					}
 				],
@@ -1096,32 +1168,13 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
-				"parameters": {
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_TableSchema": {
-						"type": "string"
-					},
-					"pm_WatermarkColumn": {
-						"type": "string"
-					},
-					"pm_FullLoad": {
-						"type": "string",
-						"defaultValue": "false"
-					},
-					"pm_Truncate": {
-						"type": "string",
-						"defaultValue": "false"
-					}
-				},
 				"folder": {
-					"name": "20 Silver"
+					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ADB')]"
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_TAGETIK')]"
 			]
 		}
 	]
