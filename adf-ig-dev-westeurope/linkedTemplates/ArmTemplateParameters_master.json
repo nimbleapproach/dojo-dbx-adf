@@ -17,6 +17,9 @@
 		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 			"value": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
+		"LS_HTTP_ADB_properties_typeProperties_url": {
+			"value": "@{linkedService().pm_Databrick_Workspace_URL}"
+		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"value": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
 		},
