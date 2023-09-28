@@ -218,23 +218,21 @@ spark.sql(f"""
 
 # COMMAND ----------
 
-currentVersion = spark.sql(f"""
-          DESCRIBE HISTORY {TABLE_NAME}
-          """).agg(max('version').alias('current_version')).collect()[0]['current_version']
+import random
+
+chanceForOptimizing = random.random()
 
 # COMMAND ----------
 
-# MAGIC %md Every 5 loadings we want to use liquid clustering to optimzie our silver table.
+# MAGIC %md By chance loadings we want to use liquid clustering to optimzie our silver table.
 
 # COMMAND ----------
 
-print(f'The current table version is: {currentVersion}')
-if currentVersion % 5 == 0:
+print(f'The chance is: {chanceForOptimizing}')
+if chanceForOptimizing >= 0.75:
     print(f'We are optimizing the table by using liquid clustering on {BUSINESS_KEYS}')
     spark.sql(
         f"""
         OPTIMIZE {TABLE_NAME}
         """
     )
-else:
-    print(f'Since {currentVersion} is not divisible by 5 we are not optimizing.')
