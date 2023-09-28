@@ -21,6 +21,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
+# MAGIC     ,_SysRowId STRING NOT NULL
+# MAGIC       COMMENT 'Technical Key'
 # MAGIC     ,InvoiceId	STRING	NOT NULL                    
 # MAGIC       COMMENT  'Business key'
 # MAGIC     ,DataAreaId	STRING	NOT NULL   	                    
