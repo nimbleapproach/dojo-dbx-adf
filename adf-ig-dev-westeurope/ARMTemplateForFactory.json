@@ -8830,6 +8830,9 @@
 						},
 						{
 							"name": "DropCurrentWatermark"
+						},
+						{
+							"name": "CastTimestamps"
 						}
 					],
 					"scriptLines": [
@@ -8856,7 +8859,7 @@
 						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
 						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('Last_Modified')))) ~> GetMaxWatermark",
 						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('DataLakeModified_DateTime')) > CurrentWatermark)) ~> Increment",
-						"GetFile, GetMaxWatermark join(true(),",
+						"CastTimestamps, GetMaxWatermark join(true(),",
 						"     joinType:'cross',",
 						"     matchType:'exact',",
 						"     ignoreSpaces: false,",
@@ -8866,6 +8869,8 @@
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
+						"GetFile derive(Last_Modified = toTimestamp(byName('Last_Modified'),'dd/MM/yyyy h:mm a'),",
+						"          Date_Created = toTimestamp(byName('Date_Created'),'dd/MM/yyyy h:mm a')) ~> CastTimestamps",
 						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'delta',",
