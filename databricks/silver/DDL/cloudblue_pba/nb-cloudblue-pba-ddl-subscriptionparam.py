@@ -60,6 +60,6 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE subscriptionparam ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE subscriptionparam ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE subscriptionparam ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE subscrparam ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE subscrparam ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE subscrparam ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');

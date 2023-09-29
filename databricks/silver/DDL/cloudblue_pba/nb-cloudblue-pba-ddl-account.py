@@ -17,9 +17,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR ALTER TABLE account
+# MAGIC CREATE OR REPLACE TABLE account
 # MAGIC   ( 
-# MAGIC         SID bigint
+# MAGIC     SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,AccountID	INT	NOT NULL

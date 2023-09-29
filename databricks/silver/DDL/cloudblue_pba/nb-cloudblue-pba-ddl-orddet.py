@@ -16,7 +16,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR ALTER TABLE orddet
+# MAGIC CREATE OR REPLACE TABLE orddet
 # MAGIC   ( 
 # MAGIC         SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY

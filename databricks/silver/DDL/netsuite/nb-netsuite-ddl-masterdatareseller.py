@@ -29,8 +29,6 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,Reseller_Name	string NOT NULL     
 # MAGIC       COMMENT 'Name of the End User. Also used as the Unique ID'
-# MAGIC     ,Country	    string    
-# MAGIC       COMMENT 'Country Location of Customer'
 # MAGIC     ,Date_Created	TIMESTAMP NOT NULL
 # MAGIC       COMMENT 'Date the End User was created'
 # MAGIC     ,Last_Modified	TIMESTAMP NOT NULL

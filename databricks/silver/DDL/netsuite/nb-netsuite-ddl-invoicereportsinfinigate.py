@@ -42,6 +42,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'GP in USD'
 # MAGIC     ,Last_Modified	TIMESTAMP	 NOT NULL    
 # MAGIC         COMMENT 'Date the sales order was last Modified'
+# MAGIC     ,Start_Date	TIMESTAMP	  
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,End_Date	TIMESTAMP	  
+# MAGIC         COMMENT 'TODO'
 # MAGIC     ,Line_ID	STRING	          
 # MAGIC         COMMENT 'Column to be hashed with Invoice number to make unique PK'
 # MAGIC     ,Opportunity_Name	STRING	  
