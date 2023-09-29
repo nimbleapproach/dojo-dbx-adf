@@ -17,7 +17,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE account
+# MAGIC CREATE OR ALTER TABLE account
 # MAGIC   ( 
 # MAGIC         SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
@@ -25,7 +25,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,AccountID	INT	NOT NULL
 # MAGIC       COMMENT 'Business key'
 # MAGIC     ,AccStatementDay	INT	 
-# MAGIC       COMMENT'TODO'
+# MAGIC       COMMENT'Day of statement date'
 # MAGIC     ,TermID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,AdminPhAreaCode	STRING	
@@ -37,7 +37,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,CountryID	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,AccCurrencyCurrencyID	STRING	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'Currency, customer market place'
 # MAGIC     ,Zip	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,TaxRegID	STRING	
@@ -53,11 +53,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,ExternalID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,BaseCurrencyCurrencyID	STRING	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'what they will buy in'
 # MAGIC     ,TaxRegIDStatus	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,AccCreditLimit_Code	STRING	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'charged in'
 # MAGIC     ,AdminFName	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,CompanyName	STRING	
@@ -67,7 +67,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,AdminLName	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,CreditLimitSrc	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'default credit limit'
 # MAGIC     ,State	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,AdminPhCountryCode	STRING	
@@ -75,19 +75,19 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,AdminPhNumber	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,AStatus	INT	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Type	INT
-# MAGIC       	COMMENT 'TODO'
+# MAGIC       COMMENT 'On active or not, 0 is active, 2 is inactive'
+# MAGIC     ,`Type`	INT
+# MAGIC       	COMMENT '2 is customer and 3 is a reseller'
 # MAGIC     ,ClassID	INT
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,VendorAccountID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'Reseller'
 # MAGIC     ,CreationDate	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Address2	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DateArc	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'Last Modified'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
@@ -111,3 +111,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC ALTER TABLE account ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
 # MAGIC ALTER TABLE account ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
 # MAGIC ALTER TABLE account ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC select * from silver_dev.cloudblue_pba.orddet
+# MAGIC limit 10

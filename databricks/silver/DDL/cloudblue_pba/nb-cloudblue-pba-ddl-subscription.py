@@ -25,65 +25,65 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,subscriptionID	INT	
 # MAGIC       COMMENT 'Business key'
 # MAGIC     ,ExpirationDate	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'current expiration date of the subscription'
 # MAGIC     ,AccountID	INT
-# MAGIC       	COMMENT 'TODO'
+# MAGIC       	COMMENT 'FK for accoutns table, customer that has purhcased subscription'
 # MAGIC     ,startDate	INT	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,ShutdownDate	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'Bkank: order is not processed'
 # MAGIC     ,IsAutoRenew	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'if it wil automatically renew'
+# MAGIC     ,LastBillDate	INT	
+# MAGIC       COMMENT 'last time a billing order was generated'
 # MAGIC     ,NextBillDate	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'next time it will be generated'
 # MAGIC     ,PromoCode	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,BillingPeriod	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'how long it can be billed for'
 # MAGIC     ,BillingPeriodType	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT '2 is month 3 is years 4 is tri'
 # MAGIC     ,LastSyncDate	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'last time subscription was synced'
 # MAGIC     ,NumberOfPeriods	DECIMAL	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'number of times it will recurr'
 # MAGIC     ,RenewPointType	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,RefundPeriod	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'how long it can be refunded for'
 # MAGIC     ,CurrencyID	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,PlanID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'FK for plan table, plan purchased'
 # MAGIC     ,BaseDate	INT	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,LastBillDate	INT	
-# MAGIC       COMMENT 'TODO'
 # MAGIC     ,tariffID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'current tarrif'
+# MAGIC     ,ShutdownDate	INT	
+# MAGIC       COMMENT 'when it was shutdown'
 # MAGIC     ,ShutdownAt	INT	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Period	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'when it was shutdown'
 # MAGIC     ,ServTermID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'FK for subscription '
 # MAGIC     ,CustomStatementDay	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Status	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'subscription can be active but not running'
 # MAGIC     ,RenewOrderInterval	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'days before renewal'
 # MAGIC     ,SubscriptionName	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,serviceTemplateID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Trial	INT	
 # MAGIC       COMMENT 'TODO'
+# MAGIC     ,Period	INT	
+# MAGIC       COMMENT 'subscription period. 1 of whatever period'
 # MAGIC     ,PeriodType	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT '2 is month 3 is years 1 is days'
 # MAGIC     ,RecurringType	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'how often it will recurr'
 # MAGIC     ,DateArc	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'Last Modified'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP

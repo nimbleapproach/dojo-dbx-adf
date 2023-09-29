@@ -23,7 +23,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,PlanID	INT	
-# MAGIC         COMMENT 'TODO'
+# MAGIC         COMMENT 'Primary key'
 # MAGIC     ,name	STRING	
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,shortDescription	STRING	
@@ -31,7 +31,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,ServTermID	INT	
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,serviceTemplateID	INT	
-# MAGIC         COMMENT 'TODO'
+# MAGIC         COMMENT 'template plan id for vendor'
 # MAGIC     ,RecurringType	INT	
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,IsAutoRenew	INT	
@@ -39,13 +39,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,longDescription	STRING	
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,AccountID	INT	
-# MAGIC         COMMENT 'TODO'
+# MAGIC         COMMENT 'FK, tells which resellers have the plan'
 # MAGIC     ,BillingPeriod	INT	
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,BillingPeriodType	INT	
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,Copied_From_PlanID	INT	
-# MAGIC         COMMENT 'TODO'
+# MAGIC         COMMENT 'where plan is delegated from'
 # MAGIC     ,DateArc	INT	
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP

@@ -23,13 +23,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,subscriptionID	INT	
-# MAGIC       COMMENT 'Business key'
+# MAGIC       COMMENT 'Primary key'
 # MAGIC     ,Status	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'been installed, provisioned'
 # MAGIC     ,OrderedAmount	DECIMAL	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,resourceID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'FK'
 # MAGIC     ,Amount	DECIMAL	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,CancellationFeeDescr	STRING	

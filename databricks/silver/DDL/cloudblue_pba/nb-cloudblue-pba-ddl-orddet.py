@@ -16,16 +16,31 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR REPLACE TABLE orddet
+# MAGIC CREATE OR ALTER TABLE orddet
 # MAGIC   ( 
 # MAGIC         SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,DetID	INT	
 # MAGIC       COMMENT 'Business key'
+# MAGIC     ,DetTypeID	INT	
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,UnitPrice_Code	STRING	
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,UnitPrice_Value	DECIMAL	
+# MAGIC       COMMENT 'price per unit'
+# MAGIC     ,ServQty	DECIMAL	
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,ServUnitMeasure	STRING	
+# MAGIC       COMMENT 'unit can be license, but it can also be azure usage'
+# MAGIC     ,DurBillPeriod	INT	
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,DurBillPeriodType	INT	
+# MAGIC       COMMENT 'TODO'
+# MAGIC       ,Vendor_AccountID	INT	
+# MAGIC       COMMENT 'not customer but the reseller'
 # MAGIC     ,OrderID	INT	
-# MAGIC       COMMENT 'Business key'
+# MAGIC       COMMENT 'FK to salesorder'
 # MAGIC     ,PromoID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,PromotedAmt_Code	STRING	
@@ -37,7 +52,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,DiscountAmt_Value	DECIMAL	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,InterReselTranID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'FK to resellertrans'
 # MAGIC     ,ExtendedPrice_Code	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DetDatesAreFinal	INT	
@@ -45,47 +60,29 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,planCategoryID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,TaxAmt_Value	DECIMAL	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'amount of tax for that line item'
 # MAGIC     ,TaxAmt_Code	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DiscountAmt_Code	STRING	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,UnitPrice_Value	DECIMAL	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,ServUnitMeasure	STRING	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,DurBillPeriod	INT	
-# MAGIC       COMMENT 'TODO'
 # MAGIC     ,PromotedAmt_Value	DECIMAL
 # MAGIC       	COMMENT 'TODO'
-# MAGIC     ,UnitPrice_Code	STRING	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,DetEDate	INT	
-# MAGIC       COMMENT 'TODO'
 # MAGIC     ,resourceID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'FK'
 # MAGIC     ,Descr	STRING	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Duration	DECIMAL	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,ServQty	DECIMAL	
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,DetTypeID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,OIID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,subscriptionID	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       COMMENT 'FK to subscription'
 # MAGIC     ,DiscountPercent	DECIMAL	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,ExtendedPrice_Value	DECIMAL	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Vendor_AccountID	INT	
-# MAGIC       COMMENT 'TODO'
 # MAGIC     ,DetSDate	INT
-# MAGIC       	COMMENT 'TODO'
-# MAGIC     ,DurBillPeriodType	INT	
-# MAGIC       COMMENT 'TODO'
+# MAGIC       	COMMENT 'start'
+# MAGIC     ,DetEDate	INT	
+# MAGIC       COMMENT 'end date'
 # MAGIC     ,PlanPeriodID	INT	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DateArc	INT	
