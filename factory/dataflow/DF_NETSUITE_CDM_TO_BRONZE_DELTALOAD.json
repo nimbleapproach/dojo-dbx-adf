@@ -58,7 +58,7 @@
 				"     ignoreNoFilesFound: true,",
 				"     multiLineRow: true,",
 				"     dateFormats: ['dd/MM/yyyy'],",
-				"     timestampFormats: ['dd/MM/yyyy hh:MM a'],",
+				"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
 				"     manifestType: 'manifest',",
 				"     mode: 'read') ~> GetFile",
 				"source(allowSchemaDrift: true,",
