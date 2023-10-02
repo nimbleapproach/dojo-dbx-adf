@@ -79,3 +79,12 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC CREATE SCHEMA IF NOT EXISTS cloudblue_pba;
 # MAGIC CREATE SCHEMA IF NOT EXISTS cloudblue_oss;
 # MAGIC CREATE SCHEMA IF NOT EXISTS nuvias_operations;
+
+# COMMAND ----------
+
+spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE SCHEMA IF NOT EXISTS obt;
