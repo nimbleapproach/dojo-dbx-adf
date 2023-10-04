@@ -40,6 +40,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Classification of the individual item'
 # MAGIC     ,Type	          STRING	  
 # MAGIC       COMMENT 'Column to identify Inventory/Non- inventory item'
+# MAGIC     ,Billing_Duration String
+# MAGIC       COMMENT 'TODO'
 # MAGIC     ,Date_Created	  TIMESTAMP	
 # MAGIC       COMMENT 'Date the SKU was created'
 # MAGIC     ,Last_Modified	TIMESTAMP	NOT NULL
