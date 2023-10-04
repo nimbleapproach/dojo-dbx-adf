@@ -105,11 +105,21 @@ and a.table_name = '{TABLE_NAME}'
 and b.constraint_type = 'PRIMARY KEY'
 """).collect()]
 
-BUSINESS_KEYS = SILVER_PRIMARY_KEYS
+# COMMAND ----------
+
+BUSINESS_KEYS = SILVER_PRIMARY_KEYS.copy()
 try :
     BUSINESS_KEYS.remove(WATERMARK_COLUMN)
 except:
-    BUSINESS_KEYS = SILVER_PRIMARY_KEYS
+    BUSINESS_KEYS = SILVER_PRIMARY_KEYS.copy()
+
+# COMMAND ----------
+
+SILVER_PRIMARY_KEYS
+
+# COMMAND ----------
+
+BUSINESS_KEYS
 
 # COMMAND ----------
 
@@ -143,7 +153,7 @@ else:
 
 target_columns = target_df.columns
 selection_column = [col(column) for column in target_columns if column not in ['SID']]
-hash_columns = [col(column) for column in target_columns if not column in ['SID' ,'Sys_Bronze_InsertDateTime_UTC','Sys_Silver_InsertDateTime_UTC','Sys_Silver_ModifedDateTime_UTC','Sys_Silver_HashKey',f'{WATERMARK_COLUMN}']]
+hash_columns = [col(column) for column in target_columns if not column in ['SID' ,'Sys_Bronze_InsertDateTime_UTC','Sys_Silver_InsertDateTime_UTC','Sys_Silver_ModifedDateTime_UTC','Sys_Silver_HashKey','Sys_Silver_IsCurrent',f'{WATERMARK_COLUMN}']]
 
 # COMMAND ----------
 
@@ -161,10 +171,15 @@ source_df = (
             .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_HashKey', hash(*hash_columns))
+            .withColumn('Sys_Silver_IsCurrent', lit(True))
             .select(selection_column)
             .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
             .dropDuplicates(['Sys_Silver_HashKey'])
             )
+
+# COMMAND ----------
+
+source_df.count()
 
 # COMMAND ----------
 
@@ -173,6 +188,10 @@ source_df = (
 # COMMAND ----------
 
 deduped_df = fillnas(source_df.dropDuplicates(SILVER_PRIMARY_KEYS))
+
+# COMMAND ----------
+
+deduped_df.count()
 
 # COMMAND ----------
 
@@ -193,15 +212,38 @@ updateDict = dict(zip(target_update_columns,source_update_columns))
 
 # COMMAND ----------
 
+SILVER_PRIMARY_KEYS
+
+# COMMAND ----------
+
+BUSINESS_KEYS
+
+# COMMAND ----------
+
 from delta.tables import *
 
 deltaTable = DeltaTable.forName(spark,tableOrViewName=f"silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}")
 
+# COMMAND ----------
+
+conditionBK = " AND ".join([f's.{BUSINESS_KEYS[i]} = t.{BUSINESS_KEYS[i]}' for i in range(len(BUSINESS_KEYS))])
+
+dedupedBK_df = deduped_df.dropDuplicates(BUSINESS_KEYS)
+(deltaTable.alias("t").merge(
+dedupedBK_df.alias("s"),
+conditionBK)
+.whenMatchedUpdate(set = {'t.Sys_Silver_IsCurrent' : lit(None)})
+.execute()
+)
+
+# COMMAND ----------
+
 condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[i]}' for i in range(len(SILVER_PRIMARY_KEYS))])
+
 (deltaTable.alias("t").merge(
 deduped_df.alias("s"),
 condition)
-.whenMatchedUpdate('s.Sys_Silver_HashKey <> t.Sys_Silver_HashKey',set = updateDict)
+.whenMatchedUpdate('s.Sys_Silver_HashKey <> t.Sys_Silver_HashKey or t.Sys_Silver_HashKey is Null',set = updateDict)
 .whenNotMatchedInsert(values  = insertDict)
 .execute()
 )
