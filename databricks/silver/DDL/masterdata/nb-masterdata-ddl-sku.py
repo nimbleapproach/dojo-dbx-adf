@@ -22,8 +22,6 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
-# MAGIC     ,AccountID	INT	NOT NULL
-# MAGIC       COMMENT 'Business key'
 # MAGIC     ,SKU	STRING
 # MAGIC       COMMENT 'Globally Identifier for a Product.'
 # MAGIC     ,Commitment_Duration	STRING
@@ -46,23 +44,16 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the current version.'
-# MAGIC ,CONSTRAINT account_pk PRIMARY KEY(AccountID,DateArc)
+# MAGIC ,CONSTRAINT SKU_pk PRIMARY KEY(SKU)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for account. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (AccountID)
+# MAGIC CLUSTER BY (SKU)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE account ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE account ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE account ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC select * from silver_dev.cloudblue_pba.orddet
-# MAGIC limit 10
+# MAGIC ALTER TABLE SKU ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE SKU ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE SKU ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
