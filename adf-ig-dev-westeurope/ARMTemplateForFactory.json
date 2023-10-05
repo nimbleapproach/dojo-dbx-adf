@@ -4511,7 +4511,7 @@
 										"type": "Expression"
 									},
 									"pm_FileName": {
-										"value": "bronze-datanow-arr-@{pipeline().parameters.pm_SheetName}-@{utcNow()}",
+										"value": "bronze-datanow-arr-@{pipeline().parameters.pm_SheetName}",
 										"type": "Expression"
 									}
 								}
