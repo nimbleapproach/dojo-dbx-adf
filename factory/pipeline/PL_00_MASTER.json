@@ -156,6 +156,12 @@
 						"dependencyConditions": [
 							"Completed"
 						]
+					},
+					{
+						"activity": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
 					}
 				],
 				"userProperties": [],
@@ -182,6 +188,19 @@
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "PL_00_BRONZE_TO_SILVER_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
