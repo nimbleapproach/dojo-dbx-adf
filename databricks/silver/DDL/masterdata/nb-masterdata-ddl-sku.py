@@ -32,6 +32,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'One of Capacity,Flexible'
 # MAGIC     ,Product_Type	STRING
 # MAGIC       COMMENT 'One of Hardware,SW Subscription,SW Perpetual,Vendor support,Training,Professional services,Logistics,Rebates'
+# MAGIC     ,Vendor STRING
+# MAGIC       COMMENT 'Name of the Vendor.'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
@@ -44,11 +46,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the current version.'
-# MAGIC ,CONSTRAINT SKU_pk PRIMARY KEY(SKU,Sys_Bronze_InsertDateTime_UTC)
+# MAGIC ,CONSTRAINT SKU_pk PRIMARY KEY(SKU,Vendor,Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for account. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (SKU)
+# MAGIC CLUSTER BY (SKU,Vendor)
 
 # COMMAND ----------
 
