@@ -118,6 +118,15 @@
 							},
 							{
 								"source": {
+									"name": "Vendor",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Vendor"
+								}
+							},
+							{
+								"source": {
 									"name": "Sys_Bronze_InsertDateTime_UTC",
 									"type": "String"
 								},
@@ -180,7 +189,7 @@
 								"type": "Expression"
 							},
 							"pm_FileName": {
-								"value": "bronze-datanow-arr-@{pipeline().parameters.pm_SheetName}",
+								"value": "bronze-datanow-arr-@{pipeline().parameters.pm_SheetName}-@{utcNow()}",
 								"type": "Expression"
 							}
 						}
