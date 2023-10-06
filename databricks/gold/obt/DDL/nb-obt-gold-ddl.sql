@@ -33,17 +33,17 @@ CREATE OR REPLACE TABLE globaltransactions
     SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
-    ,TransactionDate Date NOT NULL
+    ,TransactionDate TIMESTAMP NOT NULL
         Comment 'Date of the Transaction'
     ,GroupEntityCode STRING NOT NULL 
       COMMENT 'Code to map from with Entity this Transactions came from.'
-    ,RevenueAmount DOUBLE NOT NULL 
+    ,RevenueAmount DECIMAL NOT NULL 
       COMMENT 'Amount of Revenue.'
     ,CurrencyCode STRING NOT NULL
       COMMENT 'Code of the Currency.'
     ,SKU STRING NOT NULL
       COMMENT 'SKU of the item sold. [MASTERDATA]'
-    ,Description STRING NOT NULL
+    ,Description STRING 
       COMMENT 'Description of the item sold.'
     ,ProductType STRING 
       COMMENT 'Type of the Item.'
@@ -61,13 +61,13 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'Name of the Vendor.'
     ,VendorGeography STRING 
       COMMENT 'TODO'
-    ,VendorStartDate STRING 
+    ,VendorStartDate Date 
       COMMENT 'First Date a Vendor sold one item.'
     ,ResellerCode STRING 
       COMMENT 'Code of Reseller.'
     ,ResellerName STRING 
       COMMENT 'Name of Reseller.'
-    ,ResellerStartDate STRING 
+    ,ResellerStartDate TIMESTAMP 
       COMMENT 'TODO'
     ,ResellerGroupCode STRING 
       COMMENT 'TODO'
@@ -75,23 +75,10 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'TODO'
     ,ResellerGeography STRING 
       COMMENT 'TODO'
-    ,ResellerGroupStartDate STRING 
+    ,ResellerGroupStartDate Date 
       COMMENT 'TODO'
-    ,Sys_Gold_InsertDateTime_UTC TIMESTAMP
-      COMMENT 'The timestamp when this entry landed in gold.'
-    ,Sys_Gold_ModifedDateTime_UTC TIMESTAMP
-      DEFAULT current_timestamp()
-      COMMENT 'The timestamp when this entry was last modifed in gold.'
-    ,Sys_Silver_HashKey BIGINT NOT NULL
-      COMMENT 'HashKey over all but Sys columns.'
-,CONSTRAINT globaltransactions_pk PRIMARY KEY(TransactionDate,GroupEntityCode,SKU,VendorCode,ResellerCode,ResellerGroupCode)
+,CONSTRAINT globaltransactions_pk PRIMARY KEY(TransactionDate,GroupEntityCode,SKU)
   )
 COMMENT 'This table contains the global needed reports data for the management reports as one big table (obt). \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (SKU,TransactionDate)
-
--- COMMAND ----------
-
-ALTER TABLE globaltransactions ADD CONSTRAINT Sys_Gold_InsertDateTime_UTC CHECK (Sys_Gold_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE globaltransactions ADD CONSTRAINT Sys_Gold_ModifedDateTime_UTC CHECK (Sys_Gold_ModifedDateTime_UTC > '1900-01-01');
-ALTER TABLE globaltransactions ADD CONSTRAINT TransactionDate CHECK (TransactionDate > '1900-01-01');
+PARTITIONED BY (GroupEntityCode) 
