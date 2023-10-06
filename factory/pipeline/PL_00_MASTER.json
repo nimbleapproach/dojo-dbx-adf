@@ -205,6 +205,26 @@
 					},
 					"waitOnCompletion": true
 				}
+			},
+			{
+				"name": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_00_BRONZE_TO_SILVER_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
 			}
 		],
 		"parameters": {

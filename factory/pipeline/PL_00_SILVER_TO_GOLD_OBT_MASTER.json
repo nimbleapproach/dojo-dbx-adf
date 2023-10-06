@@ -1,0 +1,24 @@
+{
+	"name": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "30 Gold"
+		},
+		"annotations": []
+	}
+}
