@@ -100,11 +100,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT resellertrans_pk PRIMARY KEY(ReselOrdDetID, DateArc)
+# MAGIC ,CONSTRAINT resellertrans_pk PRIMARY KEY(InterReselTranID, DateArc)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for resellertrans. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (ReselOrdDetID)
+# MAGIC CLUSTER BY (InterReselTranID)
 
 # COMMAND ----------
 
