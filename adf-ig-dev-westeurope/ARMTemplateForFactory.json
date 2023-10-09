@@ -879,6 +879,27 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
+					},
+					{
+						"name": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "PL_00_BRONZE_TO_SILVER_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -904,7 +925,8 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_CLOUDBLUE_PBA_Load_Table_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_BRONZE_REGISTER_TABLES_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_BRONZE_TO_SILVER_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_DATANOW_ARR_Load_Sheet_MASTER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_00_DATANOW_ARR_Load_Sheet_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_SILVER_TO_GOLD_OBT_MASTER')]"
 			]
 		},
 		{
@@ -1037,6 +1059,39 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_NUVIAS_OPERATIONS_ITERATOR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_SILVER_TO_GOLD_OBT_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_10_SILVER_TO_GOLD_OBT_TRIGGER')]"
 			]
 		},
 		{
@@ -1999,6 +2054,44 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_SILVER_TO_GOLD_OBT_TRIGGER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_99_TRIGGER_JOB",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_99_TRIGGER_JOB",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_JobID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Silver_to_Gold_obt",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
 			]
 		},
 		{

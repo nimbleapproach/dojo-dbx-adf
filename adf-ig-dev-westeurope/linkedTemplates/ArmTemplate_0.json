@@ -1171,44 +1171,28 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_99_TAG02_CREATE_EDW_LAYER')]",
+			"name": "[concat(parameters('factoryName'), '/PL_10_SILVER_TO_GOLD_OBT_TRIGGER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Create EDW Schema",
-						"type": "Script",
+						"name": "PL_99_TRIGGER_JOB",
+						"type": "ExecutePipeline",
 						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
 						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "LS_SQLDB_TAGETIK",
-							"type": "LinkedServiceReference",
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_99_TRIGGER_JOB",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
 							"parameters": {
-								"pm_Environment": {
-									"value": "@pipeline().globalParameters.gpm_Environment",
+								"pm_JobID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Silver_to_Gold_obt",
 									"type": "Expression"
 								}
 							}
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "Query",
-									"text": {
-										"value": "CREATE SCHEMA [edw_@{pipeline().globalParameters.gpm_Environment}]",
-										"type": "Expression"
-									}
-								}
-							],
-							"scriptBlockExecutionTimeout": "02:00:00"
 						}
 					}
 				],
@@ -1216,12 +1200,12 @@
 					"elapsedTimeMetric": {}
 				},
 				"folder": {
-					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
+					"name": "30 Gold"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_TAGETIK')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
 			]
 		}
 	]
