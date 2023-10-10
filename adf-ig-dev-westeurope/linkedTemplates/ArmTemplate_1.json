@@ -109,6 +109,44 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_RESELLERGROUPS_EXCEL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/RESELLERGROUPS"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "resellergroups",
+						"fileSystem": "external"
+					},
+					"sheetIndex": 0,
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -940,872 +978,201 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_CLOUDBLUE_OSS_Copy_Data')]",
+			"name": "[concat(parameters('factoryName'), '/PL_10_RESELLERGROUPS_Load_Sheet')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "IfFullLoad",
-						"type": "IfCondition",
+						"name": "Load Sheet",
+						"type": "Copy",
 						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
-							"expression": {
-								"value": "@pipeline().parameters.pm_full_load",
-								"type": "Expression"
+							"source": {
+								"type": "ExcelSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									}
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "resellergroups",
+										"type": "Expression"
+									},
+									"wildcardFileName": {
+										"value": "*.xlsx",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								}
 							},
-							"ifFalseActivities": [
-								{
-									"name": "Full Load Cloudblue PBA_Delta_Load",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 1,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
 										"source": {
-											"type": "PostgreSqlSource",
-											"additionalColumns": [
-												{
-													"name": "Sys_Bronze_InsertDateTime_UTC",
-													"value": {
-														"value": "@utcNow()",
-														"type": "Expression"
-													}
-												}
-											]
+											"name": "Infinigate Company",
+											"type": "String",
+											"physicalType": "String"
 										},
 										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings",
-												"maxRowsPerFile": 1000000,
-												"fileNamePrefix": {
-													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
-													"type": "Expression"
-												}
-											}
-										},
-										"enableStaging": false,
-										"validateDataConsistency": true,
-										"logSettings": {
-											"enableCopyActivityLog": true,
-											"copyActivityLogSettings": {
-												"logLevel": "Info",
-												"enableReliableLogging": true
-											},
-											"logLocationSettings": {
-												"linkedServiceName": {
-													"referenceName": "LS_ADLS",
-													"type": "LinkedServiceReference",
-													"parameters": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												},
-												"path": "logging/adf"
-											}
-										},
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
+											"name": "InfinigateCompany",
+											"physicalType": "UTF8"
 										}
 									},
-									"inputs": [
-										{
-											"referenceName": "DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_TableName": {
-													"value": "@pipeline().parameters.pm_TableName",
-													"type": "Expression"
-												},
-												"pm_TableSchema": "public"
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "DS_ADLS_PARQUET",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_FileSystem": "bronze",
-												"pm_Directory": {
-													"value": "cloudblue/oss/@{pipeline().parameters.pm_TableName}",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								}
-							],
-							"ifTrueActivities": [
-								{
-									"name": "Full Load Cloudblue PBA",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 1,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
+									{
 										"source": {
-											"type": "PostgreSqlSource",
-											"additionalColumns": [
-												{
-													"name": "Sys_Bronze_InsertDateTime_UTC",
-													"value": {
-														"value": "@utcNow()",
-														"type": "Expression"
-													}
-												}
-											]
+											"name": "ResellerID",
+											"type": "String",
+											"physicalType": "String"
 										},
 										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings",
-												"maxRowsPerFile": 1000000,
-												"fileNamePrefix": {
-													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
-													"type": "Expression"
-												}
-											}
-										},
-										"enableStaging": false,
-										"validateDataConsistency": true,
-										"logSettings": {
-											"enableCopyActivityLog": true,
-											"copyActivityLogSettings": {
-												"logLevel": "Info",
-												"enableReliableLogging": true
-											},
-											"logLocationSettings": {
-												"linkedServiceName": {
-													"referenceName": "LS_ADLS",
-													"type": "LinkedServiceReference",
-													"parameters": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												},
-												"path": "logging/adf"
-											}
-										},
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
+											"name": "ResellerID",
+											"type": "String",
+											"physicalType": "UTF8"
 										}
 									},
-									"inputs": [
-										{
-											"referenceName": "DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_TableName": {
-													"value": "@pipeline().parameters.pm_TableName",
-													"type": "Expression"
-												},
-												"pm_TableSchema": "public"
-											}
+									{
+										"source": {
+											"name": "ResellerName",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ResellerName",
+											"type": "String",
+											"physicalType": "UTF8"
 										}
-									],
-									"outputs": [
-										{
-											"referenceName": "DS_ADLS_PARQUET",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_FileSystem": "bronze",
-												"pm_Directory": {
-													"value": "cloudblue/oss/@{pipeline().parameters.pm_TableName}",
-													"type": "Expression"
-												}
-											}
+									},
+									{
+										"source": {
+											"name": "ResellerGroupCode",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ResellerGroupCode",
+											"type": "String",
+											"physicalType": "UTF8"
 										}
-									]
+									},
+									{
+										"source": {
+											"name": "ResellerGroupName",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ResellerGroupName",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Entity",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Entity",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"type": "String"
+										},
+										"sink": {
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
 								}
-							]
-						}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_DV_RESELLERGROUPS_EXCEL",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET_STATIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": {
+										"value": "bronze",
+										"type": "Expression"
+									},
+									"pm_Directory": {
+										"value": "masterdata/resellergroups",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "bronze-resellergroups-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
-				"parameters": {
-					"pm_full_load": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_TableName": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"v_watermark_update_meta_source": {
-						"type": "Integer"
-					},
-					"v_Column_Name_update_meta_source": {
-						"type": "String"
-					},
-					"v_Table_Name_update_meta_source": {
-						"type": "String"
-					},
-					"Watermark_int": {
-						"type": "Integer"
-					},
-					"Watermark_int_delta": {
-						"type": "String"
-					}
-				},
 				"folder": {
-					"name": "10 Bronze/CLOUDBLUE/OSS"
+					"name": "10 Bronze/RESELLERGROUPS"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_CLOUDBLUE_PBA_Copy_Data')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "IfFullLoad",
-						"type": "IfCondition",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@pipeline().parameters.pm_full_load",
-								"type": "Expression"
-							},
-							"ifFalseActivities": [
-								{
-									"name": "Delta Load Cloudblue PBA",
-									"type": "Copy",
-									"dependsOn": [
-										{
-											"activity": "Watermark_delta",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										},
-										{
-											"activity": "Watermark_delta_source",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 1,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "PostgreSqlSource",
-											"additionalColumns": [
-												{
-													"name": "Sys_Bronze_InsertDateTime_UTC",
-													"value": {
-														"value": "@utcNow()",
-														"type": "Expression"
-													}
-												}
-											],
-											"query": {
-												"value": "SELECT * FROM public.\"@{pipeline().parameters.pm_TableName}\" WHERE \"@{pipeline().parameters.pm_ColumnName}\"<= @{variables('Watermark_int_delta')} and \"@{pipeline().parameters.pm_ColumnName}\" > @{variables('Watermark_int')}",
-												"type": "Expression"
-											}
-										},
-										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings",
-												"maxRowsPerFile": 500000,
-												"fileNamePrefix": {
-													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
-													"type": "Expression"
-												}
-											}
-										},
-										"enableStaging": false,
-										"logSettings": {
-											"enableCopyActivityLog": true,
-											"copyActivityLogSettings": {
-												"logLevel": "Info",
-												"enableReliableLogging": true
-											},
-											"logLocationSettings": {
-												"linkedServiceName": {
-													"referenceName": "LS_ADLS",
-													"type": "LinkedServiceReference",
-													"parameters": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												},
-												"path": "logging/adf"
-											}
-										},
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_TableName": {
-													"value": "@pipeline().parameters.pm_TableName",
-													"type": "Expression"
-												},
-												"pm_TableSchema": {
-													"value": "'public'",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "DS_ADLS_PARQUET",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_FileSystem": "bronze",
-												"pm_Directory": {
-													"value": "cloudblue/pba/@{pipeline().parameters.pm_TableName}",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								},
-								{
-									"name": "Get Watermark data for Delta",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"sqlReaderQuery": {
-												"value": "SELECT \n      [TABLE_NAME]\n      ,[COLUMN_NAME]\n \n      ,[WATERMARK] as WATERMARK_current\n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]\n  where [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}'\n  and COLUMN_NAME = '@{pipeline().parameters.pm_ColumnName}'",
-												"type": "Expression"
-											},
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"dataset": {
-											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_SchemaName": "adf",
-												"pm_TableName": "CT_CLOUDBLUE_PBA_TABLES",
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												}
-											}
-										},
-										"firstRowOnly": false
-									}
-								},
-								{
-									"name": "Watermark_delta",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "Get Watermark data for Delta",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "Watermark_int",
-										"value": {
-											"value": "@activity('Get Watermark data for Delta').output.value[0].WATERMARK_current",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "UpdateWatermark_DeltaLoad",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "Delta Load Cloudblue PBA",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": "[[adf].[sp_cloudblue_pba_tables_watermark_upsert]",
-										"storedProcedureParameters": {
-											"table_name": {
-												"value": {
-													"value": "@{pipeline().parameters.pm_TableName}",
-													"type": "Expression"
-												},
-												"type": "String"
-											},
-											"watermark": {
-												"value": {
-													"value": "@variables('Watermark_int_delta')",
-													"type": "Expression"
-												},
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "LS_SQLDB_METADATA",
-										"type": "LinkedServiceReference",
-										"parameters": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "Get Watermark data source",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "PostgreSqlSource",
-											"query": {
-												"value": "SELECT MAX(\"@{pipeline().parameters.pm_ColumnName}\") AS WATERMARK_NEW FROM \"@{pipeline().parameters.pm_TableName}\"",
-												"type": "Expression"
-											}
-										},
-										"dataset": {
-											"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_TableName": {
-													"value": "@pipeline().parameters.pm_TableName",
-													"type": "Expression"
-												},
-												"pm_TableSchema": {
-													"value": "'public'",
-													"type": "Expression"
-												}
-											}
-										},
-										"firstRowOnly": false
-									}
-								},
-								{
-									"name": "Watermark_delta_source",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "Get Watermark data source",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "Watermark_int_delta",
-										"value": {
-											"value": "@activity('Get Watermark data source').output.value[0].WATERMARK_NEW",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"ifTrueActivities": [
-								{
-									"name": "Full Load Cloudblue PBA",
-									"type": "Copy",
-									"dependsOn": [
-										{
-											"activity": "Watermark",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 1,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "PostgreSqlSource",
-											"additionalColumns": [
-												{
-													"name": "Sys_Bronze_InsertDateTime_UTC",
-													"value": {
-														"value": "@utcNow()",
-														"type": "Expression"
-													}
-												}
-											],
-											"query": {
-												"value": "SELECT * FROM public.\"@{pipeline().parameters.pm_TableName}\" WHERE \"@{pipeline().parameters.pm_ColumnName}\"<= @{variables('Watermark_int')}",
-												"type": "Expression"
-											}
-										},
-										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings",
-												"maxRowsPerFile": 500000,
-												"fileNamePrefix": {
-													"value": "bronze-cloudblue-@{pipeline().parameters.pm_TableName}-@{utcNow()}",
-													"type": "Expression"
-												}
-											}
-										},
-										"enableStaging": false,
-										"logSettings": {
-											"enableCopyActivityLog": true,
-											"copyActivityLogSettings": {
-												"logLevel": "Info",
-												"enableReliableLogging": true
-											},
-											"logLocationSettings": {
-												"linkedServiceName": {
-													"referenceName": "LS_ADLS",
-													"type": "LinkedServiceReference",
-													"parameters": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												},
-												"path": "logging/adf"
-											}
-										},
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_TableName": {
-													"value": "@pipeline().parameters.pm_TableName",
-													"type": "Expression"
-												},
-												"pm_TableSchema": {
-													"value": "'public'",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "DS_ADLS_PARQUET",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_FileSystem": "bronze",
-												"pm_Directory": {
-													"value": "cloudblue/pba/@{pipeline().parameters.pm_TableName}",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								},
-								{
-									"name": "Get Watermark data",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "PostgreSqlSource",
-											"query": {
-												"value": "SELECT MAX(\"@{pipeline().parameters.pm_ColumnName}\") AS WATERMARK_NEW FROM \"@{pipeline().parameters.pm_TableName}\"",
-												"type": "Expression"
-											}
-										},
-										"dataset": {
-											"referenceName": "DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
-												"pm_TableName": {
-													"value": "@pipeline().parameters.pm_TableName",
-													"type": "Expression"
-												},
-												"pm_TableSchema": {
-													"value": "'public'",
-													"type": "Expression"
-												}
-											}
-										},
-										"firstRowOnly": false
-									}
-								},
-								{
-									"name": "Watermark",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "Get Watermark data",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "Watermark_int",
-										"value": {
-											"value": "@activity('Get Watermark data').output.value[0].WATERMARK_NEW",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "UpdateWatermark_FullLoad",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "Full Load Cloudblue PBA",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": "[[adf].[sp_cloudblue_pba_tables_watermark_upsert]",
-										"storedProcedureParameters": {
-											"table_name": {
-												"value": {
-													"value": "@{pipeline().parameters.pm_TableName}",
-													"type": "Expression"
-												},
-												"type": "String"
-											},
-											"watermark": {
-												"value": {
-													"value": "@variables('Watermark_int')",
-													"type": "Expression"
-												},
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "LS_SQLDB_METADATA",
-										"type": "LinkedServiceReference",
-										"parameters": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_full_load": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_WaterMark": {
-						"type": "int"
-					},
-					"pm_ColumnName": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"v_Column_Name_update_meta_source": {
-						"type": "String"
-					},
-					"v_Table_Name_update_meta_source": {
-						"type": "String"
-					},
-					"Watermark_int": {
-						"type": "Integer"
-					},
-					"Watermark_int_delta": {
-						"type": "Integer"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/CLOUDBLUE/PBA"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]",
-				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]"
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_RESELLERGROUPS_EXCEL')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]"
 			]
 		}
 	]
