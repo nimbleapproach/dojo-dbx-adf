@@ -215,7 +215,7 @@ AND
 # COMMAND ----------
 
 df_obt = spark.read.table('globaltransactions')
-df_infinigate = spark.read.table('gold_dev.obt.infinigate_globaltransactions')
+df_infinigate = spark.read.table(f'gold_{ENVIRONMENT}.obt.infinigate_globaltransactions')
 
 # COMMAND ----------
 
