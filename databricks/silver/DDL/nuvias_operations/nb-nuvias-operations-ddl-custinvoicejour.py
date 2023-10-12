@@ -31,6 +31,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT  'TODO'
 # MAGIC     ,InvoiceAccount	STRING	                
 # MAGIC       COMMENT  'TODO'
+# MAGIC     ,InvoicingName STRING	                
+# MAGIC       COMMENT  'TODO'
 # MAGIC     ,InterCompanyCompanyId	STRING	        
 # MAGIC       COMMENT  'TODO'
 # MAGIC     ,ExchRate	DECIMAL	                      
@@ -40,6 +42,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,CustGroup	STRING	                    
 # MAGIC       COMMENT  'TODO'
 # MAGIC     ,CurrencyCode	STRING	                  
+# MAGIC       COMMENT  'TODO'
+# MAGIC     ,InvoiceAmount DECIMAL
+# MAGIC       COMMENT  'TODO'
+# MAGIC     ,InvoiceAmountMST DECIMAL
 # MAGIC       COMMENT  'TODO'
 # MAGIC     ,SalesId	STRING	                      
 # MAGIC       COMMENT  'TODO'
@@ -59,11 +65,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT custinvoicejour_pk PRIMARY KEY(_SysRowId,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT custinvoicejour_pk PRIMARY KEY(_SysRowId,InvoiceId,DataAreaId,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for custinvoicejour. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId)
+# MAGIC CLUSTER BY (_SysRowId,InvoiceId,DataAreaId)
 
 # COMMAND ----------
 
