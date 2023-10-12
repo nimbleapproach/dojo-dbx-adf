@@ -32,7 +32,7 @@ CREATE OR REPLACE TABLE azienda
     GENERATED ALWAYS AS IDENTITY
     ,COD_AZIENDA STRING NOT NULL 
       COMMENT 'Entity Code'
-    ,RAGIONE_SOCIALE STRING
+    ,DESC_AZIENDA0 STRING
       COMMENT 'Business Name'
     ,FLAG_AZIENDA TINYINT
       COMMENT 'Tells if the entity is a division or real legal entity. \n Possible values are: \n
