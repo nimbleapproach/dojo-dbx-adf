@@ -33,7 +33,7 @@ CREATE OR REPLACE TABLE globaltransactions
     SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
-    ,TransactionDate TIMESTAMP NOT NULL
+    ,TransactionDate Date NOT NULL
         Comment 'Date of the Transaction'
     ,GroupEntityCode STRING NOT NULL 
       COMMENT 'Code to map from with Entity this Transactions came from.'
@@ -67,7 +67,7 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'Code of Reseller.'
     ,ResellerName STRING 
       COMMENT 'Name of Reseller.'
-    ,ResellerStartDate TIMESTAMP 
+    ,ResellerStartDate Date 
       COMMENT 'TODO'
     ,ResellerGroupCode STRING 
       COMMENT 'TODO'
@@ -79,6 +79,6 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'TODO'
 ,CONSTRAINT globaltransactions_pk PRIMARY KEY(TransactionDate,GroupEntityCode,SKU)
   )
-COMMENT 'This table contains the global needed reports data for the management reports as one big table (obt). \n' 
+COMMENT 'This table contains the global needed reports data for the management reports as one big table (obt).' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-PARTITIONED BY (GroupEntityCode) 
+CLUSTER BY (SKU,GroupEntityCode) 

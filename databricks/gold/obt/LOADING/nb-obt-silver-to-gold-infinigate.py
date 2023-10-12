@@ -24,7 +24,7 @@ SELECT
 sil.SID AS SID
 ,'IG' AS GroupEntityCode
 ,'Invoice' AS DocumentType
-,sih.PostingDate AS TransactionDate
+,to_date(sih.PostingDate) AS TransactionDate
 ,RIGHT(sih.Sys_DatabaseName,2) AS InfinigateEntity
 ,sil.Amount AS RevenueAmount
 ,sih.CurrencyCode
@@ -42,7 +42,7 @@ sil.SID AS SID
 ,to_date('1900-01-01','yyyy-MM-dd') AS VendorStartDate
 ,cu.No_ AS ResellerCode
 ,concat_ws(' ',cu.Name,cu.Name2) AS ResellerNameInternal
-,cu.Createdon AS ResellerStartDate
+,to_date(cu.Createdon) AS ResellerStartDate
 ,rg.ResellerGroupCode AS ResellerGroupCode
 ,rg.ResellerGroupName AS ResellerGroupName
 ,cu.Country_RegionCode  AS ResellerGeographyInternal
@@ -121,7 +121,7 @@ SELECT
 sih.Sys_Silver_HashKey as HashKey
 ,'IG' AS GroupEntityCode
 ,'Credit' AS DocumentType
-,sih.PostingDate AS TransactionDate
+,to_date(sih.PostingDate) AS TransactionDate
 ,RIGHT(sih.Sys_DatabaseName,2) AS InfinigateEntity
 ,sil.Amount AS RevenueAmount
 ,sih.CurrencyCode
@@ -139,7 +139,7 @@ sih.Sys_Silver_HashKey as HashKey
 ,to_date('1900-01-01','yyyy-MM-dd') AS VendorStartDate
 ,cu.No_ AS ResellerCode
 ,concat_ws(' ',cu.Name,cu.Name2) AS ResellerNameInternal
-,cu.Createdon AS ResellerStartDate
+,to_date(cu.Createdon) AS ResellerStartDate
 ,rg.ResellerGroupCode AS ResellerGroupCode
 ,rg.ResellerGroupName AS ResellerGroupName
 ,cu.Country_RegionCode AS ResellerGeographyInternal
@@ -214,6 +214,10 @@ AND
 
 # COMMAND ----------
 
+spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
+
+# COMMAND ----------
+
 df_obt = spark.read.table('globaltransactions')
 df_infinigate = spark.read.table(f'gold_{ENVIRONMENT}.obt.infinigate_globaltransactions')
 
@@ -232,4 +236,4 @@ df_selection = df_infinigate.select(selection_columns)
 
 # COMMAND ----------
 
-df_selection.write.mode('overwrite').partitionBy('GroupEntityCode').saveAsTable("globaltransactions")
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'IG'").saveAsTable("globaltransactions")

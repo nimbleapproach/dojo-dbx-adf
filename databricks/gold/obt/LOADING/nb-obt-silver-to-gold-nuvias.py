@@ -23,7 +23,7 @@ SELECT DISTINCT
   'NUV' AS GroupEntityCode 
   ,trans.SID
   ,trans.InvoiceId
-  ,trans.InvoiceDate  AS TransactionDate
+  ,to_date(trans.InvoiceDate)  AS TransactionDate
   ,trans.LineAmountMST AS RevenueAmount
   ,trans.CurrencyCode
   ,COALESCE(it.Description, "NaN") AS SKU 
@@ -40,7 +40,7 @@ SELECT DISTINCT
   ,to_date('1900-01-01') AS VendorStartDate
   ,inv.InvoiceAccount AS ResellerCode
   ,inv.InvoicingName AS ResellerNameInternal
-  ,COALESCE(cust.CREATEDDATETIME, to_timestamp('1900-01-01'))  AS ResellerStartDate
+  ,COALESCE(to_date(cust.CREATEDDATETIME), to_date('1900-01-01'))  AS ResellerStartDate
   ,rg.ResellerGroupCode AS ResellerGroupCode
   ,rg.ResellerGroupName AS ResellerGroupName
   ,'' AS ResellerGeographyInternal
@@ -172,6 +172,4 @@ selection_columns = [
 # COMMAND ----------
 
 df_selection = df_nuvias.select(selection_columns)
-df_selection.write.mode("overwrite").partitionBy("GroupEntityCode").saveAsTable(
-    "globaltransactions"
-)
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NUV'").saveAsTable("globaltransactions")
