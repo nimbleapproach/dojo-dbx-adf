@@ -103,7 +103,7 @@ ResellerGroupCode,
 ResellerGroupName,
 ResellerName,
 Entity
-FROM silver_{ENVIRONMENT}.masterdata.reseller_groups) rg
+FROM silver_{ENVIRONMENT}.masterdata.resellergroups) rg
 ON 
   concat_ws(RIGHT(sih.Sys_DatabaseName,2), sih.`Sell-toCustomerNo_`) = concat_ws(rg.Entity, rg.ResellerID)
 LEFT JOIN
@@ -200,7 +200,7 @@ ResellerGroupCode,
 ResellerGroupName,
 ResellerName,
 Entity
-FROM silver_{ENVIRONMENT}.masterdata.reseller_groups) rg
+FROM silver_{ENVIRONMENT}.masterdata.resellergroups) rg
 ON 
   concat_ws(RIGHT(sih.Sys_DatabaseName,2), sih.`Sell-toCustomerNo_`) = concat_ws(rg.Entity, rg.ResellerID)
 LEFT JOIN
