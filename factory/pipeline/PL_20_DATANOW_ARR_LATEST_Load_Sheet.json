@@ -1,0 +1,218 @@
+{
+	"name": "PL_20_DATANOW_ARR_LATEST_Load_Sheet",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load Sheet",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"additionalColumns": [
+							{
+								"name": "Sys_Bronze_InsertDateTime_UTC",
+								"value": {
+									"value": "@utcNow()",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "datanow/arr/latest",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "*.xlsx",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Vendor name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Vendor_Name",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "SKU",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "SKU",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Commitment Duration with ratio",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Commitment_Duration_with_ratio",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Commitment Duration",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Commitment_Duration",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Billing frequency with ratio",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Billing_Frequency_with_ratio",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Billing Frequency",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Billing_Frequency",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Consumption Model",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Consumption_Model",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Product type",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Product_Type",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Somme de Sales (EUR) LTM",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Somme_de_Sales_EUR_LTM",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_DV_DATANOW_ARR_LATEST_EXCEL",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_PARQUET_STATIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileSystem": {
+								"value": "bronze",
+								"type": "Expression"
+							},
+							"pm_Directory": {
+								"value": "masterdata/datanow/latest/sku",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "bronze-datanow-latest-arr-@{utcNow()}",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/DATANOW/LATEST"
+		},
+		"annotations": []
+	}
+}
