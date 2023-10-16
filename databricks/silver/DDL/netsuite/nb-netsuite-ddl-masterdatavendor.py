@@ -48,7 +48,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT masterdatavendor_pk PRIMARY KEY(Vendor_ID)
+# MAGIC ,CONSTRAINT masterdatavendor_pk PRIMARY KEY(Vendor_ID,Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for masterdatavendor. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
