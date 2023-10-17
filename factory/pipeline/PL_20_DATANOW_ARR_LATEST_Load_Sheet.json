@@ -78,45 +78,45 @@
 							},
 							{
 								"source": {
-									"name": "Commitment Duration with ratio",
+									"name": "Commitment Duration (in months)",
 									"type": "String",
 									"physicalType": "String"
 								},
 								"sink": {
-									"name": "Commitment_Duration_with_ratio",
+									"name": "Commitment_Duration_in_months",
 									"physicalType": "UTF8"
 								}
 							},
 							{
 								"source": {
-									"name": "Commitment Duration",
+									"name": "Commitment Duration2",
 									"type": "String",
 									"physicalType": "String"
 								},
 								"sink": {
-									"name": "Commitment_Duration",
+									"name": "Commitment_Duration2",
 									"physicalType": "UTF8"
 								}
 							},
 							{
 								"source": {
-									"name": "Billing frequency with ratio",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Billing_Frequency_with_ratio",
-									"physicalType": "UTF8"
-								}
-							},
-							{
-								"source": {
-									"name": "Billing Frequency",
+									"name": "Billing frequency",
 									"type": "String",
 									"physicalType": "String"
 								},
 								"sink": {
 									"name": "Billing_Frequency",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Billing Frequency2",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Billing_Frequency2",
 									"physicalType": "UTF8"
 								}
 							},
@@ -150,6 +150,73 @@
 								},
 								"sink": {
 									"name": "Somme_de_Sales_EUR_LTM",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Mapping type Duration",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Mapping_Type_Duration",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Mapping type Billing",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Mapping_Type_Billing",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "MRR ratio",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "MRR_Ratio",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Commitment duration value",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Commitment_Duration_Value",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Billing frequency value2",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Billing_Frequency_Value2",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "MRR",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "MRR",
+									"type": "String",
 									"physicalType": "UTF8"
 								}
 							},
