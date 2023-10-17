@@ -5201,14 +5201,7 @@
 								{
 									"name": "PL_30_IGSQL03_Load_View",
 									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "GetBusinessKeys",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
+									"dependsOn": [],
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
@@ -5230,96 +5223,6 @@
 												"type": "Expression"
 											}
 										}
-									}
-								},
-								{
-									"name": "GetBusinessKeys",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"sqlReaderQuery": {
-												"value": "Select [TABLE_NAME],[BUSINESS_KEYS] from [adf].[CT_IGSQL03_KEYS]\nwhere [TABLE_NAME] = '@{item().TABLE_NAME}'",
-												"type": "Expression"
-											},
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"dataset": {
-											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_SchemaName": {
-													"value": "adf",
-													"type": "Expression"
-												},
-												"pm_TableName": {
-													"value": "CT_IGSQL03_KEYS",
-													"type": "Expression"
-												},
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												}
-											}
-										}
-									}
-								},
-								{
-									"name": "IfBusinessKeysExists",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "PL_30_IGSQL03_Load_View",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@empty(activity('GetBusinessKeys').output.firstRow.BUSINESS_KEYS)",
-											"type": "Expression"
-										},
-										"ifFalseActivities": [
-											{
-												"name": "PL_30_IGSQL03_Sync_Keys",
-												"type": "ExecutePipeline",
-												"dependsOn": [],
-												"userProperties": [],
-												"typeProperties": {
-													"pipeline": {
-														"referenceName": "PL_30_IGSQL03_Sync_Keys",
-														"type": "PipelineReference"
-													},
-													"waitOnCompletion": true,
-													"parameters": {
-														"pm_DatabaseName": {
-															"value": "@pipeline().parameters.pm_DatabaseName",
-															"type": "Expression"
-														},
-														"pm_ViewName": {
-															"value": "@item().TABLE_NAME",
-															"type": "Expression"
-														},
-														"pm_BuinessKeys": {
-															"value": "@split(activity('GetBusinessKeys').output.firstRow.BUSINESS_KEYS,',')",
-															"type": "Expression"
-														}
-													}
-												}
-											}
-										]
 									}
 								}
 							]
@@ -5389,9 +5292,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_30_IGSQL03_Load_View')]",
-				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_30_IGSQL03_Sync_Keys')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_30_IGSQL03_Load_View')]"
 			]
 		},
 		{
