@@ -90,6 +90,9 @@ from pyspark.sql.functions import *
 # COMMAND ----------
 
 target_df = spark.read.table(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}')
+target_datatypes = target_df.dtypes
+
+INIT_LOAD = (target_df.count() == 0)
 
 # COMMAND ----------
 
@@ -225,16 +228,26 @@ deltaTable = DeltaTable.forName(spark,tableOrViewName=f"silver_{ENVIRONMENT}.{TA
 
 # COMMAND ----------
 
-condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[i]}' for i in range(len(SILVER_PRIMARY_KEYS))])
+if INIT_LOAD:
+    print('We are initial loading...')
+    casted_df = deduped_df
+    for column in deduped_df.columns:
+            target_datatype = [pair[1] for pair in target_datatypes if pair[0] == column][0]
+            casted_df = casted_df.withColumn(column, col(column).cast(target_datatype))
 
-(deltaTable.alias("t").merge(
-deduped_df.alias("s"),
-condition)
-.whenMatchedUpdate('t.Sys_Silver_HashKey <> s.Sys_Silver_HashKey',set = updateDict)
-.whenNotMatchedBySourceUpdate(set = {'t.Sys_Silver_IsCurrent' : lit(False)})
-.whenNotMatchedInsert(values  = insertDict)
-.execute()
-)
+    casted_df.writeTo(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}').append()
+else:
+    print('We are merging...')
+    condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[i]}' for i in range(len(SILVER_PRIMARY_KEYS))])
+
+    (deltaTable.alias("t").merge(
+    deduped_df.alias("s"),
+    condition)
+    .whenMatchedUpdate('t.Sys_Silver_HashKey <> s.Sys_Silver_HashKey',set = updateDict)
+    .whenNotMatchedBySourceUpdate(set = {'t.Sys_Silver_IsCurrent' : lit(False)})
+    .whenNotMatchedInsert(values  = insertDict)
+    .execute()
+    )
 
 # COMMAND ----------
 

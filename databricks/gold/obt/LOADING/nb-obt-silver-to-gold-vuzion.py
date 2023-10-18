@@ -153,4 +153,4 @@ df_selection = df_vuzion.select(selection_columns)
 
 # COMMAND ----------
 
-df_selection.write.mode('overwrite').partitionBy('GroupEntityCode').saveAsTable("globaltransactions")
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'VU'").saveAsTable("globaltransactions")
