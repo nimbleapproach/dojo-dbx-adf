@@ -28,7 +28,7 @@ USE SCHEMA igsql03;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales_invoice_line_copy
+CREATE OR REPLACE TABLE sales_invoice_line
   ( 
         SID bigint
         GENERATED ALWAYS AS IDENTITY
@@ -53,6 +53,10 @@ CREATE OR REPLACE TABLE sales_invoice_line_copy
       COMMENT 'TODO'
     ,ShortcutDimension1Code STRING 
       COMMENT 'TODO'
+    ,OrderNo_ STRING 
+      COMMENT 'Sales Order number'
+    ,OrderLineNo_ int 
+      COMMENT 'Sales Order line number'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL
@@ -67,7 +71,7 @@ CREATE OR REPLACE TABLE sales_invoice_line_copy
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
-,CONSTRAINT sales_invoice_line_copy_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT sales_invoice_line_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for sales invoices line. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
@@ -75,6 +79,6 @@ CLUSTER BY (DocumentNo_,LineNo_,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_line_copy ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_line ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_line ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_line ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');

@@ -1,5 +1,5 @@
 -- Databricks notebook source
--- DBTITLE 1,Define Sales Credit Memo Line at Silver
+-- DBTITLE 1,Define Sales Line Archive at Silver
 -- MAGIC %md
 -- MAGIC Widgets are used to give Data Factory a way to hand over parameters. In that we we can control the environment.
 -- MAGIC If there is no widget defined, Data Factory will automatically create them.
@@ -28,35 +28,39 @@ USE SCHEMA igsql03;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales_cr_memo_line
+CREATE OR REPLACE TABLE sales_line_archive
   ( 
         SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
     ,DocumentNo_ STRING NOT NULL 
       COMMENT 'Business Key'
-    ,LineNo_ STRING NOT NULL 
-      COMMENT 'Business Key'
-    ,No_ STRING 
+    ,DocumentType INT NOT NULL
+     COMMENT 'identifier of sales quote(0) and sales order (1)'
+    ,VersionNo_ INT
+      COMMENT 'The version of archive for each document'
+    ,LineNo_ INT
+      COMMENT 'Doc line'
+    ,Doc_No_Occurrence INT
       COMMENT 'TODO'
-    ,Amount DECIMAL 
-      COMMENT 'TODO'
-    ,AmountIncludingVAT DECIMAL 
-      COMMENT 'TODO'
-    ,CostAmountLCY DECIMAL 
-      COMMENT 'TODO'
-    ,Quantity DECIMAL 
-      COMMENT 'TODO'
-    ,UnitPrice DECIMAL 
-      COMMENT 'TODO'
-    ,UnitCostLCY DECIMAL 
-      COMMENT 'TODO'
-    ,ShortcutDimension1Code STRING 
-      COMMENT 'TODO'
-    ,OrderNo_ STRING 
-      COMMENT 'Sales Order number'
-    ,OrderLineNo_ int 
-      COMMENT 'Sales Order line number'
+    ,No_ String
+      COMMENT 'Line item number'
+    ,Type INT
+      COMMENT 'item type'
+   ,Quantity DECIMAL
+      COMMENT 'Line quantity'
+    ,Amount DECIMAL
+      COMMENT 'Line Amount'
+    ,AmountIncludingVAT DECIMAL
+      COMMENT 'Line amount including VAT'
+    ,CostAmountLCY DECIMAL
+      COMMENT 'Line Cost'
+    ,Alternative INT
+      COMMENT 'flag whether a sales quote is alternative or not'
+    ,ShortcutDimension1Code STRING
+      COMMENT 'vendor code'
+    ,ShortcutDimension2Code STRING
+      COMMENT 'business type code'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL
@@ -71,14 +75,14 @@ CREATE OR REPLACE TABLE sales_cr_memo_line
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
-,CONSTRAINT sales_cr_memo_line_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT sales_line_archivee_pk PRIMARY KEY(DocumentNo_,VersionNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
-COMMENT 'This table contains the line data for sales credit memo line. \n' 
-TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (DocumentNo_,LineNo_,Sys_DatabaseName)
+COMMENT 'This table contains the header data for sales line archive. \n' 
+TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'enabled')
+CLUSTER BY (DocumentNo_,VersionNo_,LineNo_,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_cr_memo_line ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_cr_memo_line ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_cr_memo_line ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_line_archive ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_line_archive ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_line_archive ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');

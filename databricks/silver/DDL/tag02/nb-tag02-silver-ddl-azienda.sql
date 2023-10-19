@@ -50,6 +50,8 @@ CREATE OR REPLACE TABLE azienda
       P: Proportional \n
       C: Cost \n
       E: Equity \n'
+      ,COD_VALUTA STRING
+      COMMENT 'Entity Local currency'
     ,DATEUPD TIMESTAMP
       COMMENT 'Last Update Timestamp'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP

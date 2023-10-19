@@ -16,38 +16,28 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE custinvoicetrans
+# MAGIC CREATE OR REPLACE TABLE salesline
 # MAGIC   ( 
 # MAGIC     SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,_SysRowId STRING NOT NULL
 # MAGIC       COMMENT 'Technical Key'
-# MAGIC     ,InvoiceId	STRING	NOT NULL                    
-# MAGIC       COMMENT  'Business key'
-# MAGIC     ,InvoiceDate	TIMESTAMP                  
-# MAGIC       COMMENT  'TODO'
+# MAGIC     ,SalesId 	STRING	
+# MAGIC       COMMENT 'Business key'
+# MAGIC     ,SalesStatus STRING
 # MAGIC     ,LineNum DECIMAL
-# MAGIC       COMMENT 'line number of the invoice'
-# MAGIC     ,DataAreaId	STRING	NOT NULL   	                    
-# MAGIC       COMMENT  'Identifier of source data area'
-# MAGIC     ,CurrencyCode	STRING	                 
-# MAGIC       COMMENT  'TODO'
-# MAGIC     ,LineAmountMST DECIMAL 
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,ItemId	STRING	        
+# MAGIC     ,ItemId STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,InventTransId STRING	        
+# MAGIC     ,InventTransId STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,SalesId	STRING	      
+# MAGIC     ,CREATEDDATETIME TIMESTAMP
+# MAGIC       COMMENT 'TODO' 
+# MAGIC     ,SalesPrice   DECIMAL
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,LineAmount	DECIMAL	    
+# MAGIC     ,SalesQty DECIMAL
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Qty	DECIMAL	          
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,SalesUnit	STRING	
-# MAGIC       COMMENT 'TODO'
-# MAGIC
 # MAGIC     ,LastProcessedChange_DateTime	TIMESTAMP	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DataLakeModified_DateTime	TIMESTAMP	
@@ -62,16 +52,16 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT custinvoicetrans_pk PRIMARY KEY(_SysRowId,InvoiceId,LineNum,DataAreaId,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT salesline_pk PRIMARY KEY(_SysRowId,SalesId,LineNum,DataLakeModified_DateTime)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the line data for custinvoicetrans. \n' 
+# MAGIC COMMENT 'This table contains the line data for salesline. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId,InvoiceId,LineNum,DataAreaId)
+# MAGIC CLUSTER BY (_SysRowId,SalesId,LineNum)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE custinvoicetrans ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE custinvoicetrans ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE custinvoicetrans ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE salesline ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE salesline ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE salesline ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');

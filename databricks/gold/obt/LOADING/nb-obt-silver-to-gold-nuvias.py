@@ -20,10 +20,13 @@ spark.sql(
 CREATE OR REPLACE VIEW nuvias_globaltransactions AS
 
 SELECT DISTINCT
-  'NUV' AS GroupEntityCode 
+  'NUV' AS SourceSystemName
+  -- ,UPPER(trans.DataAreaId) AS GroupEntityCode 
+  ,'NUV' AS GroupEntityCode 
   ,trans.SID
   ,trans.InvoiceId
   ,to_date(trans.InvoiceDate)  AS TransactionDate
+  ,trans.SalesId AS SalesOrderID
   ,trans.LineAmountMST AS RevenueAmount
   ,trans.CurrencyCode
   ,COALESCE(it.Description, "NaN") AS SKU 
@@ -82,6 +85,7 @@ FROM
   LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON inv.InvoiceAccount = rg.ResellerID
   and rg.InfinigateCompany = 'Nuvias'
   AND upper(trans.DataAreaId) = rg.Entity
+  AND rg.Sys_Silver_IsCurrent = 1
   LEFT JOIN silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_omlegalstaging AS entmap ON rg.Entity = entmap.LEGALENTITYID
   and entmap.Sys_Silver_IsCurrent = 1
   LEFT JOIN (
@@ -143,9 +147,16 @@ FROM
   ON inv.InvoiceAccount = cust.AccountNum
   AND inv.DataAreaId = cust.DataAreaId
   AND cust.Sys_Silver_IsCurrent = 1
+  LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.salesline AS salestrans ON trans.SalesId = salestrans.Salesid
+  AND trans.ItemId = salestrans.ItemId
+  and trans.InventTransId = salestrans.InventTransId
+  AND salestrans.Sys_Silver_IsCurrent = 1
+  AND salestrans.SalesStatus <> '4' --This is removed as it identifies cancelled lines on the sales order
+  AND salestrans.itemid NOT IN ('Delivery_Out', '6550896') -- This removes the Delivery_Out and Swedish Chemical Tax lines that are on some orders which is never included in the Revenue Number
 WHERE
   trans.Sys_Silver_IsCurrent = 1
-  and right(trans.InvoiceId, 4) not in ('NGS1', 'NNL2')"""
+  AND UPPER(trans.DataAreaId) NOT IN ('NGS1', 'NNL2')
+  AND UPPER(LEFT(trans.InvoiceId,2)) IN ('IN','CR')"""
 )
 
 # COMMAND ----------
