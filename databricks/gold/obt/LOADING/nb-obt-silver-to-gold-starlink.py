@@ -30,7 +30,7 @@ SELECT
   it.Item_Category AS ProductTypeInternal,
   datanowarr.Product_Type AS ProductTypeMaster,
   '' AS ProductSubtype,
-  datanowarr.Commitment_Duration AS CommitmentDuration,
+  datanowarr.Commitment_Duration_in_months AS CommitmentDuration,
   datanowarr.Billing_Frequency AS BillingFrequency,
   datanowarr.Consumption_Model AS ConsumptionModel,
   ven.Vendor_ID AS VendorCode,

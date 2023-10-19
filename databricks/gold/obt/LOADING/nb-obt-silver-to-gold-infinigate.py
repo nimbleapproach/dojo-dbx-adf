@@ -28,7 +28,7 @@ SELECT
   'Invoice' AS DocumentType,
   to_date(sih.PostingDate) AS TransactionDate,
   so.SalesOrderID,
-  so.SalesOrderDate,
+  to_date(so.SalesOrderDate) as SalesOrderDate,
   so.SalesOrderItemID,
   CAST(sil.Amount AS DECIMAL)  AS RevenueAmount,
   Case
@@ -145,7 +145,7 @@ SELECT
   'Sales Credit Memo' AS DocumentType,
   to_date(sih.PostingDate) AS TransactionDate,
   so.SalesOrderID,
-  so.SalesOrderDate,
+  to_date(so.SalesOrderDate) as SalesOrderDate,
   so.SalesOrderItemID,
   CAST(sil.Amount * (-1)AS DECIMAL) AS RevenueAmount,
   Case
@@ -253,10 +253,6 @@ FROM
   and sil.OrderLineNo_ = so.SalesOrderLineNo
   and sil.Sys_DatabaseName = so.Sys_DatabaseName
 """)
-
-# COMMAND ----------
-
-spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
 
 # COMMAND ----------
 
