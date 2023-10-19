@@ -33,19 +33,27 @@ CREATE OR REPLACE TABLE globaltransactions
     SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
-    ,TransactionDate Date NOT NULL
-        Comment 'Date of the Transaction'
     ,GroupEntityCode STRING NOT NULL 
       COMMENT 'Code to map from with Entity this Transactions came from.'
-    ,RevenueAmount DECIMAL NOT NULL 
+    ,EntityCode STRING
+      COMMENT 'Reseller Entity code'
+    ,TransactionDate DATE NOT NULL
+        Comment 'Date of the Transaction'
+    ,SalesOrderID STRING
+        Comment 'Business Key'
+    ,SalesOrderDate DATE
+      Comment 'TODO'
+    ,SalesOrderItemID STRING
+      Comment 'Line item number'
+    ,RevenueAmount DECIMAL(10,2)
       COMMENT 'Amount of Revenue.'
-    ,CurrencyCode STRING NOT NULL
+    ,CurrencyCode STRING
       COMMENT 'Code of the Currency.'
-    ,SKU STRING NOT NULL
+    ,SKU STRING
       COMMENT 'SKU of the item sold. [MASTERDATA]'
     ,Description STRING 
       COMMENT 'Description of the item sold.'
-    ,ProductType STRING 
+    ,ProductType_Internal STRING 
       COMMENT 'Type of the Item.'
     ,ProductSubType STRING 
       COMMENT 'SubType of the Item.'
@@ -61,13 +69,13 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'Name of the Vendor.'
     ,VendorGeography STRING 
       COMMENT 'TODO'
-    ,VendorStartDate Date 
+    ,VendorStartDate DATE 
       COMMENT 'First Date a Vendor sold one item.'
     ,ResellerCode STRING 
       COMMENT 'Code of Reseller.'
     ,ResellerName STRING 
       COMMENT 'Name of Reseller.'
-    ,ResellerStartDate Date 
+    ,ResellerStartDate DATE 
       COMMENT 'TODO'
     ,ResellerGroupCode STRING 
       COMMENT 'TODO'
@@ -75,10 +83,9 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'TODO'
     ,ResellerGeography STRING 
       COMMENT 'TODO'
-    ,ResellerGroupStartDate Date 
+    ,ResellerGroupStartDate DATE 
       COMMENT 'TODO'
-,CONSTRAINT globaltransactions_pk PRIMARY KEY(TransactionDate,GroupEntityCode,SKU)
   )
-COMMENT 'This table contains the global needed reports data for the management reports as one big table (obt).' 
+COMMENT 'This table contains the global needed reports data for the management reports as one big table (obt). \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (SKU,GroupEntityCode) 
+CLUSTER BY (GroupEntityCode) 
