@@ -22,15 +22,14 @@ CREATE OR Replace VIEW infinigate_globaltransactions AS
 --Sales Invoice Header/Line
 SELECT
   sil.SID AS SID,
-  'NAV' AS SourceSystemName,
-  'NAV'AS GroupEntityCode,
-  -- entity.TagetikEntityCode AS GroupEntityCode,
+  'IG'AS GroupEntityCode,
+  entity.TagetikEntityCode AS EntityCode,
   'Invoice' AS DocumentType,
   to_date(sih.PostingDate) AS TransactionDate,
-  so.SalesOrderID,
-  to_date(so.SalesOrderDate) as SalesOrderDate,
-  so.SalesOrderItemID,
-  CAST(sil.Amount AS DECIMAL)  AS RevenueAmount,
+  coalesce(so.SalesOrderID, 'NaN' ) AS SalesOrderID,
+  to_date(coalesce(so.SalesOrderDate,'1900-01-01' )) as SalesOrderDate,
+  coalesce(so.SalesOrderItemID, 'NaN' ) AS SalesOrderItemID,
+  CAST(sil.Amount AS DECIMAL(10,2))  AS RevenueAmount,
   Case
     sih.CurrencyCode = 'NaN'
     WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
@@ -41,7 +40,7 @@ SELECT
     WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
     ELSE sih.CurrencyCode
   END AS CurrencyCode,
-  it.No_ AS SKU,
+  coalesce(it.No_,'NaN') AS SKU,
   concat_ws(
     ' ',
     it.Description,
@@ -49,17 +48,16 @@ SELECT
     it.Description3,
     it.Description4
   ) AS Description,
-  it.ProductType AS ProductTypeInternal,
-  datanowarr.Product_Type AS ProductTypeMaster,
-  '' AS ProductSubtype,
-  datanowarr.Commitment_Duration2 AS CommitmentDuration,
-  datanowarr.Billing_Frequency AS BillingFrequency,
-  datanowarr.Consumption_Model AS ConsumptionModel,
-  ven.Code AS VendorCode,
-  ven.Name AS VendorName,
+  coalesce(it.ProductType,'NaN') AS ProductTypeInternal,
+  coalesce(datanowarr.Product_Type,'NaN')AS ProductTypeMaster,
+  coalesce(datanowarr.Commitment_Duration_in_months ,'NaN')AS CommitmentDuration,
+  coalesce(datanowarr.Billing_Frequency             ,'NaN')AS BillingFrequency,
+  coalesce(datanowarr.Consumption_Model             ,'NaN')AS ConsumptionModel,
+  coalesce(ven.Code,'NaN') AS VendorCode,
+  coalesce(ven.Name,'NaN') AS VendorName,
   '' AS VendorGeography,
   to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
-  cu.No_ AS ResellerCode,
+  coalesce(cu.No_,'NaN') AS ResellerCode,
   concat_ws(' ', cu.Name, cu.Name2) AS ResellerNameInternal,
   to_date(cu.Createdon) AS ResellerStartDate,
   rg.ResellerGroupCode AS ResellerGroupCode,
@@ -68,7 +66,6 @@ SELECT
   to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
   rg.ResellerName AS ResellerNameMaster,
   rg.Entity AS IGEntityOfReseller,
-  '' AS ResellerGeographyMaster,
   rg.ResellerID AS ResellerID
 FROM
   silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
@@ -139,15 +136,14 @@ UNION All
   --- Sales credit memo
 SELECT
   sil.SID AS SID,
-  'NAV' AS SourceSystemName,
-  'NAV'AS GroupEntityCode,
-  -- entity.TagetikEntityCode AS GroupEntityCode,
+  'IG'AS GroupEntityCode,
+  entity.TagetikEntityCode AS EntityCode,
   'Sales Credit Memo' AS DocumentType,
   to_date(sih.PostingDate) AS TransactionDate,
   so.SalesOrderID,
-  to_date(so.SalesOrderDate) as SalesOrderDate,
+  to_date(coalesce(so.SalesOrderDate,'1900-01-01' )) as SalesOrderDate,
   so.SalesOrderItemID,
-  CAST(sil.Amount * (-1)AS DECIMAL) AS RevenueAmount,
+  CAST(sil.Amount * (-1)AS DECIMAL(10,2)) AS RevenueAmount,
   Case
     sih.CurrencyCode = 'NaN'
     WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
@@ -168,8 +164,7 @@ SELECT
   ) AS Description,
   it.ProductType AS ProductTypeInternal,
   datanowarr.Product_Type AS ProductTypeMaster,
-  '' AS ProductSubtype,
-  datanowarr.Commitment_Duration2 AS CommitmentDuration,
+  datanowarr.Commitment_Duration_in_months AS CommitmentDuration,
   datanowarr.Billing_Frequency AS BillingFrequency,
   datanowarr.Consumption_Model AS ConsumptionModel,
   ven.Code AS VendorCode,
@@ -185,7 +180,6 @@ SELECT
   to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
   rg.ResellerName AS ResellerNameMaster,
   rg.Entity AS IGEntityOfReseller,
-  '' AS ResellerGeographyMaster,
   rg.ResellerID AS ResellerID
 FROM
   silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
@@ -256,6 +250,10 @@ FROM
 
 # COMMAND ----------
 
+spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
+
+# COMMAND ----------
+
 df_obt = spark.read.table('globaltransactions')
 df_infinigate = spark.read.table(f'gold_{ENVIRONMENT}.obt.infinigate_globaltransactions')
 
@@ -271,7 +269,8 @@ selection_columns = [col(column) for column in intersection_columns if column no
 # COMMAND ----------
 
 df_selection = df_infinigate.select(selection_columns)
+df_selection = df_selection.fillna(value= 'NaN').replace('', 'NaN')
 
 # COMMAND ----------
 
-df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NAV'").saveAsTable("globaltransactions")
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'IG'").saveAsTable("globaltransactions")

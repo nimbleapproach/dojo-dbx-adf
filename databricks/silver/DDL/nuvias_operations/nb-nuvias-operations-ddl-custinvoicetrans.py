@@ -27,13 +27,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT  'Business key'
 # MAGIC     ,InvoiceDate	TIMESTAMP                  
 # MAGIC       COMMENT  'TODO'
-# MAGIC     ,LineNum DECIMAL
+# MAGIC     ,LineNum DECIMAL(10,2) 
 # MAGIC       COMMENT 'line number of the invoice'
 # MAGIC     ,DataAreaId	STRING	NOT NULL   	                    
 # MAGIC       COMMENT  'Identifier of source data area'
 # MAGIC     ,CurrencyCode	STRING	                 
 # MAGIC       COMMENT  'TODO'
-# MAGIC     ,LineAmountMST DECIMAL 
+# MAGIC     ,LineAmountMST DECIMAL(10,2)  
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,ItemId	STRING	        
 # MAGIC       COMMENT 'TODO'
@@ -41,9 +41,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,SalesId	STRING	      
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,LineAmount	DECIMAL	    
+# MAGIC     ,LineAmount	DECIMAL(10,2) 	    
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Qty	DECIMAL	          
+# MAGIC     ,Qty	DECIMAL(10,2) 	          
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,SalesUnit	STRING	
 # MAGIC       COMMENT 'TODO'

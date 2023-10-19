@@ -39,17 +39,17 @@ CREATE OR REPLACE TABLE sales_cr_memo_line
       COMMENT 'Business Key'
     ,No_ STRING 
       COMMENT 'TODO'
-    ,Amount DECIMAL 
+    ,Amount DECIMAL(10,2) 
       COMMENT 'TODO'
-    ,AmountIncludingVAT DECIMAL 
+    ,AmountIncludingVAT DECIMAL(10,2) 
       COMMENT 'TODO'
-    ,CostAmountLCY DECIMAL 
+    ,CostAmountLCY DECIMAL(10,2) 
       COMMENT 'TODO'
-    ,Quantity DECIMAL 
+    ,Quantity DECIMAL(10,2) 
       COMMENT 'TODO'
-    ,UnitPrice DECIMAL 
+    ,UnitPrice DECIMAL(10,2) 
       COMMENT 'TODO'
-    ,UnitCostLCY DECIMAL 
+    ,UnitCostLCY DECIMAL(10,2) 
       COMMENT 'TODO'
     ,ShortcutDimension1Code STRING 
       COMMENT 'TODO'

@@ -21,9 +21,13 @@ CREATE OR REPLACE VIEW starlink_globaltransactions AS
 
 SELECT
   'SL' AS GroupEntityCode,
+  'SL' AS EntityCode,
   si.SID,
   to_date(si.Date) AS TransactionDate,
-  cast(si.Revenue_USD as DECIMAL(10, 0)) AS RevenueAmount,
+  RIGHT(si.Sales_Order_Number,9) AS SalesOrderID,
+  TO_DATE(si.Sales_Order_Date) AS SalesOrderDate,
+  si.SKU_ID AS SalesOrderItemID,
+  cast(si.Revenue_USD as DECIMAL(10, 2)) AS RevenueAmount,
   si.Deal_Currency AS CurrencyCode,
   COALESCE(it.SKU_ID, "NaN") AS SKU,
   it.Description AS Description,
@@ -39,11 +43,11 @@ SELECT
   to_date(ven.Contract_Start_Date) AS VendorStartDate,
   cu.Customer_Name AS ResellerCode,
   cu.Customer_Name AS ResellerNameInternal,
-  to_date(cu.Date_Created) AS ResellerStartDate,
+  to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerStartDate,
   '' AS ResellerGroupCode,
   '' AS ResellerGroupName,
   '' AS ResellerGeographyInternal,
-  to_date(cu.Date_Created) AS ResellerGroupStartDate,
+  to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,
   '' AS ResellerNameMaster,
   '' AS IGEntityOfReseller,
   '' AS ResellerGeographyMaster,
@@ -100,6 +104,7 @@ selection_columns = [
 # COMMAND ----------
 
 df_selection = df_sl.select(selection_columns)
+df_selection = df_selection.fillna(value= 'NaN').replace('', 'NaN')
 
 # COMMAND ----------
 

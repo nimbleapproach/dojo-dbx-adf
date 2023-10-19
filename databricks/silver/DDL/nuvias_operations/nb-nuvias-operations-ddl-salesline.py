@@ -38,6 +38,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,SalesQty DECIMAL
 # MAGIC       COMMENT 'TODO'
+# MAGIC     ,DataAreaId STRING
+# MAGIC       COMMENT 'TODO'
 # MAGIC     ,LastProcessedChange_DateTime	TIMESTAMP	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DataLakeModified_DateTime	TIMESTAMP	
@@ -52,11 +54,12 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT salesline_pk PRIMARY KEY(_SysRowId,SalesId,LineNum,DataLakeModified_DateTime)
+# MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC ,CONSTRAINT salesline_pk PRIMARY KEY(SalesId,LineNum,DataAreaId,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for salesline. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId,SalesId,LineNum)
+# MAGIC CLUSTER BY (SalesId,LineNum,DataAreaId)
 
 # COMMAND ----------
 

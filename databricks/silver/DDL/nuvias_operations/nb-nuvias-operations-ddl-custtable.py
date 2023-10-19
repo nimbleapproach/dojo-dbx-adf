@@ -46,11 +46,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,Sys_Silver_IsCurrent BOOLEAN NOT NULL
 # MAGIC       COMMENT 'TODO'
 # MAGIC     
-# MAGIC ,CONSTRAINT custtable_pk PRIMARY KEY(_SysRowId,AccountNum,DataAreaId,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT custtable_pk PRIMARY KEY(AccountNum,DataAreaId,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for custtable. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId,AccountNum,DataAreaId)
+# MAGIC CLUSTER BY (AccountNum,DataAreaId)
 
 # COMMAND ----------
 
