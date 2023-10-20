@@ -53,10 +53,8 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'SKU of the item sold. [MASTERDATA]'
     ,Description STRING 
       COMMENT 'Description of the item sold.'
-    ,ProductType_Internal STRING 
+    ,ProductTypeInternal STRING 
       COMMENT 'Type of the Item.'
-    ,ProductSubType STRING 
-      COMMENT 'SubType of the Item.'
     ,CommitmentDuration STRING 
       COMMENT 'TODO'
     ,BillingFrequency STRING 
@@ -73,7 +71,7 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'First Date a Vendor sold one item.'
     ,ResellerCode STRING 
       COMMENT 'Code of Reseller.'
-    ,ResellerName STRING 
+    ,ResellerNameInternal STRING 
       COMMENT 'Name of Reseller.'
     ,ResellerStartDate DATE 
       COMMENT 'TODO'
@@ -81,7 +79,7 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'TODO'
     ,ResellerGroupName STRING 
       COMMENT 'TODO'
-    ,ResellerGeography STRING 
+    ,ResellerGeographyInternal STRING 
       COMMENT 'TODO'
     ,ResellerGroupStartDate DATE 
       COMMENT 'TODO'
