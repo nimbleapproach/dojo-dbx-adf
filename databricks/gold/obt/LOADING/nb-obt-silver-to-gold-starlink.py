@@ -19,40 +19,39 @@ spark.sql(
     f"""         
 CREATE OR REPLACE VIEW starlink_globaltransactions AS
 
-SELECT
+with cte as 
+(SELECT
   'SL' AS GroupEntityCode,
-  'SL' AS EntityCode,
+  'AE1' AS EntityCode,
   si.SID,
   to_date(si.Date) AS TransactionDate,
-  RIGHT(si.Sales_Order_Number,9) AS SalesOrderID,
   TO_DATE(si.Sales_Order_Date) AS SalesOrderDate,
+  RIGHT(si.Sales_Order_Number,9) AS SalesOrderID,
   si.SKU_ID AS SalesOrderItemID,
-  cast(si.Revenue_USD as DECIMAL(10, 2)) AS RevenueAmount,
-  si.Deal_Currency AS CurrencyCode,
-  COALESCE(it.SKU_ID, "NaN") AS SKU,
-  it.Description AS Description,
-  it.Item_Category AS ProductTypeInternal,
-  datanowarr.Product_Type AS ProductTypeMaster,
-  '' AS ProductSubtype,
-  datanowarr.Commitment_Duration_in_months AS CommitmentDuration,
-  datanowarr.Billing_Frequency AS BillingFrequency,
-  datanowarr.Consumption_Model AS ConsumptionModel,
-  ven.Vendor_ID AS VendorCode,
-  ven.Vendor_Name AS VendorName,
-  '' AS VendorGeography,
-  to_date(ven.Contract_Start_Date) AS VendorStartDate,
-  cu.Customer_Name AS ResellerCode,
-  cu.Customer_Name AS ResellerNameInternal,
+  COALESCE(it.SKU_ID, "NaN") AS SKUInternal,
+  COALESCE(datanowarr.SKU, 'NaN')  AS SKUMaster,
+  COALESCE(it.Description,'NaN') AS Description,
+  COALESCE(it.Item_Category,'NaN') AS ProductTypeInternal,
+  COALESCE(datanowarr.Product_Type,'NaN') AS ProductTypeMaster,
+  coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
+  coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
+  coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
+  coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
+  coalesce(ven.Vendor_ID,   'NaN') AS VendorCode,
+  coalesce(ven.Vendor_Name, 'NaN') AS VendorNameInternal,
+  coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
+  'AE1' AS VendorGeography,
+  to_date('1900-01-01') AS VendorStartDate,
+  coalesce(cu.Customer_Name,'NaN') AS ResellerCode,
+  coalesce(cu.Customer_Name,'NaN') AS ResellerNameInternal,
+  'AE1' AS ResellerGeographyInternal,
   to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerStartDate,
-  '' AS ResellerGroupCode,
-  '' AS ResellerGroupName,
-  '' AS ResellerGeographyInternal,
+  'NaN' AS ResellerGroupCode,
+  'NaN' AS ResellerGroupName,
   to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,
-  '' AS ResellerNameMaster,
-  '' AS IGEntityOfReseller,
-  '' AS ResellerGeographyMaster,
-  '' AS ResellerID,
-  datanowarr.Vendor_Name AS VendorNameMaster
+  si.Deal_Currency AS CurrencyCode,
+  cast(si.Revenue_USD as DECIMAL(10, 2)) AS RevenueAmount
+
 FROM
   silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si
   left join silver_{ENVIRONMENT}.netsuite.masterdatasku AS it ON si.SKU_ID = it.SKU_ID
@@ -78,7 +77,49 @@ FROM
   AND datanowarr.SKU = it.SKU_ID
   AND datanowarr.Sys_Silver_IsCurrent = 1
 where
-  si.Sys_Silver_IsCurrent = 1""")
+  si.Sys_Silver_IsCurrent = 1)
+
+  select
+  GroupEntityCode,
+  EntityCode,
+  TransactionDate,
+  SalesOrderDate,
+  SalesOrderID,
+  SalesOrderItemID,
+  SKUInternal,
+  SKUMaster,
+  Description,
+  ProductTypeInternal,
+  ProductTypeMaster,
+  CommitmentDuration1Master,
+  CommitmentDuration2Master,
+  BillingFrequencyMaster,
+  ConsumptionModelMaster,
+  VendorCode,
+  VendorNameInternal,
+  VendorNameMaster,
+  EntityCode as VendorGeography,
+  case
+    when VendorStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, VendorCode)
+    else VendorStartDate
+  end as VendorStartDate,
+  substring_index(ResellerCode, ' ', 1)ResellerCode,
+  ResellerNameInternal,
+  ResellerGeographyInternal,
+  case
+    when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerCode)
+    else ResellerStartDate
+  end as ResellerStartDate,
+  ResellerGroupCode,
+  ResellerGroupName,
+case
+    when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerCode)
+    else ResellerStartDate
+  end as ResellerGroupStartDate,
+  CurrencyCode,
+  RevenueAmount
+from
+  cte""")
 
 # COMMAND ----------
 

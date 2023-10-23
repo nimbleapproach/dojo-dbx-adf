@@ -19,47 +19,41 @@ spark.sql(
     f"""         
 CREATE OR REPLACE VIEW nuvias_globaltransactions AS
 
+with cte as (
  SELECT
     'NU' AS GroupEntityCode,
     UPPER(trans.DataAreaId) AS EntityCode,
     trans.SID,
-    trans.InvoiceId,
     to_date(trans.InvoiceDate) AS TransactionDate,
-    trans.SalesId AS SalesOrderID,
-    COALESCE(so_it.Description, "NaN") AS SalesOrderItemID,
     to_date(salestrans.CREATEDDATETIME) as SalesOrderDate,
-    CAST(trans.LineAmountMST AS DECIMAL(10,2)) AS RevenueAmount,
-    trans.CurrencyCode,
-    COALESCE(it.Description, "NaN") AS SKU,
-    itdesc.Description AS Description,
-    trans.ItemId,
-    invitgroup.Name AS ProductTypeInternal,
-    datanowarr.Product_Type AS ProductTypeMaster,
-    '' AS ProductSubtype,
-    datanowarr.Commitment_Duration_in_months AS CommitmentDuration,
-    datanowarr.Billing_Frequency,
-    datanowarr.Consumption_Model,
-    prod.SAG_NGS1VendorID AS VendorCode,
-    dirpartytable.name AS VendorName,
+    trans.SalesId AS SalesOrderID,
+    COALESCE(so_it.Description, 'NaN') AS SalesOrderItemID,
+    COALESCE(it.Description, 'NaN') AS SKUInternal,
+    COALESCE(datanowarr.SKU, 'NaN')  AS SKUMaster,
+    COALESCE(itdesc.Description,'NaN') AS Description,
+    COALESCE(invitgroup.Name,'NaN') AS ProductTypeInternal,
+    COALESCE(datanowarr.Product_Type,'NaN') AS ProductTypeMaster,
+    coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
+    coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
+    coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
+    coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
+    coalesce(prod.SAG_NGS1VendorID,'NaN') AS VendorCode,
+    coalesce(dirpartytable.name   ,'NaN') AS VendorNameInternal,
+    coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
     '' AS VendorGeography,
     to_date('1900-01-01') AS VendorStartDate,
     inv.InvoiceAccount AS ResellerCode,
     inv.InvoicingName AS ResellerNameInternal,
+    UPPER(trans.DataAreaId) AS ResellerGeographyInternal,
     COALESCE(
       to_date(cust.CREATEDDATETIME),
       to_date('1900-01-01')
     ) AS ResellerStartDate,
-    rg.ResellerGroupCode AS ResellerGroupCode,
-    rg.ResellerGroupName AS ResellerGroupName,
-    '' AS ResellerGeographyInternal,
+    coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
+    coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
     to_date('1900-01-01') AS ResellerGroupStartDate,
-    rg.ResellerName AS ResellerNameMaster,
-    rg.Entity AS IGEntityOfReseller,
-    case
-      when len(rg.Entity) = 2 then rg.Entity
-      else entmap.ADDRESSCOUNTRYREGIONISOCODE
-    end AS ResellerGeographyMaster,
-    rg.ResellerID AS ResellerID
+    trans.CurrencyCode,
+    CAST(trans.LineAmountMST AS DECIMAL(10,2)) AS RevenueAmount
   FROM
     silver_{ENVIRONMENT}.nuvias_operations.custinvoicetrans AS trans
     LEFT JOIN (
@@ -99,8 +93,7 @@ CREATE OR REPLACE VIEW nuvias_globaltransactions AS
     and rg.InfinigateCompany = 'Nuvias'
     AND upper(trans.DataAreaId) = rg.Entity
     AND rg.Sys_Silver_IsCurrent = 1
-    LEFT JOIN silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_omlegalstaging AS entmap ON rg.Entity = entmap.LEGALENTITYID
-    and entmap.Sys_Silver_IsCurrent = 1
+
     LEFT JOIN (
       SELECT
         DISTINCT prod.SAG_NGS1VendorID AS VendorCode,
@@ -182,7 +175,63 @@ CREATE OR REPLACE VIEW nuvias_globaltransactions AS
   WHERE
     trans.Sys_Silver_IsCurrent = 1
     AND UPPER(trans.DataAreaId) NOT IN ('NGS1', 'NNL2')
-    AND UPPER(LEFT(trans.InvoiceId, 2)) IN ('IN', 'CR')"""
+    AND UPPER(LEFT(trans.InvoiceId, 2)) IN ('IN', 'CR'))
+
+
+select
+  GroupEntityCode,
+  EntityCode,
+  TransactionDate,
+  SalesOrderDate,
+  SalesOrderID,
+  SalesOrderItemID,
+  SKUInternal,
+  SKUMaster,
+  Description,
+  ProductTypeInternal,
+  ProductTypeMaster,
+  CommitmentDuration1Master,
+  CommitmentDuration2Master,
+  BillingFrequencyMaster,
+  ConsumptionModelMaster,
+  VendorCode,
+  VendorNameInternal,
+  VendorNameMaster,
+  EntityCode as VendorGeography,
+  case
+    when VendorStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, VendorCode)
+    else VendorStartDate
+  end as VendorStartDate,
+  ResellerCode,
+  ResellerNameInternal,
+  ResellerGeographyInternal,
+  case
+    when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerCode)
+    else ResellerStartDate
+  end as ResellerStartDate,
+  ResellerGroupCode,
+  ResellerGroupName,
+  case
+    when (
+      ResellerGroupName = 'No Group'
+      or ResellerGroupName is null
+    ) then (
+      case
+        when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerCode)
+        else ResellerStartDate
+      end
+    )
+    else (
+      case
+        when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerGroupName)
+        else min(ResellerStartDate) OVER(PARTITION BY EntityCode, ResellerGroupName)
+      end
+    )
+  end AS ResellerGroupStartDate,
+  CurrencyCode,
+  RevenueAmount
+from
+  cte"""
 )
 
 # COMMAND ----------

@@ -15,7 +15,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # COMMAND ----------
 
 # DBTITLE 1,Silver to Gold Navision
-spark.sql(f"""
+spark.sql(
+    f"""
 
 CREATE OR Replace VIEW infinigate_globaltransactions AS
 
@@ -301,8 +302,11 @@ select
   VendorCode,
   VendorNameInternal,
   VendorNameMaster,
-  VendorGeography,
-  VendorStartDate,
+  EntityCode as VendorGeography,
+  case
+    when VendorStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, VendorCode)
+    else VendorStartDate
+  end as VendorStartDate,
   ResellerCode,
   ResellerNameInternal,
   ResellerGeographyInternal,
@@ -333,7 +337,8 @@ select
   RevenueAmount
 from
   cte
-""")
+"""
+)
 
 # COMMAND ----------
 
