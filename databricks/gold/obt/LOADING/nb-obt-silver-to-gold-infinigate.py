@@ -19,233 +19,320 @@ spark.sql(f"""
 
 CREATE OR Replace VIEW infinigate_globaltransactions AS
 
---Sales Invoice Header/Line
-SELECT
-  sil.SID AS SID,
-  'IG'AS GroupEntityCode,
-  entity.TagetikEntityCode AS EntityCode,
-  'Invoice' AS DocumentType,
-  to_date(sih.PostingDate) AS TransactionDate,
-  coalesce(so.SalesOrderID, 'NaN' ) AS SalesOrderID,
-  to_date(coalesce(so.SalesOrderDate,'1900-01-01' )) as SalesOrderDate,
-  coalesce(so.SalesOrderItemID, 'NaN' ) AS SalesOrderItemID,
-  CAST(sil.Amount AS DECIMAL(10,2))  AS RevenueAmount,
-  Case
-    sih.CurrencyCode = 'NaN'
-    WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
-    WHEN left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
-    WHEN left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
-    WHEN left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
-    WHEN left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
-    WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
-    ELSE sih.CurrencyCode
-  END AS CurrencyCode,
-  coalesce(it.No_,'NaN') AS SKU,
-  concat_ws(
-    ' ',
-    it.Description,
-    it.Description2,
-    it.Description3,
-    it.Description4
-  ) AS Description,
-  coalesce(it.ProductType,'NaN') AS ProductTypeInternal,
-  coalesce(datanowarr.Product_Type,'NaN')AS ProductTypeMaster,
-  coalesce(datanowarr.Commitment_Duration_in_months ,'NaN')AS CommitmentDuration,
-  coalesce(datanowarr.Billing_Frequency             ,'NaN')AS BillingFrequency,
-  coalesce(datanowarr.Consumption_Model             ,'NaN')AS ConsumptionModel,
-  coalesce(ven.Code,'NaN') AS VendorCode,
-  coalesce(ven.Name,'NaN') AS VendorName,
-  '' AS VendorGeography,
-  to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
-  coalesce(cu.No_,'NaN') AS ResellerCode,
-  concat_ws(' ', cu.Name, cu.Name2) AS ResellerNameInternal,
-  to_date(cu.Createdon) AS ResellerStartDate,
-  rg.ResellerGroupCode AS ResellerGroupCode,
-  rg.ResellerGroupName AS ResellerGroupName,
-  cu.Country_RegionCode AS ResellerGeographyInternal,
-  to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
-  rg.ResellerName AS ResellerNameMaster,
-  rg.Entity AS IGEntityOfReseller,
-  rg.ResellerID AS ResellerID
-FROM
-  silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
-  INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
-  AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
-  AND sih.Sys_Silver_IsCurrent = true
-  AND sil.Sys_Silver_IsCurrent = true
-  INNER JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
-  AND sil.Sys_DatabaseName = it.Sys_DatabaseName
-  AND it.Sys_Silver_IsCurrent = true
-  LEFT JOIN (
-    SELECT
-      Code,
-      Name,
-      Sys_DatabaseName
-    FROM
-      silver_{ENVIRONMENT}.igsql03.dimension_value
-    WHERE
-      DimensionCode = 'VENDOR'
-      AND Sys_Silver_IsCurrent = true
-  ) ven ON sil.ShortcutDimension1Code = ven.Code
-  AND sil.Sys_DatabaseName = ven.Sys_DatabaseName
-  AND sil.Sys_Silver_IsCurrent = true
-  LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
-  AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
-  AND cu.Sys_Silver_IsCurrent = true
-  LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON concat(
-    RIGHT(sih.Sys_DatabaseName, 2),
-    sih.`Sell-toCustomerNo_`
-  ) = concat(rg.Entity, rg.ResellerID)
-  AND rg.Sys_Silver_IsCurrent = TRUE
-  LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr ON it.No_ = datanowarr.sku
-  and lower(ven.Name) = lower(datanowarr.Vendor_Name)
-  AND datanowarr.Sys_Silver_IsCurrent = true
-  LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
-  LEFT JOIN (
-    select
-      sla.Sys_DatabaseName,
-      sla.DocumentNo_ As SalesOrderID,
-      sha.DocumentDate AS SalesOrderDate,
-      sla.LineNo_ AS SalesOrderLineNo,
-      sla.No_ as SalesOrderItemID
-    from
-      silver_{ENVIRONMENT}.igsql03.sales_line_archive as sla
-      inner join (
-        select
-          No_,
-          Sys_DatabaseName,
-          max(DocumentDate) DocumentDate,
-          max(VersionNo_) VersionNo_
+with cte as (
+  --- sales invoice
+  SELECT
+    sil.SID AS SID,
+    'IG' AS GroupEntityCode,
+    entity.TagetikEntityCode AS EntityCode,
+    -- 'Invoice' AS DocumentType,
+    to_date(sih.PostingDate) AS TransactionDate,
+    to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
+    coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
+    coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
+    coalesce(it.No_, 'NaN') AS SKUInternal,
+    coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
+    trim(
+      concat_ws(
+        ' ',
+        regexp_replace(it.Description, 'NaN', ''),
+        regexp_replace(it.Description2, 'NaN', ''),
+        regexp_replace(it.Description3, 'NaN', ''),
+        regexp_replace(it.Description4, 'NaN', '')
+      )
+    ) AS Description,
+    coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
+    coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
+    coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
+    coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
+    coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
+    coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
+    coalesce(ven.Code, 'NaN') AS VendorCode,
+    coalesce(ven.Name, 'NaN') AS VendorNameInternal,
+    coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
+    '' AS VendorGeography,
+    to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
+    coalesce(cu.No_, 'NaN') AS ResellerCode,
+    case
+      when cu.Name2 = 'NaN' THEN cu.Name
+      ELSE concat_ws(' ', cu.Name, cu.Name2)
+    END AS ResellerNameInternal,
+    cu.Country_RegionCode AS ResellerGeographyInternal,
+    to_date(cu.Createdon) AS ResellerStartDate,
+    rg.ResellerGroupCode AS ResellerGroupCode,
+    rg.ResellerGroupName AS ResellerGroupName,
+    to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
+    Case
+      sih.CurrencyCode = 'NaN'
+      WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
+      WHEN left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
+      WHEN left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
+      WHEN left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
+      WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
+      ELSE sih.CurrencyCode
+    END AS CurrencyCode,
+    CAST(sil.Amount AS DECIMAL(10, 2)) AS RevenueAmount
+  FROM
+    silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
+    INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
+    AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
+    AND sih.Sys_Silver_IsCurrent = true
+    AND sil.Sys_Silver_IsCurrent = true
+    INNER JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
+    AND sil.Sys_DatabaseName = it.Sys_DatabaseName
+    AND it.Sys_Silver_IsCurrent = true
+    LEFT JOIN (
+      SELECT
+        Code,
+        Name,
+        Sys_DatabaseName
+      FROM
+        silver_{ENVIRONMENT}.igsql03.dimension_value
+      WHERE
+        DimensionCode = 'VENDOR'
+        AND Sys_Silver_IsCurrent = true
+    ) ven ON it.GlobalDimension1Code = ven.Code
+    AND it.Sys_DatabaseName = ven.Sys_DatabaseName
+    AND it.Sys_Silver_IsCurrent = true
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
+    AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
+    AND cu.Sys_Silver_IsCurrent = true
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON concat(
+      RIGHT(sih.Sys_DatabaseName, 2),
+      sih.`Sell-toCustomerNo_`
+    ) = concat(rg.Entity, rg.ResellerID)
+    AND rg.Sys_Silver_IsCurrent = TRUE
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr ON it.No_ = datanowarr.sku
+    and case
+      when lower(ven.Name) NOT IN (
+        SELECT
+          distinct lower(Vendor_Name) Vendor_Name
         from
-          silver_{ENVIRONMENT}.igsql03.sales_header_archive
+          silver_{ENVIRONMENT}.masterdata.datanowarr
         where
           Sys_Silver_IsCurrent = 1
-        group by
-          No_,
-          Sys_DatabaseName
-      ) as sha on sla.DocumentNo_ = sha.No_
-      and sla.DocumentType = 1
-      and sla.Doc_No_Occurrence = 1
-      and sla.VersionNo_ = sha.VersionNo_
-      and sla.Sys_DatabaseName = sha.Sys_DatabaseName
-      and sla.Sys_Silver_IsCurrent = 1
-  ) AS so on sil.OrderNo_ = so.SalesOrderID
-  and sil.OrderLineNo_ = so.SalesOrderLineNo
-  and sil.Sys_DatabaseName = so.Sys_DatabaseName
-UNION All
-  --- Sales credit memo
-SELECT
-  sil.SID AS SID,
-  'IG'AS GroupEntityCode,
-  entity.TagetikEntityCode AS EntityCode,
-  'Sales Credit Memo' AS DocumentType,
-  to_date(sih.PostingDate) AS TransactionDate,
-  so.SalesOrderID,
-  to_date(coalesce(so.SalesOrderDate,'1900-01-01' )) as SalesOrderDate,
-  so.SalesOrderItemID,
-  CAST(sil.Amount * (-1)AS DECIMAL(10,2)) AS RevenueAmount,
-  Case
-    sih.CurrencyCode = 'NaN'
-    WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
-    WHEN left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
-    WHEN left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
-    WHEN left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
-    WHEN left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
-    WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
-    ELSE sih.CurrencyCode
-  END AS CurrencyCode,
-  it.No_ AS SKU,
-  concat_ws(
-    ' ',
-    it.Description,
-    it.Description2,
-    it.Description3,
-    it.Description4
-  ) AS Description,
-  it.ProductType AS ProductTypeInternal,
-  datanowarr.Product_Type AS ProductTypeMaster,
-  datanowarr.Commitment_Duration_in_months AS CommitmentDuration,
-  datanowarr.Billing_Frequency AS BillingFrequency,
-  datanowarr.Consumption_Model AS ConsumptionModel,
-  ven.Code AS VendorCode,
-  ven.Name AS VendorName,
-  '' AS VendorGeography,
-  to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
-  cu.No_ AS ResellerCode,
-  concat_ws(' ', cu.Name, cu.Name2) AS ResellerNameInternal,
-  to_date(cu.Createdon) AS ResellerStartDate,
-  rg.ResellerGroupCode AS ResellerGroupCode,
-  rg.ResellerGroupName AS ResellerGroupName,
-  cu.Country_RegionCode AS ResellerGeographyInternal,
-  to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
-  rg.ResellerName AS ResellerNameMaster,
-  rg.Entity AS IGEntityOfReseller,
-  rg.ResellerID AS ResellerID
-FROM
-  silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
-  INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
-  AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
-  AND sih.Sys_Silver_IsCurrent = true
-  AND sil.Sys_Silver_IsCurrent = true
-  INNER JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
-  AND sil.Sys_DatabaseName = it.Sys_DatabaseName
-  AND it.Sys_Silver_IsCurrent = true
-  LEFT JOIN (
-    SELECT
-      Code,
-      Name,
-      Sys_DatabaseName
-    FROM
-      silver_{ENVIRONMENT}.igsql03.dimension_value
-    WHERE
-      DimensionCode = 'VENDOR'
-      AND Sys_Silver_IsCurrent = true
-  ) ven ON sil.ShortcutDimension1Code = ven.Code
-  AND sil.Sys_DatabaseName = ven.Sys_DatabaseName
-  AND sil.Sys_Silver_IsCurrent = true
-  LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
-  AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
-  AND cu.Sys_Silver_IsCurrent = true
-  LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON concat(
-    RIGHT(sih.Sys_DatabaseName, 2),
-    sih.`Sell-toCustomerNo_`
-  ) = concat(rg.Entity, rg.ResellerID)
-  AND rg.Sys_Silver_IsCurrent = TRUE
-  LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr ON it.No_ = datanowarr.sku
-  and lower(ven.Name) = lower(datanowarr.Vendor_Name)
-  AND datanowarr.Sys_Silver_IsCurrent = true
-  LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
-  LEFT JOIN (
-    select
-      sla.Sys_DatabaseName,
-      sla.DocumentNo_ As SalesOrderID,
-      sha.DocumentDate AS SalesOrderDate,
-      sla.LineNo_ AS SalesOrderLineNo,
-      sla.No_ as SalesOrderItemID
-    from
-      silver_{ENVIRONMENT}.igsql03.sales_line_archive as sla
-      inner join (
-        select
-          No_,
-          Sys_DatabaseName,
-          max(DocumentDate) DocumentDate,
-          max(VersionNo_) VersionNo_
+      ) then 'other vendors'
+      when ven.Name like 'Sophos%' then 'sophos'
+      when ven.Name like 'Symantec%' then 'symantec'
+      else lower(ven.Name)
+    end = lower(datanowarr.Vendor_Name)
+    AND datanowarr.Sys_Silver_IsCurrent = true
+    LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
+    LEFT JOIN (
+      select
+        sla.Sys_DatabaseName,
+        sla.DocumentNo_ As SalesOrderID,
+        sha.DocumentDate AS SalesOrderDate,
+        sla.LineNo_ AS SalesOrderLineNo,
+        sla.No_ as SalesOrderItemID
+      from
+        silver_{ENVIRONMENT}.igsql03.sales_line_archive as sla
+        inner join (
+          select
+            No_,
+            Sys_DatabaseName,
+            max(DocumentDate) DocumentDate,
+            max(VersionNo_) VersionNo_
+          from
+            silver_{ENVIRONMENT}.igsql03.sales_header_archive
+          where
+            Sys_Silver_IsCurrent = 1
+          group by
+            No_,
+            Sys_DatabaseName
+        ) as sha on sla.DocumentNo_ = sha.No_
+        and sla.DocumentType = 1
+        and sla.Doc_No_Occurrence = 1
+        and sla.VersionNo_ = sha.VersionNo_
+        and sla.Sys_DatabaseName = sha.Sys_DatabaseName
+        and sla.Sys_Silver_IsCurrent = 1
+    ) AS so on sil.OrderNo_ = so.SalesOrderID
+    and sil.OrderLineNo_ = so.SalesOrderLineNo
+    and sil.Sys_DatabaseName = so.Sys_DatabaseName
+  UNION all
+    --- SALES CR MEMO
+  SELECT
+    sil.SID AS SID,
+    'IG' AS GroupEntityCode,
+    entity.TagetikEntityCode AS EntityCode,
+    -- 'Invoice' AS DocumentType,
+    to_date(sih.PostingDate) AS TransactionDate,
+    to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
+    coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
+    coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
+    coalesce(it.No_, 'NaN') AS SKUInternal,
+    coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
+    trim(
+      concat_ws(
+        ' ',
+        regexp_replace(it.Description, 'NaN', ''),
+        regexp_replace(it.Description2, 'NaN', ''),
+        regexp_replace(it.Description3, 'NaN', ''),
+        regexp_replace(it.Description4, 'NaN', '')
+      )
+    ) AS Description,
+    coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
+    coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
+    coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
+    coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
+    coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
+    coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
+    coalesce(ven.Code, 'NaN') AS VendorCode,
+    coalesce(ven.Name, 'NaN') AS VendorNameInternal,
+    coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
+    '' AS VendorGeography,
+    to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
+    coalesce(cu.No_, 'NaN') AS ResellerCode,
+    case
+      when cu.Name2 = 'NaN' THEN cu.Name
+      ELSE concat_ws(' ', cu.Name, cu.Name2)
+    END AS ResellerNameInternal,
+    cu.Country_RegionCode AS ResellerGeographyInternal,
+    to_date(cu.Createdon) AS ResellerStartDate,
+    rg.ResellerGroupCode AS ResellerGroupCode,
+    rg.ResellerGroupName AS ResellerGroupName,
+    to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
+    Case
+      sih.CurrencyCode = 'NaN'
+      WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
+      WHEN left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
+      WHEN left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
+      WHEN left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
+      WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
+      ELSE sih.CurrencyCode
+    END AS CurrencyCode,
+    CAST(sil.Amount * (-1) AS DECIMAL(10, 2)) AS RevenueAmount
+  FROM
+    silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
+    INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
+    AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
+    AND sih.Sys_Silver_IsCurrent = true
+    AND sil.Sys_Silver_IsCurrent = true
+    INNER JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
+    AND sil.Sys_DatabaseName = it.Sys_DatabaseName
+    AND it.Sys_Silver_IsCurrent = true
+    LEFT JOIN (
+      SELECT
+        Code,
+        Name,
+        Sys_DatabaseName
+      FROM
+        silver_{ENVIRONMENT}.igsql03.dimension_value
+      WHERE
+        DimensionCode = 'VENDOR'
+        AND Sys_Silver_IsCurrent = true
+    ) ven ON it.GlobalDimension1Code = ven.Code
+    AND it.Sys_DatabaseName = ven.Sys_DatabaseName
+    AND it.Sys_Silver_IsCurrent = true
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
+    AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
+    AND cu.Sys_Silver_IsCurrent = true
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON concat(
+      RIGHT(sih.Sys_DatabaseName, 2),
+      sih.`Sell-toCustomerNo_`
+    ) = concat(rg.Entity, rg.ResellerID)
+    AND rg.Sys_Silver_IsCurrent = TRUE
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr ON it.No_ = datanowarr.sku
+    and case
+      when lower(ven.Name) NOT IN (
+        SELECT
+          distinct lower(Vendor_Name) Vendor_Name
         from
-          silver_{ENVIRONMENT}.igsql03.sales_header_archive
+          silver_{ENVIRONMENT}.masterdata.datanowarr
         where
           Sys_Silver_IsCurrent = 1
-        group by
-          No_,
-          Sys_DatabaseName
-      ) as sha on sla.DocumentNo_ = sha.No_
-      and sla.DocumentType = 1
-      and sla.Doc_No_Occurrence = 1
-      and sla.VersionNo_ = sha.VersionNo_
-      and sla.Sys_DatabaseName = sha.Sys_DatabaseName
-      and sla.Sys_Silver_IsCurrent = 1
-  ) AS so on sil.OrderNo_ = so.SalesOrderID
-  and sil.OrderLineNo_ = so.SalesOrderLineNo
-  and sil.Sys_DatabaseName = so.Sys_DatabaseName
+      ) then 'other vendors'
+      when ven.Name like 'Sophos%' then 'sophos'
+      when ven.Name like 'Symantec%' then 'symantec'
+      else lower(ven.Name)
+    end = lower(datanowarr.Vendor_Name)
+    AND datanowarr.Sys_Silver_IsCurrent = true
+    LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
+    LEFT JOIN (
+      select
+        sla.Sys_DatabaseName,
+        sla.DocumentNo_ As SalesOrderID,
+        sha.DocumentDate AS SalesOrderDate,
+        sla.LineNo_ AS SalesOrderLineNo,
+        sla.No_ as SalesOrderItemID
+      from
+        silver_{ENVIRONMENT}.igsql03.sales_line_archive as sla
+        inner join (
+          select
+            No_,
+            Sys_DatabaseName,
+            max(DocumentDate) DocumentDate,
+            max(VersionNo_) VersionNo_
+          from
+            silver_{ENVIRONMENT}.igsql03.sales_header_archive
+          where
+            Sys_Silver_IsCurrent = 1
+          group by
+            No_,
+            Sys_DatabaseName
+        ) as sha on sla.DocumentNo_ = sha.No_
+        and sla.DocumentType = 1
+        and sla.Doc_No_Occurrence = 1
+        and sla.VersionNo_ = sha.VersionNo_
+        and sla.Sys_DatabaseName = sha.Sys_DatabaseName
+        and sla.Sys_Silver_IsCurrent = 1
+    ) AS so on sil.OrderNo_ = so.SalesOrderID
+    and sil.OrderLineNo_ = so.SalesOrderLineNo
+    and sil.Sys_DatabaseName = so.Sys_DatabaseName
+)
+select
+  GroupEntityCode,
+  EntityCode,
+  TransactionDate,
+  SalesOrderDate,
+  SalesOrderID,
+  SalesOrderItemID,
+  SKUInternal,
+  SKUMaster,
+  Description,
+  ProductTypeInternal,
+  ProductTypeMaster,
+  CommitmentDuration1Master,
+  CommitmentDuration2Master,
+  BillingFrequencyMaster,
+  ConsumptionModelMaster,
+  VendorCode,
+  VendorNameInternal,
+  VendorNameMaster,
+  VendorGeography,
+  VendorStartDate,
+  ResellerCode,
+  ResellerNameInternal,
+  ResellerGeographyInternal,
+  case
+    when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerCode)
+    else ResellerStartDate
+  end as ResellerStartDate,
+  ResellerGroupCode,
+  ResellerGroupName,
+  case
+    when (
+      ResellerGroupName = 'No Group'
+      or ResellerGroupName is null
+    ) then (
+      case
+        when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerCode)
+        else ResellerStartDate
+      end
+    )
+    else (
+      case
+        when ResellerStartDate <= '1900-01-01' then min(TransactionDate) OVER(PARTITION BY EntityCode, ResellerGroupName)
+        else min(ResellerStartDate) OVER(PARTITION BY EntityCode, ResellerGroupName)
+      end
+    )
+  end AS ResellerGroupStartDate,
+  CurrencyCode,
+  RevenueAmount
+from
+  cte
 """)
 
 # COMMAND ----------
