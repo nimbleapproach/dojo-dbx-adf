@@ -19,36 +19,98 @@ spark.sql(f"""
 
 CREATE OR Replace VIEW vuzion_globaltransactions AS
 
+WITH ResellerStartDates
+AS
+(
+SELECT MIN(sa.OrderDate) AS VendorStartDate, s.serviceTemplateID
+FROM
+  silver_{ENVIRONMENT}.cloudblue_pba.salesorder sa
+INNER JOIN
+  silver_{ENVIRONMENT}.cloudblue_pba.orddet od
+ON 
+  sa.OrderID = od.OrderID
+AND
+  sa.Sys_Silver_IsCurrent = true
+AND
+  od.Sys_Silver_IsCurrent = true
+INNER JOIN
+  (
+  SELECT DISTINCT subscriptionID, serviceTemplateID
+  FROM silver_{ENVIRONMENT}.cloudblue_pba.subscription
+  WHERE Sys_Silver_IsCurrent = true
+ ) s
+ON
+  od.subscriptionID = s.subscriptionID
+GROUP BY serviceTemplateID
+)
+,ResellerGroupStartDates
+AS 
+(
+SELECT MIN(sa.OrderDate) AS ResellerGroupStartDate, rs.ResellerGroupName
+FROM
+  silver_{ENVIRONMENT}.cloudblue_pba.salesorder sa
+INNER JOIN
+  silver_{ENVIRONMENT}.cloudblue_pba.orddet od
+ON 
+  sa.OrderID = od.OrderID
+AND
+  sa.Sys_Silver_IsCurrent = true
+AND
+  od.Sys_Silver_IsCurrent = true
+INNER JOIN
+  (
+  SELECT DISTINCT AccountID AS ResellerID
+  FROM silver_{ENVIRONMENT}.cloudblue_pba.account
+  WHERE Sys_Silver_IsCurrent = true
+  ) r
+ON
+  od.Vendor_AccountID = r.ResellerID
+INNER JOIN
+  (
+  SELECT DISTINCT ResellerID, ResellerGroupName
+  FROM silver_{ENVIRONMENT}.masterdata.resellergroups
+  WHERE InfinigateCompany = 'Vuzion'
+  AND Sys_Silver_IsCurrent = true
+  ) rs
+ON
+  cast(r.ResellerID as string) = rs.ResellerID
+GROUP BY rs.ResellerGroupName
+)
+
 SELECT
 'VU' AS GroupEntityCode
-,coalesce(rg.Entity,'NaN')  AS EntityCode
+,'NaN' AS EntityCode
 ,to_date(sa.OrderDate) AS TransactionDate
-,cast(sa.OrderID AS STRING) AS SalesOrderID
 ,to_date(sa.OrderDate) AS SalesOrderDate
+,cast(sa.OrderID AS STRING) AS SalesOrderID
 ,cast(od.DetID AS STRING) AS SalesOrderItemID
-,cast(od.ExtendedPrice_Value + od.TaxAmt_Value AS DECIMAL(10,2)) AS RevenueAmount
-,coalesce(sa.CurrencyID,'NaN') AS CurrencyCode
-,coalesce(bm.MPNumber,'NaN') AS SKU
+,coalesce(bm.MPNumber,'NaN') AS SKUInternal
+,'DataNowArr data not available' AS SKUMaster
 ,coalesce(od.Descr,'NaN') AS Description
 ,'NaN' AS ProductTypeInternal
-,'DataNowArr data not available' AS CommitmentDuration
-,'DataNowArr data not available' AS BillingFrequency
-,'DataNowArr data not available' AS ConsumptionModel
+,'DataNowArr data not available' AS ProductTypeMaster
+,'DataNowArr data not available' AS CommitmentDuration1Master
+,'DataNowArr data not available' AS CommitmentDuration2Master
+,'DataNowArr data not available' AS BillingFrequencyMaster
+,'DataNowArr data not available' AS ConsumptionModelMaster
 ,cast(coalesce(s.serviceTemplateID,'NaN') AS string) AS VendorCode
-,coalesce(bm.ManufacturerName,'NaN') AS VendorName
+,coalesce(bm.ManufacturerName,'NaN') AS VendorNameInternal
+,'DataNowArr data not available' AS VendorNameMaster
 ,'NaN' AS VendorGeography
-,to_date('1900-01-01') AS VendorStartDate
+,to_date(coalesce(vs.VendorStartDate,'1900-01-01')) AS VendorStartDate
 ,cast(coalesce(r.ResellerID,'NaN') AS string) AS ResellerCode
 ,coalesce(r.ResellerName,'NaN') AS ResellerNameInternal
+,'NaN' AS ResellerGeographyInternal
 ,to_date('1900-01-01') AS ResellerStartDate
 ,coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode 
 ,coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName 
-,'NaN' AS ResellerGeographyInternal
-,to_date('1900-01-01') AS ResellerGroupStartDate
+,to_date(coalesce(rgs.ResellerGroupStartDate,'1900-01-01')) AS ResellerGroupStartDate
+,coalesce(sa.CurrencyID,'NaN') AS CurrencyCode
+,cast(od.ExtendedPrice_Value + od.TaxAmt_Value AS DECIMAL(10,2)) AS RevenueAmount
 FROM
-  silver_dev.cloudblue_pba.salesorder sa
+  silver_{ENVIRONMENT}.cloudblue_pba.salesorder sa
 LEFT JOIN
-  silver_dev.cloudblue_pba.orddet od
+  silver_{ENVIRONMENT}.cloudblue_pba.orddet od
 ON 
   sa.OrderID = od.OrderID
 AND
@@ -58,7 +120,7 @@ AND
 LEFT JOIN
 (
   SELECT DISTINCT AccountID AS ResellerID, CompanyName AS ResellerName
-  FROM silver_dev.cloudblue_pba.account
+  FROM silver_{ENVIRONMENT}.cloudblue_pba.account
   WHERE Sys_Silver_IsCurrent = true
 ) r
 ON
@@ -66,13 +128,13 @@ ON
 LEFT JOIN
   (
   SELECT DISTINCT subscriptionID, serviceTemplateID
-  FROM silver_dev.cloudblue_pba.subscription
+  FROM silver_{ENVIRONMENT}.cloudblue_pba.subscription
   WHERE Sys_Silver_IsCurrent = true
   ) s
 ON
   od.subscriptionID = s.subscriptionID
 LEFT JOIN
-  silver_dev.cloudblue_pba.bmresource bm
+  silver_{ENVIRONMENT}.cloudblue_pba.bmresource bm
 ON
   od.resourceID = bm.resourceID
 AND
@@ -80,12 +142,20 @@ AND
 LEFT JOIN 
 (
   SELECT DISTINCT ResellerID, ResellerGroupCode, ResellerGroupName, ResellerName, Entity
-  FROM silver_dev.masterdata.resellergroups
+  FROM silver_{ENVIRONMENT}.masterdata.resellergroups
   WHERE InfinigateCompany = 'Vuzion'
   AND Sys_Silver_IsCurrent = true
 ) rg
 ON 
   cast(r.ResellerID as string) = rg.ResellerID
+LEFT JOIN
+  ResellerStartDates vs
+ON
+  s.serviceTemplateID = vs.serviceTemplateID
+LEFT JOIN
+  ResellerGroupStartDates rgs
+ON
+  rg.ResellerGroupName = rgs.ResellerGroupName
 """)
 
 # COMMAND ----------
@@ -105,7 +175,15 @@ selection_columns = [col(column) for column in intersection_columns if column no
 # COMMAND ----------
 
 df_selection = df_vuzion.select(selection_columns)
+df_selection = df_vuzion.fillna(value= 'NaN').replace('', 'NaN')
 
 # COMMAND ----------
 
 df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'VU'").saveAsTable("globaltransactions")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from gold_dev.obt.globaltransactions
+# MAGIC WHERE GroupEntityCode = 'VU'
+# MAGIC and SalesOrderID = 1461068
