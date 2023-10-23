@@ -43,11 +43,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT vendtable_pk PRIMARY KEY(_SysRowId,AccountNum,Party,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT vendtable_pk PRIMARY KEY(AccountNum,Party,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for vendtable. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId,AccountNum,Party)
+# MAGIC CLUSTER BY (AccountNum,Party)
 
 # COMMAND ----------
 

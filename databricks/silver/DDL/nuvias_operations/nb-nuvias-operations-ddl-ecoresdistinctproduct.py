@@ -47,11 +47,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT ecoresdistinctproduct_pk PRIMARY KEY(_SysRowId,SAG_NGS1VendorID,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT ecoresdistinctproduct_pk PRIMARY KEY(SAG_NGS1VendorID,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ecoresdistinctproduct. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId,SAG_NGS1VendorID)
+# MAGIC CLUSTER BY (SAG_NGS1VendorID)
 
 # COMMAND ----------
 

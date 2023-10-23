@@ -41,11 +41,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT dirpartytable_pk PRIMARY KEY(_SysRowId,RECID,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT dirpartytable_pk PRIMARY KEY(RECID,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for dirpartytable. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId,RECID)
+# MAGIC CLUSTER BY (RECID)
 
 # COMMAND ----------
 

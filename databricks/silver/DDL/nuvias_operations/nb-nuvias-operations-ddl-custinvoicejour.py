@@ -65,11 +65,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT custinvoicejour_pk PRIMARY KEY(_SysRowId,InvoiceId,DataAreaId,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT custinvoicejour_pk PRIMARY KEY(InvoiceId,DataAreaId,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for custinvoicejour. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (_SysRowId,InvoiceId,DataAreaId)
+# MAGIC CLUSTER BY (InvoiceId,DataAreaId)
 
 # COMMAND ----------
 
