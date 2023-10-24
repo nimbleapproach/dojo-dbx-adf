@@ -19,64 +19,9 @@ spark.sql(f"""
 
 CREATE OR Replace VIEW vuzion_globaltransactions AS
 
-WITH ResellerStartDates
-AS
-(
-SELECT MIN(sa.OrderDate) AS VendorStartDate, s.serviceTemplateID
-FROM
-  silver_{ENVIRONMENT}.cloudblue_pba.salesorder sa
-INNER JOIN
-  silver_{ENVIRONMENT}.cloudblue_pba.orddet od
-ON 
-  sa.OrderID = od.OrderID
-AND
-  sa.Sys_Silver_IsCurrent = true
-AND
-  od.Sys_Silver_IsCurrent = true
-INNER JOIN
-  (
-  SELECT DISTINCT subscriptionID, serviceTemplateID
-  FROM silver_{ENVIRONMENT}.cloudblue_pba.subscription
-  WHERE Sys_Silver_IsCurrent = true
- ) s
-ON
-  od.subscriptionID = s.subscriptionID
-GROUP BY serviceTemplateID
-)
-,ResellerGroupStartDates
+WITH initial_query
 AS 
 (
-SELECT MIN(sa.OrderDate) AS ResellerGroupStartDate, rs.ResellerGroupName
-FROM
-  silver_{ENVIRONMENT}.cloudblue_pba.salesorder sa
-INNER JOIN
-  silver_{ENVIRONMENT}.cloudblue_pba.orddet od
-ON 
-  sa.OrderID = od.OrderID
-AND
-  sa.Sys_Silver_IsCurrent = true
-AND
-  od.Sys_Silver_IsCurrent = true
-INNER JOIN
-  (
-  SELECT DISTINCT AccountID AS ResellerID
-  FROM silver_{ENVIRONMENT}.cloudblue_pba.account
-  WHERE Sys_Silver_IsCurrent = true
-  ) r
-ON
-  od.Vendor_AccountID = r.ResellerID
-INNER JOIN
-  (
-  SELECT DISTINCT ResellerID, ResellerGroupName
-  FROM silver_{ENVIRONMENT}.masterdata.resellergroups
-  WHERE InfinigateCompany = 'Vuzion'
-  AND Sys_Silver_IsCurrent = true
-  ) rs
-ON
-  cast(r.ResellerID as string) = rs.ResellerID
-GROUP BY rs.ResellerGroupName
-)
-
 SELECT
 'VU' AS GroupEntityCode
 ,'NaN' AS EntityCode
@@ -97,16 +42,13 @@ SELECT
 ,coalesce(bm.ManufacturerName,'NaN') AS VendorNameInternal
 ,'DataNowArr data not available' AS VendorNameMaster
 ,'NaN' AS VendorGeography
-,to_date(coalesce(vs.VendorStartDate,'1900-01-01')) AS VendorStartDate
 ,cast(coalesce(r.ResellerID,'NaN') AS string) AS ResellerCode
 ,coalesce(r.ResellerName,'NaN') AS ResellerNameInternal
 ,'NaN' AS ResellerGeographyInternal
-,to_date('1900-01-01') AS ResellerStartDate
 ,coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode 
 ,coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName 
-,to_date(coalesce(rgs.ResellerGroupStartDate,'1900-01-01')) AS ResellerGroupStartDate
 ,coalesce(sa.CurrencyID,'NaN') AS CurrencyCode
-,cast(od.ExtendedPrice_Value + od.TaxAmt_Value AS DECIMAL(10,2)) AS RevenueAmount
+,cast((coalesce(od.ExtendedPrice_Value,0.00) + coalesce(od.TaxAmt_Value,0.00)) AS DECIMAL(10,2)) AS RevenueAmount
 FROM
   silver_{ENVIRONMENT}.cloudblue_pba.salesorder sa
 LEFT JOIN
@@ -148,15 +90,99 @@ LEFT JOIN
 ) rg
 ON 
   cast(r.ResellerID as string) = rg.ResellerID
-LEFT JOIN
-  ResellerStartDates vs
-ON
-  s.serviceTemplateID = vs.serviceTemplateID
-LEFT JOIN
-  ResellerGroupStartDates rgs
-ON
-  rg.ResellerGroupName = rgs.ResellerGroupName
+)
+, main_dates
+AS
+(
+SELECT
+  GroupEntityCode,
+  EntityCode,
+  TransactionDate,
+  SalesOrderDate,
+  SalesOrderID,
+  SalesOrderItemID,
+  SKUInternal,
+  SKUMaster,
+  Description,
+  ProductTypeInternal,
+  ProductTypeMaster,
+  CommitmentDuration1Master,
+  CommitmentDuration2Master,
+  BillingFrequencyMaster,
+  ConsumptionModelMaster,
+  VendorCode,
+  VendorNameInternal,
+  VendorNameMaster,
+  VendorGeography,
+  CASE
+    WHEN VendorCode <> 'NaN' THEN MIN(TransactionDate) OVER(PARTITION BY VendorCode)
+    ELSE to_date('1900-01-01')
+  END AS VendorStartDate,
+  ResellerCode,
+  ResellerNameInternal,
+  ResellerGeographyInternal,
+  CASE
+    WHEN ResellerCode <> 'NaN' THEN MIN(TransactionDate) OVER(PARTITION BY ResellerCode)
+    ELSE to_date('1900-01-01')
+  END AS ResellerStartDate,
+  ResellerGroupCode,
+  ResellerGroupName,
+  CurrencyCode,
+  RevenueAmount
+FROM initial_query
+)
+
+SELECT
+  GroupEntityCode,
+  EntityCode,
+  TransactionDate,
+  SalesOrderDate,
+  SalesOrderID,
+  SalesOrderItemID,
+  SKUInternal,
+  SKUMaster,
+  Description,
+  ProductTypeInternal,
+  ProductTypeMaster,
+  CommitmentDuration1Master,
+  CommitmentDuration2Master,
+  BillingFrequencyMaster,
+  ConsumptionModelMaster,
+  VendorCode,
+  VendorNameInternal,
+  VendorNameMaster,
+  VendorGeography,
+  to_date(VendorStartDate,'yyyy-MM-dd') AS VendorStartDate,
+  ResellerCode,
+  ResellerNameInternal,
+  ResellerGeographyInternal,
+  to_date(ResellerStartDate,'yyyy-MM-dd') AS ResellerStartDate,
+  ResellerGroupCode,
+  ResellerGroupName,  
+  CASE
+    WHEN ResellerGroupName = 'NaN' THEN to_date('1900-01-01')
+    WHEN ResellerGroupName = 'No Group'
+    THEN (
+      CASE
+        WHEN ResellerStartDate <> '1900-01-01' THEN MIN(TransactionDate) OVER(PARTITION BY ResellerCode)
+        ELSE to_date('1900-01-01')
+      END
+    )
+    ELSE (
+      CASE
+        WHEN ResellerStartDate <> '1900-01-01' THEN MIN(TransactionDate) OVER(PARTITION BY ResellerGroupName)
+        ELSE to_date('1900-01-01')
+      END
+    )
+  END AS ResellerGroupStartDate,
+  CurrencyCode,
+  RevenueAmount
+  FROM main_dates
 """)
+
+# COMMAND ----------
+
+spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
 
 # COMMAND ----------
 
@@ -175,15 +201,7 @@ selection_columns = [col(column) for column in intersection_columns if column no
 # COMMAND ----------
 
 df_selection = df_vuzion.select(selection_columns)
-df_selection = df_vuzion.fillna(value= 'NaN').replace('', 'NaN')
 
 # COMMAND ----------
 
 df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'VU'").saveAsTable("globaltransactions")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC select * from gold_dev.obt.globaltransactions
-# MAGIC WHERE GroupEntityCode = 'VU'
-# MAGIC and SalesOrderID = 1461068
