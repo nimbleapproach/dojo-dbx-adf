@@ -22,7 +22,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC Entity_ID,
 # MAGIC year(Date_ID) AS Year_No,
 # MAGIC right(concat('0',cast(month(Date_ID) as string)),2) AS Month_No,
-# MAGIC sum(Amount_LCY_Original) AS Amount_Euro,
 # MAGIC sum(Amount_LCY_in_Euro) AS Amount_Euro
 # MAGIC FROM 
 # MAGIC   gold_dev.obt.tagetik_consolidation

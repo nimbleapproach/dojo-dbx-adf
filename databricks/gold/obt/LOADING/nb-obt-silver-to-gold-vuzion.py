@@ -64,9 +64,10 @@ LEFT JOIN
   SELECT DISTINCT AccountID AS ResellerID, CompanyName AS ResellerName
   FROM silver_{ENVIRONMENT}.cloudblue_pba.account
   WHERE Sys_Silver_IsCurrent = true
+  AND Type = 2
 ) r
 ON
-  od.Vendor_AccountID = r.ResellerID
+  sa.Customer_AccountID = r.ResellerID
 LEFT JOIN
   (
   SELECT DISTINCT subscriptionID, serviceTemplateID
@@ -90,6 +91,8 @@ LEFT JOIN
 ) rg
 ON 
   cast(r.ResellerID as string) = rg.ResellerID
+WHERE
+  sa.OrderTypeID IN ('BO','SO','CF','CH')
 )
 , main_dates
 AS
