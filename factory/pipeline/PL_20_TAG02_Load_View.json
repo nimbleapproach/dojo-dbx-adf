@@ -360,7 +360,7 @@
 										"type": "ParquetWriteSettings",
 										"maxRowsPerFile": 1000000,
 										"fileNamePrefix": {
-											"value": "bronze-igsql03-@{pipeline().parameters.pm_ViewName}-@{utcNow()}",
+											"value": "bronze-tag02-@{pipeline().parameters.pm_ViewName}-@{utcNow()}",
 											"type": "Expression"
 										}
 									}
