@@ -22,7 +22,7 @@ CREATE OR REPLACE VIEW nuvias_globaltransactions AS
 with cte as (
  SELECT
     'NU' AS GroupEntityCode,
-    UPPER(trans.DataAreaId) AS EntityCode,
+    UPPER(entity.TagetikEntityCode) AS EntityCode,
     trans.SID,
     to_date(trans.InvoiceDate) AS TransactionDate,
     to_date(salestrans.CREATEDDATETIME) as SalesOrderDate,
@@ -172,6 +172,7 @@ with cte as (
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.custvendexternalitem as so_it ON salestrans.ItemId = so_it.ItemId
     and so_it.DataAreaId = salestrans.DataAreaId
     and so_it.Sys_Silver_IsCurrent = 1
+    LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON upper(trans.DataAreaId) = entity.SourceEntityCode
   WHERE
     trans.Sys_Silver_IsCurrent = 1
     AND UPPER(trans.DataAreaId) NOT IN ('NGS1', 'NNL2')
@@ -228,7 +229,7 @@ select
       end
     )
   end AS ResellerGroupStartDate,
-  CurrencyCode,
+  case when length(EntityCode)>3 then 'USD' ELSE CurrencyCode END AS CurrencyCode,
   RevenueAmount
 from
   cte"""

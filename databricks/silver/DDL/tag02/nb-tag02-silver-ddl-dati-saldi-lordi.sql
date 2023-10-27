@@ -50,7 +50,7 @@ CREATE OR REPLACE TABLE dati_saldi_lordi
       COMMENT 'todo'
     ,COD_CATEGORIA    STRING
       COMMENT 'todo'
-    ,IMPORTO    DECIMAL(10,2)
+    ,IMPORTO    DECIMAL(20,2)
       COMMENT 'todo'
     ,COD_VALUTA   STRING
       COMMENT 'todo'
@@ -70,7 +70,7 @@ CREATE OR REPLACE TABLE dati_saldi_lordi
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys and DATEUPD columns.'
       ,Sys_Silver_IsCurrent BOOLEAN
-,CONSTRAINT dati_saldi_lordi_pk PRIMARY KEY(COD_PERIODO,COD_SCENARIO,COD_AZIENDA,COD_CONTO,COD_DEST1,COD_DEST2,COD_DEST3,COD_DEST4,DATEUPD)
+,CONSTRAINT dati_saldi_lordi_pk PRIMARY KEY(COD_PERIODO,COD_SCENARIO,COD_AZIENDA,COD_CONTO,COD_DEST1,COD_DEST2,COD_DEST3,COD_DEST4,PROVENIENZA,COD_CATEGORIA ,DATEUPD)
   )
 COMMENT 'This table contains the "fact information".'
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')

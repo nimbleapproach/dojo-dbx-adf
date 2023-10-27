@@ -26,21 +26,21 @@ with cte as (
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
     entity.TagetikEntityCode AS EntityCode,
-    -- 'Invoice' AS DocumentType,
+    sil.DocumentNo_ AS DocumentNo,
+    sil.LineNo_ AS LineNo,
     to_date(sih.PostingDate) AS TransactionDate,
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
     coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
     coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
-    coalesce(it.No_, 'NaN') AS SKUInternal,
+    coalesce(it.No_,sil.No_, 'NaN') AS SKUInternal,
     coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
     trim(
-      concat_ws(
-        ' ',
+      (concat(
         regexp_replace(it.Description, 'NaN', ''),
         regexp_replace(it.Description2, 'NaN', ''),
         regexp_replace(it.Description3, 'NaN', ''),
         regexp_replace(it.Description4, 'NaN', '')
-      )
+      ))
     ) AS Description,
     coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
     coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
@@ -73,14 +73,14 @@ with cte as (
       WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
       ELSE sih.CurrencyCode
     END AS CurrencyCode,
-    CAST(sil.Amount AS DECIMAL(10, 2)) AS RevenueAmount
+    CAST(case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end  AS DECIMAL(10, 2)) AS RevenueAmount
   FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
     INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
     AND sih.Sys_Silver_IsCurrent = true
     AND sil.Sys_Silver_IsCurrent = true
-    INNER JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
     AND sil.Sys_DatabaseName = it.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
     LEFT JOIN (
@@ -157,16 +157,16 @@ with cte as (
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
     entity.TagetikEntityCode AS EntityCode,
-    -- 'Invoice' AS DocumentType,
+    sil.DocumentNo_ AS DocumentNo,
+    sil.LineNo_ AS LineNo,
     to_date(sih.PostingDate) AS TransactionDate,
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
     coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
     coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, 'NaN') AS SKUInternal,
-    coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
+    coalesce(it.No_,sil.No_, 'NaN')  AS SKUMaster,
     trim(
-      concat_ws(
-        ' ',
+      concat(
         regexp_replace(it.Description, 'NaN', ''),
         regexp_replace(it.Description2, 'NaN', ''),
         regexp_replace(it.Description3, 'NaN', ''),
@@ -204,14 +204,14 @@ with cte as (
       WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
       ELSE sih.CurrencyCode
     END AS CurrencyCode,
-    CAST(sil.Amount * (-1) AS DECIMAL(10, 2)) AS RevenueAmount
+    CAST((case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end) *(-1) AS DECIMAL(10, 2)) AS RevenueAmount
   FROM
     silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
     INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
     AND sih.Sys_Silver_IsCurrent = true
     AND sil.Sys_Silver_IsCurrent = true
-    INNER JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
     AND sil.Sys_DatabaseName = it.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
     LEFT JOIN (
@@ -286,6 +286,8 @@ with cte as (
 select
   GroupEntityCode,
   EntityCode,
+  DocumentNo,
+  LineNo,
   TransactionDate,
   SalesOrderDate,
   SalesOrderID,
