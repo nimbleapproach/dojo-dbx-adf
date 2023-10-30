@@ -49,7 +49,7 @@ except:
 
 # COMMAND ----------
 
-FULL_LOAD = True
+# FULL_LOAD = True
 
 # COMMAND ----------
 
@@ -180,7 +180,7 @@ source_df = (
           """)
             .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-            .withColumn('Sys_Silver_HashKey', hash(*hash_columns))
+            .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
             .select(selection_column)
             .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
             .dropDuplicates(SILVER_PRIMARY_KEYS)
