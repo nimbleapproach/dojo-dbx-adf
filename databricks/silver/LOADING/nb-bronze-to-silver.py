@@ -49,7 +49,7 @@ except:
 
 # COMMAND ----------
 
-# FULL_LOAD = True
+FULL_LOAD = True
 
 # COMMAND ----------
 
