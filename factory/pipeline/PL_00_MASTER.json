@@ -124,7 +124,7 @@
 				}
 			},
 			{
-				"name": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
+				"name": "PL_00_BRONZE_TO_SILVER_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
@@ -146,13 +146,13 @@
 						]
 					},
 					{
-						"activity": "PL_00_NUVIAS_OPERATIONS_MASTER",
+						"activity": "PL_00_NETSUITE_Load_File_MASTER",
 						"dependencyConditions": [
 							"Completed"
 						]
 					},
 					{
-						"activity": "PL_00_NETSUITE_Load_File_MASTER",
+						"activity": "PL_00_NUVIAS_OPERATIONS_MASTER",
 						"dependencyConditions": [
 							"Completed"
 						]
@@ -174,23 +174,9 @@
 						"dependencyConditions": [
 							"Completed"
 						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
-						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "PL_00_BRONZE_TO_SILVER_MASTER",
-				"type": "ExecutePipeline",
-				"dependsOn": [
 					{
-						"activity": "PL_00_BRONZE_REGISTER_TABLES_MASTER",
+						"activity": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
 						"dependencyConditions": [
 							"Completed"
 						]
@@ -259,6 +245,19 @@
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true

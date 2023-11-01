@@ -1,0 +1,45 @@
+{
+	"name": "PL_10_VUZION_ARR_Load_Sheet_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachSheet",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@createArray(0,1)",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "PL_20_VUZION_ARR_Load_Sheet",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_VUZION_ARR_Load_Sheet",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_SheetIndex": {
+										"value": "@item()",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/VUZION"
+		},
+		"annotations": []
+	}
+}
