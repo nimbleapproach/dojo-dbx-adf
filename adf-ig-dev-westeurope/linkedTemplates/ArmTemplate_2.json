@@ -2551,7 +2551,7 @@
 										"type": "Expression"
 									},
 									"pm_Directory": {
-										"value": "masterdata/vuzion/arr",
+										"value": "masterdata/vuzion/vuzionarr",
 										"type": "Expression"
 									},
 									"pm_FileName": {
