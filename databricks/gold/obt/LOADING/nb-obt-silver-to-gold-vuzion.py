@@ -30,17 +30,17 @@ SELECT
 ,cast(sa.OrderID AS STRING) AS SalesOrderID
 ,cast(od.DetID AS STRING) AS SalesOrderItemID
 ,coalesce(bm.MPNumber,'NaN') AS SKUInternal
-,'DataNowArr data not available' AS SKUMaster
+,coalesce(vuzionarr.sku,'NaN')  AS SKUMaster
 ,coalesce(od.Descr,'NaN') AS Description
 ,'NaN' AS ProductTypeInternal
-,'DataNowArr data not available' AS ProductTypeMaster
-,'DataNowArr data not available' AS CommitmentDuration1Master
+,coalesce(vuzionarr.product_type,'NaN') AS ProductTypeMaster
+,coalesce(vuzionarr.commitment_duration,'NaN') AS CommitmentDuration1Master
 ,'DataNowArr data not available' AS CommitmentDuration2Master
-,'DataNowArr data not available' AS BillingFrequencyMaster
-,'DataNowArr data not available' AS ConsumptionModelMaster
+,coalesce(vuzionarr.billing_frequency,'NaN') AS BillingFrequencyMaster
+,coalesce(vuzionarr.consumption_model,'NaN') AS ConsumptionModelMaster
 ,cast(coalesce(s.serviceTemplateID,'NaN') AS string) AS VendorCode
 ,coalesce(bm.ManufacturerName,'NaN') AS VendorNameInternal
-,'DataNowArr data not available' AS VendorNameMaster
+,coalesce(vuzionarr.vendor_name,'NaN') AS VendorNameMaster
 ,'NaN' AS VendorGeography
 ,cast(coalesce(r.ResellerID,'NaN') AS string) AS ResellerCode
 ,coalesce(r.ResellerName,'NaN') AS ResellerNameInternal
@@ -91,6 +91,10 @@ LEFT JOIN
 ) rg
 ON 
   cast(r.ResellerID as string) = rg.ResellerID
+LEFT JOIN 
+  silver_{ENVIRONMENT}.masterdata.vuzionarr 
+ON vuzionarr.sku = bm.MPNumber
+AND vuzionarr.Sys_Silver_IsCurrent = true
 WHERE
   sa.OrderTypeID IN ('BO','SO','CF','CH')
 )
