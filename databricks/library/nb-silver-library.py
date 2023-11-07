@@ -3,7 +3,7 @@ import pyspark
 
 # COMMAND ----------
 
-test_df = spark.read.table("bronze_dev.tag02.azienda")
+#test_df = spark.read.table("bronze_dev.tag02.azienda")
 
 # COMMAND ----------
 
