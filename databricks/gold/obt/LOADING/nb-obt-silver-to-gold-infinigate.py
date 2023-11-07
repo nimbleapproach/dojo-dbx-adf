@@ -32,7 +32,7 @@ with cte as (
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
     coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
     coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
-    coalesce(it.No_,sil.No_, 'NaN') AS SKUInternal,
+    coalesce(it.No_, 'NaN') AS SKUInternal,
     coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
     trim(
       (concat(
@@ -151,6 +151,17 @@ with cte as (
     ) AS so on sil.OrderNo_ = so.SalesOrderID
     and sil.OrderLineNo_ = so.SalesOrderLineNo
     and sil.Sys_DatabaseName = so.Sys_DatabaseName
+
+    WHERE 
+        (UPPER(sil.No_)NOT LIKE 'PORTO'
+      AND UPPER(sil.No_)NOT LIKE 'VERSAND%'
+      AND UPPER(sil.No_)NOT LIKE 'SHIP%'
+      AND UPPER(sil.No_)NOT LIKE 'TRANS%'
+      AND UPPER(sil.No_)NOT LIKE 'POST%'
+      AND UPPER(sil.No_)NOT LIKE 'FREI%'
+      AND UPPER(sil.No_)NOT LIKE 'FRACHT%'
+      AND UPPER(sil.No_)NOT LIKE 'EXP%')
+
   UNION all
     --- SALES CR MEMO
   SELECT
@@ -282,6 +293,15 @@ with cte as (
     ) AS so on sil.OrderNo_ = so.SalesOrderID
     and sil.OrderLineNo_ = so.SalesOrderLineNo
     and sil.Sys_DatabaseName = so.Sys_DatabaseName
+    WHERE 
+        (UPPER(sil.No_)NOT LIKE 'PORTO'
+      AND UPPER(sil.No_)NOT LIKE 'VERSAND%'
+      AND UPPER(sil.No_)NOT LIKE 'SHIP%'
+      AND UPPER(sil.No_)NOT LIKE 'TRANS%'
+      AND UPPER(sil.No_)NOT LIKE 'POST%'
+      AND UPPER(sil.No_)NOT LIKE 'FREI%'
+      AND UPPER(sil.No_)NOT LIKE 'FRACHT%'
+      AND UPPER(sil.No_)NOT LIKE 'EXP%')
 )
 select
   GroupEntityCode,

@@ -19,34 +19,6 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC
 # MAGIC CREATE OR Replace VIEW globaltransactions AS
 # MAGIC
-# MAGIC WITH IG_Shipping_Codes
-# MAGIC AS
-# MAGIC (
-# MAGIC SELECT DISTINCT SKUInternal
-# MAGIC FROM 
-# MAGIC   gold_dev.obt.globaltransactions
-# MAGIC WHERE 
-# MAGIC   GroupEntityCode ='IG'
-# MAGIC AND 
-# MAGIC   SKUInternal <>'NaN'
-# MAGIC AND 
-# MAGIC   Description ='NaN'
-# MAGIC AND 
-# MAGIC   RevenueAmount <> 0
-# MAGIC AND 
-# MAGIC   SKUInternal NOT RLIKE "^[0-9]*$"
-# MAGIC AND 
-# MAGIC   (UPPER(SKUInternal) LIKE 'PORTO'
-# MAGIC   OR UPPER(SKUInternal) LIKE '%VER%'
-# MAGIC   OR UPPER(SKUInternal) LIKE '%SHIP%'
-# MAGIC   OR UPPER(SKUInternal) LIKE '%TRANS%'
-# MAGIC   OR UPPER(SKUInternal) LIKE '%POS%'
-# MAGIC   OR UPPER(SKUInternal) LIKE '%FREI%'
-# MAGIC   OR UPPER(SKUInternal) LIKE '%FRA%'
-# MAGIC   OR UPPER(SKUInternal) LIKE '%EXP%')
-# MAGIC GROUP BY SKUInternal
-# MAGIC )
-# MAGIC
 # MAGIC
 # MAGIC SELECT
 # MAGIC   g.GroupEntityCode,
@@ -109,5 +81,4 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC   e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
 # MAGIC AND
 # MAGIC   g.CurrencyCode = cast(e1.Currency as string)
-# MAGIC WHERE 
-# MAGIC   SKUInternal NOT IN (SELECT SKUInternal FROM IG_Shipping_Codes)
+# MAGIC
