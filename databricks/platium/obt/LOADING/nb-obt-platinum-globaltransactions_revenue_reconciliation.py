@@ -22,7 +22,7 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC AS
 # MAGIC (
 # MAGIC SELECT DISTINCT cast(Year_No as string) AS Year_No, cast(Month_No as string) AS Month_No
-# MAGIC FROM gold_dev.obt.tagetik_revenue_reconciliation
+# MAGIC FROM platinum_dev.obt.tagetik_revenue_reconciliation
 # MAGIC )
 # MAGIC SELECT
 # MAGIC     GroupEntityCode,
@@ -31,7 +31,7 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC     right(concat('0',cast(month(TransactionDate) as string)),2) AS Month_No,
 # MAGIC     coalesce(SUM(RevenueAmount_Euro),0.00) AS RevenueAmount_Euro
 # MAGIC FROM 
-# MAGIC     gold_dev.obt.globaltransactions_platinum p
+# MAGIC     platinum_dev.obt.globaltransactions p
 # MAGIC INNER JOIN
 # MAGIC     YearMonth ym
 # MAGIC ON
