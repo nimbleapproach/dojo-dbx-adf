@@ -69,6 +69,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   WHERE
 # MAGIC     (COD_SCENARIO like '%ACT%')
 # MAGIC     and (COD_SCENARIO not like '%ACT-PFA-04')
+# MAGIC     and (COD_SCENARIO not like '%OB%')
 # MAGIC     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
 # MAGIC     AND Sys_Silver_IsCurrent = 1
 # MAGIC   group by
@@ -180,7 +181,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC                 ,'314088'
 # MAGIC                 ,'320988'
 # MAGIC                 ,'322988'
-# MAGIC                 ,'370988')
+# MAGIC                 ,'370988'
+# MAGIC                 ,'371988'
+# MAGIC                 ,'391988')
 # MAGIC      THEN 'TotalRevenue' ELSE 'Others' end as RevenueAccounts,
 # MAGIC     SpecialDeal_ID,
 # MAGIC     RPTRegion_ID,
