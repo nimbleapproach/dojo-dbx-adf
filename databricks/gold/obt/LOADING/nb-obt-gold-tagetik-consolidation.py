@@ -164,22 +164,23 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     Currency_ID,
 # MAGIC     Account_ID,
 # MAGIC     case when Account_ID IN(
-# MAGIC             '309988'
-# MAGIC             ,'310188'
-# MAGIC             ,'310288'
-# MAGIC             ,'310388'
-# MAGIC             ,'310488'
-# MAGIC             ,'310588'
-# MAGIC             ,'310688'
-# MAGIC             ,'310788'
-# MAGIC             ,'310888'
-# MAGIC             ,'310988'
-# MAGIC             ,'320988'
-# MAGIC             -- ,'350988'
-# MAGIC             -- ,'351988'
-# MAGIC             ,'370988'
-# MAGIC             ,'371988'
-# MAGIC             ,'391988')
+# MAGIC                 '309988'
+# MAGIC                 ,'310188'
+# MAGIC                 ,'310288'
+# MAGIC                 ,'310388'
+# MAGIC                 ,'310488'
+# MAGIC                 ,'310588'
+# MAGIC                 ,'310688'
+# MAGIC                 ,'310788'
+# MAGIC                 ,'310888'
+# MAGIC                 ,'310988'
+# MAGIC                 ,'311088'
+# MAGIC                 ,'312088'
+# MAGIC                 ,'313088'
+# MAGIC                 ,'314088'
+# MAGIC                 ,'320988'
+# MAGIC                 ,'322988'
+# MAGIC                 ,'370988')
 # MAGIC      THEN 'TotalRevenue' ELSE 'Others' end as RevenueAccounts,
 # MAGIC     SpecialDeal_ID,
 # MAGIC     RPTRegion_ID,
