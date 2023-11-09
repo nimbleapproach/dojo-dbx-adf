@@ -44,6 +44,8 @@ def silver_table_has_bronze_keys(df_silver: pyspark.sql.DataFrame,df_bronze: pys
     condition = " AND ".join([f"s.{key} == b.{key}" for key in businessKeys])
 
     df_unvalid = spark.sql(f"SELECT s.* FROM SILVER s LEFT ANTI JOIN BRONZE b ON {condition}")
+    for c in businessKeys:
+        df_unvalid = df_unvalid.filter(col(c) !='NaN')
 
     unvalidCount = df_unvalid.count()
 
