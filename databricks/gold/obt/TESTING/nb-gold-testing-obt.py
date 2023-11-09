@@ -22,8 +22,6 @@ class TestTable(unittest.TestCase):
         """
         result = column_contains_only_valid_values(df_test, 'GroupEntityCode',['IG','VU','SL','NU'])
         self.assertEqual(result, 'OK')
-
-    def test_obt_all_bronze_keys(self):
     
 
 # COMMAND ----------
