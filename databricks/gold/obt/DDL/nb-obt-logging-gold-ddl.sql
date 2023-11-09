@@ -36,6 +36,8 @@ CREATE OR REPLACE TABLE globaltransactions_logging
       COMMENT 'the lower level Entity code for the IG group company - from source ERP but should align to Azienda in Tagetik?'
     ,TransactionDate DATE NOT NULL
         Comment 'Date of the Transaction'
+    ,RevenueAmount DECIMAL(10,2) NOT NULL
+        Comment 'Amount of Revenue.'
     , Sys_Gold_NumberOfRows BIGINT NOT NULL
     , Sys_Gold_Observation_DateTime_UTC TIMESTAMP
         Comment 'Date when an entry was logged.'
