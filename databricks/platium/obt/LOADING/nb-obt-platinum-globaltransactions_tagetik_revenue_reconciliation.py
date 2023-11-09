@@ -25,8 +25,8 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC g.Month_No,
 # MAGIC g.RevenueAmount_Euro AS Globaltransactions_RevenueAmount_Euro,
 # MAGIC t.Amount_Euro AS Tagetik_RevenueAmount_Euro,
-# MAGIC g.RevenueAmount_Euro - t.Amount_Euro AS Amount_Euro_Diff,
-# MAGIC round((t.amount_euro - g.RevenueAmount_Euro)/g.RevenueAmount_Euro,2) AS Percent_Diff
+# MAGIC ABS(g.RevenueAmount_Euro - t.Amount_Euro) AS Amount_Euro_Diff,
+# MAGIC ROUND(ABS((t.Amount_Euro - g.RevenueAmount_Euro)/g.RevenueAmount_Euro)*100,2) AS Percent_Diff
 # MAGIC FROM 
 # MAGIC     platinum_dev.obt.globaltransactions_revenue_reconciliation g
 # MAGIC INNER JOIN 
