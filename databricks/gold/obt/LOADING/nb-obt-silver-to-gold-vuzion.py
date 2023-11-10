@@ -30,7 +30,7 @@ SELECT
 ,cast(sa.OrderID AS STRING) AS SalesOrderID
 ,cast(od.DetID AS STRING) AS SalesOrderItemID
 ,coalesce(bm.MPNumber,'NaN') AS SKUInternal
-,coalesce(vuzionarr.sku,'NaN')  AS SKUMaster
+,coalesce(vuzionarr.sku,'NaN') AS SKUMaster
 ,coalesce(od.Descr,'NaN') AS Description
 ,'NaN' AS ProductTypeInternal
 ,coalesce(vuzionarr.product_type,'NaN') AS ProductTypeMaster
@@ -92,9 +92,11 @@ LEFT JOIN
 ON 
   cast(r.ResellerID as string) = rg.ResellerID
 LEFT JOIN 
-  silver_{ENVIRONMENT}.masterdata.vuzionarr 
-ON vuzionarr.sku = bm.MPNumber
-AND vuzionarr.Sys_Silver_IsCurrent = true
+  silver_{ENVIRONMENT}.masterdata.vuzionarr
+ON
+  vuzionarr.sku = bm.MPNumber
+AND
+  vuzionarr.Sys_Silver_IsCurrent = true
 WHERE
   sa.OrderTypeID IN ('BO','SO','CF','CH')
 )
