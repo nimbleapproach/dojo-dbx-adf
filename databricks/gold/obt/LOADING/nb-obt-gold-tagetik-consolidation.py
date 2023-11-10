@@ -182,8 +182,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC                 ,'320988'
 # MAGIC                 ,'322988'
 # MAGIC                 ,'370988'
-# MAGIC                 ,'371988'
-# MAGIC                 ,'391988')
+# MAGIC                 -- ,'371988' #these two are IC accounts shouldn't be included
+# MAGIC                 -- ,'391988'
+# MAGIC                 )
 # MAGIC      THEN 'TotalRevenue' ELSE 'Others' end as RevenueAccounts,
 # MAGIC     SpecialDeal_ID,
 # MAGIC     RPTRegion_ID,
