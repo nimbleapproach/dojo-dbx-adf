@@ -18,7 +18,7 @@ obt_df = spark.read.table('globaltransactions')
 
 # COMMAND ----------
 
-from pyspark.sql.functions import current_timestamp
+from pyspark.sql.functions import current_timestamp, sum, count
 
 obt_df \
 .groupBy('GroupEntityCode','EntityCode','TransactionDate') \
