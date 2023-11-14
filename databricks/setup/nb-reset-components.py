@@ -5,6 +5,15 @@ ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
+spark.catalog.setCurrentCatalog(f"keys_{ENVIRONMENT}")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE SCHEMA IF NOT EXISTS tag02;
+
+# COMMAND ----------
+
 spark.catalog.setCurrentCatalog(f"bronze_{ENVIRONMENT}")
 
 # COMMAND ----------

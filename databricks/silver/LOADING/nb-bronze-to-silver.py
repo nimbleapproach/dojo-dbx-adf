@@ -61,6 +61,14 @@ except:
 
 # COMMAND ----------
 
+try:
+    SOFT_DELETE = bool(dbutils.widgets.get("wg_softdelete") == 'true')
+except:
+    dbutils.widgets.dropdown(name = "wg_softdelete", defaultValue = 'false', choices =   ['false','true'])
+    SOFT_DELETE = bool(dbutils.widgets.get("wg_softdelete") == 'true')
+
+# COMMAND ----------
+
 TABLE_NAME = TABLE_NAME.lower()
 TABLE_SCHEMA = TABLE_SCHEMA.lower()
 
@@ -159,8 +167,8 @@ else:
 # COMMAND ----------
 
 target_columns = target_df.columns
-selection_column = [col(column) for column in target_columns if column not in ['SID']]
-hash_columns = [col(column) for column in target_columns if not column in ['SID' ,'Sys_Bronze_InsertDateTime_UTC','Sys_Silver_InsertDateTime_UTC','Sys_Silver_ModifedDateTime_UTC','Sys_Silver_HashKey',f'{WATERMARK_COLUMN}']]
+selection_column = [col(column) for column in target_columns if column not in ['SID','Sys_Silver_IsDeleted']]
+hash_columns = [col(column) for column in target_columns if not column in ['SID' ,'Sys_Bronze_InsertDateTime_UTC','Sys_Silver_InsertDateTime_UTC','Sys_Silver_ModifedDateTime_UTC','Sys_Silver_HashKey','Sys_Silver_IsDeleted',f'{WATERMARK_COLUMN}']]
 
 # COMMAND ----------
 
@@ -197,13 +205,13 @@ deduped_df = fillnas(source_df)
 
 # COMMAND ----------
 
-target_insert_columns = [f'`{column}`' for column in target_columns if column not in ['SID']]
+target_insert_columns = [f'`{column}`' for column in target_columns if column not in ['SID','Sys_Silver_IsDeleted']]
 source_insert_columns = [f's.{column}' for column in target_insert_columns]
 insertDict = dict(zip(target_insert_columns,source_insert_columns))
 
 # COMMAND ----------
 
-target_update_columns = [f'`{column}`' for column in target_columns if column not in ['SID' , 'Sys_Silver_InsertDateTime_UTC']]
+target_update_columns = [f'`{column}`' for column in target_columns if column not in ['SID' , 'Sys_Silver_IsDeleted','Sys_Silver_InsertDateTime_UTC']]
 source_update_columns = [f's.{column}' for column in target_update_columns]
 updateDict = dict(zip(target_update_columns,source_update_columns))
 
@@ -248,6 +256,21 @@ else:
     .whenNotMatchedInsert(values  = insertDict)
     .execute()
     )
+
+# COMMAND ----------
+
+if SOFT_DELETE :
+    print(f'Soft deleting {TABLE_NAME}...')
+    condition = " AND ".join([f'k.{BUSINESS_KEYS[i]} = t.{BUSINESS_KEYS[i]}' for i in range(len(BUSINESS_KEYS))])
+    spark.sql(f"""
+              UPDATE {TABLE_NAME} t
+                SET  Sys_Silver_IsDeleted = True
+                where NOT EXISTS (
+                    Select *
+                    from keys_dev.tag02.DATI_SALDI_LORDI k 
+                    where {condition}
+                )
+              """)
 
 # COMMAND ----------
 

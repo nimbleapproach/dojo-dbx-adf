@@ -21,7 +21,7 @@ def addColumnIfNotExists(tableSchema : str, tableName : str, columnName : str, d
 # COMMAND ----------
 
 def addSystemColumns(tableSchema : str, tableName : str) -> None:
-    columnList = [('Sys_Silver_InsertDateTime_UTC','TIMESTAMP'), ('Sys_Silver_ModifedDateTime_UTC','TIMESTAMP'),( 'Sys_Silver_HashKey','BIGINT'), ('Sys_Silver_IsCurrent','BOOLEAN')]
+    columnList = [('Sys_Silver_InsertDateTime_UTC','TIMESTAMP'), ('Sys_Silver_ModifedDateTime_UTC','TIMESTAMP'),( 'Sys_Silver_HashKey','BIGINT'), ('Sys_Silver_IsCurrent','BOOLEAN'),('Sys_Silver_IsDeleted','BOOLEAN')]
 
     assert spark.catalog.databaseExists(tableSchema), f"Schema {tableSchema} does not exists in catalog silver."
     spark.catalog.setCurrentDatabase(tableSchema)
