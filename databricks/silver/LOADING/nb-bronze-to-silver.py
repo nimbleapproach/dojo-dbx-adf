@@ -271,6 +271,15 @@ if SOFT_DELETE :
                     where {condition}
                 )
               """)
+    spark.sql(f"""
+              UPDATE {TABLE_NAME} t
+                SET  Sys_Silver_IsDeleted = False
+                where EXISTS (
+                    Select *
+                    from keys_dev.tag02.DATI_SALDI_LORDI k 
+                    where {condition}
+                )
+              """)
 
 # COMMAND ----------
 
