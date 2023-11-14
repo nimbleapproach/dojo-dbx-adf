@@ -86,6 +86,32 @@
 									}
 								}
 							}
+						},
+						{
+							"name": "PL_20_TAG02_Sync_Keys",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "PL_20_TAG02_Load_View",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_TAG02_Sync_Keys",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_ViewName": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									}
+								}
+							}
 						}
 					]
 				}
