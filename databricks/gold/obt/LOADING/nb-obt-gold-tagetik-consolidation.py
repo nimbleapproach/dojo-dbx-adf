@@ -22,7 +22,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC with FX AS(
 # MAGIC   /****** FX Rate  ******/
 # MAGIC     SELECT
-# MAGIC     distinct COD_SCENARIO as Scenario,
+# MAGIC     distinct 
+# MAGIC     COD_SCENARIO as Scenario,
 # MAGIC     COD_PERIODO as Period,case
 # MAGIC       when COD_PERIODO between '10'
 # MAGIC       and '12' then LEFT(COD_SCENARIO, 4)
@@ -41,8 +42,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     LEFT(COD_SCENARIO, 4) RLIKE '[0-9]'
 # MAGIC     and (
 # MAGIC       COD_SCENARIO LIKE '%ACT%'
-# MAGIC       or COD_SCENARIO LIKE '%BUD%'
-# MAGIC       or COD_SCENARIO LIKE '%FC%'
+# MAGIC
 # MAGIC     )
 # MAGIC     AND COD_SCENARIO not like '%AUD%'
 # MAGIC     AND COD_SCENARIO not like '%OB%'
@@ -68,10 +68,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     silver_dev.tag02.dati_saldi_lordi FB
 # MAGIC   WHERE
 # MAGIC     (COD_SCENARIO like '%ACT%')
-# MAGIC     and (COD_SCENARIO not like '%ACT-PFA-04')
+# MAGIC     and (COD_SCENARIO  like '%04')
 # MAGIC     and (COD_SCENARIO not like '%OB%')
 # MAGIC     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
 # MAGIC     AND Sys_Silver_IsCurrent = 1
+# MAGIC
 # MAGIC   group by
 # MAGIC     COD_PERIODO,
 # MAGIC     COD_VALUTA,
@@ -116,9 +117,169 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   from
 # MAGIC     cte_2
 # MAGIC   where
-# MAGIC     maxMonth = 11
+# MAGIC     maxMonth = '11'
 # MAGIC     and Period = '11'
 # MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '11' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '10'
+# MAGIC     and Period = '10'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '10' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '09'
+# MAGIC     and Period = '09'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '09' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '08'
+# MAGIC     and Period = '08'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '08' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '07'
+# MAGIC     and Period = '07'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '07' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '06'
+# MAGIC     and Period = '06'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '06' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '05'
+# MAGIC     and Period = '05'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '05' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '04'
+# MAGIC     and Period = '04'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '04' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '03'
+# MAGIC     and Period = '03'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '03' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '02'
+# MAGIC     and Period = '02'
+# MAGIC   UNION ALL
+# MAGIC     select
+# MAGIC     '02' AS Period,
+# MAGIC     Currency_ID,
+# MAGIC     Account_ID,
+# MAGIC     SpecialDeal_ID,
+# MAGIC     RPTRegion_ID,
+# MAGIC     Vendor_ID,
+# MAGIC     Scenario_ID,
+# MAGIC     Entity_ID,
+# MAGIC      0 AS Amount_LCY_Original
+# MAGIC   from
+# MAGIC     cte_2
+# MAGIC   where
+# MAGIC     maxMonth = '01'
+# MAGIC     and Period = '01'
+# MAGIC UNION ALL
 # MAGIC   SELECT
 # MAGIC     Period,
 # MAGIC     Currency_ID,
@@ -212,9 +373,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ) AS fxr ON Currency_ID = fxr.Currency
 # MAGIC     AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) = CONCAT(fxr.Scenario , fxr.Period)
 # MAGIC )
-# MAGIC SELECT 
-# MAGIC *
-# MAGIC FROM 
-# MAGIC act
+# MAGIC select * from act
 # MAGIC
 # MAGIC

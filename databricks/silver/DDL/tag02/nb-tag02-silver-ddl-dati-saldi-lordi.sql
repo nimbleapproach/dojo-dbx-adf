@@ -70,8 +70,15 @@ CREATE OR REPLACE TABLE dati_saldi_lordi
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys and DATEUPD columns.'
       ,Sys_Silver_IsCurrent BOOLEAN
-,CONSTRAINT dati_saldi_lordi_pk PRIMARY KEY(COD_PERIODO,COD_SCENARIO,OID_DATI_SALDI_LORDI,DATEUPD)
-  )
+,CONSTRAINT dati_saldi_lordi_pk PRIMARY KEY(COD_PERIODO,COD_SCENARIO,COD_AZIENDA,COD_CONTO,
+                              COD_DEST1,
+                              DATEUPD,
+                              COD_DEST2,
+                              COD_DEST3,
+                              COD_DEST4,
+                              COD_CATEGORIA,
+                              PROVENIENZA)
+  ) /**OID_DATI_SALDI_LORDI is not primary key **/
 COMMENT 'This table contains the "fact information".'
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
 CLUSTER BY (COD_PERIODO,COD_SCENARIO)

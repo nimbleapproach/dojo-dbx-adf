@@ -63,14 +63,13 @@ with cte as (
     rg.ResellerGroupCode AS ResellerGroupCode,
     rg.ResellerGroupName AS ResellerGroupName,
     to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
-    Case
-      sih.CurrencyCode = 'NaN'
-      WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
-      WHEN left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
-      WHEN left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
-      WHEN left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
-      WHEN left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
-      WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
+     Case
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
       ELSE sih.CurrencyCode
     END AS CurrencyCode,
     CAST(case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end  AS DECIMAL(10, 2)) AS RevenueAmount
@@ -205,14 +204,13 @@ with cte as (
     rg.ResellerGroupCode AS ResellerGroupCode,
     rg.ResellerGroupName AS ResellerGroupName,
     to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
-    Case
-      sih.CurrencyCode = 'NaN'
-      WHEN left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
-      WHEN left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
-      WHEN left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
-      WHEN left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
-      WHEN left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
-      WHEN left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
+     Case
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
+      WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
       ELSE sih.CurrencyCode
     END AS CurrencyCode,
     CAST((case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end) *(-1) AS DECIMAL(10, 2)) AS RevenueAmount

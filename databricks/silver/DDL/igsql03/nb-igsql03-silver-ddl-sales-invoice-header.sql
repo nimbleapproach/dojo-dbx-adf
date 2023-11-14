@@ -28,7 +28,7 @@ USE SCHEMA igsql03;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales_invoice_header_copy
+CREATE OR REPLACE TABLE sales_invoice_header
   ( 
         SID bigint
         GENERATED ALWAYS AS IDENTITY
@@ -45,7 +45,7 @@ CREATE OR REPLACE TABLE sales_invoice_header_copy
       COMMENT 'TODO'
     ,`CurrencyCode` STRING
       COMMENT 'TODO'
-    ,`CurrencyFactor` FLOAT
+    ,`CurrencyFactor` DECIMAL(10,2)
       COMMENT 'TODO'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
@@ -61,6 +61,7 @@ CREATE OR REPLACE TABLE sales_invoice_header_copy
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
+    ,Sys_Silver_IsCurrent BOOLEAN
 ,CONSTRAINT sales_invoice_header_copy_pk PRIMARY KEY(No_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the header data for sales invoice header. \n' 
@@ -69,6 +70,6 @@ CLUSTER BY (No_,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_invoice_header_copy ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_header_copy ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_header_copy ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');

@@ -1,12 +1,4 @@
 -- Databricks notebook source
--- DBTITLE 1,Define Sales Credit Memo Header at Silver
--- MAGIC %md
--- MAGIC Widgets are used to give Data Factory a way to hand over parameters. In that we we can control the environment.
--- MAGIC If there is no widget defined, Data Factory will automatically create them.
--- MAGIC For us while developing we can use the try and except trick here.
-
--- COMMAND ----------
-
 -- MAGIC %python
 -- MAGIC import os
 -- MAGIC
@@ -28,23 +20,18 @@ USE SCHEMA igsql03;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE sales_cr_memo_header
+CREATE OR REPLACE TABLE g_l_account
   ( 
-        SID bigint
+    SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
-    ,No_ STRING NOT NULL 
+    ,No_ STRING 
       COMMENT 'Business Key'
-    ,PostingDate TIMESTAMP NOT NULL
-      COMMENT 'The timestamp off the posting.'
-    ,`Sell-toCustomerNo_` STRING
-      COMMENT 'TODO'
-    ,`Bill-toCustomerNo_` STRING
-      COMMENT 'TODO'
-    ,`CurrencyCode` STRING
-      COMMENT 'TODO'
-    ,`CurrencyFactor`  DECIMAL(10,2)
-      COMMENT 'TODO'
+    ,Name STRING
+    ,Consol_CreditAcc_ STRING
+      COMMENT 'Group Account'
+    ,ConsolidationAccountName STRING
+      COMMENT 'Group Account Name'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL
@@ -60,14 +47,14 @@ CREATE OR REPLACE TABLE sales_cr_memo_header
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
-,CONSTRAINT sales_cr_memo_header_pk PRIMARY KEY(No_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT g_l_account_pk PRIMARY KEY(No_,Sys_DatabaseName, Sys_RowNumber)
   )
-COMMENT 'This table contains the header data for sales credit memo. \n' 
-TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'enabled')
+COMMENT 'This table contains the line data for gl_entry. \n' 
+TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
 CLUSTER BY (No_,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_cr_memo_header ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_cr_memo_header ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_cr_memo_header ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE g_l_account ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE g_l_account ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE g_l_account ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');

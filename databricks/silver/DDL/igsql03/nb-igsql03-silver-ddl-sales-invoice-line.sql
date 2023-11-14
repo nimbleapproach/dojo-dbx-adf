@@ -71,6 +71,7 @@ CREATE OR REPLACE TABLE sales_invoice_line
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
+    ,Sys_Silver_IsCurrent BOOLEAN
 ,CONSTRAINT sales_invoice_line_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for sales invoices line. \n' 
