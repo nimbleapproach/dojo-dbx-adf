@@ -74,7 +74,7 @@
 				"     folderPath: ('netsuite/'+ $pm_FileName)) ~> GetBronzeData",
 				"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
 				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('Last_Modified')))) ~> GetMaxWatermark",
-				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('DataLakeModified_DateTime')) > CurrentWatermark)) ~> Increment",
+				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('Last_Modified')) > CurrentWatermark)) ~> Increment",
 				"CastTimestamps, GetMaxWatermark join(true(),",
 				"     joinType:'cross',",
 				"     matchType:'exact',",
