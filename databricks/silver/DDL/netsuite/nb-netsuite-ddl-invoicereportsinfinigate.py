@@ -31,7 +31,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,Invoice_Number	STRING	NOT NULL 
 # MAGIC         COMMENT 'BUSINESS KEY/ Invoice Number'
 # MAGIC     ,`Date`	TIMESTAMP	              
-# MAGIC         COMMENT 'WATERMARK/ Date of invoice'
+# MAGIC         COMMENT 'Date of invoice'
 # MAGIC     ,Customer_Name	STRING	    
 # MAGIC         COMMENT 'Name of the End User'    
 # MAGIC     ,Date_Created	TIMESTAMP	  NOT NULL     
@@ -47,7 +47,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ,End_Date	TIMESTAMP	  
 # MAGIC         COMMENT 'TODO'
 # MAGIC     ,Line_ID	STRING	          
-# MAGIC         COMMENT 'Column to be hashed with Invoice number to make unique PK'
+# MAGIC         COMMENT 'BUSINESS KEY/ Column to be hashed with Invoice number to make unique PK'
 # MAGIC     ,Opportunity_Name	STRING	  
 # MAGIC         COMMENT 'Name of opportunity'
 # MAGIC     ,PO_Number	STRING	        
@@ -80,7 +80,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT invoicereportsinfinigate_pk PRIMARY KEY(Invoice_Number, Last_Modified)
+# MAGIC ,CONSTRAINT invoicereportsinfinigate_pk PRIMARY KEY(Invoice_Number,Line_ID, Last_Modified)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for invoicereportsinfinigate. \n'
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
