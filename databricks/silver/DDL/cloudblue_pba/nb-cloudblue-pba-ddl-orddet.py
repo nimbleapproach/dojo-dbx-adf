@@ -27,9 +27,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,UnitPrice_Code	STRING	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,UnitPrice_Value	DECIMAL	
+# MAGIC     ,UnitPrice_Value	DECIMAL(38,18)
 # MAGIC       COMMENT 'price per unit'
-# MAGIC     ,ServQty	DECIMAL	
+# MAGIC     ,ServQty	DECIMAL(38,18)
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,ServUnitMeasure	STRING	
 # MAGIC       COMMENT 'unit can be license, but it can also be azure usage'
@@ -47,9 +47,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Original_DetID	INT	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,TaxPercent	DECIMAL	
+# MAGIC     ,TaxPercent	DECIMAL(38,18)
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,DiscountAmt_Value	DECIMAL	
+# MAGIC     ,DiscountAmt_Value	DECIMAL(38,18)	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,InterReselTranID	INT	
 # MAGIC       COMMENT 'FK to resellertrans'
@@ -59,13 +59,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,planCategoryID	INT	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,TaxAmt_Value	DECIMAL	
+# MAGIC     ,TaxAmt_Value	DECIMAL(38,18)	
 # MAGIC       COMMENT 'amount of tax for that line item'
 # MAGIC     ,TaxAmt_Code	STRING	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DiscountAmt_Code	STRING	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,PromotedAmt_Value	DECIMAL
+# MAGIC     ,PromotedAmt_Value	DECIMAL(38,18)
 # MAGIC       	COMMENT 'TODO'
 # MAGIC     ,resourceID	INT	
 # MAGIC       COMMENT 'FK'
@@ -75,9 +75,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,subscriptionID	INT	
 # MAGIC       COMMENT 'FK to subscription'
-# MAGIC     ,DiscountPercent	DECIMAL	
+# MAGIC     ,DiscountPercent	DECIMAL(38,18)	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,ExtendedPrice_Value	DECIMAL	
+# MAGIC     ,ExtendedPrice_Value	DECIMAL(38,18)	
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DetSDate	INT
 # MAGIC       	COMMENT 'start'
