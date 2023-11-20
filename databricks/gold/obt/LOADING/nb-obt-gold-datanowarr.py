@@ -1,8 +1,14 @@
 # Databricks notebook source
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+
+# COMMAND ----------
+
 df_dn = spark.sql(
-    """select 
+    f"""select 
     *
-    from silver_dev.masterdata.datanowarr
+    from silver_{ENVIRONMENT}.masterdata.datanowarr
     where Sys_Silver_IsCurrent=1
   """
 )
@@ -53,6 +59,6 @@ df_result.createOrReplaceTempView('df')
 
 # COMMAND ----------
 
-spark.sql("""create or replace table gold_dev.obt.datanowarr
+spark.sql(f"""create or replace table gold_{ENVIRONMENT}.obt.datanowarr
                     as
                     select * from df""")
