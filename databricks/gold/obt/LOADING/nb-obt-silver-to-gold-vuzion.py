@@ -51,7 +51,7 @@ SELECT
 ,cast((coalesce(od.ExtendedPrice_Value,0.00) + coalesce(od.TaxAmt_Value,0.00)) AS DECIMAL(10,2)) AS RevenueAmount
 FROM
   silver_{ENVIRONMENT}.cloudblue_pba.salesorder sa
-LEFT JOIN
+INNER JOIN
   silver_{ENVIRONMENT}.cloudblue_pba.orddet od
 ON 
   sa.OrderID = od.OrderID
@@ -59,7 +59,7 @@ AND
   sa.Sys_Silver_IsCurrent = true
 AND
   od.Sys_Silver_IsCurrent = true
-LEFT JOIN
+INNER JOIN
 (
   SELECT DISTINCT AccountID AS ResellerID, CompanyName AS ResellerName
   FROM silver_{ENVIRONMENT}.cloudblue_pba.account
