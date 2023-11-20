@@ -71,6 +71,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     and (COD_SCENARIO  like '%04')
 # MAGIC     and (COD_SCENARIO not like '%OB%')
 # MAGIC     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
+# MAGIC     AND COD_CATEGORIA LIKE '%AMOUNT'
 # MAGIC     AND Sys_Silver_IsCurrent = 1
 # MAGIC     AND Sys_Silver_IsDeleted = 0
 # MAGIC   group by

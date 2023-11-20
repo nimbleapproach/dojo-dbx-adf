@@ -103,21 +103,7 @@ with cte as (
       sih.`Sell-toCustomerNo_`
     ) = concat(rg.Entity, rg.ResellerID)
     AND rg.Sys_Silver_IsCurrent = TRUE
-    LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr ON it.No_ = datanowarr.sku
-    and case
-      when lower(ven.Name) NOT IN (
-        SELECT
-          distinct lower(Vendor_Name) Vendor_Name
-        from
-          silver_{ENVIRONMENT}.masterdata.datanowarr
-        where
-          Sys_Silver_IsCurrent = 1
-      ) then 'other vendors'
-      when ven.Name like 'Sophos%' then 'sophos'
-      when ven.Name like 'Symantec%' then 'symantec'
-      else lower(ven.Name)
-    end = lower(datanowarr.Vendor_Name)
-    AND datanowarr.Sys_Silver_IsCurrent = true
+    LEFT JOIN gold_dev.obt.datanowarr ON it.No_ = datanowarr.sku
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
     LEFT JOIN (
       select
@@ -244,21 +230,7 @@ with cte as (
       sih.`Sell-toCustomerNo_`
     ) = concat(rg.Entity, rg.ResellerID)
     AND rg.Sys_Silver_IsCurrent = TRUE
-    LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr ON it.No_ = datanowarr.sku
-    and case
-      when lower(ven.Name) NOT IN (
-        SELECT
-          distinct lower(Vendor_Name) Vendor_Name
-        from
-          silver_{ENVIRONMENT}.masterdata.datanowarr
-        where
-          Sys_Silver_IsCurrent = 1
-      ) then 'other vendors'
-      when ven.Name like 'Sophos%' then 'sophos'
-      when ven.Name like 'Symantec%' then 'symantec'
-      else lower(ven.Name)
-    end = lower(datanowarr.Vendor_Name)
-    AND datanowarr.Sys_Silver_IsCurrent = true
+    LEFT JOIN gold_dev.obt.datanowarr ON it.No_ = datanowarr.sku
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
     LEFT JOIN (
       select
