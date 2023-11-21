@@ -146,9 +146,8 @@ with cte as (
         prod.Sys_Silver_IsCurrent = 1
         and prod.SAG_NGS1VendorID <> 'NaN'
     ) AS vm ON prod.SAG_NGS1VendorID = vm.VendorCode
-    LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr AS datanowarr ON upper(datanowarr.Vendor_Name) = upper(vm.IG_Vendor)
-    and datanowarr.SKU = it.Description
-    AND datanowarr.Sys_Silver_IsCurrent = 1
+    LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON 
+     datanowarr.SKU = it.Description
     LEFT JOIN (
       select
         distinct AccountNum,

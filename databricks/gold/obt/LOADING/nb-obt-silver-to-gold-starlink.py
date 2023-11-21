@@ -60,22 +60,7 @@ FROM
   and ven.Sys_Silver_IsCurrent is not false
   LEFT JOIN silver_{ENVIRONMENT}.netsuite.masterdatacustomer AS cu ON si.Customer_Name = cu.Customer_Name
   and cu.Sys_Silver_IsCurrent = 1
-  LEFT JOIN silver_{ENVIRONMENT}.masterdata.datanowarr AS datanowarr ON case
-    when lower(regexp_replace(
-        substring_index(ven.Vendor_Name, '-', 1),
-        ' ',
-        ''
-      )) NOT IN ( select distinct lower(Vendor_Name) from silver_{ENVIRONMENT}.netsuite.masterdatavendor )
-    then 'other vendors'
-    else lower(
-      regexp_replace(
-        substring_index(ven.Vendor_Name, '-', 1),
-        ' ',
-        ''
-      )
-    ) end = lower(datanowarr.Vendor_Name)
-  AND datanowarr.SKU = it.SKU_ID
-  AND datanowarr.Sys_Silver_IsCurrent = 1
+  LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = it.SKU_ID
 where
   si.Sys_Silver_IsCurrent = 1)
 
