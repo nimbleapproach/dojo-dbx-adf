@@ -21,6 +21,6 @@ steps:
     azureSubscription: 'SC-ARM-EDW-UAT'
     ScriptType: 'FilePath'
     ScriptPath: '../main/deployment/scripts/ps_db_update_repo.ps1'
-    ScriptArguments: '-AzureuatOpsBranch $(v-uat-branch) -Token $(v-token) -DatabricksRepoURI $(v-uat-databricks-repo-uri)'
+    ScriptArguments: '-AzureuatOpsBranch $(v-uat-branch) -Token $(v-uat-token) -DatabricksRepoURI $(v-uat-databricks-repo-uri)'
     azurePowerShellVersion: 'LatestVersion'
     pwsh: true

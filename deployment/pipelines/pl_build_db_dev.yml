@@ -21,6 +21,6 @@ steps:
     azureSubscription: 'SC-ARM-EDW-DEV'
     ScriptType: 'FilePath'
     ScriptPath: '../main/deployment/scripts/ps_db_update_repo.ps1'
-    ScriptArguments: '-AzureDevOpsBranch $(v-dev-branch) -Token $(v-token) -DatabricksRepoURI $(v-dev-databricks-repo-uri)'
+    ScriptArguments: '-AzureDevOpsBranch $(v-dev-branch) -Token $(v-dev-token) -DatabricksRepoURI $(v-dev-databricks-repo-uri)'
     azurePowerShellVersion: 'LatestVersion'
     pwsh: true
