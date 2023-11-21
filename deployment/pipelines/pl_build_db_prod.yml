@@ -6,7 +6,7 @@
 variables:
 - group: vg-inf-edw-deployment
 trigger:
-- main
+- production
 
 pool:
   vmImage: ubuntu-latest
