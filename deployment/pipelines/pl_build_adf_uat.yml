@@ -18,7 +18,7 @@ steps:
 
 - task: AzureResourceManagerTemplateDeployment@3
   inputs:
-    deploymentScope: 'Resource Group'
+    deploymentScope: 'Subscription'
     azureResourceManagerConnection: 'SC-ARM-EDW-UAT'
     subscriptionId: 'bf75b24f-2b10-4ada-a25a-b5bec3311486'
     action: 'Create Or Update Resource Group'
