@@ -30,9 +30,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,BranchID STRING
 # MAGIC       COMMENT 'FK'
-# MAGIC     ,SalesCommission DECIMAL
+# MAGIC     ,SalesCommission FLOAT
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,RecurringCommission DECIMAL
+# MAGIC     ,RecurringCommission FLOAT
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,UserArc INT
 # MAGIC       COMMENT 'TODO'

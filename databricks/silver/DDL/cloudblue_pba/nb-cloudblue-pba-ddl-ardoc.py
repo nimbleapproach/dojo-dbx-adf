@@ -19,21 +19,29 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC
 # MAGIC CREATE OR REPLACE TABLE ardoc
 # MAGIC   ( 
-# MAGIC         SID bigint
-# MAGIC         GENERATED ALWAYS AS IDENTITY
-# MAGIC         COMMENT 'Surrogate Key'
+# MAGIC     SID bigint
+# MAGIC       GENERATED ALWAYS AS IDENTITY
+# MAGIC       COMMENT 'Surrogate Key'
 # MAGIC     ,DocID BIGINT NOT NULL 
 # MAGIC       COMMENT 'Business Key'
+# MAGIC     ,DocNum STRING
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,DocType	BIGINT
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,Status	INT
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,CurrencyID	STRING
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,Total_Code STRING
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,Total_Value FLOAT
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,TaxTotal_Code STRING
+# MAGIC         COMMENT 'TODO'
+# MAGIC     ,TaxTotal_Value FLOAT
+# MAGIC         COMMENT 'TODO'
 # MAGIC     ,DateArc INT NOT NULL
 # MAGIC       COMMENT 'Water mark'
-# MAGIC     ,DocNum	    string
-# MAGIC         COMMENT 'TODO'    
-# MAGIC     ,DocType	BIGINT
-# MAGIC         COMMENT 'TODO'    
-# MAGIC     ,CurrencyID	string
-# MAGIC         COMMENT 'TODO'    
-# MAGIC     ,Total_Value float
-# MAGIC         COMMENT 'TODO'    
 # MAGIC     ,Vendor_AccountID	BIGINT
 # MAGIC         COMMENT 'TODO'    
 # MAGIC     ,Customer_AccountID	BIGINT
@@ -58,6 +66,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
+# MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC       COMMENT 'Flag if this is the current version.'
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
+# MAGIC       COMMENT 'Flag if this is the deleted version.'
 # MAGIC ,CONSTRAINT ardoc_pk PRIMARY KEY(DocID, DateArc)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ardoc. \n' 
