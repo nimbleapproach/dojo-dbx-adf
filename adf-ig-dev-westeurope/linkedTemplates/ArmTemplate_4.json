@@ -13,6 +13,506 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Recreate_View_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get DatabasesControl Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get DatabasesControl Table').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "PL_30_IGSQL03_Recreate_View",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_30_IGSQL03_Recreate_View",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_TableName": {
+												"value": "@pipeline().parameters.pm_TableName",
+												"type": "Expression"
+											},
+											"pm_DatabaseName": {
+												"value": "@item().DATABASE_NAME",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Get DatabasesControl Table",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_IGSQL03_DATABASES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_TableName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_NETSUITE_Load_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IfFullLoad",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD",
+											"type": "DataFlowReference",
+											"parameters": {
+												"pm_FileName": {
+													"value": "'@{pipeline().parameters.pm_FileName}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"GetFile": {
+													"pm_environment": {
+														"value": "@pipeline().globalParameters.gpm_Environment",
+														"type": "Expression"
+													},
+													"pm_FileName": {
+														"value": "@pipeline().parameters.pm_FileName",
+														"type": "Expression"
+													}
+												},
+												"GetBronzeData": {},
+												"WriteDeltaTable": {}
+											},
+											"linkedServiceParameters": {
+												"GetBronzeData": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"WriteDeltaTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										},
+										"staging": {},
+										"integrationRuntime": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "DF_NETSUITE_CDM_TO_BRONZE_FULLLOAD",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF_NETSUITE_CDM_TO_BRONZE_FULLLOAD",
+											"type": "DataFlowReference",
+											"parameters": {
+												"pm_FileName": {
+													"value": "'@{pipeline().parameters.pm_FileName}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"GetFile": {
+													"pm_environment": {
+														"value": "@pipeline().globalParameters.gpm_Environment",
+														"type": "Expression"
+													},
+													"pm_FileName": {
+														"value": "@pipeline().parameters.pm_FileName",
+														"type": "Expression"
+													}
+												},
+												"WriteDeltaTable": {}
+											},
+											"linkedServiceParameters": {
+												"WriteDeltaTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										},
+										"staging": {},
+										"integrationRuntime": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_FileName": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NETSUITE"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_30_NUAZ-SQLSERVER-01_Load_Table')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Full Load Nuivas FO Table",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE",
+								"type": "DataFlowReference",
+								"parameters": {
+									"pm_TableSchema": {
+										"value": "'@{pipeline().parameters.pm_SchemaName}'",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "'@{pipeline().parameters.pm_TableName}'",
+										"type": "Expression"
+									},
+									"pm_DatabaseName": {
+										"value": "'@{pipeline().parameters.pm_DatabaseName}'",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"GetSQLTable": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_DatabaseType": {
+											"value": "@split(pipeline().parameters.pm_DatabaseName,'_')[1]",
+											"type": "Expression"
+										},
+										"pm_SchemaName": {
+											"value": "@pipeline().parameters.pm_SchemaName",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "@pipeline().parameters.pm_TableName",
+											"type": "Expression"
+										}
+									},
+									"WriteToBronzeADLS": {}
+								},
+								"linkedServiceParameters": {
+									"WriteToBronzeADLS": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseName": {
+						"type": "string"
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"pm_SchemaName": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"v_Watermark": {
+						"type": "String"
+					},
+					"v_NewWatermark": {
+						"type": "String"
+					},
+					"v_SelectionString": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_CLOUDBLUE_OSS_Load_Table_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_CLOUDBLUE_OSS_Load_Table_Copy_copy1",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_CLOUDBLUE_OSS_Load_Table_ITERATOR",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_full_load": {
+									"value": "@pipeline().parameters.pm_full_load",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"variables": {
+					"Watermark_int_delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/CLOUDBLUE/OSS"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_CLOUDBLUE_PBA_Load_Table_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_CLOUDBLUE_PBA_Load_Table_Iterator",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_CLOUDBLUE_PBA_Load_Table_ITERATOR",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_full_load": {
+									"value": "@pipeline().parameters.pm_full_load",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"variables": {
+					"Watermark_int_delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/CLOUDBLUE/PBA"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_DATANOW_ARR_Load_Sheet_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_DATANOW_ARR_Load_Sheet_ITERATOR",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_DATANOW_ARR_Load_Sheet_ITERATOR",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/DATANOW"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_DELTALINK_Load_File_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -38,6 +538,37 @@
 				},
 				"folder": {
 					"name": "10 Bronze/DELTALINK"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_NETSAFE_Load_File_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_NETSAFE_Load_File_ITERATOR",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_NETSAFE_Load_File_ITERATOR",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/NETSAFE"
 				},
 				"annotations": []
 			},
@@ -314,7 +845,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Recreate_View_ITERATOR')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_10_NETSUITE_Load_File_ITERATOR')]",
@@ -418,7 +951,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_20_NETSUITE_Load_File')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__6')]",
@@ -711,7 +1246,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_30_NUAZ-SQLSERVER-01_Load_Table')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_IGSQL03_Load_View_MASTER')]",
@@ -1128,1177 +1665,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_NUAZ-SQLSERVER-01_Load_Table_ITERATOR')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__4')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetManifest",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_ManifestPath": {
-										"value": "@pipeline().parameters.pm_ManifestPath",
-										"type": "Expression"
-									},
-									"pm_ManifestName": {
-										"value": "@pipeline().parameters.pm_ManifestFile",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "ForEachSubmanifest",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__5",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__5",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@{item().manifestName}",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "ForEachEntities",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_Entity": {
-												"value": "@item().entityName",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@pipeline().parameters.pm_ManifestPath",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@pipeline().parameters.pm_ManifestFile",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_ManifestPath": {
-						"type": "string"
-					},
-					"pm_ManifestFile": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__5')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__3')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetManifest",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_ManifestPath": {
-										"value": "@pipeline().parameters.pm_ManifestPath",
-										"type": "Expression"
-									},
-									"pm_ManifestName": {
-										"value": "@pipeline().parameters.pm_ManifestFile",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "ForEachSubmanifest",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__4",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__4",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@{item().manifestName}",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "ForEachEntities",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_Entity": {
-												"value": "@item().entityName",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@pipeline().parameters.pm_ManifestPath",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@pipeline().parameters.pm_ManifestFile",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_ManifestPath": {
-						"type": "string"
-					},
-					"pm_ManifestFile": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__4')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetManifest",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_ManifestPath": {
-										"value": "@pipeline().parameters.pm_ManifestPath",
-										"type": "Expression"
-									},
-									"pm_ManifestName": {
-										"value": "@pipeline().parameters.pm_ManifestFile",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "ForEachSubmanifest",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__3",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__3",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@{item().manifestName}",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "ForEachEntities",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_Entity": {
-												"value": "@item().entityName",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@pipeline().parameters.pm_ManifestPath",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@pipeline().parameters.pm_ManifestFile",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_ManifestPath": {
-						"type": "string"
-					},
-					"pm_ManifestFile": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__3')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetManifest",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_ManifestPath": {
-										"value": "@pipeline().parameters.pm_ManifestPath",
-										"type": "Expression"
-									},
-									"pm_ManifestName": {
-										"value": "@pipeline().parameters.pm_ManifestFile",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "ForEachSubmanifest",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__2",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__2",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@item().manifestName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "ForEachEntities",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_Entity": {
-												"value": "@item().entityName",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@pipeline().parameters.pm_ManifestPath",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@pipeline().parameters.pm_ManifestFile",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_ManifestPath": {
-						"type": "string"
-					},
-					"pm_ManifestFile": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__2')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_NUVIAS_OPERATIONS_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetManifest",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_ManifestPath": {
-										"value": "Tables",
-										"type": "Expression"
-									},
-									"pm_ManifestName": {
-										"value": "Tables",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "ForEachSubmanifest",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetManifest').output.firstRow.subManifests",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__1",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "Tables/@{item().manifestName}",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@item().manifestName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_NUVIAS_OPERATIONS_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_NUVIAS_OPERATIONS_ITERATOR",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_NUVIAS_OPERATIONS_ITERATOR",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_FullLoad": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_10_NUVIAS_OPERATIONS_ITERATOR')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_00_TAG02_Load_View_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_TAG02_Load_View_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_full_load": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "PL_00_IGSQL03_Load_View_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_IGSQL03_Load_View_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_FullLoad": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "PL_00_NETSUITE_Load_File_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_NETSUITE_Load_File_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_FullLoad": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "PL_00_NUVIAS_OPERATIONS_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_NUVIAS_OPERATIONS_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_FullLoad": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_full_load": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_full_load": {
-									"value": "@pipeline().parameters.pm_FullLoad",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "PL_00_BRONZE_TO_SILVER_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "PL_00_CLOUDBLUE_OSS_Load_Table_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_TAG02_Load_View_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_IGSQL03_Load_View_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_NETSUITE_Load_File_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_NUVIAS_OPERATIONS_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_BRONZE_TO_SILVER_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "PL_00_BRONZE_TO_SILVER_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					}
-				},
-				"folder": {
-					"name": "00 Setup"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_00_TAG02_Load_View_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL03_Load_View_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_NETSUITE_Load_File_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_NUVIAS_OPERATIONS_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_VUZION_ARR_Load_Sheet_MASTER')]"
 			]
 		}
 	]
