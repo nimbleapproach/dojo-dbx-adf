@@ -1,0 +1,88 @@
+{
+	"name": "PL_10_NETSAFE_Load_File_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachFile",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetFileNames",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetFileNames').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "PL_10_NETSAFE_Load_File_ITERATOR",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_NETSAFE_Load_File",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_FileName": {
+										"value": "@item().name",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "GetFileNames",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_BINARY_NETSAFE",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/NETSAFE"
+		},
+		"annotations": []
+	}
+}
