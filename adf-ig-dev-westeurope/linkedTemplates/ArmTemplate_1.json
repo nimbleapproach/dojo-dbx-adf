@@ -65,6 +65,110 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_BINARY')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_Container": {
+						"type": "string"
+					},
+					"pm_FilePath": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DV"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().pm_FilePath",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().pm_Container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_BINARY_FILE')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_Container": {
+						"type": "string"
+					},
+					"pm_FilePath": {
+						"type": "string"
+					},
+					"pm_FileName": {
+						"type": "string"
+					},
+					"pm_FileExtension": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DV"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{dataset().pm_FileName}.@{dataset().pm_FileExtension}",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().pm_FilePath",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().pm_Container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_DATANOW_ARR_EXCEL')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -755,15 +859,15 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC')]",
+			"name": "[concat(parameters('factoryName'), '/DS_EXCEL_CLOUD_DISTRIBUTION')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "LS_PGSQL_CLOUDBLUE_OSS",
+					"referenceName": "LS_ADLS_DV",
 					"type": "LinkedServiceReference",
 					"parameters": {
-						"pm_Environment": {
+						"pm_environment": {
 							"value": "@dataset().pm_Environment",
 							"type": "Expression"
 						}
@@ -772,127 +876,23 @@
 				"parameters": {
 					"pm_Environment": {
 						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_TableSchema": {
-						"type": "string"
 					}
 				},
 				"folder": {
-					"name": "Sources/CLOUDBLUE/OSS"
+					"name": "Sources/CLOUD_DISTRIBUTION"
 				},
 				"annotations": [],
-				"type": "PostgreSqlTable",
-				"schema": [],
+				"type": "Excel",
 				"typeProperties": {
-					"schema": {
-						"value": "@dataset().pm_TableSchema",
-						"type": "Expression"
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "cloud_distribution/pending",
+						"fileSystem": "external"
 					},
-					"table": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_PGSQL_CLOUDBLUE_PBA",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
+					"sheetIndex": 0,
+					"firstRowAsHeader": true
 				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_TableSchema": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/CLOUDBLUE/PBA"
-				},
-				"annotations": [],
-				"type": "PostgreSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().pm_TableSchema",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_CRM_DYNAMIC')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_SQLDB_CRM_DYNAMIC",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						},
-						"pm_DatabaseName": {
-							"value": "@dataset().pm_DatabaseName",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_SchemaName": {
-						"type": "string"
-					},
-					"pm_DatabaseName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/IGSQL01 [CRM]"
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().pm_SchemaName",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
+				"schema": []
 			},
 			"dependsOn": []
 		}
