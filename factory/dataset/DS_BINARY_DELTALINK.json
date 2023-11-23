@@ -24,7 +24,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "deltalink/pending",
+				"folderPath": {
+					"value": "deltalink/pending",
+					"type": "Expression"
+				},
 				"fileSystem": "external"
 			}
 		}

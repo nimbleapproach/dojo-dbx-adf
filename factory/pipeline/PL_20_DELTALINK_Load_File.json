@@ -52,12 +52,223 @@
 						"logLocationSettings": {
 							"linkedServiceName": {
 								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
 							}
 						}
 					},
 					"translator": {
 						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Invoice Date",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "InvoiceDate",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Order Type",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "OrderType",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Order Number",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "OrderNumber",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Invoice Number",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "InvoiceNumber",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Client Number",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ClientNumber",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Company",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Company",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Artcode",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Artcode",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Supplier_ID",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "SupplierID",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Supplier",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Supplier",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Art Sup Code",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ArtSupCode",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Description",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Description",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Quantity",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Quantity",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Article Product Type",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ArticleProductType",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Currency",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Currency",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Revenue Transaction",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "RevenueTransaction",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Cost Transaction",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "CostTransaction",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Margin Transaction",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "MarginTransaction",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							}
+						],
 						"typeConversion": true,
 						"typeConversionSettings": {
 							"allowDataTruncation": true,
@@ -77,7 +288,8 @@
 							"pm_FileName": {
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
-							}
+							},
+							"pm_FileLocation": "pending"
 						}
 					}
 				],
@@ -105,6 +317,131 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "Move To Archived",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Load File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_BINARY_DELTALINK_FILE",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "@pipeline().parameters.pm_FileName",
+								"type": "Expression"
+							},
+							"pm_FileExtension": {
+								"value": "xlsx",
+								"type": "Expression"
+							},
+							"pm_FileLocation": "pending"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_BINARY_DELTALINK_FILE",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "@pipeline().parameters.pm_FileName",
+								"type": "Expression"
+							},
+							"pm_FileExtension": "xlsx",
+							"pm_FileLocation": {
+								"value": "archived",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Delete Moved File",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Move To Archived",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_BINARY_DELTALINK_FILE",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "@pipeline().parameters.pm_FileName",
+								"type": "Expression"
+							},
+							"pm_FileExtension": "xlsx",
+							"pm_FileLocation": "pending"
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
 			}
 		],
 		"parameters": {

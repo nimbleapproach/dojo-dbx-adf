@@ -20,6 +20,9 @@
 			},
 			"pm_FileExtension": {
 				"type": "string"
+			},
+			"pm_FileLocation": {
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -34,7 +37,10 @@
 					"value": "@{dataset().pm_FileName}.@{dataset().pm_FileExtension}",
 					"type": "Expression"
 				},
-				"folderPath": "deltalink/pending",
+				"folderPath": {
+					"value": "deltalink/@{dataset().pm_FileLocation}",
+					"type": "Expression"
+				},
 				"fileSystem": "external"
 			}
 		}

@@ -17,6 +17,9 @@
 			},
 			"pm_FileName": {
 				"type": "string"
+			},
+			"pm_FileLocation": {
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -31,7 +34,10 @@
 					"value": "@{dataset().pm_FileName}.xlsx",
 					"type": "Expression"
 				},
-				"folderPath": "deltalink/pending",
+				"folderPath": {
+					"value": "deltalink/pending",
+					"type": "Expression"
+				},
 				"fileSystem": "external"
 			},
 			"sheetIndex": 0,
