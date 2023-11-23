@@ -1,0 +1,54 @@
+{
+	"name": "DS_ADLS_DV_BINARY_FILE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_Container": {
+				"type": "string"
+			},
+			"pm_FilePath": {
+				"type": "string"
+			},
+			"pm_FileName": {
+				"type": "string"
+			},
+			"pm_FileExtension": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "DV"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@{dataset().pm_FileName}.@{dataset().pm_FileExtension}",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().pm_FilePath",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().pm_Container",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

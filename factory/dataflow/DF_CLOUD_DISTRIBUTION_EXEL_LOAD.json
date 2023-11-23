@@ -1,0 +1,77 @@
+{
+	"name": "DF_CLOUD_DISTRIBUTION_EXEL_LOAD",
+	"properties": {
+		"folder": {
+			"name": "CLOUD_DISTRIBUTION"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_EXCEL_CLOUD_DISTRIBUTION",
+						"type": "DatasetReference"
+					},
+					"name": "GetExcelFile"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteDeltaFiles"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddSystemColumns"
+				},
+				{
+					"name": "RenameColumns"
+				}
+			],
+			"udfLibraries": [
+				{
+					"referenceName": "General",
+					"type": "DataFlowReference"
+				}
+			],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
+				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+				"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+				"GetExcelFile select(mapColumn(",
+				"          each(match(true()),",
+				"               applyParquetNaming($$) = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+				"AddSystemColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: 'cloud_distribution/invoicedata',",
+				"     mergeSchema: true,",
+				"     autoCompact: true,",
+				"     optimizedWrite: true,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+			]
+		}
+	}
+}

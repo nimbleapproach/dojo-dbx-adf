@@ -1,0 +1,24 @@
+{
+	"name": "PL_00_CLOUD_DISTRIBUTION_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_20_CLOUD_DISTRIBUTION_Load_File",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_20_CLOUD_DISTRIBUTION_Load_File",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/CLOUD_DISTRIBUTION"
+		},
+		"annotations": []
+	}
+}
