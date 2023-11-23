@@ -1,0 +1,42 @@
+{
+	"name": "DS_ADLS_DV_DELTALINK_EXCEL",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/DELTALINK"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@{dataset().pm_FileName}.xlsx",
+					"type": "Expression"
+				},
+				"folderPath": "deltalink/pending",
+				"fileSystem": "external"
+			},
+			"sheetIndex": 0,
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	}
+}
