@@ -150,6 +150,51 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_DELTALINK_EXCEL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_FileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/DELTALINK"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{dataset().pm_FileName}.xlsx",
+							"type": "Expression"
+						},
+						"folderPath": "deltalink/pending",
+						"fileSystem": "external"
+					},
+					"sheetIndex": 0,
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_RESELLERGROUPS_EXCEL')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -382,6 +427,86 @@
 					"compressionCodec": "snappy"
 				},
 				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_BINARY_DELTALINK')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/DELTALINK"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "deltalink/pending",
+						"fileSystem": "external"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_BINARY_DELTALINK_FILE')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_FileName": {
+						"type": "string"
+					},
+					"pm_FileExtension": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/DELTALINK"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{dataset().pm_FileName}.@{dataset().pm_FileExtension}",
+							"type": "Expression"
+						},
+						"folderPath": "deltalink/pending",
+						"fileSystem": "external"
+					}
+				}
 			},
 			"dependsOn": []
 		},
@@ -798,236 +923,6 @@
 						"type": "Expression"
 					}
 				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "NUVIAS/Dynamics"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetCDMEnity"
-						},
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetBronzeData"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaTable"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddBronzeLoadDate"
-						},
-						{
-							"name": "GetMaxWatermark"
-						},
-						{
-							"name": "Increment"
-						},
-						{
-							"name": "AddCurrentWatermark"
-						},
-						{
-							"name": "DropCurrentWatermark"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_Entity as string,",
-						"     pm_ManifestPath as string,",
-						"     pm_ManifestFile as string,",
-						"     pm_FullLoad as boolean (false())",
-						"}",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: true,",
-						"     entity: ($pm_Entity),",
-						"     format: 'cdm',",
-						"     manifestType: 'manifest',",
-						"     manifestName: ($pm_ManifestFile),",
-						"     entityPath: ($pm_ManifestPath),",
-						"     local: true,",
-						"     folderPath: 'nuvias.operations.dynamics.com',",
-						"     fileSystem: 'dynamics365-financeandoperations',",
-						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
-						"     mode: 'read') ~> GetCDMEnity",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
-						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('DataLakeModified_DateTime')))) ~> GetMaxWatermark",
-						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('DataLakeModified_DateTime')) > CurrentWatermark)) ~> Increment",
-						"GetCDMEnity, GetMaxWatermark join(true(),",
-						"     joinType:'cross',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'right')~> AddCurrentWatermark",
-						"Increment select(mapColumn(",
-						"          each(match(name!='CurrentWatermark'))",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
-						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "NUVIAS/Dynamics"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetCDMEnity"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaTable"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddBronzeLoadDate"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_Entity as string,",
-						"     pm_ManifestPath as string,",
-						"     pm_ManifestFile as string,",
-						"     pm_FullLoad as boolean (false())",
-						"}",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: true,",
-						"     entity: ($pm_Entity),",
-						"     format: 'cdm',",
-						"     manifestType: 'manifest',",
-						"     manifestName: ($pm_ManifestFile),",
-						"     entityPath: ($pm_ManifestPath),",
-						"     local: true,",
-						"     folderPath: 'nuvias.operations.dynamics.com',",
-						"     fileSystem: 'dynamics365-financeandoperations',",
-						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
-						"     mode: 'read') ~> GetCDMEnity",
-						"GetCDMEnity derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_BRONZE_TO_SILVER_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_BRONZE_TO_SILVER_TRIGGER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_BRONZE_TO_SILVER_TRIGGER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "20 Silver"
-				},
-				"annotations": []
 			},
 			"dependsOn": []
 		}

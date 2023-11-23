@@ -13,6 +13,236 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "NUVIAS/Dynamics"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetCDMEnity"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetBronzeData"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaTable"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddBronzeLoadDate"
+						},
+						{
+							"name": "GetMaxWatermark"
+						},
+						{
+							"name": "Increment"
+						},
+						{
+							"name": "AddCurrentWatermark"
+						},
+						{
+							"name": "DropCurrentWatermark"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_Entity as string,",
+						"     pm_ManifestPath as string,",
+						"     pm_ManifestFile as string,",
+						"     pm_FullLoad as boolean (false())",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: true,",
+						"     entity: ($pm_Entity),",
+						"     format: 'cdm',",
+						"     manifestType: 'manifest',",
+						"     manifestName: ($pm_ManifestFile),",
+						"     entityPath: ($pm_ManifestPath),",
+						"     local: true,",
+						"     folderPath: 'nuvias.operations.dynamics.com',",
+						"     fileSystem: 'dynamics365-financeandoperations',",
+						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
+						"     mode: 'read') ~> GetCDMEnity",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
+						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('DataLakeModified_DateTime')))) ~> GetMaxWatermark",
+						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('DataLakeModified_DateTime')) > CurrentWatermark)) ~> Increment",
+						"GetCDMEnity, GetMaxWatermark join(true(),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> AddCurrentWatermark",
+						"Increment select(mapColumn(",
+						"          each(match(name!='CurrentWatermark'))",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
+						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "NUVIAS/Dynamics"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetCDMEnity"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaTable"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddBronzeLoadDate"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_Entity as string,",
+						"     pm_ManifestPath as string,",
+						"     pm_ManifestFile as string,",
+						"     pm_FullLoad as boolean (false())",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: true,",
+						"     entity: ($pm_Entity),",
+						"     format: 'cdm',",
+						"     manifestType: 'manifest',",
+						"     manifestName: ($pm_ManifestFile),",
+						"     entityPath: ($pm_ManifestPath),",
+						"     local: true,",
+						"     folderPath: 'nuvias.operations.dynamics.com',",
+						"     fileSystem: 'dynamics365-financeandoperations',",
+						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
+						"     mode: 'read') ~> GetCDMEnity",
+						"GetCDMEnity derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_BRONZE_TO_SILVER_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_BRONZE_TO_SILVER_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_BRONZE_TO_SILVER_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "20 Silver"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_SILVER_TO_GOLD_OBT_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1608,6 +1838,132 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_DELTALINK_Load_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load File",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									}
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Warning",
+									"enableReliableLogging": false
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "LS_ADLS",
+										"type": "LinkedServiceReference"
+									}
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_DV_DELTALINK_EXCEL",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "@pipeline().parameters.pm_FileName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET_STATIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": {
+										"value": "bronze",
+										"type": "Expression"
+									},
+									"pm_Directory": {
+										"value": "deltalink",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "bronze-deltalink-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_FileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/DELTALINK"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1795,7 +2151,10 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
+				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_TAG02_Load_View')]",
@@ -4540,316 +4899,6 @@
 				"annotations": []
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "Starlink/NETSUITE"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
-								"type": "DatasetReference"
-							},
-							"name": "GetFile"
-						},
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetBronzeData"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaTable"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddBronzeLoadDate"
-						},
-						{
-							"name": "GetMaxWatermark"
-						},
-						{
-							"name": "Increment"
-						},
-						{
-							"name": "AddCurrentWatermark"
-						},
-						{
-							"name": "DropCurrentWatermark"
-						},
-						{
-							"name": "CastTimestamps"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_FileName as string",
-						"}",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: true,",
-						"     multiLineRow: true,",
-						"     dateFormats: ['dd/MM/yyyy'],",
-						"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
-						"     manifestType: 'manifest',",
-						"     mode: 'read') ~> GetFile",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('netsuite/'+ $pm_FileName)) ~> GetBronzeData",
-						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('Last_Modified')))) ~> GetMaxWatermark",
-						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('Last_Modified')) > CurrentWatermark)) ~> Increment",
-						"CastTimestamps, GetMaxWatermark join(true(),",
-						"     joinType:'cross',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'right')~> AddCurrentWatermark",
-						"Increment select(mapColumn(",
-						"          each(match(name!='CurrentWatermark'))",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
-						"GetFile derive(Last_Modified = toTimestamp(byName('Last_Modified'),'dd/MM/yyyy h:mm a'),",
-						"          Date_Created = toTimestamp(byName('Date_Created'),'dd/MM/yyyy h:mm a')) ~> CastTimestamps",
-						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('netsuite/'+ $pm_FileName),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NETSUITE_CDM_TO_BRONZE_FULLLOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "Starlink/NETSUITE"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
-								"type": "DatasetReference"
-							},
-							"name": "GetFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaTable"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddBronzeLoadDate"
-						},
-						{
-							"name": "CastTimestamps"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_FileName as string",
-						"}",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: true,",
-						"     multiLineRow: true,",
-						"     dateFormats: ['dd/MM/yyyy'],",
-						"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
-						"     manifestType: 'manifest',",
-						"     mode: 'read') ~> GetFile",
-						"CastTimestamps derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"GetFile derive(Last_Modified = toTimestamp(byName('Last_Modified'),'dd/MM/yyyy h:mm a'),",
-						"          Date_Created = toTimestamp(byName('Date_Created'),'dd/MM/yyyy h:mm a')) ~> CastTimestamps",
-						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('netsuite/'+ $pm_FileName),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "NUVIAS/NUAZ_SQLSERVER-01 [FO]"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
-								"type": "DatasetReference"
-							},
-							"name": "GetSQLTable"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteToBronzeADLS"
-						}
-					],
-					"transformations": [
-						{
-							"name": "ApplyParquetName"
-						},
-						{
-							"name": "AddCurrentUTC"
-						}
-					],
-					"udfLibraries": [
-						{
-							"referenceName": "General",
-							"type": "DataFlowReference"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_TableSchema as string,",
-						"     pm_TableName as string,",
-						"     pm_DatabaseName as string",
-						"}",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     isolationLevel: 'READ_UNCOMMITTED',",
-						"     format: 'table') ~> GetSQLTable",
-						"GetSQLTable select(mapColumn(",
-						"          each(match(true()),",
-						"               applyParquetNaming($$) = $$)",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> ApplyParquetName",
-						"ApplyParquetName derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddCurrentUTC",
-						"AddCurrentUTC sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: ('bronze'),",
-						"     folderPath: ('nuaz-sqlserver-01/'+$pm_DatabaseName+'/'+$pm_TableSchema+'/'+$pm_TableName),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteToBronzeADLS"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_20_DATANOW_ARR_LATEST_Load_Sheet",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_20_DATANOW_ARR_LATEST_Load_Sheet",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/DATANOW/LATEST"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_20_DATANOW_ARR_LATEST_Load_Sheet')]"
-			]
 		}
 	]
 }
