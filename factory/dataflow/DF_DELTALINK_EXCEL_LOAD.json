@@ -1,0 +1,87 @@
+{
+	"name": "DF_DELTALINK_EXCEL_LOAD",
+	"properties": {
+		"folder": {
+			"name": "DELTALINK"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_ADLS_DV_DELTALINK_EXCEL",
+						"type": "DatasetReference"
+					},
+					"name": "GetExcelFile"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS_DV",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OutputCSVFile"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Partition"
+				},
+				{
+					"name": "AddSystemColumns",
+					"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     pm_FileName as integer",
+				"}",
+				"source(output(",
+				"          {Invoice Date} as string,",
+				"          {Order Type} as string,",
+				"          {Order Number} as integer,",
+				"          {Invoice Number} as integer,",
+				"          {Client Number} as integer,",
+				"          Company as string,",
+				"          Artcode as string,",
+				"          Supplier_ID as string,",
+				"          Supplier as string,",
+				"          {Art Sup Code} as string,",
+				"          Description as string,",
+				"          Quantity as double,",
+				"          {Article Product Type} as string,",
+				"          Currency as string,",
+				"          {Revenue Transaction} as double,",
+				"          {Cost Transaction} as double,",
+				"          {Margin Transaction} as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     moveFiles: ['deltalink/pending','deltalink/archived'],",
+				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+				"GetExcelFile window(over({Invoice Number}),",
+				"     asc(Artcode, true),",
+				"     LineNo = rowNumber()) ~> Partition",
+				"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+				"AddSystemColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'external',",
+				"     folderPath: 'deltalink/transform',",
+				"     columnDelimiter: ';',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     partitionFileNames:[(concat(toString($pm_FileName),'.csv'))],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> OutputCSVFile"
+			]
+		}
+	}
+}

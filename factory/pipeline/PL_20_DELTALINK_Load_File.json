@@ -5,7 +5,14 @@
 			{
 				"name": "Load File",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "CopyToCSV",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -16,20 +23,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "ExcelSource",
-						"additionalColumns": [
-							{
-								"name": "Sys_Bronze_InsertDateTime_UTC",
-								"value": {
-									"value": "@utcNow()",
-									"type": "Expression"
-								}
-							}
-						],
+						"type": "DelimitedTextSource",
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
 							"recursive": false,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
 						}
 					},
 					"sink": {
@@ -267,6 +268,15 @@
 									"type": "String",
 									"physicalType": "UTF8"
 								}
+							},
+							{
+								"source": {
+									"name": "LineNo",
+									"type": "String"
+								},
+								"sink": {
+									"name": "LineNo"
+								}
 							}
 						],
 						"typeConversion": true,
@@ -278,7 +288,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "DS_ADLS_DV_DELTALINK_EXCEL",
+						"referenceName": "DS_ADLS_CSV",
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_Environment": {
@@ -289,7 +299,15 @@
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
 							},
-							"pm_FileLocation": "pending"
+							"pm_FileLocation": {
+								"value": "transform",
+								"type": "Expression"
+							},
+							"pm_FileExtension": ".csv",
+							"pm_SourceFolderName": {
+								"value": "deltalink",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -370,10 +388,10 @@
 								"type": "Expression"
 							},
 							"pm_FileExtension": {
-								"value": "xlsx",
+								"value": "csv",
 								"type": "Expression"
 							},
-							"pm_FileLocation": "pending"
+							"pm_FileLocation": "transform"
 						}
 					}
 				],
@@ -390,7 +408,7 @@
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
 							},
-							"pm_FileExtension": "xlsx",
+							"pm_FileExtension": "csv",
 							"pm_FileLocation": {
 								"value": "archived",
 								"type": "Expression"
@@ -431,8 +449,8 @@
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
 							},
-							"pm_FileExtension": "xlsx",
-							"pm_FileLocation": "pending"
+							"pm_FileExtension": "csv",
+							"pm_FileLocation": "transform"
 						}
 					},
 					"enableLogging": false,
@@ -441,6 +459,59 @@
 						"recursive": true,
 						"enablePartitionDiscovery": false
 					}
+				}
+			},
+			{
+				"name": "CopyToCSV",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_DELTALINK_EXCEL_LOAD",
+						"type": "DataFlowReference",
+						"parameters": {
+							"pm_FileName": {
+								"value": "@pipeline().parameters.pm_FileName",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"GetExcelFile": {
+								"pm_Environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"pm_FileName": {
+									"value": "@pipeline().parameters.pm_FileName",
+									"type": "Expression"
+								},
+								"pm_FileLocation": "pending"
+							}
+						},
+						"linkedServiceParameters": {
+							"OutputCSVFile": {
+								"linkedService": {
+									"pm_environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
 				}
 			}
 		],
