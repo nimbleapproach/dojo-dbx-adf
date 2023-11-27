@@ -32,6 +32,8 @@ CREATE OR REPLACE TABLE g_l_account
       COMMENT 'Group Account'
     ,ConsolidationAccountName STRING
       COMMENT 'Group Account Name'
+    ,DirectPosting INT
+      COMMENT 'Mark if the account is allowing direct posting'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL

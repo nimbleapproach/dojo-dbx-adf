@@ -19,6 +19,9 @@ spark.sql(f"""create or replace view silver_{ENVIRONMENT}.igsql03.g_l_consolidat
         SELECT
         right(gl.Sys_DatabaseName, 2 )as EntityCode,
         GL.DocumentNo_,
+        GL.G_LAccountNo_ as GLAccountNo,
+        ga.Name As GLAccountName,
+        ga.DirectPosting,
         cast (PostingDate as date) PostingDate,
         SUM(GL.Amount) AS Revenue_LCY
         FROM
@@ -50,4 +53,7 @@ spark.sql(f"""create or replace view silver_{ENVIRONMENT}.igsql03.g_l_consolidat
         group by
         DocumentNo_,
         PostingDate,
+        ga.DirectPosting,
+        GL.G_LAccountNo_,
+        ga.Name,
         right(gl.Sys_DatabaseName, 2 )""")
