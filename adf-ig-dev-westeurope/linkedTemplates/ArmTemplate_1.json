@@ -65,6 +65,66 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_FileName": {
+						"type": "string"
+					},
+					"pm_FileLocation": {
+						"type": "string"
+					},
+					"pm_FileExtension": {
+						"type": "string",
+						"defaultValue": ".csv"
+					},
+					"pm_SourceFolderName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ADLS"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{dataset().pm_FileName}@{dataset().pm_FileExtension}",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@{dataset().pm_SourceFolderName}/@{dataset().pm_FileLocation}",
+							"type": "Expression"
+						},
+						"fileSystem": "external"
+					},
+					"columnDelimiter": ";",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_BINARY')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -274,6 +334,9 @@
 					},
 					"pm_FileName": {
 						"type": "string"
+					},
+					"pm_FileLocation": {
+						"type": "string"
 					}
 				},
 				"folder": {
@@ -288,7 +351,10 @@
 							"value": "@{dataset().pm_FileName}.xlsx",
 							"type": "Expression"
 						},
-						"folderPath": "deltalink/pending",
+						"folderPath": {
+							"value": "deltalink/pending",
+							"type": "Expression"
+						},
 						"fileSystem": "external"
 					},
 					"sheetIndex": 0,
@@ -330,7 +396,7 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@dataset().pm_FileName",
+							"value": "@{dataset().pm_FileName}.xlsx",
 							"type": "Expression"
 						},
 						"folderPath": "netsafe/pending",
@@ -607,7 +673,10 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"folderPath": "deltalink/pending",
+						"folderPath": {
+							"value": "deltalink/pending",
+							"type": "Expression"
+						},
 						"fileSystem": "external"
 					}
 				}
@@ -638,6 +707,9 @@
 					},
 					"pm_FileExtension": {
 						"type": "string"
+					},
+					"pm_FileLocation": {
+						"type": "string"
 					}
 				},
 				"folder": {
@@ -652,7 +724,10 @@
 							"value": "@{dataset().pm_FileName}.@{dataset().pm_FileExtension}",
 							"type": "Expression"
 						},
-						"folderPath": "deltalink/pending",
+						"folderPath": {
+							"value": "deltalink/@{dataset().pm_FileLocation}",
+							"type": "Expression"
+						},
 						"fileSystem": "external"
 					}
 				}
@@ -695,7 +770,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_BINARY_NETSAFE_ARCHIVED')]",
+			"name": "[concat(parameters('factoryName'), '/DS_BINARY_NETSAFE_FILE')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -715,47 +790,11 @@
 					},
 					"pm_FileName": {
 						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/NETSAFE"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().pm_FileName",
-							"type": "Expression"
-						},
-						"folderPath": "netsafe/archived",
-						"fileSystem": "external"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_BINARY_NETSAFE_DYNAMIC')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_ADLS_DV",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
+					},
+					"pm_FileExtension": {
 						"type": "string"
 					},
-					"pm_FileName": {
+					"pm_FileLocation": {
 						"type": "string"
 					}
 				},
@@ -768,10 +807,13 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
-							"value": "@dataset().pm_FileName",
+							"value": "@{dataset().pm_FileName}.@{dataset().pm_FileExtension}",
 							"type": "Expression"
 						},
-						"folderPath": "netsafe/pending",
+						"folderPath": {
+							"value": "netsafe/@{dataset().pm_FileLocation}",
+							"type": "Expression"
+						},
 						"fileSystem": "external"
 					}
 				}
