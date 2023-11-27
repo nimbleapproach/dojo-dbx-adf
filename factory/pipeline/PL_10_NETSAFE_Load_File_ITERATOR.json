@@ -34,7 +34,7 @@
 								"waitOnCompletion": true,
 								"parameters": {
 									"pm_FileName": {
-										"value": "@item().name",
+										"value": "@split(item().name,'.')[0]",
 										"type": "Expression"
 									}
 								}

@@ -1,0 +1,94 @@
+{
+	"name": "DF_NETSAFE_EXCEL_LOAD",
+	"properties": {
+		"folder": {
+			"name": "NETSAFE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_ADLS_DV_NETSAFE_EXCEL",
+						"type": "DatasetReference"
+					},
+					"name": "GetExcelFile"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS_DV",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OutputCSVFile"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Partition"
+				},
+				{
+					"name": "AddSystemColumns",
+					"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     pm_FileName as string",
+				"}",
+				"source(output(",
+				"          {Invoice Date} as string,",
+				"          {Sales Order Number} as string,",
+				"          {Invoice Number} as string,",
+				"          {Item ID} as string,",
+				"          SKU as string,",
+				"          {Item Type} as string,",
+				"          {Customer Name} as string,",
+				"          Qty as short,",
+				"          {Transaction Currency} as string,",
+				"          {Revenue Transaction Currency} as double,",
+				"          {Cost Transaction Currency} as double,",
+				"          {Margin Transaction Currency} as double,",
+				"          {Exchange Rate} as string,",
+				"          {Revenue GBP} as string,",
+				"          {Cost GBP} as string,",
+				"          {Margin GBP} as string,",
+				"          {Vendor ID} as string,",
+				"          {Vendor Name} as string,",
+				"          {Account Manager} as string,",
+				"          {Order Type} as string,",
+				"          {Quote ID} as string,",
+				"          {Customer Account} as string,",
+				"          {SKU Description} as string,",
+				"          Country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     moveFiles: ['netsafe/pending','netsafe/archived'],",
+				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+				"GetExcelFile window(over({Invoice Number}),",
+				"     asc({Item ID}, true),",
+				"     LineNo = rowNumber()) ~> Partition",
+				"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+				"AddSystemColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'external',",
+				"     folderPath: 'netsafe/transform',",
+				"     columnDelimiter: ';',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     partitionFileNames:[(concat(toString($pm_FileName),'.csv'))],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> OutputCSVFile"
+			]
+		}
+	}
+}

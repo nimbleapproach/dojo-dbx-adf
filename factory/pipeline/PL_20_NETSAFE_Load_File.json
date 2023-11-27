@@ -5,7 +5,14 @@
 			{
 				"name": "Load File",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "CopyToCSV",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -16,27 +23,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "ExcelSource",
-						"additionalColumns": [
-							{
-								"name": "Sys_Bronze_InsertDateTime_UTC",
-								"value": {
-									"value": "@utcNow()",
-									"type": "Expression"
-								}
-							},
-							{
-								"name": "Sys_Bronze_FileName",
-								"value": {
-									"value": "@pipeline().parameters.pm_FileName",
-									"type": "Expression"
-								}
-							}
-						],
+						"type": "DelimitedTextSource",
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
 							"recursive": false,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
 						}
 					},
 					"sink": {
@@ -321,22 +315,30 @@
 							},
 							{
 								"source": {
-									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"name": "Sys_FileName",
 									"type": "String"
 								},
 								"sink": {
-									"name": "Sys_Bronze_InsertDateTime_UTC",
-									"type": "String",
+									"name": "Sys_FileName",
 									"physicalType": "UTF8"
 								}
 							},
 							{
 								"source": {
-									"name": "Sys_Bronze_FileName",
+									"name": "LineNo",
 									"type": "String"
 								},
 								"sink": {
-									"name": "Sys_Bronze_FileName",
+									"name": "LineNo",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sys_Bronze_InsertDateTime_UTC"
+								},
+								"sink": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
 									"type": "String",
 									"physicalType": "UTF8"
 								}
@@ -351,7 +353,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "DS_ADLS_DV_NETSAFE_EXCEL",
+						"referenceName": "DS_ADLS_CSV",
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_Environment": {
@@ -361,7 +363,10 @@
 							"pm_FileName": {
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
-							}
+							},
+							"pm_FileLocation": "transform",
+							"pm_FileExtension": ".csv",
+							"pm_SourceFolderName": "netsafe"
 						}
 					}
 				],
@@ -391,7 +396,7 @@
 				]
 			},
 			{
-				"name": "Move File",
+				"name": "Move File Archived",
 				"type": "Copy",
 				"dependsOn": [
 					{
@@ -430,7 +435,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "DS_BINARY_NETSAFE_DYNAMIC",
+						"referenceName": "DS_BINARY_NETSAFE_FILE",
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_Environment": {
@@ -440,13 +445,15 @@
 							"pm_FileName": {
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
-							}
+							},
+							"pm_FileExtension": "csv",
+							"pm_FileLocation": "transform"
 						}
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_BINARY_NETSAFE_ARCHIVED",
+						"referenceName": "DS_BINARY_NETSAFE_FILE",
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_Environment": {
@@ -456,17 +463,71 @@
 							"pm_FileName": {
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
-							}
+							},
+							"pm_FileExtension": "csv",
+							"pm_FileLocation": "archived"
 						}
 					}
 				]
 			},
 			{
-				"name": "Delete File",
+				"name": "CopyToCSV",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_NETSAFE_EXCEL_LOAD",
+						"type": "DataFlowReference",
+						"parameters": {
+							"pm_FileName": {
+								"value": "@concat('\"',pipeline().parameters.pm_FileName,'\"')",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"GetExcelFile": {
+								"pm_Environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"pm_FileName": {
+									"value": "@pipeline().parameters.pm_FileName",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"OutputCSVFile": {
+								"linkedService": {
+									"pm_environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "Delete Moved File",
 				"type": "Delete",
 				"dependsOn": [
 					{
-						"activity": "Move File",
+						"activity": "Move File Archived",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -482,7 +543,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "DS_BINARY_NETSAFE_DYNAMIC",
+						"referenceName": "DS_BINARY_NETSAFE_FILE",
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_Environment": {
@@ -492,7 +553,9 @@
 							"pm_FileName": {
 								"value": "@pipeline().parameters.pm_FileName",
 								"type": "Expression"
-							}
+							},
+							"pm_FileExtension": "csv",
+							"pm_FileLocation": "transform"
 						}
 					},
 					"enableLogging": false,
