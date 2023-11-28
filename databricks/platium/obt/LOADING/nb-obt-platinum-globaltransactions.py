@@ -51,12 +51,12 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC   g.CurrencyCode,
 # MAGIC   g.RevenueAmount,
 # MAGIC   CASE 
-# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode = 'NOTINTAGETIK')
+# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
 # MAGIC   THEN e1.Period_FX_rate
 # MAGIC   ELSE e.Period_FX_rate
 # MAGIC   END AS Period_FX_rate,
 # MAGIC   CASE 
-# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode = 'NOTINTAGETIK')
+# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
 # MAGIC   THEN cast(g.RevenueAmount / e1.Period_FX_rate AS DECIMAL(10,2))
 # MAGIC   ELSE cast(g.RevenueAmount / e.Period_FX_rate AS DECIMAL(10,2))
 # MAGIC   END AS RevenueAmount_Euro
@@ -81,4 +81,3 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC   e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
 # MAGIC AND
 # MAGIC   g.CurrencyCode = cast(e1.Currency as string)
-# MAGIC
