@@ -2,7 +2,7 @@
 	"name": "DF_NETSAFE_EXCEL_LOAD",
 	"properties": {
 		"folder": {
-			"name": "DELTALINK"
+			"name": "NETSAFE"
 		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -78,7 +78,8 @@
 				"     fileSystem: 'bronze',",
 				"     folderPath: 'netsafe/invoicedata',",
 				"     compressionCodec: 'snappy',",
-				"     partitionFileNames:[(\"bronze-netsafe-{$pm_FileName}.snappy.parquet\")],",
+				"     partitionFileNames:[(concat('bronze-netsafe-',$pm_FileName,'-',toString(currentUTC()),'.snappy.parquet')\r",
+				")],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
