@@ -13,165 +13,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__7')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetManifest",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_ManifestPath": {
-										"value": "@pipeline().parameters.pm_ManifestPath",
-										"type": "Expression"
-									},
-									"pm_ManifestName": {
-										"value": "@pipeline().parameters.pm_ManifestFile",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "ForEachSubmanifest",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "FoundOneMoreDepth",
-									"type": "Fail",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"message": "Found more depths then 7.",
-										"errorCode": "400"
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "ForEachEntities",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetManifest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,skip(array(''),1))",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_Entity": {
-												"value": "@item().entityName",
-												"type": "Expression"
-											},
-											"pm_ManifestPath": {
-												"value": "@pipeline().parameters.pm_ManifestPath",
-												"type": "Expression"
-											},
-											"pm_ManifestFile": {
-												"value": "@pipeline().parameters.pm_ManifestFile",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_ManifestPath": {
-						"type": "string"
-					},
-					"pm_ManifestFile": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_CLOUD_DISTRIBUTION_Load_File')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -240,466 +81,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Load File",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "CopyToCSV",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": true,
-							"logSettings": {
-								"enableCopyActivityLog": true,
-								"copyActivityLogSettings": {
-									"logLevel": "Warning",
-									"enableReliableLogging": false
-								},
-								"logLocationSettings": {
-									"linkedServiceName": {
-										"referenceName": "LS_ADLS",
-										"type": "LinkedServiceReference",
-										"parameters": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							},
-							"translator": {
-								"type": "TabularTranslator",
-								"mappings": [
-									{
-										"source": {
-											"name": "Invoice Date",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "InvoiceDate",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Order Type",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "OrderType",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Order Number",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "OrderNumber",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Invoice Number",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "InvoiceNumber",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Client Number",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "ClientNumber",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Company",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Company",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Artcode",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Artcode",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Supplier_ID",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "SupplierID",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Supplier",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Supplier",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Art Sup Code",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "ArtSupCode",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Description",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Description",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Quantity",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Quantity",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Article Product Type",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "ArticleProductType",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Currency",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Currency",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Revenue Transaction",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "RevenueTransaction",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Cost Transaction",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "CostTransaction",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Margin Transaction",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "MarginTransaction",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Sys_Bronze_InsertDateTime_UTC",
-											"type": "String"
-										},
-										"sink": {
-											"name": "Sys_Bronze_InsertDateTime_UTC",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "LineNo",
-											"type": "String"
-										},
-										"sink": {
-											"name": "LineNo"
-										}
-									}
-								],
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_ADLS_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileLocation": {
-										"value": "transform",
-										"type": "Expression"
-									},
-									"pm_FileExtension": ".csv",
-									"pm_SourceFolderName": {
-										"value": "deltalink",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_ADLS_PARQUET_STATIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileSystem": {
-										"value": "bronze",
-										"type": "Expression"
-									},
-									"pm_Directory": {
-										"value": "deltalink/invoicedata",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "bronze-deltalink-@{utcNow()}",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Move To Archived",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Load File",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "BinarySource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true
-								},
-								"formatSettings": {
-									"type": "BinaryReadSettings"
-								}
-							},
-							"sink": {
-								"type": "BinarySink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_BINARY_DELTALINK_FILE",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileExtension": {
-										"value": "csv",
-										"type": "Expression"
-									},
-									"pm_FileLocation": "transform"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_BINARY_DELTALINK_FILE",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileExtension": "csv",
-									"pm_FileLocation": {
-										"value": "archived",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Delete Moved File",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "Move To Archived",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "DS_BINARY_DELTALINK_FILE",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileExtension": "csv",
-									"pm_FileLocation": "transform"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							}
-						}
-					},
-					{
-						"name": "CopyToCSV",
+						"name": "DF_DELTALINK_EXEL_LOAD",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -725,19 +107,14 @@
 										"pm_Environment": {
 											"value": "@pipeline().globalParameters.gpm_Environment",
 											"type": "Expression"
-										},
-										"pm_FileName": {
-											"value": "@pipeline().parameters.pm_FileName",
-											"type": "Expression"
-										},
-										"pm_FileLocation": "pending"
+										}
 									},
-									"OutputCSVFile": {}
+									"WriteDeltaFiles": {}
 								},
 								"linkedServiceParameters": {
-									"OutputCSVFile": {
+									"WriteDeltaFiles": {
 										"linkedService": {
-											"pm_environment": {
+											"pm_Environment": {
 												"value": "@pipeline().globalParameters.gpm_Environment",
 												"type": "Expression"
 											}
@@ -746,9 +123,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -999,475 +376,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Load File",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "CopyToCSV",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"mappings": [
-									{
-										"source": {
-											"name": "Invoice Date",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Invoice_Date",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Sales Order Number",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Sales_Order_Number",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Invoice Number",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Invoice_Number",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Item ID",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Item_ID",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "SKU",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "SKU",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Item Type",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Item_Type",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Customer Name",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Customer_Name",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Qty",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Qty",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Transaction Currency",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Transaction_Currency",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Revenue Transaction Currency",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Revenue_Transaction_Currency",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Cost Transaction Currency",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Cost_Transaction_Currency",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Margin Transaction Currency",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Margin_Transaction_Currency",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Exchange Rate",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Exchange_Rate",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Revenue GBP",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Revenue_GBP",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Cost GBP",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Cost_GBP",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Margin GBP",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Margin_GBP",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Vendor ID",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Vendor_ID",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Vendor Name",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Vendor_Name",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Account Manager",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Account_Manager",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Order Type",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Order_Type",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Quote ID",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Quote_ID",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Customer Account",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Customer_Account",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "SKU Description",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "SKU_Description",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Country",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "Country",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Sys_FileName",
-											"type": "String"
-										},
-										"sink": {
-											"name": "Sys_FileName",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "LineNo",
-											"type": "String"
-										},
-										"sink": {
-											"name": "LineNo",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "Sys_Bronze_InsertDateTime_UTC"
-										},
-										"sink": {
-											"name": "Sys_Bronze_InsertDateTime_UTC",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									}
-								],
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_ADLS_CSV",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileLocation": "transform",
-									"pm_FileExtension": ".csv",
-									"pm_SourceFolderName": "netsafe"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_ADLS_PARQUET_STATIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileSystem": {
-										"value": "bronze",
-										"type": "Expression"
-									},
-									"pm_Directory": {
-										"value": "netsafe/invoicedata",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "bronze-netsafe-@{replace(pipeline().parameters.pm_FileName,'.xlsx','')}-@{utcNow()}",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Move File Archived",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Load File",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "BinarySource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false
-								},
-								"formatSettings": {
-									"type": "BinaryReadSettings"
-								}
-							},
-							"sink": {
-								"type": "BinarySink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_BINARY_NETSAFE_FILE",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileExtension": "csv",
-									"pm_FileLocation": "transform"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_BINARY_NETSAFE_FILE",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileExtension": "csv",
-									"pm_FileLocation": "archived"
-								}
-							}
-						]
-					},
-					{
-						"name": "CopyToCSV",
+						"name": "DF_NETSAFE_EXEL_LOAD",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -1493,18 +402,14 @@
 										"pm_Environment": {
 											"value": "@pipeline().globalParameters.gpm_Environment",
 											"type": "Expression"
-										},
-										"pm_FileName": {
-											"value": "@pipeline().parameters.pm_FileName",
-											"type": "Expression"
 										}
 									},
-									"OutputCSVFile": {}
+									"WriteDeltaFiles": {}
 								},
 								"linkedServiceParameters": {
-									"OutputCSVFile": {
+									"WriteDeltaFiles": {
 										"linkedService": {
-											"pm_environment": {
+											"pm_Environment": {
 												"value": "@pipeline().globalParameters.gpm_Environment",
 												"type": "Expression"
 											}
@@ -1513,55 +418,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "Delete Moved File",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "Move File Archived",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "DS_BINARY_NETSAFE_FILE",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@pipeline().parameters.pm_FileName",
-										"type": "Expression"
-									},
-									"pm_FileExtension": "csv",
-									"pm_FileLocation": "transform"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							}
 						}
 					}
 				],
@@ -2390,7 +1251,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "ForEachFile",
+						"name": "ForEachView",
 						"type": "ForEach",
 						"dependsOn": [
 							{
@@ -2409,7 +1270,7 @@
 							"isSequential": false,
 							"activities": [
 								{
-									"name": "PL_10_NETSAFE_Load_File_ITERATOR",
+									"name": "PL_20_NETSAFE_Load_File",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"userProperties": [],
@@ -2759,8 +1620,125 @@
 				},
 				"annotations": []
 			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_NUAZ-SQLSERVER-01_Load_Table_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_30_NUAZ-SQLSERVER-01_Load_Table",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_30_NUAZ-SQLSERVER-01_Load_Table",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_DatabaseName": {
+												"value": "@pipeline().parameters.pm_DatabaseName",
+												"type": "Expression"
+											},
+											"pm_TableName": {
+												"value": "@item().Table_Name",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											},
+											"pm_SchemaName": {
+												"value": "@item().Schema_Name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Get EDW Tables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "Select * from adf.[CT_NUAZ-SQLSERVER-01_TABLES] where [DATABASE_NAME] = '@{pipeline().parameters.pm_DatabaseName}' and ShouldBeLoaded = 1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_NUAZ-SQLSERVER-01_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseName": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": []
+			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__7')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_30_NUAZ-SQLSERVER-01_Load_Table')]"
 			]
 		}
 	]

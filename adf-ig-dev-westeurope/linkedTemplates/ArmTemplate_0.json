@@ -370,7 +370,8 @@
 			"properties": {
 				"parameters": {
 					"pm_Environment": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "dev"
 					}
 				},
 				"annotations": [],
@@ -394,7 +395,8 @@
 			"properties": {
 				"parameters": {
 					"pm_environment": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "dev"
 					}
 				},
 				"annotations": [],
