@@ -3,7 +3,8 @@
 	"properties": {
 		"parameters": {
 			"pm_Environment": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "dev"
 			}
 		},
 		"annotations": [],

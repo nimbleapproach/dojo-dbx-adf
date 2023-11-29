@@ -14,12 +14,6 @@
 		"parameters": {
 			"pm_Environment": {
 				"type": "string"
-			},
-			"pm_FileName": {
-				"type": "string"
-			},
-			"pm_FileLocation": {
-				"type": "string"
 			}
 		},
 		"folder": {
@@ -30,10 +24,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@{dataset().pm_FileName}.xlsx",
-					"type": "Expression"
-				},
 				"folderPath": {
 					"value": "deltalink/pending",
 					"type": "Expression"
@@ -43,6 +33,75 @@
 			"sheetIndex": 0,
 			"firstRowAsHeader": true
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "Invoice Date",
+				"type": "String"
+			},
+			{
+				"name": "Order Type",
+				"type": "String"
+			},
+			{
+				"name": "Order Number",
+				"type": "String"
+			},
+			{
+				"name": "Invoice Number",
+				"type": "String"
+			},
+			{
+				"name": "Client Number",
+				"type": "String"
+			},
+			{
+				"name": "Company",
+				"type": "String"
+			},
+			{
+				"name": "Artcode",
+				"type": "String"
+			},
+			{
+				"name": "Supplier_ID",
+				"type": "String"
+			},
+			{
+				"name": "Supplier",
+				"type": "String"
+			},
+			{
+				"name": "Art Sup Code",
+				"type": "String"
+			},
+			{
+				"name": "Description",
+				"type": "String"
+			},
+			{
+				"name": "Quantity",
+				"type": "String"
+			},
+			{
+				"name": "Article Product Type",
+				"type": "String"
+			},
+			{
+				"name": "Currency",
+				"type": "String"
+			},
+			{
+				"name": "Revenue Transaction",
+				"type": "String"
+			},
+			{
+				"name": "Cost Transaction",
+				"type": "String"
+			},
+			{
+				"name": "Margin Transaction",
+				"type": "String"
+			}
+		]
 	}
 }

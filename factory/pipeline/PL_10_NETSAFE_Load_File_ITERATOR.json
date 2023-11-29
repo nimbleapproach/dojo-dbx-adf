@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "ForEachFile",
+				"name": "ForEachView",
 				"type": "ForEach",
 				"dependsOn": [
 					{
@@ -22,7 +22,7 @@
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "PL_10_NETSAFE_Load_File_ITERATOR",
+							"name": "PL_20_NETSAFE_Load_File",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],

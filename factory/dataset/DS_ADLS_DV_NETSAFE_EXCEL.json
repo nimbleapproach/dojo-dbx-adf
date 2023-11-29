@@ -13,10 +13,8 @@
 		},
 		"parameters": {
 			"pm_Environment": {
-				"type": "string"
-			},
-			"pm_FileName": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "dev"
 			}
 		},
 		"folder": {
@@ -27,16 +25,109 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@{dataset().pm_FileName}.xlsx",
-					"type": "Expression"
-				},
 				"folderPath": "netsafe/pending",
 				"fileSystem": "external"
 			},
 			"sheetIndex": 0,
 			"firstRowAsHeader": true
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "Invoice Date",
+				"type": "String"
+			},
+			{
+				"name": "Sales Order Number",
+				"type": "String"
+			},
+			{
+				"name": "Invoice Number",
+				"type": "String"
+			},
+			{
+				"name": "Item ID",
+				"type": "String"
+			},
+			{
+				"name": "SKU",
+				"type": "String"
+			},
+			{
+				"name": "Item Type",
+				"type": "String"
+			},
+			{
+				"name": "Customer Name",
+				"type": "String"
+			},
+			{
+				"name": "Qty",
+				"type": "String"
+			},
+			{
+				"name": "Transaction Currency",
+				"type": "String"
+			},
+			{
+				"name": "Revenue Transaction Currency",
+				"type": "String"
+			},
+			{
+				"name": "Cost Transaction Currency",
+				"type": "String"
+			},
+			{
+				"name": "Margin Transaction Currency",
+				"type": "String"
+			},
+			{
+				"name": "Exchange Rate",
+				"type": "String"
+			},
+			{
+				"name": "Revenue GBP",
+				"type": "String"
+			},
+			{
+				"name": "Cost GBP",
+				"type": "String"
+			},
+			{
+				"name": "Margin GBP",
+				"type": "String"
+			},
+			{
+				"name": "Vendor ID",
+				"type": "String"
+			},
+			{
+				"name": "Vendor Name",
+				"type": "String"
+			},
+			{
+				"name": "Account Manager",
+				"type": "String"
+			},
+			{
+				"name": "Order Type",
+				"type": "String"
+			},
+			{
+				"name": "Quote ID",
+				"type": "String"
+			},
+			{
+				"name": "Customer Account",
+				"type": "String"
+			},
+			{
+				"name": "SKU Description",
+				"type": "String"
+			},
+			{
+				"name": "Country",
+				"type": "String"
+			}
+		]
 	}
 }

@@ -18,10 +18,10 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "LS_ADLS_DV",
+						"referenceName": "LS_ADLS",
 						"type": "LinkedServiceReference"
 					},
-					"name": "OutputCSVFile"
+					"name": "WriteDeltaFiles"
 				}
 			],
 			"transformations": [
@@ -49,7 +49,7 @@
 				"          Supplier as string,",
 				"          {Art Sup Code} as string,",
 				"          Description as string,",
-				"          Quantity as double,",
+				"          Quantity as short,",
 				"          {Article Product Type} as string,",
 				"          Currency as string,",
 				"          {Revenue Transaction} as double,",
@@ -67,20 +67,38 @@
 				"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
 				"AddSystemColumns sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'delimited',",
-				"     fileSystem: 'external',",
-				"     folderPath: 'deltalink/transform',",
-				"     columnDelimiter: ';',",
-				"     escapeChar: '\\\\',",
-				"     quoteChar: '\\\"',",
-				"     columnNamesAsHeader: true,",
-				"     partitionFileNames:[(concat(toString($pm_FileName),'.csv'))],",
+				"     format: 'parquet',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: 'deltalink/invoicedata',",
+				"     partitionFileNames:[(concat('bronze-deltalink-',toString($pm_FileName),'-',toString(currentUTC()),'.snappy.parquet'))],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> OutputCSVFile"
+				"     mapColumn(",
+				"          InvoiceDate = {Invoice Date},",
+				"          OrderType = {Order Type},",
+				"          OrderNumber = {Order Number},",
+				"          InvoiceNumber = {Invoice Number},",
+				"          ClientNumber = {Client Number},",
+				"          Company,",
+				"          Artcode,",
+				"          SupplierID = Supplier_ID,",
+				"          Supplier,",
+				"          ArtSupCode = {Art Sup Code},",
+				"          Description,",
+				"          Quantity,",
+				"          ArticleProductType = {Article Product Type},",
+				"          Currency,",
+				"          RevenueTransaction = {Revenue Transaction},",
+				"          CostTransaction = {Cost Transaction},",
+				"          MarginTransaction = {Margin Transaction},",
+				"          Sys_FileName,",
+				"          LineNo,",
+				"          Sys_Bronze_InsertDateTime_UTC",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
 			]
 		}
 	}
