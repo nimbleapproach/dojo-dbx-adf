@@ -2152,7 +2152,7 @@
 						"     validateSchema: false,",
 						"     format: 'parquet',",
 						"     fileSystem: 'bronze',",
-						"     folderPath: 'dcb',",
+						"     folderPath: 'dcb/invoicedata',",
 						"     compressionCodec: 'snappy',",
 						"     partitionFileNames:[(concat('bronze-dcb-',$pm_FileName,'-',toString(currentUTC()),'.snappy.parquet')\r",
 						")],",
