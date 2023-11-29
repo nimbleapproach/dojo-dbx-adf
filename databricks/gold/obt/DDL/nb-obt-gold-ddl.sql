@@ -91,6 +91,10 @@ CREATE OR REPLACE TABLE globaltransactions
       COMMENT 'Code of the Currency.'
     ,RevenueAmount DECIMAL(10,2)
       COMMENT 'Amount of Revenue.'
+    ,CostAmount DECIMAL(10,2)
+      COMMENT 'Amount of Cost for calculate GP1.'
+    ,GP1 DECIMAL(10,2)
+      COMMENT 'Amount of Gross Margin at GP1 level.'
   )
 COMMENT 'This table contains the global needed reports data for the management reports as one big table (obt). \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')

@@ -72,7 +72,8 @@ with cte as (
       WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
       ELSE sih.CurrencyCode
     END AS CurrencyCode,
-    CAST(case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end  AS DECIMAL(10, 2)) AS RevenueAmount
+    CAST(case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end  AS DECIMAL(10, 2)) AS RevenueAmount,
+    CAST(case when sil.Quantity>0 then  sil.UnitCostLCY*sil.Quantity*(-1) else 0 end AS DECIMAL(10, 2)) as CostAmount
   FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
     INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
@@ -199,7 +200,8 @@ with cte as (
       WHEN sih.CurrencyCode = 'NaN' AND left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
       ELSE sih.CurrencyCode
     END AS CurrencyCode,
-    CAST((case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end) *(-1) AS DECIMAL(10, 2)) AS RevenueAmount
+    CAST((case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end) *(-1) AS DECIMAL(10, 2)) AS RevenueAmount,
+    CAST(case when sil.Quantity>0 then  sil.UnitCostLCY*sil.Quantity*(-1) else 0 end AS DECIMAL(10, 2)) as CostAmount
   FROM
     silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
     INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
@@ -326,7 +328,9 @@ select
     )
   end AS ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  cast(RevenueAmount + CostAmount as decimal(10,2)) as GP1
 from
   cte
 """
