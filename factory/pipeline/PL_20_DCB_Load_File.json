@@ -1,0 +1,64 @@
+{
+	"name": "PL_20_DCB_Load_File",
+	"properties": {
+		"activities": [
+			{
+				"name": "DF_DCB_EXCEL_LOAD",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_DCB_EXCEL_LOAD",
+						"type": "DataFlowReference",
+						"parameters": {
+							"pm_FileName": {
+								"value": "@concat('\"',pipeline().parameters.pm_FileName,'\"')",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"GetExcelFile": {
+								"pm_Environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"WriteDeltaFiles": {
+								"linkedService": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "ir-ig-managed-dev-westeurope",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"pm_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/DCB"
+		},
+		"annotations": []
+	}
+}
