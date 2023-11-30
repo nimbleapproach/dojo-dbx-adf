@@ -2033,6 +2033,9 @@
 						},
 						{
 							"name": "RenameColumns"
+						},
+						{
+							"name": "AddIdColumn"
 						}
 					],
 					"udfLibraries": [
@@ -2048,12 +2051,13 @@
 						"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
 						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
 						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"GetExcelFile select(mapColumn(",
+						"AddIdColumn select(mapColumn(",
 						"          each(match(true()),",
 						"               applyParquetNaming($$) = $$)",
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"GetExcelFile derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['Entity','Invoice Date','Sales Order','Invoice Number','Item ID','SKU','SKU Description']))))) ~> AddIdColumn",
 						"AddSystemColumns sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'delta',",
