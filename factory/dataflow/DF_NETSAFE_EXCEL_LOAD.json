@@ -26,9 +26,6 @@
 			],
 			"transformations": [
 				{
-					"name": "Partition"
-				},
-				{
 					"name": "AddSystemColumns",
 					"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
 				}
@@ -45,7 +42,7 @@
 				"          SKU as string,",
 				"          {Item Type} as string,",
 				"          {Customer Name} as string,",
-				"          Qty as short,",
+				"          Qty as float,",
 				"          {Transaction Currency} as string,",
 				"          {Revenue Transaction Currency} as double,",
 				"          {Cost Transaction Currency} as double,",
@@ -61,17 +58,15 @@
 				"          {Quote ID} as string,",
 				"          {Customer Account} as string,",
 				"          {SKU Description} as string,",
-				"          Country as string",
+				"          Country as string,",
+				"          {Invoice Line Nb} as integer",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: true,",
 				"     moveFiles: ['netsafe/pending','netsafe/archived'],",
 				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-				"GetExcelFile window(over({Invoice Number}),",
-				"     asc({Item ID}, true),",
-				"     LineNo = rowNumber()) ~> Partition",
-				"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+				"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
 				"AddSystemColumns sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
@@ -110,8 +105,8 @@
 				"          Customer_Account = {Customer Account},",
 				"          SKU_Description = {SKU Description},",
 				"          Country,",
+				"          Invoice_Line_Nb = {Invoice Line Nb},",
 				"          Sys_FileName,",
-				"          LineNo,",
 				"          Sys_Bronze_InsertDateTime_UTC",
 				"     ),",
 				"     partitionBy('hash', 1)) ~> WriteDeltaFiles"

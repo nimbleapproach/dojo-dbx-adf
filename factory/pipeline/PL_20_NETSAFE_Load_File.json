@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "DF_NETSAFE_EXEL_LOAD",
+				"name": "DF_NETSAFE_EXCEL_LOAD",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
