@@ -59,7 +59,13 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
 # MAGIC   THEN cast(g.RevenueAmount / e1.Period_FX_rate AS DECIMAL(10,2))
 # MAGIC   ELSE cast(g.RevenueAmount / e.Period_FX_rate AS DECIMAL(10,2))
-# MAGIC   END AS RevenueAmount_Euro
+# MAGIC   END AS RevenueAmount_Euro,
+# MAGIC   g.GP1,
+# MAGIC   CASE 
+# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+# MAGIC   THEN cast(g.GP1 / e1.Period_FX_rate AS DECIMAL(10,2))
+# MAGIC   ELSE cast(g.GP1 / e.Period_FX_rate AS DECIMAL(10,2))
+# MAGIC   END AS GP1_Euro
 # MAGIC FROM 
 # MAGIC   gold_dev.obt.globaltransactions g
 # MAGIC LEFT JOIN

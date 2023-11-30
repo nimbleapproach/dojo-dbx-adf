@@ -56,7 +56,9 @@ to_date('1900-01-01') AS ResellerStartDate,
 'NaN' AS ResellerGroupName,
 to_date('1900-01-01') AS ResellerGroupStartDate,
 Transaction_Currency AS CurrencyCode,
-cast(Revenue_Transaction_Currency as DECIMAL(10, 2)) AS RevenueAmount
+cast(Revenue_Transaction_Currency as DECIMAL(10, 2)) AS RevenueAmount,
+cast(Cost_Transaction_Currency as DECIMAL(10, 2)) AS CostAmount,
+cast(Margin_Transaction_Currency as DECIMAL(10, 2)) AS GP1
 from 
   silver_{ENVIRONMENT}.netsafe.invoicedata as invoice
 LEFT JOIN
@@ -105,7 +107,9 @@ case
     else ResellerStartDate
   end as ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  GP1
 from
   initial_query""")
 

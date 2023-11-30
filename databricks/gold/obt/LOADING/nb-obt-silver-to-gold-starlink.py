@@ -50,7 +50,10 @@ with cte as
   'NaN' AS ResellerGroupName,
   to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,
   si.Deal_Currency AS CurrencyCode,
-  cast(si.Revenue_USD as DECIMAL(10, 2)) AS RevenueAmount
+  cast(si.Revenue_USD as DECIMAL(10, 2)) AS RevenueAmount,
+  cast((si.Revenue_USD - si.GP_USD)*(-1) as DECIMAL(10, 2))  as CostAmount,
+  CAST(si.GP_USD AS  DECIMAL(10, 2)) as GP1
+  
 
 FROM
   silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si
@@ -102,7 +105,9 @@ case
     else ResellerStartDate
   end as ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  GP1
 from
   cte""")
 

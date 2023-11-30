@@ -51,7 +51,10 @@ to_date( '1900-01-01' ) AS ResellerStartDate,
 'NaN' AS ResellerGroupName,
 to_date('1900-01-01' ) AS ResellerGroupStartDate,
 Currency AS CurrencyCode,
-cast(RevenueTransaction as DECIMAL(10, 2)) AS RevenueAmount
+cast(RevenueTransaction as DECIMAL(10, 2)) AS RevenueAmount,
+cast(case when CostTransaction <0 then CostTransaction
+    else CostTransaction*(-1) end  as DECIMAL(10, 2)) as CostAmount,
+cast(MarginTransaction  as DECIMAL(10, 2)) as GP1
  from silver_{ENVIRONMENT}.deltalink.invoicedata as invoice
 LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = invoice.ArtSupCode
 where invoice.Sys_Silver_IsCurrent = 1)
@@ -94,7 +97,9 @@ case
     else ResellerStartDate
   end as ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  GP1
 from
   cte""")
 
