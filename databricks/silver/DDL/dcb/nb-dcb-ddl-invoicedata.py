@@ -11,7 +11,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC USE SCHEMA netsafe;
+# MAGIC USE SCHEMA dcb;
 
 # COMMAND ----------
 
@@ -22,55 +22,53 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     SID bigint
 # MAGIC       GENERATED ALWAYS AS IDENTITY
 # MAGIC       COMMENT 'Surrogate Key'
-# MAGIC     ,Invoice_Number STRING
+# MAGIC     ,Invoice STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,LineNo INT
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Invoice_Date STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Sales_Order_Number STRING
+# MAGIC     ,Invoice_Month INT
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Order_Type STRING
+# MAGIC     ,Invoice_Year INT
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Item_ID STRING
+# MAGIC     ,SO_Number STRING
+# MAGIC       COMMENT 'TODO'  
+# MAGIC     ,SO_Date STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,Reseller_ID INT
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,Reseller STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,VAT_Number STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,SKU STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Item_Type STRING
+# MAGIC     ,Description STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Customer_Name STRING
+# MAGIC     ,Remark STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,QTY FLOAT
+# MAGIC     ,QTY STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Transaction_Currency STRING
+# MAGIC     ,Unit_Price DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Revenue_Transaction_Currency DECIMAL(38,18)
+# MAGIC     ,Line_Discount_Percentage DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Cost_Transaction_Currency DECIMAL(38,18)
+# MAGIC     ,Line_Discount_Euro DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Margin_Transaction_Currency DECIMAL(38,18)
+# MAGIC     ,Net_Price DECIMAL(18,2)
+# MAGIC       COMMENT 'TODO' 
+# MAGIC     ,Total_Invoice DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Exchange_Rate FLOAT
+# MAGIC     ,Entity STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Revenue_GBP DECIMAL(38,18)
+# MAGIC     ,Vendor STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Cost_GBP DECIMAL(38,18)
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Margin_GBP DECIMAL(38,18)
-# MAGIC       COMMENT 'TODO'    
 # MAGIC     ,Vendor_ID STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Vendor_Name STRING
+# MAGIC     ,Product_Type STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Account_Manager STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Quote_ID STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Customer_Account STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,SKU_Description STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Country STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC     ,Invoice_Line_Nb INT
+# MAGIC     ,Article_Group STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_FileName STRING
 # MAGIC       COMMENT 'TODO'
@@ -88,11 +86,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Flag if this is the current version.'
 # MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the deleted version.'
-# MAGIC ,CONSTRAINT invoicedata_pk PRIMARY KEY(Invoice_Number, Invoice_Line_Nb, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC ,CONSTRAINT invoicedata_pk PRIMARY KEY(Invoice, LineNo, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ardoc. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (Invoice_Number, Invoice_Line_Nb)
+# MAGIC CLUSTER BY (Invoice, LineNo)
 
 # COMMAND ----------
 

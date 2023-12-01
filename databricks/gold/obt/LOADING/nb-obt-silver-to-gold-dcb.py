@@ -14,68 +14,64 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
 
-# DBTITLE 1,Silver to Gold Netsafe
+# DBTITLE 1,Silver to Gold DCB
 spark.sql(
     f"""         
-CREATE OR REPLACE VIEW netsafe_globaltransactions AS
+CREATE OR REPLACE VIEW dcb_globaltransactions AS
 
 WITH initial_query 
 AS
 (
-SELECT 
+SELECT
 'NU' AS GroupEntityCode,
 CASE
-WHEN invoice.Country = 'Romania' THEN 'RO2'
-WHEN invoice.Country = 'Croatia' THEN 'HR2'
-WHEN invoice.Country = 'Slovenia' THEN 'SI1'
-WHEN invoice.Country = 'Bulgaria' THEN 'BG1'
+WHEN invoice.Entity = '1' THEN 'BE2'
+WHEN invoice.Entity = '2' THEN 'NL3'
 END AS EntityCode,
 to_date(invoice.Invoice_Date) AS TransactionDate,
-to_date(invoice.Invoice_Date) AS SalesOrderDate,
-coalesce(invoice.Invoice_Number,'NaN') AS SalesOrderID,
-coalesce(invoice.Item_ID,'NaN') AS SalesOrderItemID,
-COALESCE(invoice.SKU, "NaN") AS SKUInternal,
-COALESCE(datanowarr.SKU, 'NaN')  AS SKUMaster,
-COALESCE(invoice.SKU_Description,'NaN') AS Description,
-COALESCE(invoice.Item_Type,'NaN') AS ProductTypeInternal,
+to_date(invoice.SO_Date) AS SalesOrderDate,
+coalesce(invoice.SO_Number,'NaN') AS SalesOrderID,
+'NaN' AS SalesOrderItemID,
+COALESCE(invoice.SKU,'NaN') AS SKUInternal,
+COALESCE(datanowarr.SKU,'NaN') AS SKUMaster,
+COALESCE(invoice.Description,'NaN') AS Description,
+COALESCE(invoice.Product_Type,'NaN')  AS ProductTypeInternal,
 COALESCE(datanowarr.Product_Type,'NaN') AS ProductTypeMaster,
-coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
-coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
-coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
-coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
-coalesce(invoice.Vendor_ID, 'NaN') AS VendorCode,
-coalesce(invoice.Vendor_Name, 'NaN') AS VendorNameInternal,
-coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
+coalesce(datanowarr.Commitment_Duration_in_months,'NaN') AS CommitmentDuration1Master,
+coalesce(datanowarr.Commitment_Duration_Value,'NaN') AS CommitmentDuration2Master,
+coalesce(datanowarr.Billing_Frequency,'NaN') AS BillingFrequencyMaster,
+coalesce(datanowarr.Consumption_Model,'NaN') AS ConsumptionModelMaster,
+coalesce(invoice.Vendor_ID,'NaN') AS VendorCode,
+coalesce(invoice.Vendor,'NaN') AS VendorNameInternal,
+coalesce(datanowarr.Vendor_Name,'NaN') AS VendorNameMaster,
 'NaN' AS VendorGeography,
 to_date('1900-01-01') AS VendorStartDate,
-coalesce(invoice.Customer_Account,'NaN') AS ResellerCode,
-coalesce(invoice.Customer_Name,'NaN') AS ResellerNameInternal,
+coalesce(invoice.Reseller_ID,'NaN') AS ResellerCode,
+coalesce(invoice.Reseller,'NaN') AS ResellerNameInternal,
 'NaN' AS ResellerGeographyInternal,
 to_date('1900-01-01') AS ResellerStartDate,
 coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
 coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
 to_date('1900-01-01') AS ResellerGroupStartDate,
-Transaction_Currency AS CurrencyCode,
-cast(Revenue_Transaction_Currency as DECIMAL(10, 2)) AS RevenueAmount,
-cast(Cost_Transaction_Currency as DECIMAL(10, 2)) AS CostAmount,
-cast(Margin_Transaction_Currency as DECIMAL(10, 2)) AS GP1
+'EUR' AS CurrencyCode,
+cast(invoice.Total_Invoice as DECIMAL(10, 2)) AS RevenueAmount
 FROM 
-  silver_{ENVIRONMENT}.netsafe.invoicedata AS invoice
+  silver_{ENVIRONMENT}.dcb.invoicedata AS invoice
 LEFT JOIN
   gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr
 ON
   datanowarr.SKU = invoice.SKU
-WHERE
-  invoice.Sys_Silver_IsCurrent = true
 LEFT JOIN 
 (
   SELECT DISTINCT ResellerID, ResellerGroupCode, ResellerGroupName, ResellerName, Entity
-  FROM silver_dev.masterdata.resellergroups
+  FROM silver_{ENVIRONMENT}.masterdata.resellergroups
   WHERE InfinigateCompany = 'Nuvias'
   AND Sys_Silver_IsCurrent = true
 ) rg
 ON 
-  cast(invoice.Customer_Account as string) = rg.ResellerID
+  cast(invoice.Reseller_ID as string) = rg.ResellerID
+WHERE
+  invoice.Sys_Silver_IsCurrent = true
 )
 
 SELECT
@@ -102,7 +98,7 @@ SELECT
     WHEN VendorStartDate <= '1900-01-01' THEN min(TransactionDate) OVER(PARTITION BY EntityCode, VendorCode)
     ELSE VendorStartDate
   END AS VendorStartDate,
-  substring_index(ResellerCode, ' ', 1)ResellerCode,
+  ResellerCode,
   ResellerNameInternal,
   ResellerGeographyInternal,
   CASE
@@ -123,21 +119,21 @@ FROM
 # COMMAND ----------
 
 df_obt = spark.read.table("globaltransactions")
-df_netsafe = spark.read.table(f"gold_{ENVIRONMENT}.obt.netsafe_globaltransactions")
+df_dcb = spark.read.table(f"gold_{ENVIRONMENT}.obt.dcb_globaltransactions")
 
 # COMMAND ----------
 
 from pyspark.sql.functions import col
 
 target_columns = df_obt.columns
-source_columns = df_netsafe.columns
+source_columns = df_dcb.columns
 intersection_columns = [column for column in target_columns if column in source_columns]
 selection_columns = [col(column) for column in intersection_columns if column not in ['SID']]
 
 # COMMAND ----------
 
-df_selection = df_netsafe.select(selection_columns)
+df_selection = df_dcb.select(selection_columns)
 
 # COMMAND ----------
 
-df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NU' AND EntityCode IN ('RO2', 'HR2', 'SI1', 'BG1')").saveAsTable("globaltransactions")
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NU' AND EntityCode IN ('BE2', 'NL3')").saveAsTable("globaltransactions")
