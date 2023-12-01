@@ -65,8 +65,6 @@ LEFT JOIN
   gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr
 ON
   datanowarr.SKU = invoice.SKU
-WHERE
-  invoice.Sys_Silver_IsCurrent = true
 LEFT JOIN 
 (
   SELECT DISTINCT ResellerID, ResellerGroupCode, ResellerGroupName, ResellerName, Entity
@@ -76,6 +74,8 @@ LEFT JOIN
 ) rg
 ON 
   cast(invoice.Customer_Account as string) = rg.ResellerID
+WHERE
+  invoice.Sys_Silver_IsCurrent = true
 )
 
 SELECT
