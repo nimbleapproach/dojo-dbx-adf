@@ -45,7 +45,7 @@ CREATE OR REPLACE TABLE sales_invoice_header
       COMMENT 'TODO'
     ,`CurrencyCode` STRING
       COMMENT 'TODO'
-    ,`CurrencyFactor` DECIMAL(10,2)
+    ,`CurrencyFactor` DECIMAL(10,4)
       COMMENT 'TODO'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
