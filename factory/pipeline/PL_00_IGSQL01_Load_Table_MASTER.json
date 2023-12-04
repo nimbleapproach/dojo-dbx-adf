@@ -1,0 +1,46 @@
+{
+	"name": "PL_00_IGSQL01_Load_Table_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_20_IGCRM_Load_Table_ITERATOR",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_IGSQL01_Load_Table_ITERATOR",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_FullLoad": {
+							"value": "@pipeline().parameters.pm_FullLoad",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pm_FullLoad": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"Watermark": {
+				"type": "String"
+			},
+			"ColumnString": {
+				"type": "Array"
+			},
+			"ColumnName": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/IGSQL01 [CRM]"
+		},
+		"annotations": []
+	}
+}
