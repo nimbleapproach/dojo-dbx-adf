@@ -1,0 +1,41 @@
+{
+	"name": "DS_EXCEL_D2B_SINGLE_SHEET",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": {
+					"value": "@dataset().pm_environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_environment": {
+				"type": "string"
+			},
+			"pm_folder_name": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/D2B"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "d2b/@{dataset().pm_folder_name}",
+					"type": "Expression"
+				},
+				"fileSystem": "external"
+			},
+			"sheetIndex": 0,
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	}
+}

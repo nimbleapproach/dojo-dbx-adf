@@ -1,0 +1,29 @@
+{
+	"name": "PL_00_D2B_Load_Table_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_D2B_Load_Table",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_D2B_Load_Table_ITERATOR",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"variables": {
+			"Watermark_int_delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/D2B"
+		},
+		"annotations": []
+	}
+}

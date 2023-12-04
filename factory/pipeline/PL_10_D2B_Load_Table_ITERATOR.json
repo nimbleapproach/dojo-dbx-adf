@@ -1,0 +1,54 @@
+{
+	"name": "PL_10_D2B_Load_Table_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachView",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@createArray('sales','customers')",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "PL_20_D2B_Copy_Data",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_D2B_Load_sheet",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_folder_name": {
+										"value": "@item()",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"v_tabelnames": {
+				"type": "String"
+			},
+			"Watermark_int_delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/D2B"
+		},
+		"annotations": []
+	}
+}
