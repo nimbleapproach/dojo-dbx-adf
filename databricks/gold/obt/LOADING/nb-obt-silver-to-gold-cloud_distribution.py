@@ -17,7 +17,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # DBTITLE 1,Silver to Gold Cloud Distribution
 spark.sql(
     f"""         
-CREATE OR REPLACE VIEW netsafe_globaltransactions AS
+CREATE OR REPLACE VIEW clouddistribution_globaltransactions AS
 
 WITH initial_query AS (
   SELECT
@@ -120,20 +120,20 @@ from
 # COMMAND ----------
 
 df_obt = spark.read.table("globaltransactions")
-df_netsafe = spark.read.table(f"gold_{ENVIRONMENT}.obt.netsafe_globaltransactions")
+df_clouddistribution = spark.read.table(f"gold_{ENVIRONMENT}.obt.clouddistribution_globaltransactions")
 
 # COMMAND ----------
 
 from pyspark.sql.functions import col
 
 target_columns = df_obt.columns
-source_columns = df_netsafe.columns
+source_columns = df_clouddistribution.columns
 intersection_columns = [column for column in target_columns if column in source_columns]
 selection_columns = [col(column) for column in intersection_columns if column not in ['SID']]
 
 # COMMAND ----------
 
-df_selection = df_netsafe.select(selection_columns)
+df_selection = df_clouddistribution.select(selection_columns)
 
 # COMMAND ----------
 

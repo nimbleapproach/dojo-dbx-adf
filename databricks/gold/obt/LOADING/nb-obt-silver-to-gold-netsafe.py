@@ -68,7 +68,7 @@ ON
 LEFT JOIN 
 (
   SELECT DISTINCT ResellerID, ResellerGroupCode, ResellerGroupName, ResellerName, Entity
-  FROM silver_dev.masterdata.resellergroups
+  FROM silver_{ENVIRONMENT}.masterdata.resellergroups
   WHERE InfinigateCompany = 'Nuvias'
   AND Sys_Silver_IsCurrent = true
 ) rg
