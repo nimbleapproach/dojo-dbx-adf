@@ -86,12 +86,12 @@
 											"value": "@pipeline().parameters.pm_TableName",
 											"type": "Expression"
 										},
-										"pm_SchemaName": {
-											"value": "@pipeline().parameters.pm_SchemaName",
-											"type": "Expression"
-										},
 										"pm_DatabaseName": {
 											"value": "@pipeline().parameters.pm_DatabaseName",
+											"type": "Expression"
+										},
+										"pm_SchemaName": {
+											"value": "@pipeline().parameters.pm_SchemaName",
 											"type": "Expression"
 										}
 									}
@@ -111,7 +111,7 @@
 											"type": "Expression"
 										},
 										"pm_Directory": {
-											"value": "igsql01/@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/",
+											"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/",
 											"type": "Expression"
 										}
 									}
@@ -350,12 +350,12 @@
 											"value": "@pipeline().parameters.pm_TableName",
 											"type": "Expression"
 										},
-										"pm_SchemaName": {
-											"value": "@pipeline().parameters.pm_SchemaName",
-											"type": "Expression"
-										},
 										"pm_DatabaseName": {
 											"value": "@pipeline().parameters.pm_DatabaseName",
+											"type": "Expression"
+										},
+										"pm_SchemaName": {
+											"value": "@pipeline().parameters.pm_SchemaName",
 											"type": "Expression"
 										}
 									}
@@ -375,7 +375,7 @@
 											"type": "Expression"
 										},
 										"pm_Directory": {
-											"value": "igsql01/@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/",
+											"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/",
 											"type": "Expression"
 										}
 									}
