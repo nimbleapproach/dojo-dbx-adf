@@ -48,13 +48,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Margin_Transaction_Currency DECIMAL(38,18)
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Exchange_Rate FLOAT
+# MAGIC     ,Exchange_Rate STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Revenue_GBP DECIMAL(38,18)
+# MAGIC     ,Revenue_GBP STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Cost_GBP DECIMAL(38,18)
+# MAGIC     ,Cost_GBP STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Margin_GBP DECIMAL(38,18)
+# MAGIC     ,Margin_GBP STRING
 # MAGIC       COMMENT 'TODO'    
 # MAGIC     ,Vendor_ID STRING
 # MAGIC       COMMENT 'TODO'
