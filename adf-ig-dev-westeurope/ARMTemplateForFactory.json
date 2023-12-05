@@ -8578,7 +8578,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT ISNULL('1900-01-01',[WATERMARK]) AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
+												"value": "SELECT COALESCE([WATERMARK]),'1900-01-01') AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -8842,7 +8842,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "SELECT \nISNULL('1900-01-01',MAX(\"@{pipeline().parameters.pm_WatermarkColumn}\")) AS WATERMARK_NEW FROM dbo.[@{pipeline().parameters.pm_TableName}]",
+												"value": "SELECT \nCOALESCE(MAX(\"@{pipeline().parameters.pm_WatermarkColumn}\"),'1900-01-01') AS WATERMARK_NEW FROM dbo.[@{pipeline().parameters.pm_TableName}]",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
