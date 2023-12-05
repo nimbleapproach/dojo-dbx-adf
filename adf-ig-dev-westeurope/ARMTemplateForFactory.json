@@ -8492,7 +8492,7 @@
 													"type": "Expression"
 												},
 												"pm_Directory": {
-													"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/",
+													"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/",
 													"type": "Expression"
 												}
 											}
@@ -8756,7 +8756,7 @@
 													"type": "Expression"
 												},
 												"pm_Directory": {
-													"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/",
+													"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/",
 													"type": "Expression"
 												}
 											}
