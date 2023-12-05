@@ -1020,6 +1020,22 @@
 									"typeProperties": {
 										"source": {
 											"type": "SqlServerSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "Sys_DatabaseName",
+													"value": {
+														"value": "@pipeline().parameters.pm_DatabaseName",
+														"type": "Expression"
+													}
+												}
+											],
 											"sqlReaderQuery": {
 												"value": "SELECT \n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{pipeline().parameters.pm_WatermarkColumn}\">= '@{variables('Watermark_Value_Delta')}'\n",
 												"type": "Expression"
@@ -1284,6 +1300,22 @@
 									"typeProperties": {
 										"source": {
 											"type": "SqlServerSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "Sys_DatabaseName",
+													"value": {
+														"value": "@pipeline().parameters.pm_DatabaseName",
+														"type": "Expression"
+													}
+												}
+											],
 											"sqlReaderQuery": {
 												"value": "SELECT \n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{pipeline().parameters.pm_WatermarkColumn}\"<= '@{variables('Watermark_value')}'\n",
 												"type": "Expression"
