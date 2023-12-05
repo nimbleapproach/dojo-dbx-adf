@@ -57,6 +57,8 @@ CREATE OR REPLACE TABLE sales_invoice_line
       COMMENT 'Sales Order number'
     ,OrderLineNo_ int 
       COMMENT 'Sales Order line number'
+    ,Gen_Bus_PostingGroup STRING
+      COMMENT 'TODO'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL

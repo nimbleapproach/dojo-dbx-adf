@@ -57,6 +57,8 @@ CREATE OR REPLACE TABLE sales_cr_memo_line
       COMMENT 'Sales Order number'
     ,OrderLineNo_ int 
       COMMENT 'Sales Order line number'
+    ,Gen_Bus_PostingGroup STRING
+      COMMENT 'TODO'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL
@@ -71,6 +73,7 @@ CREATE OR REPLACE TABLE sales_cr_memo_line
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
+    ,Sys_Silver_IsCurrent BOOLEAN
 ,CONSTRAINT sales_cr_memo_line_pk PRIMARY KEY(DocumentNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for sales credit memo line. \n' 

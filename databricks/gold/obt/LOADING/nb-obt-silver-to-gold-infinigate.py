@@ -147,6 +147,7 @@ with cte as (
       AND UPPER(sil.No_)NOT LIKE 'FREI%'
       AND UPPER(sil.No_)NOT LIKE 'FRACHT%'
       AND UPPER(sil.No_)NOT LIKE 'EXP%')
+      AND sil.Gen_Bus_PostingGroup not like 'IC%'
 
   UNION all
     --- SALES CR MEMO
@@ -274,6 +275,7 @@ with cte as (
       AND UPPER(sil.No_)NOT LIKE 'FREI%'
       AND UPPER(sil.No_)NOT LIKE 'FRACHT%'
       AND UPPER(sil.No_)NOT LIKE 'EXP%')
+      AND sil.Gen_Bus_PostingGroup not like 'IC%'
 )
 select
   GroupEntityCode,
