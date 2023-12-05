@@ -1192,6 +1192,7 @@
 				"activities": [
 					{
 						"name": "PL_20_IGCRM_Load_Table_ITERATOR",
+						"description": "Aravin",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
 						"userProperties": [],
