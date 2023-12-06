@@ -62,7 +62,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Flag if this is the current version.'
 # MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the deleted version.'
-# MAGIC ,CONSTRAINT invoicedata_pk PRIMARY KEY(Sys_ID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC ,CONSTRAINT d2bsales_pk PRIMARY KEY(Sys_ID, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ardoc. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')

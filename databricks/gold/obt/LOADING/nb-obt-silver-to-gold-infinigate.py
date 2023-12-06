@@ -363,4 +363,4 @@ df_selection = df_selection.fillna(value= 'NaN').replace('', 'NaN')
 
 # COMMAND ----------
 
-df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'IG'").saveAsTable("globaltransactions")
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'IG'  AND EntityCode NOT IN ('FR2')").saveAsTable("globaltransactions")
