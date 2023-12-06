@@ -3,13 +3,13 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "PL_10_D2B_Load_Table",
+				"name": "PL_20_D2B_Load_sheet",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_10_D2B_Load_Table_ITERATOR",
+						"referenceName": "PL_20_D2B_Load_sheet",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true

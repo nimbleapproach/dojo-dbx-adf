@@ -3,127 +3,99 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Load D2B Data",
-				"type": "Copy",
+				"name": "DF_D2B_EXEL_LOAD_CUSTOMER",
+				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
-					"retry": 1,
+					"retry": 0,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"source": {
-						"type": "ExcelSource",
-						"additionalColumns": [
-							{
-								"name": "Sys_Bronze_InsertDateTime_UTC",
-								"value": {
-									"value": "@utcNow()",
+					"dataflow": {
+						"referenceName": "DF_D2B_EXEL_LOAD_CUSTOMER",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"GetExcelFile": {
+								"pm_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
 									"type": "Expression"
-								}
+								},
+								"pm_folder_name": "customers"
 							}
-						],
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"wildcardFolderPath": {
-								"value": "d2b/@{pipeline().parameters.pm_folder_name}",
-								"type": "Expression"
-							},
-							"wildcardFileName": {
-								"value": "*.xlsx",
-								"type": "Expression"
-							},
-							"enablePartitionDiscovery": false
-						}
-					},
-					"sink": {
-						"type": "ParquetSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
 						},
-						"formatSettings": {
-							"type": "ParquetWriteSettings"
-						}
-					},
-					"enableStaging": false,
-					"validateDataConsistency": true,
-					"logSettings": {
-						"enableCopyActivityLog": true,
-						"copyActivityLogSettings": {
-							"logLevel": "Info",
-							"enableReliableLogging": true
-						},
-						"logLocationSettings": {
-							"linkedServiceName": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference",
-								"parameters": {
+						"linkedServiceParameters": {
+							"WriteDeltaFiles": {
+								"linkedService": {
 									"pm_Environment": {
 										"value": "@pipeline().globalParameters.gpm_Environment",
 										"type": "Expression"
 									}
 								}
-							},
-							"path": "logging/adf"
+							}
 						}
 					},
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
+					"integrationRuntime": {
+						"referenceName": "ir-ig-managed-dev-westeurope",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "DF_D2B_EXEL_LOAD_SALES",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
 					{
-						"referenceName": "DS_EXCEL_D2B_SINGLE_SHEET",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_environment": {
-								"value": "@pipeline().globalParameters.gpm_Environment",
-								"type": "Expression"
-							},
-							"pm_folder_name": {
-								"value": "@{pipeline().parameters.pm_folder_name}",
-								"type": "Expression"
-							}
-						}
+						"activity": "DF_D2B_EXEL_LOAD_CUSTOMER",
+						"dependencyConditions": [
+							"Completed"
+						]
 					}
 				],
-				"outputs": [
-					{
-						"referenceName": "DS_ADLS_PARQUET_STATIC",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_Environment": {
-								"value": "@pipeline().globalParameters.gpm_Environment",
-								"type": "Expression"
-							},
-							"pm_FileSystem": "bronze",
-							"pm_Directory": {
-								"value": "d2b/@{pipeline().parameters.pm_folder_name}",
-								"type": "Expression"
-							},
-							"pm_FileName": {
-								"value": "bronze-d2b-@{pipeline().parameters.pm_folder_name}-@{utcNow()}",
-								"type": "Expression"
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_D2B_EXEL_LOAD_SALES",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"GetExcelFile": {
+								"pm_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"pm_folder_name": "sales"
+							}
+						},
+						"linkedServiceParameters": {
+							"WriteDeltaFiles": {
+								"linkedService": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
 							}
 						}
-					}
-				]
+					},
+					"integrationRuntime": {
+						"referenceName": "ir-ig-managed-dev-westeurope",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
 			}
 		],
-		"parameters": {
-			"pm_folder_name": {
-				"type": "string"
-			}
-		},
 		"folder": {
 			"name": "10 Bronze/D2B"
 		},
