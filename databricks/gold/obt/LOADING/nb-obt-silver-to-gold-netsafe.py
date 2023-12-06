@@ -116,7 +116,9 @@ SELECT
     ELSE ResellerStartDate
   END AS ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  GP1
 FROM
   initial_query""")
 
