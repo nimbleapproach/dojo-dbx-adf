@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
 		},
+		"LS_Oracle_CX_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
+		},
 		"LS_SQLDB_METADATA_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
@@ -27,6 +31,14 @@
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "https://nuviastest1.bigmachines.com/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "CRM.Admin"
 		},
 		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
@@ -99,6 +111,9 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"LS_Oracle_CX_password": {
+						"value": "[parameters('LS_Oracle_CX_password')]"
+					},
 					"LS_SQLDB_METADATA_connectionString": {
 						"value": "[parameters('LS_SQLDB_METADATA_connectionString')]"
 					},
@@ -119,6 +134,12 @@
 					},
 					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
+					},
+					"LS_Oracle_CX_properties_typeProperties_host": {
+						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]"
+					},
+					"LS_Oracle_CX_properties_typeProperties_username": {
+						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]"
 					},
 					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"

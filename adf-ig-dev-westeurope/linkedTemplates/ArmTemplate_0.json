@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
 		},
+		"LS_Oracle_CX_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
+		},
 		"LS_SQLDB_METADATA_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
@@ -35,6 +39,14 @@
 		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
+		"LS_Oracle_CX_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "https://nuviastest1.bigmachines.com/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "CRM.Admin"
 		},
 		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
@@ -450,6 +462,33 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
 				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Oracle_CX')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "OracleServiceCloud",
+				"typeProperties": {
+					"host": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]",
+					"username": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_Oracle_CX_password')]"
+					},
+					"useEncryptedEndpoints": true,
+					"useHostVerification": true,
+					"usePeerVerification": true
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
 			]
 		},
 		{
@@ -1165,44 +1204,6 @@
 				},
 				"folder": {
 					"name": "20 Silver"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_SILVER_TO_GOLD_OBT_TRIGGER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_99_TRIGGER_JOB",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_99_TRIGGER_JOB",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_JobID": {
-									"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Silver_to_Gold_obt",
-									"type": "Expression"
-								}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "30 Gold"
 				},
 				"annotations": []
 			},

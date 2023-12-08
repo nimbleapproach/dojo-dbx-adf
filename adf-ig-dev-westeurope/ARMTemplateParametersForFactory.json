@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "adf-ig-dev-westeurope"
 		},
+		"LS_Oracle_CX_password": {
+			"value": ""
+		},
 		"LS_SQLDB_METADATA_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
 		},
@@ -19,6 +22,12 @@
 		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"value": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_host": {
+			"value": "https://nuviastest1.bigmachines.com/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_username": {
+			"value": "CRM.Admin"
 		},
 		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-cloudblue-commerce-oss-connectionsstring"
