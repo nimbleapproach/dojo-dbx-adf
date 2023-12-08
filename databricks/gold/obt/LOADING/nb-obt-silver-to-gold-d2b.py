@@ -51,7 +51,9 @@ coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
 coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
 to_date('1900-01-01') AS ResellerGroupStartDate,
 'EUR' AS CurrencyCode,
-cast(sales.SALES_PRICE as DECIMAL(10, 2)) AS RevenueAmount
+cast(sales.SALES_PRICE as DECIMAL(10, 2)) AS RevenueAmount,
+cast(sales.PURCHASE_PRICE as DECIMAL(10, 2)) AS CostAmount,
+cast(sales.SALES_PRICE - (sales.PURCHASE_PRICE / sales.USD_RATE) as DECIMAL(10, 2)) AS GP1
 FROM 
   silver_{ENVIRONMENT}.d2b.sales AS sales
 LEFT JOIN
@@ -109,7 +111,9 @@ SELECT
     ELSE ResellerStartDate
   END AS ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  GP1
 FROM
   initial_query""")
 
