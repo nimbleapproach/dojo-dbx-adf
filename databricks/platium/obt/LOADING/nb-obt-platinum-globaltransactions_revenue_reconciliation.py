@@ -26,7 +26,8 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC     EntityCode,
 # MAGIC     year(TransactionDate) AS Year_No,
 # MAGIC     right(concat('0',cast(month(TransactionDate) as string)),2) AS Month_No,
-# MAGIC     coalesce(SUM(RevenueAmount_Euro),0.00) AS RevenueAmount_Euro
+# MAGIC     coalesce(SUM(RevenueAmount_Euro),0.00) AS RevenueAmount_Euro,
+# MAGIC     coalesce(SUM(GP1_Euro),0.00) AS GP1_Euro
 # MAGIC FROM 
 # MAGIC     platinum_dev.obt.globaltransactions p
 # MAGIC GROUP BY 
@@ -40,7 +41,8 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC     EntityCode,
 # MAGIC     Year_No,
 # MAGIC     Month_No,
-# MAGIC     RevenueAmount_Euro
+# MAGIC     RevenueAmount_Euro,
+# MAGIC     GP1_Euro
 # MAGIC FROM 
 # MAGIC     initial_query
 # MAGIC WHERE 
