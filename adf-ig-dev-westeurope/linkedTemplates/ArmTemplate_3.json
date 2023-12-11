@@ -3911,7 +3911,7 @@
 					],
 					"scriptLines": [
 						"parameters{",
-						"     pm_FileName as integer",
+						"     pm_FileName as string",
 						"}",
 						"source(output(",
 						"          {Invoice Date} as string,",
@@ -3946,6 +3946,7 @@
 						"     format: 'parquet',",
 						"     fileSystem: 'bronze',",
 						"     folderPath: 'deltalink/invoicedata',",
+						"     compressionCodec: 'snappy',",
 						"     partitionFileNames:[(concat('bronze-deltalink-',toString($pm_FileName),'-',toString(currentUTC()),'.snappy.parquet'))],",
 						"     umask: 0022,",
 						"     preCommands: [],",
