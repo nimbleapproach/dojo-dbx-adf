@@ -72,7 +72,7 @@ CREATE OR REPLACE TABLE invoicedata
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
-,CONSTRAINT deltalink_invoicedata_pk PRIMARY KEY(InvoiceNumber,LineNo)
+,CONSTRAINT deltalink_invoicedata_pk PRIMARY KEY(InvoiceNumber,LineNo,Sys_Bronze_InsertDateTime_UTC)
   )
 COMMENT 'This table contains the line data for gl_entry. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
