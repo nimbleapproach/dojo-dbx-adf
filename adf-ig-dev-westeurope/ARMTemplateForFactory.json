@@ -1066,24 +1066,6 @@
 								]
 							},
 							{
-								"activity": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
-								"activity": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
 								"activity": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
 								"dependencyConditions": [
 									"Completed"
@@ -1119,20 +1101,6 @@
 						}
 					},
 					{
-						"name": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
 						"name": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
 						"type": "ExecutePipeline",
 						"dependsOn": [
@@ -1147,34 +1115,6 @@
 						"typeProperties": {
 							"pipeline": {
 								"referenceName": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
 								"type": "PipelineReference"
 							},
 							"waitOnCompletion": true,
@@ -1260,10 +1200,7 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_CLOUDBLUE_OSS_Load_Table_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_CLOUDBLUE_PBA_Load_Table_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_BRONZE_TO_SILVER_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_DATANOW_ARR_Load_Sheet_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_SILVER_TO_GOLD_OBT_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_RESELLERGROUPS_Load_Sheet_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_VUZION_ARR_Load_Sheet_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NETSAFE_Load_File_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_CLOUD_DISTRIBUTION_MASTER')]",
