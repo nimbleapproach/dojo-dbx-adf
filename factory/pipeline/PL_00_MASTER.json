@@ -158,24 +158,6 @@
 						]
 					},
 					{
-						"activity": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-						"dependencyConditions": [
-							"Completed"
-						]
-					},
-					{
-						"activity": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-						"dependencyConditions": [
-							"Completed"
-						]
-					},
-					{
-						"activity": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
-						"dependencyConditions": [
-							"Completed"
-						]
-					},
-					{
 						"activity": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
 						"dependencyConditions": [
 							"Completed"
@@ -210,19 +192,6 @@
 				}
 			},
 			{
-				"name": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "PL_00_DATANOW_ARR_Load_Sheet_MASTER",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
 				"name": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [
@@ -237,32 +206,6 @@
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "PL_00_SILVER_TO_GOLD_OBT_MASTER",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "PL_00_RESELLERGROUPS_Load_Sheet_MASTER",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
