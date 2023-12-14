@@ -855,12 +855,7 @@
 							"dataset": {
 								"referenceName": "DS_BINARY_NETSUITE",
 								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
+								"parameters": {}
 							},
 							"fieldList": [
 								"childItems"

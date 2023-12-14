@@ -22,15 +22,12 @@
 					"type": "LinkedServiceReference",
 					"parameters": {
 						"pm_environment": {
-							"value": "@dataset().pm_environment",
+							"value": "dev",
 							"type": "Expression"
 						}
 					}
 				},
 				"parameters": {
-					"pm_environment": {
-						"type": "string"
-					},
 					"pm_FileName": {
 						"type": "string"
 					}

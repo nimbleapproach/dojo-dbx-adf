@@ -2582,12 +2582,7 @@
 							"dataset": {
 								"referenceName": "DS_BINARY_NETSUITE",
 								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
+								"parameters": {}
 							},
 							"fieldList": [
 								"childItems"
@@ -6831,10 +6826,6 @@
 											},
 											"datasetParameters": {
 												"GetFile": {
-													"pm_environment": {
-														"value": "@pipeline().globalParameters.gpm_Environment",
-														"type": "Expression"
-													},
 													"pm_FileName": {
 														"value": "@pipeline().parameters.pm_FileName",
 														"type": "Expression"
@@ -6896,10 +6887,6 @@
 											},
 											"datasetParameters": {
 												"GetFile": {
-													"pm_environment": {
-														"value": "@pipeline().globalParameters.gpm_Environment",
-														"type": "Expression"
-													},
 													"pm_FileName": {
 														"value": "@pipeline().parameters.pm_FileName",
 														"type": "Expression"
@@ -12153,14 +12140,9 @@
 					"type": "LinkedServiceReference",
 					"parameters": {
 						"pm_environment": {
-							"value": "@dataset().pm_Environment",
+							"value": "dev",
 							"type": "Expression"
 						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
 					}
 				},
 				"folder": {
@@ -12189,15 +12171,12 @@
 					"type": "LinkedServiceReference",
 					"parameters": {
 						"pm_environment": {
-							"value": "@dataset().pm_environment",
+							"value": "dev",
 							"type": "Expression"
 						}
 					}
 				},
 				"parameters": {
-					"pm_environment": {
-						"type": "string"
-					},
 					"pm_FileName": {
 						"type": "string"
 					}

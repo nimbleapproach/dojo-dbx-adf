@@ -1616,10 +1616,6 @@
 											},
 											"datasetParameters": {
 												"GetFile": {
-													"pm_environment": {
-														"value": "@pipeline().globalParameters.gpm_Environment",
-														"type": "Expression"
-													},
 													"pm_FileName": {
 														"value": "@pipeline().parameters.pm_FileName",
 														"type": "Expression"
@@ -1681,10 +1677,6 @@
 											},
 											"datasetParameters": {
 												"GetFile": {
-													"pm_environment": {
-														"value": "@pipeline().globalParameters.gpm_Environment",
-														"type": "Expression"
-													},
 													"pm_FileName": {
 														"value": "@pipeline().parameters.pm_FileName",
 														"type": "Expression"
