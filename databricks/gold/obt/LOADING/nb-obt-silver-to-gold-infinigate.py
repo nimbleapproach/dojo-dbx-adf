@@ -30,8 +30,13 @@ with cte as (
     sil.LineNo_ AS LineNo,
     to_date(sih.PostingDate) AS TransactionDate,
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
-    coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
-    coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
+    --Comment by MS (15/12/2023) - Start
+    --Bring sales order no and sales order item no from main sales tables if it can't find then bring from archive tables
+    --coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
+    --coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
+    --Comment by MS (15/12/2023) - End
+    coalesce(sih.OrderNo_,so.SalesOrderID, 'NaN') AS SalesOrderID,
+    coalesce(sil.No_,so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, 'NaN') AS SKUInternal,
     coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
     trim(
