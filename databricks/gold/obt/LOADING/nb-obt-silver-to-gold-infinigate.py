@@ -162,7 +162,8 @@ with cte as (
     coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
     coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, 'NaN') AS SKUInternal,
-    coalesce(it.No_,sil.No_, 'NaN')  AS SKUMaster,
+    --coalesce(it.No_,sil.No_, 'NaN')  AS SKUMaster,
+    coalesce(datanowarr.SKU, 'NaN')  AS SKUMaster,
     trim(
       concat(
         regexp_replace(it.Description, 'NaN', ''),
