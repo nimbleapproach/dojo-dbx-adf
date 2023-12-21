@@ -14,10 +14,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
 
-# DBTITLE 1,Silver to Gold Vuzion
-spark.sql(f"""
-
-CREATE OR Replace VIEW vuzion_globaltransactions AS
+df = spark.sql(f"""
 
 WITH initial_query
 AS 
@@ -187,6 +184,102 @@ SELECT
   CurrencyCode,
   RevenueAmount
   FROM main_dates
+""")
+
+df.write.mode("overwrite").saveAsTable("vuzion_globaltransactions_without_gp1")
+
+# COMMAND ----------
+
+# DBTITLE 1,Load GP1
+from pyspark.sql.functions import levenshtein, regexp_extract, col, row_number
+from pyspark.sql import Window
+
+df_vuzion_gp = spark.sql(f"""SELECT DISTINCT SKUDescription, substring(date,4,2) AS GPMonthNo, substring(date,7,4) AS GPYearNo, cast(replace(GPPercentage,'%','') AS int) AS GPPercentage FROM gold_{ENVIRONMENT}.obt.vuzion_gp WHERE SKUDescription IS NOT NULL""")
+
+df_vuzion_data = spark.sql(f"""SELECT DISTINCT CASE WHEN regexp_extract(Description,'^(.*?):(.*?).Recurring',2) = "" THEN Description ELSE trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2)) END AS NewDescription, substring(TransactionDate,6,2) AS VuzionMonthNo, substring(TransactionDate,0,4) AS VuzionYearNo, TransactionDate, SalesOrderID, SalesOrderItemID, SKUInternal, Description AS OriginalDescription FROM gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1 Where TransactionDate >= '2023-05-01' AND TransactionDate <= '2023-10-31'""")
+
+df = df_vuzion_data.crossJoin(df_vuzion_gp)
+df = df.filter((col('VuzionYearNo') == col('GPYearNo')) & (col('VuzionMonthNo') == col('GPMonthNo'))) \
+        .withColumn("Similarity",(levenshtein('SKUDescription', 'NewDescription'))).filter('Similarity <= 0')
+
+#df.createOrReplaceTempView("data")
+
+#Partition by NewDescription, VuzionYearNo, VuzionMonthNo, order by Similarity asc get latest record
+window = Window.partitionBy('NewDescription', 'VuzionYearNo', 'VuzionMonthNo').orderBy(col('Similarity').asc())
+df = df.withColumn("RowNumber", row_number().over(window)).where((col('RowNumber') == 1) & (col('NewDescription') != '') & (col('SKUDescription') != '')).drop("RowNumber").select('TransactionDate', 'SalesOrderID', 'SalesOrderItemID', 'SKUInternal', 'OriginalDescription', 'GPPercentage')
+
+df.write.mode("overwrite").saveAsTable("vuzion_globaltransactions_gp1")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC df = spark.sql(f"""          
+# MAGIC SELECT TransactionDate, SalesOrderID, SalesOrderItemID, SKUInternal, OriginalDescription, GPPercentage
+# MAGIC FROM
+# MAGIC (
+# MAGIC     SELECT DISTINCT *,
+# MAGIC     ROW_NUMBER() OVER(PARTITION BY NewDescription, VuzionYearNo, VuzionMonthNo ORDER BY Similarity ASC) AS Row_Number
+# MAGIC     FROM data
+# MAGIC     WHERE NewDescription != '' AND SKUDescription != ''
+# MAGIC )
+# MAGIC WHERE Row_Number = 1
+# MAGIC """)
+# MAGIC
+# MAGIC df.write.mode("overwrite").saveAsTable("vuzion_globaltransactions_gp1")
+
+# COMMAND ----------
+
+# DBTITLE 1,Silver to Gold Vuzion
+spark.sql(f"""
+          
+CREATE OR Replace VIEW vuzion_globaltransactions AS
+
+SELECT
+  GroupEntityCode,
+  EntityCode,
+  g.TransactionDate,
+  SalesOrderDate,
+  g.SalesOrderID,
+  g.SalesOrderItemID,
+  g.SKUInternal,
+  SKUMaster,
+  g.Description,
+  ProductTypeInternal,
+  ProductTypeMaster,
+  CommitmentDuration1Master,
+  CommitmentDuration2Master,
+  BillingFrequencyMaster,
+  ConsumptionModelMaster,
+  VendorCode,
+  VendorNameInternal,
+  VendorNameMaster,
+  VendorGeography,
+  VendorStartDate,
+  ResellerCode,
+  ResellerNameInternal,
+  ResellerGeographyInternal,
+  ResellerStartDate,
+  ResellerGroupCode,
+  ResellerGroupName,  
+  ResellerGroupStartDate,
+  CurrencyCode,
+  RevenueAmount,
+  CAST(RevenueAmount - (RevenueAmount / c.GPPercentage) AS DECIMAL(10,2)) AS CostAmount,
+  CAST((RevenueAmount / c.GPPercentage) AS DECIMAL(10,2)) AS GP1
+FROM 
+  gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1 g
+LEFT JOIN 
+  gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_gp1 c
+ON 
+  g.TransactionDate = c.TransactionDate
+AND
+  g.SalesOrderID = c.SalesOrderID
+AND 
+  g.SalesOrderItemID = c.SalesOrderItemID
+AND
+  g.SKUInternal = c.SKUInternal
+AND
+  g.Description = c.OriginalDescription
 """)
 
 # COMMAND ----------
