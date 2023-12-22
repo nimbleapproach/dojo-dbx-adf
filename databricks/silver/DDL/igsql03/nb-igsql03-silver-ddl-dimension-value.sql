@@ -55,11 +55,13 @@ CREATE OR REPLACE TABLE dimension_value
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
-,CONSTRAINT dimension_value_pk PRIMARY KEY(Code,Sys_DatabaseName,Sys_RowNumber)
+    ,Sys_Silver_IsCurrent BOOLEAN
+      COMMENT 'Flag if this is the current version.'
+,CONSTRAINT dimension_value_pk PRIMARY KEY(Code,DimensionCode,Sys_DatabaseName,Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for dimension value. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (Code,Sys_DatabaseName)
+CLUSTER BY (Code,DimensionCode,Sys_DatabaseName)
 
 -- COMMAND ----------
 
