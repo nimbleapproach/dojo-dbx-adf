@@ -39,6 +39,8 @@ CREATE OR REPLACE TABLE sales_invoice_line
       COMMENT 'Business Key'
     ,No_ STRING 
       COMMENT 'TODO'
+    ,Description STRING
+      COMMENT 'TODO'
     ,Amount DECIMAL(10,2)  
       COMMENT 'TODO'
     ,AmountIncludingVAT DECIMAL(10,2)  
