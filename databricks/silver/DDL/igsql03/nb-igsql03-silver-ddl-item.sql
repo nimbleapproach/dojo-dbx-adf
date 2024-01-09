@@ -33,36 +33,42 @@ CREATE OR REPLACE TABLE item
         SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
-    ,No_ STRING NOT NULL 
-      COMMENT 'Business Key'
-    ,Description STRING 
-      COMMENT 'TODO'
-    ,Description2 STRING 
-      COMMENT 'TODO'
-	,Description3 STRING 
+  ,No_ STRING NOT NULL 
+    COMMENT 'Business Key'
+  ,Description STRING
+    COMMENT 'TODO'
+  ,Description2 STRING
+    COMMENT 'TODO'
+	,Description3 STRING
 	  COMMENT 'TODO'
-	,Description4 STRING 
+	,Description4 STRING
 	  COMMENT 'TODO'
-	,GlobalDimension1Code STRING 
-      COMMENT 'TODO'
-	,ProductType STRING 
-      COMMENT 'TODO'
-    ,PhysicalGoods BIGINT 
-      COMMENT 'TODO'
-    ,Sys_RowNumber BIGINT NOT NULL
-      COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
-    ,Sys_DatabaseName STRING NOT NULL
-      COMMENT 'Name of the Source Database.'
-    ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
-      COMMENT 'The timestamp when this entry landed in bronze.'
-    ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
-      DEFAULT current_timestamp()
-      COMMENT 'The timestamp when this entry landed in silver.'
-    ,Sys_Silver_ModifedDateTime_UTC TIMESTAMP
-      DEFAULT current_timestamp()
-      COMMENT 'The timestamp when this entry was last modifed in silver.'
-    ,Sys_Silver_HashKey BIGINT NOT NULL
-      COMMENT 'HashKey over all but Sys columns.'
+	,GlobalDimension1Code STRING
+    COMMENT 'TODO'
+	,GlobalDimension2Code STRING
+    COMMENT 'TODO'
+	,Type INT
+    COMMENT 'TODO'
+	,ProductType STRING
+    COMMENT 'TODO'
+  ,PhysicalGoods BIGINT
+    COMMENT 'TODO'
+  ,Sys_RowNumber BIGINT NOT NULL
+    COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
+  ,Sys_DatabaseName STRING NOT NULL
+    COMMENT 'Name of the Source Database.'
+  ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
+    COMMENT 'The timestamp when this entry landed in bronze.'
+  ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
+    DEFAULT current_timestamp()
+    COMMENT 'The timestamp when this entry landed in silver.'
+  ,Sys_Silver_ModifedDateTime_UTC TIMESTAMP
+    DEFAULT current_timestamp()
+    COMMENT 'The timestamp when this entry was last modifed in silver.'
+  ,Sys_Silver_HashKey BIGINT NOT NULL
+    COMMENT 'HashKey over all but Sys columns.'
+  ,Sys_Silver_IsCurrent BOOLEAN
+    COMMENT 'Flag if this is the current version.'
 ,CONSTRAINT item_pk PRIMARY KEY(No_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for item. \n' 

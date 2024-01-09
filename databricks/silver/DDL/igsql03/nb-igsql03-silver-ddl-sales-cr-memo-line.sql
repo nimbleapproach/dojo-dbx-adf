@@ -37,9 +37,11 @@ CREATE OR REPLACE TABLE sales_cr_memo_line
       COMMENT 'Business Key'
     ,LineNo_ STRING NOT NULL 
       COMMENT 'Business Key'
+    ,Type INT
+      COMMENT 'TODO'
     ,No_ STRING 
       COMMENT 'TODO'
-    ,Description STRING
+    ,Description STRING 
       COMMENT 'TODO'
     ,Amount DECIMAL(10,2) 
       COMMENT 'TODO'
