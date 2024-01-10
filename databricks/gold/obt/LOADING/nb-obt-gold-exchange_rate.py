@@ -51,13 +51,10 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   AND COD_SCENARIO not like '%OB%'
 # MAGIC   and dati_cambio.Sys_Silver_IsCurrent = 1
 # MAGIC   and azienda.Sys_Silver_IsCurrent =1
-# MAGIC
 # MAGIC )
 # MAGIC
-# MAGIC
-# MAGIC
 # MAGIC select * from FX
-# MAGIC where concat(Calendar_Year, '-',Month,'-01' )< concat(year(now()), '-',month(now()),'-01' )
+# MAGIC where concat(Calendar_Year, '-',Month,'-01' ) < concat(year(now()), '-', right(concat('0',cast(month(now()) as string)),2),'-01' )
 # MAGIC
 # MAGIC union all
 # MAGIC
@@ -66,14 +63,10 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC Scenario,
 # MAGIC Period,
 # MAGIC year(now()) as Calendar_Year,
-# MAGIC month(now()) as Month,
+# MAGIC right(concat('0',cast(month(now()) as string)),2) as Month,
 # MAGIC Currency,
 # MAGIC COD_AZIENDA,
 # MAGIC Period_FX_rate
-# MAGIC  from FX
-# MAGIC where Calendar_Year = year(now())
-# MAGIC and Month = month(now())-1
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
+# MAGIC from FX
+# MAGIC where Calendar_Year = case when month(now()) = 1 then year(now())-1 else year(now()) end
+# MAGIC and Month = case when month(now()) = 1 then '12' else right(concat('0',cast(month(now())-1 as string)),2) end
