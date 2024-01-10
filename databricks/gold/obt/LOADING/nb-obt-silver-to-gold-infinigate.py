@@ -28,6 +28,8 @@ with cte as (
     entity.TagetikEntityCode AS EntityCode,
     sil.DocumentNo_ AS DocumentNo,
     sil.LineNo_ AS LineNo,
+    sil.Type AS Type,
+    sil.Description AS SalesInvoiceDescription,
     to_date(sih.PostingDate) AS TransactionDate,
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
     --Comment by MS (15/12/2023) - Start
@@ -54,8 +56,12 @@ with cte as (
     coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
     coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
     coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
-    coalesce(ven.Code, 'NaN') AS VendorCode,
-    coalesce(ven.Name, 'NaN') AS VendorNameInternal,
+    --coalesce(ven.Code, 'NaN') AS VendorCode,
+    --coalesce(ven.Name, 'NaN') AS VendorNameInternal,
+    --first go through item and dimension value
+    --second go straight to dimension value
+    coalesce(ven1.Code,ven.Code,ven2.Code, 'NaN') AS VendorCode,
+    coalesce(ven1.Name,ven.Name,ven2.Name,'NaN') AS VendorNameInternal,
     coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
     '' AS VendorGeography,
     to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
@@ -80,6 +86,7 @@ with cte as (
     END AS CurrencyCode,
     CAST(case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end  AS DECIMAL(10, 2)) AS RevenueAmount,
     CAST(case when sil.Quantity>0 then  sil.UnitCostLCY*sil.Quantity*(-1) else 0 end AS DECIMAL(10, 2)) as CostAmount
+
   FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
     INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
@@ -109,7 +116,7 @@ with cte as (
       RIGHT(sih.Sys_DatabaseName, 2),
       sih.`Sell-toCustomerNo_`
     ) = concat(rg.Entity, rg.ResellerID)
-    AND rg.Sys_Silver_IsCurrent = TRUE
+    AND rg.Sys_Silver_IsCurrent = true
     LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr ON it.No_ = datanowarr.sku
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
     LEFT JOIN (
@@ -143,6 +150,34 @@ with cte as (
     ) AS so on sil.OrderNo_ = so.SalesOrderID
     and sil.OrderLineNo_ = so.SalesOrderLineNo
     and sil.Sys_DatabaseName = so.Sys_DatabaseName
+    LEFT JOIN (
+      SELECT
+        Code,
+        Name,
+        Sys_DatabaseName
+      FROM
+        silver_{ENVIRONMENT}.igsql03.dimension_value
+      WHERE
+        DimensionCode = 'VENDOR'
+        AND Sys_Silver_IsCurrent = true
+    ) ven1 ON sil.ShortcutDimension1Code = ven1.Code
+    AND sil.Sys_DatabaseName = ven1.Sys_DatabaseName
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.resource res
+    ON sil.No_ = res.No_
+    AND sil.Sys_DatabaseName = res.Sys_DatabaseName
+    AND res.Sys_Silver_IsCurrent = true
+    LEFT JOIN (
+      SELECT
+        Code,
+        Name,
+        Sys_DatabaseName
+      FROM
+        silver_{ENVIRONMENT}.igsql03.dimension_value
+      WHERE
+        DimensionCode = 'VENDOR'
+        AND Sys_Silver_IsCurrent = true
+    ) ven2 ON res.GlobalDimension1Code = ven2.Code
+    AND res.Sys_DatabaseName = ven2.Sys_DatabaseName
 
     WHERE 
         (UPPER(sil.No_)NOT LIKE 'PORTO'
@@ -163,6 +198,8 @@ with cte as (
     entity.TagetikEntityCode AS EntityCode,
     sil.DocumentNo_ AS DocumentNo,
     sil.LineNo_ AS LineNo,
+    sil.Type AS Type,
+    sil.Description AS SalesInvoiceDescription,
     to_date(sih.PostingDate) AS TransactionDate,
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
     coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
@@ -186,8 +223,10 @@ with cte as (
     coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
     coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
     coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
-    coalesce(ven.Code, 'NaN') AS VendorCode,
-    coalesce(ven.Name, 'NaN') AS VendorNameInternal,
+    --coalesce(ven.Code, 'NaN') AS VendorCode,
+    --coalesce(ven.Name, 'NaN') AS VendorNameInternal,
+    coalesce(ven1.Code,ven.Code,ven2.Code, 'NaN') AS VendorCode,
+    coalesce(ven1.Name,ven.Name,ven2.Name,'NaN') AS VendorNameInternal,
     coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
     '' AS VendorGeography,
     to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
@@ -212,6 +251,7 @@ with cte as (
     END AS CurrencyCode,
     CAST((case when sih.CurrencyFactor>0 then Amount/sih.CurrencyFactor else Amount end) *(-1) AS DECIMAL(10, 2)) AS RevenueAmount,
     CAST(case when sil.Quantity>0 then  sil.UnitCostLCY*sil.Quantity else 0 end AS DECIMAL(10, 2)) as CostAmount
+
   FROM
     silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
     INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
@@ -242,7 +282,7 @@ with cte as (
       sih.`Sell-toCustomerNo_`
     ) = concat(rg.Entity, rg.ResellerID)
     AND rg.Sys_Silver_IsCurrent = TRUE
-    LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr ON it.No_ = datanowarr.sku
+    LEFT JOIN gold_dev.obt.datanowarr ON it.No_ = datanowarr.sku
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
     LEFT JOIN (
       select
@@ -275,6 +315,35 @@ with cte as (
     ) AS so on sil.OrderNo_ = so.SalesOrderID
     and sil.OrderLineNo_ = so.SalesOrderLineNo
     and sil.Sys_DatabaseName = so.Sys_DatabaseName
+    LEFT JOIN (
+      SELECT
+        Code,
+        Name,
+        Sys_DatabaseName
+      FROM
+        silver_{ENVIRONMENT}.igsql03.dimension_value
+      WHERE
+        DimensionCode = 'VENDOR'
+        AND Sys_Silver_IsCurrent = true
+    ) ven1 ON sil.ShortcutDimension1Code = ven1.Code
+    AND sil.Sys_DatabaseName = ven1.Sys_DatabaseName
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.resource res
+    ON sil.No_ = res.No_
+    AND sil.Sys_DatabaseName = res.Sys_DatabaseName
+    AND res.Sys_Silver_IsCurrent = true
+    LEFT JOIN (
+      SELECT
+        Code,
+        Name,
+        Sys_DatabaseName
+      FROM
+        silver_{ENVIRONMENT}.igsql03.dimension_value
+      WHERE
+        DimensionCode = 'VENDOR'
+        AND Sys_Silver_IsCurrent = true
+    ) ven2 ON res.GlobalDimension1Code = ven2.Code
+    AND res.Sys_DatabaseName = ven2.Sys_DatabaseName
+    
     WHERE 
         (UPPER(sil.No_)NOT LIKE 'PORTO'
       AND UPPER(sil.No_)NOT LIKE 'VERSAND%'
@@ -291,6 +360,8 @@ select
   EntityCode,
   DocumentNo,
   LineNo,
+  Type,  
+  SalesInvoiceDescription,
   TransactionDate,
   SalesOrderDate,
   SalesOrderID,
