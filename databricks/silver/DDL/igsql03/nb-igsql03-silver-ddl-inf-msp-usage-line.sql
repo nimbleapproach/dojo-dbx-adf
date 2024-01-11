@@ -33,6 +33,8 @@ CREATE OR REPLACE TABLE inf_msp_usage_line
       SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
+    ,BizTalkGuid STRING
+      COMMENT 'Business Key'
     ,LineNo_ STRING NOT NULL 
       COMMENT 'Business Key'
     ,ItemNo_ STRING
@@ -57,6 +59,16 @@ CREATE OR REPLACE TABLE inf_msp_usage_line
       COMMENT 'Description'
     ,VendorNo_ STRING
       COMMENT 'Description'
+    ,SalesAccountNo_ STRING
+      COMMENT 'GL Account for sales'
+    ,COGSAccountNo_ STRING
+      COMMENT 'GL Account for cost'
+    ,UnitCostPCY Decimal(18,8)
+       COMMENT 'TODO'
+    ,TotalCostPCY Decimal(18,8)
+      COMMENT 'TODO'
+    ,PurchaseCurrencyCode STRING
+      COMMENT 'Purchase currency'
     ,SalesCreditMemoLineNo_ STRING
       COMMENT 'Description'
     ,Sys_RowNumber BIGINT NOT NULL
@@ -74,11 +86,11 @@ CREATE OR REPLACE TABLE inf_msp_usage_line
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
-,CONSTRAINT inf_msp_usage_line_pk PRIMARY KEY(LineNo_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT inf_msp_usage_line_pk PRIMARY KEY(BizTalkGuid,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the header data for MSP. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'enabled')
-CLUSTER BY (LineNo_,Sys_DatabaseName)
+CLUSTER BY (BizTalkGuid,LineNo_,Sys_DatabaseName)
 
 -- COMMAND ----------
 

@@ -33,6 +33,8 @@ CREATE OR REPLACE TABLE inf_msp_usage_header
         SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
+    ,BizTalkGuid STRING
+      COMMENT 'Business Key'
     ,CustomerNo_ STRING NOT NULL 
       COMMENT 'Business Key'
     ,DocumentDate TIMESTAMP NOT NULL
@@ -59,6 +61,8 @@ CREATE OR REPLACE TABLE inf_msp_usage_header
       COMMENT 'TODO'
       ,`CreditMemo` STRING
       COMMENT 'TODO'
+      ,InvoiceBizTalkGuid STRING
+        COMMENT 'TODO'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL
@@ -74,14 +78,14 @@ CREATE OR REPLACE TABLE inf_msp_usage_header
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
-,CONSTRAINT inf_msp_usage_header_pk PRIMARY KEY(CustomerNo_,Sys_DatabaseName, Sys_RowNumber)
+,CONSTRAINT inf_msp_usage_header_pk PRIMARY KEY(BizTalkGuid,CustomerNo_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the header data for MSP. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'enabled')
-CLUSTER BY (CustomerNo_,Sys_DatabaseName)
+CLUSTER BY (BizTalkGuid,CustomerNo_,Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE sales_invoice_header ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE inf_msp_usage_header ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE inf_msp_usage_header ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE inf_msp_usage_header ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
