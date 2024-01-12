@@ -15,365 +15,366 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # COMMAND ----------
 
 # DBTITLE 1,Gold Transactions Platinum
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR Replace VIEW tagetik_consolidation AS
-# MAGIC
-# MAGIC with FX AS(
-# MAGIC   /****** FX Rate  ******/
-# MAGIC     SELECT
-# MAGIC     distinct 
-# MAGIC     COD_SCENARIO as Scenario,
-# MAGIC     COD_PERIODO as Period,case
-# MAGIC       when COD_PERIODO between '10'
-# MAGIC       and '12' then LEFT(COD_SCENARIO, 4)
-# MAGIC       else cast(LEFT(COD_SCENARIO, 4) as int) -1
-# MAGIC     end as Calendar_Year,case
-# MAGIC       when COD_PERIODO between '01'
-# MAGIC       and '09' then right(CONCAT('0' , CAST((COD_PERIODO + 3) AS INT)),2)
-# MAGIC       when COD_PERIODO between '10'
-# MAGIC       and '12' then right(CONCAT('0' , CAST((COD_PERIODO - 9) AS INT)),2)
-# MAGIC     end as Month,
-# MAGIC     COD_VALUTA as Currency,
-# MAGIC     CAST(CAMBIO_PERIODO AS decimal(18, 4)) as Period_FX_rate
-# MAGIC   FROM
-# MAGIC     silver_dev.tag02.dati_cambio
-# MAGIC   where
-# MAGIC     LEFT(COD_SCENARIO, 4) RLIKE '[0-9]'
-# MAGIC     and (
-# MAGIC       COD_SCENARIO LIKE '%ACT%'
-# MAGIC
-# MAGIC     )
-# MAGIC     AND COD_SCENARIO not like '%AUD%'
-# MAGIC     AND COD_SCENARIO not like '%OB%'
-# MAGIC     AND Sys_Silver_IsCurrent =1
-# MAGIC ),
-# MAGIC cte as(
-# MAGIC   SELECT
-# MAGIC     fb.COD_PERIODO AS Period,
-# MAGIC     COD_VALUTA AS Currency_ID,
-# MAGIC     COD_CONTO AS Account_ID,
-# MAGIC     COD_DEST2 AS RPTRegion_ID,
-# MAGIC     COD_DEST4 AS SpecialDeal_ID,CASE
-# MAGIC       WHEN COD_DEST1 IS NULL
-# MAGIC       OR COD_DEST1 = ''
-# MAGIC       OR COD_DEST1 = 'NULL'
-# MAGIC       OR COD_DEST1 IS NULL THEN 'N/A'
-# MAGIC       ELSE COD_DEST1
-# MAGIC     END AS Vendor_ID,
-# MAGIC     fb.COD_SCENARIO AS Scenario_ID,
-# MAGIC     COD_AZIENDA AS Entity_ID,
-# MAGIC     CAST( sum(IMPORTO) * (-1) AS DECIMAL(18, 2)) AS Amount_LCY_Original
-# MAGIC   FROM
-# MAGIC     silver_dev.tag02.dati_saldi_lordi FB
-# MAGIC   WHERE
-# MAGIC     (COD_SCENARIO like '%ACT%')
-# MAGIC     and (COD_SCENARIO  like '%04')
-# MAGIC     and (COD_SCENARIO not like '%OB%')
-# MAGIC     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
-# MAGIC     AND COD_CATEGORIA LIKE '%AMOUNT'
-# MAGIC     AND Sys_Silver_IsCurrent = 1
-# MAGIC     AND Sys_Silver_IsDeleted = 0
-# MAGIC   group by
-# MAGIC     COD_PERIODO,
-# MAGIC     COD_VALUTA,
-# MAGIC     COD_CONTO,
-# MAGIC     COD_DEST2,
-# MAGIC     COD_SCENARIO,
-# MAGIC     COD_AZIENDA,CASE
-# MAGIC       WHEN COD_DEST1 IS NULL
-# MAGIC       OR COD_DEST1 = ''
-# MAGIC       OR COD_DEST1 = 'NULL'
-# MAGIC       OR COD_DEST1 IS NULL THEN 'N/A'
-# MAGIC       ELSE COD_DEST1
-# MAGIC     END,
-# MAGIC     COD_DEST4
-# MAGIC ),
-# MAGIC cte_2 as (
-# MAGIC   select
-# MAGIC     *,
-# MAGIC     MAX(Period) OVER (
-# MAGIC       Partition by Currency_ID,
-# MAGIC       Account_ID,
-# MAGIC       SpecialDeal_ID,
-# MAGIC       RPTRegion_ID,
-# MAGIC       Vendor_ID,
-# MAGIC       Scenario_ID,
-# MAGIC       Entity_ID
-# MAGIC     ) as maxMonth
-# MAGIC   FROM
-# MAGIC     cte as base --where  Account_ID ='309988'
-# MAGIC ),
-# MAGIC cte_3 as(
-# MAGIC   select
-# MAGIC     '12' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '11'
-# MAGIC     and Period = '11'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '11' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '10'
-# MAGIC     and Period = '10'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '10' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '09'
-# MAGIC     and Period = '09'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '09' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '08'
-# MAGIC     and Period = '08'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '08' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '07'
-# MAGIC     and Period = '07'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '07' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '06'
-# MAGIC     and Period = '06'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '06' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '05'
-# MAGIC     and Period = '05'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '05' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '04'
-# MAGIC     and Period = '04'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '04' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '03'
-# MAGIC     and Period = '03'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '03' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '02'
-# MAGIC     and Period = '02'
-# MAGIC   UNION ALL
-# MAGIC     select
-# MAGIC     '02' AS Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC      0 AS Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte_2
-# MAGIC   where
-# MAGIC     maxMonth = '01'
-# MAGIC     and Period = '01'
-# MAGIC UNION ALL
-# MAGIC   SELECT
-# MAGIC     Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC     Amount_LCY_Original
-# MAGIC   from
-# MAGIC     cte
-# MAGIC ),
-# MAGIC cta as(
-# MAGIC   SELECT
-# MAGIC     *,
-# MAGIC     LAG(Amount_LCY_Original, 1, 0) OVER(
-# MAGIC       PARTITION BY Currency_ID,
-# MAGIC       Account_ID,
-# MAGIC       SpecialDeal_ID,
-# MAGIC       RPTRegion_ID,
-# MAGIC       Vendor_ID,
-# MAGIC       Scenario_ID,
-# MAGIC       Entity_ID
-# MAGIC       ORDER BY
-# MAGIC         Period ASC
-# MAGIC     ) AS Amount_LCY_Original_Prev
-# MAGIC   FROM
-# MAGIC     cte_3
-# MAGIC ),
-# MAGIC act as(
-# MAGIC   select
-# MAGIC     case
-# MAGIC       when CTA.Period between '01'
-# MAGIC       and '09' then DATEADD(
-# MAGIC         YEAR,
-# MAGIC         -1,( DATEADD(month, 3,CONCAT( LEFT(Scenario_ID, 4) , '-' , CAST(CTA.Period AS STRING),'-01') )
-# MAGIC         )
-# MAGIC       )
-# MAGIC       when CTA.Period between '10'
-# MAGIC       and '12' then  DATEADD(month, -9,CONCAT( LEFT(Scenario_ID, 4) , '-' , CAST(CTA.Period AS STRING),'-01') )
-# MAGIC     end AS Date_ID ,
-# MAGIC     cta.Period,
-# MAGIC     Currency_ID,
-# MAGIC     Account_ID,
-# MAGIC     case when Account_ID IN(
-# MAGIC                 '309988'
-# MAGIC                 ,'310188'
-# MAGIC                 ,'310288'
-# MAGIC                 ,'310388'
-# MAGIC                 ,'310488'
-# MAGIC                 ,'310588'
-# MAGIC                 ,'310688'
-# MAGIC                 ,'310788'
-# MAGIC                 ,'310888'
-# MAGIC                 ,'310988'
-# MAGIC                 ,'311088'
-# MAGIC                 ,'312088'
-# MAGIC                 ,'313088'
-# MAGIC                 ,'314088'
-# MAGIC                 ,'320988'
-# MAGIC                 ,'322988'
-# MAGIC                 ,'370988'
-# MAGIC                 -- ,'371988' #these two are IC accounts shouldn't be included
-# MAGIC                 -- ,'391988'
-# MAGIC                 )
-# MAGIC      THEN 'TotalRevenue' ELSE 'Others' end as RevenueAccounts,
-# MAGIC     SpecialDeal_ID,
-# MAGIC     RPTRegion_ID,
-# MAGIC     Vendor_ID,
-# MAGIC     Scenario_ID,
-# MAGIC     Entity_ID,
-# MAGIC     (Amount_LCY_Original - Amount_LCY_Original_Prev) AS Amount_LCY_Original,
-# MAGIC     ROUND(
-# MAGIC      
-# MAGIC        CAST((Amount_LCY_Original - Amount_LCY_Original_Prev) * 1 / fxr.Period_FX_rate AS  DECIMAL(18, 2)
-# MAGIC       ),
-# MAGIC       3
-# MAGIC     ) AS Amount_LCY_in_Euro
-# MAGIC   from
-# MAGIC     cta
-# MAGIC     LEFT JOIN (
-# MAGIC       select
-# MAGIC         *
-# MAGIC       from
-# MAGIC         FX
-# MAGIC       where
-# MAGIC         (
-# MAGIC           Scenario LIKE '%ACT%' 
-# MAGIC         )
-# MAGIC     ) AS fxr ON Currency_ID = fxr.Currency
-# MAGIC     AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) = CONCAT(fxr.Scenario , fxr.Period)
-# MAGIC )
-# MAGIC select * from act
-# MAGIC
-# MAGIC
+spark.sql(f"""
+          
+
+CREATE OR Replace VIEW tagetik_consolidation AS
+
+with FX AS(
+  /****** FX Rate  ******/
+    SELECT
+    distinct 
+    COD_SCENARIO as Scenario,
+    COD_PERIODO as Period,case
+      when COD_PERIODO between '10'
+      and '12' then LEFT(COD_SCENARIO, 4)
+      else cast(LEFT(COD_SCENARIO, 4) as int) -1
+    end as Calendar_Year,case
+      when COD_PERIODO between '01'
+      and '09' then right(CONCAT('0' , CAST((COD_PERIODO + 3) AS INT)),2)
+      when COD_PERIODO between '10'
+      and '12' then right(CONCAT('0' , CAST((COD_PERIODO - 9) AS INT)),2)
+    end as Month,
+    COD_VALUTA as Currency,
+    CAST(CAMBIO_PERIODO AS decimal(18, 4)) as Period_FX_rate
+  FROM
+    silver_{ENVIRONMENT}.tag02.dati_cambio
+  where
+    LEFT(COD_SCENARIO, 4) RLIKE '[0-9]'
+    and (
+      COD_SCENARIO LIKE '%ACT%'
+
+    )
+    AND COD_SCENARIO not like '%AUD%'
+    AND COD_SCENARIO not like '%OB%'
+    AND Sys_Silver_IsCurrent =1
+),
+cte as(
+  SELECT
+    fb.COD_PERIODO AS Period,
+    COD_VALUTA AS Currency_ID,
+    COD_CONTO AS Account_ID,
+    COD_DEST2 AS RPTRegion_ID,
+    COD_DEST4 AS SpecialDeal_ID,CASE
+      WHEN COD_DEST1 IS NULL
+      OR COD_DEST1 = ''
+      OR COD_DEST1 = 'NULL'
+      OR COD_DEST1 IS NULL THEN 'N/A'
+      ELSE COD_DEST1
+    END AS Vendor_ID,
+    fb.COD_SCENARIO AS Scenario_ID,
+    COD_AZIENDA AS Entity_ID,
+    CAST( sum(IMPORTO) * (-1) AS DECIMAL(18, 2)) AS Amount_LCY_Original
+  FROM
+    silver_{ENVIRONMENT}.tag02.dati_saldi_lordi FB
+  WHERE
+    (COD_SCENARIO like '%ACT%')
+    and (COD_SCENARIO  like '%04')
+    and (COD_SCENARIO not like '%OB%')
+    AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
+    AND COD_CATEGORIA LIKE '%AMOUNT'
+    AND Sys_Silver_IsCurrent = 1
+    AND Sys_Silver_IsDeleted = 0
+  group by
+    COD_PERIODO,
+    COD_VALUTA,
+    COD_CONTO,
+    COD_DEST2,
+    COD_SCENARIO,
+    COD_AZIENDA,CASE
+      WHEN COD_DEST1 IS NULL
+      OR COD_DEST1 = ''
+      OR COD_DEST1 = 'NULL'
+      OR COD_DEST1 IS NULL THEN 'N/A'
+      ELSE COD_DEST1
+    END,
+    COD_DEST4
+),
+cte_2 as (
+  select
+    *,
+    MAX(Period) OVER (
+      Partition by Currency_ID,
+      Account_ID,
+      SpecialDeal_ID,
+      RPTRegion_ID,
+      Vendor_ID,
+      Scenario_ID,
+      Entity_ID
+    ) as maxMonth
+  FROM
+    cte as base --where  Account_ID ='309988'
+),
+cte_3 as(
+  select
+    '12' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '11'
+    and Period = '11'
+  UNION ALL
+    select
+    '11' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '10'
+    and Period = '10'
+  UNION ALL
+    select
+    '10' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '09'
+    and Period = '09'
+  UNION ALL
+    select
+    '09' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '08'
+    and Period = '08'
+  UNION ALL
+    select
+    '08' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '07'
+    and Period = '07'
+  UNION ALL
+    select
+    '07' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '06'
+    and Period = '06'
+  UNION ALL
+    select
+    '06' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '05'
+    and Period = '05'
+  UNION ALL
+    select
+    '05' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '04'
+    and Period = '04'
+  UNION ALL
+    select
+    '04' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '03'
+    and Period = '03'
+  UNION ALL
+    select
+    '03' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '02'
+    and Period = '02'
+  UNION ALL
+    select
+    '02' AS Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+     0 AS Amount_LCY_Original
+  from
+    cte_2
+  where
+    maxMonth = '01'
+    and Period = '01'
+UNION ALL
+  SELECT
+    Period,
+    Currency_ID,
+    Account_ID,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+    Amount_LCY_Original
+  from
+    cte
+),
+cta as(
+  SELECT
+    *,
+    LAG(Amount_LCY_Original, 1, 0) OVER(
+      PARTITION BY Currency_ID,
+      Account_ID,
+      SpecialDeal_ID,
+      RPTRegion_ID,
+      Vendor_ID,
+      Scenario_ID,
+      Entity_ID
+      ORDER BY
+        Period ASC
+    ) AS Amount_LCY_Original_Prev
+  FROM
+    cte_3
+),
+act as(
+  select
+    case
+      when CTA.Period between '01'
+      and '09' then DATEADD(
+        YEAR,
+        -1,( DATEADD(month, 3,CONCAT( LEFT(Scenario_ID, 4) , '-' , CAST(CTA.Period AS STRING),'-01') )
+        )
+      )
+      when CTA.Period between '10'
+      and '12' then  DATEADD(month, -9,CONCAT( LEFT(Scenario_ID, 4) , '-' , CAST(CTA.Period AS STRING),'-01') )
+    end AS Date_ID ,
+    cta.Period,
+    Currency_ID,
+    Account_ID,
+    case when Account_ID IN(
+                '309988'
+                ,'310188'
+                ,'310288'
+                ,'310388'
+                ,'310488'
+                ,'310588'
+                ,'310688'
+                ,'310788'
+                ,'310888'
+                ,'310988'
+                ,'311088'
+                ,'312088'
+                ,'313088'
+                ,'314088'
+                ,'320988'
+                ,'322988'
+                ,'370988'
+                -- ,'371988' #these two are IC accounts shouldn't be included
+                -- ,'391988'
+                )
+     THEN 'TotalRevenue' ELSE 'Others' end as RevenueAccounts,
+    SpecialDeal_ID,
+    RPTRegion_ID,
+    Vendor_ID,
+    Scenario_ID,
+    Entity_ID,
+    (Amount_LCY_Original - Amount_LCY_Original_Prev) AS Amount_LCY_Original,
+    ROUND(
+     
+       CAST((Amount_LCY_Original - Amount_LCY_Original_Prev) * 1 / fxr.Period_FX_rate AS  DECIMAL(18, 2)
+      ),
+      3
+    ) AS Amount_LCY_in_Euro
+  from
+    cta
+    LEFT JOIN (
+      select
+        *
+      from
+        FX
+      where
+        (
+          Scenario LIKE '%ACT%' 
+        )
+    ) AS fxr ON Currency_ID = fxr.Currency
+    AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) = CONCAT(fxr.Scenario , fxr.Period)
+)
+select * from act
+
+""")
