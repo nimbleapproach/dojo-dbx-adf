@@ -15,75 +15,77 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # COMMAND ----------
 
 # DBTITLE 1,Gold Transactions Platinum
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR Replace VIEW globaltransactions AS
-# MAGIC
-# MAGIC
-# MAGIC SELECT
-# MAGIC   g.GroupEntityCode,
-# MAGIC   g.EntityCode,
-# MAGIC   g.TransactionDate,
-# MAGIC   g.SalesOrderDate,
-# MAGIC   g.SalesOrderID,
-# MAGIC   g.SalesOrderItemID,
-# MAGIC   g.SKUInternal,
-# MAGIC   g.SKUMaster,
-# MAGIC   g.Description,
-# MAGIC   g.ProductTypeInternal,
-# MAGIC   g.ProductTypeMaster,
-# MAGIC   g.CommitmentDuration1Master,
-# MAGIC   g.CommitmentDuration2Master,
-# MAGIC   g.BillingFrequencyMaster,
-# MAGIC   g.ConsumptionModelMaster,
-# MAGIC   g.VendorCode,
-# MAGIC   g.VendorNameInternal,
-# MAGIC   g.VendorNameMaster,
-# MAGIC   g.VendorGeography,
-# MAGIC   g.VendorStartDate,
-# MAGIC   g.ResellerCode,
-# MAGIC   g.ResellerNameInternal,
-# MAGIC   g.ResellerGeographyInternal,
-# MAGIC   g.ResellerStartDate,
-# MAGIC   g.ResellerGroupCode,
-# MAGIC   g.ResellerGroupName,  
-# MAGIC   g.ResellerGroupStartDate,
-# MAGIC   g.CurrencyCode,
-# MAGIC   g.RevenueAmount,
-# MAGIC   CASE 
-# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-# MAGIC   THEN e1.Period_FX_rate
-# MAGIC   ELSE e.Period_FX_rate
-# MAGIC   END AS Period_FX_rate,
-# MAGIC   CASE 
-# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-# MAGIC   THEN cast(g.RevenueAmount / e1.Period_FX_rate AS DECIMAL(10,2))
-# MAGIC   ELSE cast(g.RevenueAmount / e.Period_FX_rate AS DECIMAL(10,2))
-# MAGIC   END AS RevenueAmount_Euro,
-# MAGIC   g.GP1,
-# MAGIC   CASE 
-# MAGIC   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-# MAGIC   THEN cast(g.GP1 / e1.Period_FX_rate AS DECIMAL(10,2))
-# MAGIC   ELSE cast(g.GP1 / e.Period_FX_rate AS DECIMAL(10,2))
-# MAGIC   END AS GP1_Euro
-# MAGIC FROM 
-# MAGIC   gold_dev.obt.globaltransactions g
-# MAGIC LEFT JOIN
-# MAGIC   gold_dev.obt.exchange_rate e
-# MAGIC ON
-# MAGIC   e.Calendar_Year = cast(year(g.TransactionDate) as string)
-# MAGIC AND
-# MAGIC   e.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
-# MAGIC AND
-# MAGIC   g.EntityCode = e.COD_AZIENDA
-# MAGIC AND
-# MAGIC   e.ScenarioGroup = 'Actual'
-# MAGIC --Only for VU and entitycode 'NOTINTAGETIK'
-# MAGIC LEFT JOIN
-# MAGIC   (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_dev.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
-# MAGIC ON
-# MAGIC   e1.Calendar_Year = cast(year(g.TransactionDate) as string)
-# MAGIC AND
-# MAGIC   e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
-# MAGIC AND
-# MAGIC   g.CurrencyCode = cast(e1.Currency as string)
+spark.sql(f"""
+          
+
+CREATE OR Replace VIEW globaltransactions AS
+
+
+SELECT
+  g.GroupEntityCode,
+  g.EntityCode,
+  g.TransactionDate,
+  g.SalesOrderDate,
+  g.SalesOrderID,
+  g.SalesOrderItemID,
+  g.SKUInternal,
+  g.SKUMaster,
+  g.Description,
+  g.ProductTypeInternal,
+  g.ProductTypeMaster,
+  g.CommitmentDuration1Master,
+  g.CommitmentDuration2Master,
+  g.BillingFrequencyMaster,
+  g.ConsumptionModelMaster,
+  g.VendorCode,
+  g.VendorNameInternal,
+  g.VendorNameMaster,
+  g.VendorGeography,
+  g.VendorStartDate,
+  g.ResellerCode,
+  g.ResellerNameInternal,
+  g.ResellerGeographyInternal,
+  g.ResellerStartDate,
+  g.ResellerGroupCode,
+  g.ResellerGroupName,  
+  g.ResellerGroupStartDate,
+  g.CurrencyCode,
+  g.RevenueAmount,
+  CASE 
+  WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+  THEN e1.Period_FX_rate
+  ELSE e.Period_FX_rate
+  END AS Period_FX_rate,
+  CASE 
+  WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+  THEN cast(g.RevenueAmount / e1.Period_FX_rate AS DECIMAL(10,2))
+  ELSE cast(g.RevenueAmount / e.Period_FX_rate AS DECIMAL(10,2))
+  END AS RevenueAmount_Euro,
+  g.GP1,
+  CASE 
+  WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+  THEN cast(g.GP1 / e1.Period_FX_rate AS DECIMAL(10,2))
+  ELSE cast(g.GP1 / e.Period_FX_rate AS DECIMAL(10,2))
+  END AS GP1_Euro
+FROM 
+  gold_{ENVIRONMENT}.obt.globaltransactions g
+LEFT JOIN
+  gold_{ENVIRONMENT}.obt.exchange_rate e
+ON
+  e.Calendar_Year = cast(year(g.TransactionDate) as string)
+AND
+  e.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
+AND
+  g.EntityCode = e.COD_AZIENDA
+AND
+  e.ScenarioGroup = 'Actual'
+--Only for VU and entitycode 'NOTINTAGETIK'
+LEFT JOIN
+  (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_{ENVIRONMENT}.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
+ON
+  e1.Calendar_Year = cast(year(g.TransactionDate) as string)
+AND
+  e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
+AND
+  g.CurrencyCode = cast(e1.Currency as string)
+  """)
