@@ -282,7 +282,7 @@ with cte as (
       sih.`Sell-toCustomerNo_`
     ) = concat(rg.Entity, rg.ResellerID)
     AND rg.Sys_Silver_IsCurrent = TRUE
-    LEFT JOIN gold_dev.obt.datanowarr ON it.No_ = datanowarr.sku
+    LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr ON it.No_ = datanowarr.sku
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
     LEFT JOIN (
       select
