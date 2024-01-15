@@ -47,6 +47,10 @@ CREATE OR REPLACE TABLE sales_invoice_header
       COMMENT 'TODO'
     ,`CurrencyFactor` DECIMAL(10,4)
       COMMENT 'TODO'
+    ,ProcessCode STRING
+      COMMENT 'TODO'
+    ,`MSPUsageHeaderBizTalkGuid` STRING
+      COMMENT 'identifier if an invoice is created via MSP portal'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL
