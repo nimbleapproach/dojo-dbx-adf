@@ -180,6 +180,12 @@
 						"dependencyConditions": [
 							"Succeeded"
 						]
+					},
+					{
+						"activity": "PL_00_VUZION_CRM_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
 					}
 				],
 				"userProperties": [],
@@ -258,6 +264,19 @@
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "PL_00_DCB_Load_File_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_00_VUZION_CRM_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_VUZION_CRM_MASTER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
