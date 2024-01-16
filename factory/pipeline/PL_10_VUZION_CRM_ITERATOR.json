@@ -1,0 +1,103 @@
+{
+	"name": "PL_10_VUZION_CRM_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get EDW Tables",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_VUZION_D365_TABLES",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachView",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get EDW Tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get EDW Tables').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "PL_20_VUZION_CRM_ITERATOR",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_VUZION_CRM_Load_Entity",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_TableName": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"pm_full_load": {
+										"value": "@pipeline().parameters.pm_full_load",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_full_load": {
+				"type": "bool"
+			}
+		},
+		"variables": {
+			"Watermark_New": {
+				"type": "String"
+			},
+			"Watermark_Delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION [CRM]"
+		},
+		"annotations": []
+	}
+}

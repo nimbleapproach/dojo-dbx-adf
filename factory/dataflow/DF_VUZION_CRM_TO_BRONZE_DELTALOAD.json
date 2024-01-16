@@ -1,0 +1,105 @@
+{
+	"name": "DF_VUZION_CRM_TO_BRONZE_DELTALOAD",
+	"properties": {
+		"folder": {
+			"name": "VUZION"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_VUZION_CRM_DYNAMICS",
+						"type": "DatasetReference"
+					},
+					"name": "GetEntity"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "GetBronzeData"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteDeltaTable"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddBronzeLoadDate"
+				},
+				{
+					"name": "GetMaxWatermark"
+				},
+				{
+					"name": "Increment"
+				},
+				{
+					"name": "AddCurrentWatermark"
+				},
+				{
+					"name": "DropCurrentWatermark"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     pm_TableName as string",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
+				"     manifestType: 'manifest',",
+				"     mode: 'read') ~> GetEntity",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: ('vuzion_crm/'+ $pm_TableName)) ~> GetBronzeData",
+				"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('modifiedon')))) ~> GetMaxWatermark",
+				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('modifiedon')) > CurrentWatermark)) ~> Increment",
+				"GetEntity, GetMaxWatermark join(true(),",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'right')~> AddCurrentWatermark",
+				"Increment select(mapColumn(",
+				"          each(match(name!='CurrentWatermark'))",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
+				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: ('vuzion_crm/'+ $pm_TableName),",
+				"     mergeSchema: true,",
+				"     autoCompact: true,",
+				"     optimizedWrite: true,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+			]
+		}
+	}
+}

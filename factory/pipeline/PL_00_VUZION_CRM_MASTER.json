@@ -1,0 +1,44 @@
+{
+	"name": "PL_00_VUZION_CRM_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_VUZION_CRM_ITERATOR",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_VUZION_CRM_ITERATOR",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_full_load": {
+							"value": "@pipeline().parameters.pm_full_load",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pm_full_load": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"variables": {
+			"Watermark_New": {
+				"type": "String"
+			},
+			"Watermark_Delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION [CRM]"
+		},
+		"annotations": []
+	}
+}

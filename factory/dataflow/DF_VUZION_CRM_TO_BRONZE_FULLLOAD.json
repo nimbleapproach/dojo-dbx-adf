@@ -1,0 +1,82 @@
+{
+	"name": "DF_VUZION_CRM_TO_BRONZE_FULLLOAD",
+	"properties": {
+		"folder": {
+			"name": "VUZION"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_VUZION_CRM_DYNAMICS",
+						"type": "DatasetReference"
+					},
+					"name": "GetEntity"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteDeltaTable"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddBronzeLoadDate"
+				},
+				{
+					"name": "ApplyParquetName"
+				}
+			],
+			"udfLibraries": [
+				{
+					"referenceName": "General",
+					"type": "DataFlowReference"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     pm_TableName as string",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     dateFormats: ['dd/MM/yyyy'],",
+				"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
+				"     manifestType: 'manifest',",
+				"     mode: 'read') ~> GetEntity",
+				"ApplyParquetName derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+				"GetEntity select(mapColumn(",
+				"          each(match(true()),",
+				"               applyParquetNaming($$) = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> ApplyParquetName",
+				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: ('vuzion_crm/'+ $pm_TableName),",
+				"     mergeSchema: true,",
+				"     autoCompact: true,",
+				"     optimizedWrite: true,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+			]
+		}
+	}
+}

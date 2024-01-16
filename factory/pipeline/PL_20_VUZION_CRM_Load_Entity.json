@@ -1,0 +1,171 @@
+{
+	"name": "PL_20_VUZION_CRM_Load_Entity",
+	"properties": {
+		"activities": [
+			{
+				"name": "IfFullLoad",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@pipeline().parameters.pm_full_load",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "DF_VUZION_CRM_TO_BRONZE_DELTALOAD",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "DF_VUZION_CRM_TO_BRONZE_DELTALOAD",
+									"type": "DataFlowReference",
+									"parameters": {
+										"pm_TableName": {
+											"value": "'@{pipeline().parameters.pm_TableName}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"GetEntity": {
+											"pm_TableName": {
+												"value": "@pipeline().parameters.pm_TableName",
+												"type": "Expression"
+											},
+											"pm_Service_Uri": {
+												"value": "@pipeline().globalParameters.gpm_Vuzion_CRM_Uri",
+												"type": "Expression"
+											},
+											"pm_Service_Principal_Id": {
+												"value": "@pipeline().globalParameters.gpm_Vuzion_CRM_Service_Principal_Id",
+												"type": "Expression"
+											},
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceParameters": {
+										"GetBronzeData": {
+											"linkedService": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"WriteDeltaTable": {
+											"linkedService": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										}
+									}
+								},
+								"integrationRuntime": {
+									"referenceName": "ir-ig-managed-dev-westeurope",
+									"type": "IntegrationRuntimeReference"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "DF_VUZION_CRM_TO_BRONZE_FULLLOAD",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "DF_VUZION_CRM_TO_BRONZE_FULLLOAD",
+									"type": "DataFlowReference",
+									"parameters": {
+										"pm_TableName": {
+											"value": "'@{pipeline().parameters.pm_TableName}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"GetEntity": {
+											"pm_TableName": {
+												"value": "@pipeline().parameters.pm_TableName",
+												"type": "Expression"
+											},
+											"pm_Service_Uri": {
+												"value": "@pipeline().globalParameters.gpm_Vuzion_CRM_Uri",
+												"type": "Expression"
+											},
+											"pm_Service_Principal_Id": {
+												"value": "@pipeline().globalParameters.gpm_Vuzion_CRM_Service_Principal_Id",
+												"type": "Expression"
+											},
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceParameters": {
+										"WriteDeltaTable": {
+											"linkedService": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										}
+									}
+								},
+								"integrationRuntime": {
+									"referenceName": "ir-ig-managed-dev-westeurope",
+									"type": "IntegrationRuntimeReference"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_TableName": {
+				"type": "string"
+			},
+			"pm_full_load": {
+				"type": "bool"
+			}
+		},
+		"variables": {
+			"Watermark_Value": {
+				"type": "String"
+			},
+			"Watermark_Delta": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION [CRM]"
+		},
+		"annotations": []
+	}
+}
