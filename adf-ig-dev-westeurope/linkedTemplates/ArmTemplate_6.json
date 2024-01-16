@@ -1680,6 +1680,18 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "PL_00_VUZION_CRM_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							},
+							{
+								"activity": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"userProperties": [],
@@ -1768,6 +1780,34 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
+					},
+					{
+						"name": "PL_00_VUZION_CRM_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_VUZION_CRM_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -1789,7 +1829,9 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NETSUITE_Load_File_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NUVIAS_OPERATIONS_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NETSAFE_Load_File_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_DCB_Load_File_MASTER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_00_DCB_Load_File_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_VUZION_CRM_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER')]"
 			]
 		},
 		{
