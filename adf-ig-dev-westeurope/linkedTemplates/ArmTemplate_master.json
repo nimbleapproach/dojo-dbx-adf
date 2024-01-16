@@ -72,6 +72,10 @@
 			"type": "string",
 			"defaultValue": "secret-tagetikdbserver01-connectionstring"
 		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
+		},
 		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
 			"defaultValue": false
@@ -164,6 +168,9 @@
 					},
 					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]"
 					}
 				}
 			},
