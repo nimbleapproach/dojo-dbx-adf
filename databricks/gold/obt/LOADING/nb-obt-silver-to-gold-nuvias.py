@@ -95,7 +95,7 @@ with cte as (
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.dirpartytable ON dirpartytable.RECID = ven.Party
     AND dirpartytable.Sys_Silver_IsCurrent = 1
     */
-    LEFT JOIN silver_dev.nuav_prod_sqlbyod.dbo_v_distinctitems AS disit
+    LEFT JOIN silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_v_distinctitems AS disit
     ON trans.ItemId = disit.ItemId
     AND CASE WHEN UPPER(trans.DataAreaId) = 'NUK1' then 'NGS1'
     WHEN UPPER(trans.DataAreaId) IN ('NPO1','NDK1','NNO1','NAU1','NCH1','NSW1','NFR1','NNL1', 'NES1','NDE1','NFI1') then 'NNL2'
