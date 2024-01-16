@@ -23,6 +23,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,_SysRowId STRING NOT NULL
 # MAGIC       COMMENT 'Technical Key'
+# MAGIC     ,RECID	LONG	NOT NULL
+# MAGIC       COMMENT 'TODO'
 # MAGIC     ,ItemId	STRING	NOT NULL
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DataAreaId	STRING	
@@ -45,6 +47,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
+# MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC       COMMENT 'Flag if this is the current version.'
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
+# MAGIC       COMMENT 'Flag if this is the deleted version.'
 # MAGIC ,CONSTRAINT inventtable_pk PRIMARY KEY(ItemId,DataAreaId,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for inventtable. \n' 

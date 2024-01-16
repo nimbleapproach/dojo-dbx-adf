@@ -37,8 +37,12 @@ with cte as (
     coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
     coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
     coalesce(datanowarr.Consumption_Model, 'NaN') AS ConsumptionModelMaster,
+    /*
     coalesce(prod.SAG_NGS1VendorID,'NaN') AS VendorCode,
     coalesce(dirpartytable.name   ,'NaN') AS VendorNameInternal,
+    */
+    coalesce(disit.PrimaryVendorID,'NaN') AS VendorCode,
+    coalesce(disit.PrimaryVendorName,'NaN') AS VendorNameInternal,
     coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
     '' AS VendorGeography,
     to_date('1900-01-01') AS VendorStartDate,
@@ -85,10 +89,23 @@ with cte as (
     and invitgroup.Sys_Silver_IsCurrent = 1
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.ecoresproduct AS prod ON trans.ItemId = prod.DisplayProductNumber
     AND prod.Sys_Silver_IsCurrent = 1
+    /*
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.vendtable AS ven ON ven.AccountNum = prod.SAG_NGS1VendorID
     AND ven.Sys_Silver_IsCurrent = 1
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.dirpartytable ON dirpartytable.RECID = ven.Party
     AND dirpartytable.Sys_Silver_IsCurrent = 1
+    */
+    LEFT JOIN silver_dev.nuav_prod_sqlbyod.dbo_v_distinctitems AS disit
+    ON trans.ItemId = disit.ItemId
+    AND CASE WHEN UPPER(trans.DataAreaId) = 'NUK1' then 'NGS1'
+    WHEN UPPER(trans.DataAreaId) IN ('NPO1','NDK1','NNO1','NAU1','NCH1','NSW1','NFR1','NNL1', 'NES1','NDE1','NFI1') then 'NNL2'
+    ELSE UPPER(trans.DataAreaId)
+    END =
+    CASE WHEN UPPER(disit.CompanyID) = 'NUK1' then 'NGS1'
+    WHEN UPPER(disit.CompanyID) IN ('NPO1','NDK1','NNO1','NAU1','NCH1','NSW1','NFR1','NNL1','NES1','NDE1','NFI1') then 'NNL2'
+    ELSE UPPER(disit.CompanyID)
+    END
+    AND disit.Sys_Silver_IsCurrent = true
     LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON inv.InvoiceAccount = rg.ResellerID
     and rg.InfinigateCompany = 'Nuvias'
     AND upper(trans.DataAreaId) = rg.Entity
@@ -176,7 +193,6 @@ with cte as (
     trans.Sys_Silver_IsCurrent = 1
     AND UPPER(trans.DataAreaId) NOT IN ('NGS1', 'NNL2')
     AND UPPER(LEFT(trans.InvoiceId, 2)) IN ('IN', 'CR'))
-
 
 select
   GroupEntityCode,

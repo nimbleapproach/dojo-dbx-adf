@@ -10,30 +10,36 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC USE SCHEMA nuvias_operations;
+# MAGIC USE SCHEMA nuav_prod_sqlbyod;
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE ecoresproduct
+# MAGIC CREATE OR REPLACE TABLE dbo_v_distinctitems
 # MAGIC   ( 
 # MAGIC     SID bigint
-# MAGIC         GENERATED ALWAYS AS IDENTITY
-# MAGIC         COMMENT 'Surrogate Key'
-# MAGIC     ,_SysRowId STRING NOT NULL
-# MAGIC       COMMENT 'Technical Key'
-# MAGIC     ,RECID	LONG	NOT NULL
-# MAGIC       COMMENT 'Business key'
-# MAGIC     ,DisplayProductNumber STRING
+# MAGIC       GENERATED ALWAYS AS IDENTITY
+# MAGIC       COMMENT 'Surrogate Key'
+# MAGIC     ,ItemID	STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,RECVERSION INT
+# MAGIC     ,CompanyID	STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,SAG_NGS1VendorID STRING
+# MAGIC     ,ItemName STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,LastProcessedChange_DateTime	TIMESTAMP	
+# MAGIC     ,ItemDescription STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,DataLakeModified_DateTime	TIMESTAMP	
+# MAGIC     ,ItemModelGroupID STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,ItemModelGroupName STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,ItemGroupID STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,ItemGroupName STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,PrimaryVendorID STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,PrimaryVendorName STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -49,16 +55,16 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Flag if this is the current version.'
 # MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the deleted version.'
-# MAGIC ,CONSTRAINT ecoresproduct_pk PRIMARY KEY(DisplayProductNumber,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT dbo_v_distinctitems_pk PRIMARY KEY(ItemID,CompanyID,Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the line data for ecoresproduct. \n' 
+# MAGIC COMMENT 'This table contains the line data for ara_dim_company. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (DisplayProductNumber)
+# MAGIC CLUSTER BY (ItemID,CompanyID)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE ecoresproduct ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE ecoresproduct ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE ecoresproduct ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_v_distinctitems ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_v_distinctitems ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_v_distinctitems ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
