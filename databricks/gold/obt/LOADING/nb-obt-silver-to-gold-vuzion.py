@@ -264,8 +264,18 @@ SELECT
   ResellerGroupStartDate,
   CurrencyCode,
   RevenueAmount,
-  CAST(RevenueAmount - (RevenueAmount / c.GPPercentage) AS DECIMAL(10,2)) AS CostAmount,
-  CAST((RevenueAmount / c.GPPercentage) AS DECIMAL(10,2)) AS GP1
+  CASE 
+  WHEN c.GPPercentage IS NOT NULL THEN
+  CAST(RevenueAmount - ((RevenueAmount * c.GPPercentage)/100) AS DECIMAL(10,2))
+  ELSE
+  0.00
+  END AS CostAmount,
+  CASE 
+  WHEN c.GPPercentage IS NOT NULL THEN
+  CAST((RevenueAmount * c.GPPercentage)/100 AS DECIMAL(10,2)) 
+  ELSE
+  0.00
+  END AS GP1
 FROM 
   gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1 g
 LEFT JOIN 
