@@ -66,7 +66,14 @@ SELECT
   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
   THEN cast(g.GP1 / e1.Period_FX_rate AS DECIMAL(10,2))
   ELSE cast(g.GP1 / e.Period_FX_rate AS DECIMAL(10,2))
-  END AS GP1_Euro
+  END AS GP1_Euro,
+  --Added Cost Amount
+  g.CostAmount AS COGS,
+  CASE 
+  WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+  THEN cast(g.CostAmount / e1.Period_FX_rate AS DECIMAL(10,2))
+  ELSE cast(g.CostAmount / e.Period_FX_rate AS DECIMAL(10,2))
+  END AS COGS_Euro
 FROM 
   gold_{ENVIRONMENT}.obt.globaltransactions g
 LEFT JOIN
