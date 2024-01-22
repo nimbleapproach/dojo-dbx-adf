@@ -27,10 +27,7 @@
 				"folderPath": "vuzion/gp/pending",
 				"fileSystem": "external"
 			},
-			"sheetIndex": {
-				"value": "0",
-				"type": "Expression"
-			},
+			"sheetIndex": 0,
 			"firstRowAsHeader": true
 		},
 		"schema": []
