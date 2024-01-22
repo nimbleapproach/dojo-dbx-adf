@@ -28,6 +28,16 @@
 				{
 					"name": "AddSystemColumns",
 					"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+				},
+				{
+					"name": "RenameColumns",
+					"description": "Add columns to rename"
+				}
+			],
+			"udfLibraries": [
+				{
+					"referenceName": "General",
+					"type": "DataFlowReference"
 				}
 			],
 			"scriptLines": [
@@ -40,7 +50,15 @@
 				"     moveFiles: ['vuzion/gp/pending','vuzion/gp/archived'],",
 				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
 				"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-				"AddSystemColumns sink(allowSchemaDrift: true,",
+				"AddSystemColumns select(mapColumn(",
+				"          Sys_FileName,",
+				"          Sys_Bronze_InsertDateTime_UTC,",
+				"          each(match(true()),",
+				"               applyParquetNaming($$) = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+				"RenameColumns sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
 				"     fileSystem: 'bronze',",
