@@ -22,19 +22,19 @@
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "PL_20_NETSAFE_Load_File",
+							"name": "PL_20_VUZION_GP_Load_File",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_NETSAFE_Load_File",
+									"referenceName": "PL_20_VUZION_GP_Load_File",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
 									"pm_FileName": {
-										"value": "@split(item().name,'.')[0]",
+										"value": "@item()",
 										"type": "Expression"
 									}
 								}
