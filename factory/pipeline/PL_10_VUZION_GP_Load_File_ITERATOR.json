@@ -57,7 +57,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "DS_BINARY_NETSAFE",
+						"referenceName": "DS_BINARY_VUZION_GP",
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_Environment": {
