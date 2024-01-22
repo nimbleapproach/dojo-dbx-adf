@@ -2,7 +2,7 @@
 	"name": "DF_VUZION_GP_EXCEL_LOAD",
 	"properties": {
 		"folder": {
-			"name": "VUZION/GP"
+			"name": "VUZION/GP [Percentage]"
 		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
