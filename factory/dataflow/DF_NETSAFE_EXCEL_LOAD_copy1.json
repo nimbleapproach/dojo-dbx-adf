@@ -1,0 +1,116 @@
+{
+	"name": "DF_NETSAFE_EXCEL_LOAD_copy1",
+	"properties": {
+		"folder": {
+			"name": "VUZION/GP"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_ADLS_DV_NETSAFE_EXCEL",
+						"type": "DatasetReference"
+					},
+					"name": "GetExcelFile"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteDeltaFiles"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddSystemColumns",
+					"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     pm_FileName as string",
+				"}",
+				"source(output(",
+				"          {Invoice Date} as string,",
+				"          {Sales Order Number} as string,",
+				"          {Invoice Number} as string,",
+				"          {Item ID} as string,",
+				"          SKU as string,",
+				"          {Item Type} as string,",
+				"          {Customer Name} as string,",
+				"          Qty as float,",
+				"          {Transaction Currency} as string,",
+				"          {Revenue Transaction Currency} as double,",
+				"          {Cost Transaction Currency} as double,",
+				"          {Margin Transaction Currency} as double,",
+				"          {Exchange Rate} as string,",
+				"          {Revenue GBP} as string,",
+				"          {Cost GBP} as string,",
+				"          {Margin GBP} as string,",
+				"          {Vendor ID} as string,",
+				"          {Vendor Name} as string,",
+				"          {Account Manager} as string,",
+				"          {Order Type} as string,",
+				"          {Quote ID} as string,",
+				"          {Customer Account} as string,",
+				"          {SKU Description} as string,",
+				"          Country as string,",
+				"          {Invoice Line Nb} as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     moveFiles: ['netsafe/pending','netsafe/archived'],",
+				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+				"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+				"AddSystemColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     fileSystem: 'bronze',",
+				"     folderPath: 'netsafe/invoicedata',",
+				"     compressionCodec: 'snappy',",
+				"     partitionFileNames:[(concat('bronze-netsafe-',$pm_FileName,'-',toString(currentUTC()),'.snappy.parquet')\r",
+				")],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          Invoice_Date = {Invoice Date},",
+				"          Sales_Order_Number = {Sales Order Number},",
+				"          Invoice_Number = {Invoice Number},",
+				"          Item_ID = {Item ID},",
+				"          SKU,",
+				"          Item_Type = {Item Type},",
+				"          Customer_Name = {Customer Name},",
+				"          Qty,",
+				"          Transaction_Currency = {Transaction Currency},",
+				"          Revenue_Transaction_Currency = {Revenue Transaction Currency},",
+				"          Cost_Transaction_Currency = {Cost Transaction Currency},",
+				"          Margin_Transaction_Currency = {Margin Transaction Currency},",
+				"          Exchange_Rate = {Exchange Rate},",
+				"          Revenue_GBP = {Revenue GBP},",
+				"          Cost_GBP = {Cost GBP},",
+				"          Margin_GBP = {Margin GBP},",
+				"          Vendor_ID = {Vendor ID},",
+				"          Vendor_Name = {Vendor Name},",
+				"          Account_Manager = {Account Manager},",
+				"          Order_Type = {Order Type},",
+				"          Quote_ID = {Quote ID},",
+				"          Customer_Account = {Customer Account},",
+				"          SKU_Description = {SKU Description},",
+				"          Country,",
+				"          Invoice_Line_Nb = {Invoice Line Nb},",
+				"          Sys_FileName,",
+				"          Sys_Bronze_InsertDateTime_UTC",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
+			]
+		}
+	}
+}
