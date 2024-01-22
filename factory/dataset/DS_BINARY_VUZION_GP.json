@@ -24,7 +24,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "netsafe/pending",
+				"folderPath": "vuzion/gp/pending",
 				"fileSystem": "external"
 			}
 		}
