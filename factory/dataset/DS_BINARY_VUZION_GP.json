@@ -1,5 +1,5 @@
 {
-	"name": "DS_BINARY_NETSAFE_copy1",
+	"name": "DS_BINARY_VUZION_GP",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_ADLS_DV",
