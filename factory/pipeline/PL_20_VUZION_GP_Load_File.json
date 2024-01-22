@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "DF_NETSAFE_EXCEL_LOAD",
+				"name": "DF_VUZION_GP_EXCEL_LOAD",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -16,11 +16,11 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "DF_NETSAFE_EXCEL_LOAD",
+						"referenceName": "DF_VUZION_GP_EXCEL_LOAD",
 						"type": "DataFlowReference",
 						"parameters": {
 							"pm_FileName": {
-								"value": "@concat('\"',pipeline().parameters.pm_FileName,'\"')",
+								"value": "'@{concat('\"',pipeline().parameters.pm_FileName,'\"')}'",
 								"type": "Expression"
 							}
 						},
@@ -43,9 +43,9 @@
 							}
 						}
 					},
-					"integrationRuntime": {
-						"referenceName": "ir-ig-managed-dev-westeurope",
-						"type": "IntegrationRuntimeReference"
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
 					},
 					"traceLevel": "Fine"
 				}
