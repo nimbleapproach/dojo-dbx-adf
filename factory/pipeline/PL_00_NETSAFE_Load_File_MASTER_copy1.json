@@ -1,0 +1,24 @@
+{
+	"name": "PL_00_NETSAFE_Load_File_MASTER_copy1",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_NETSAFE_Load_File_ITERATOR",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_NETSAFE_Load_File_ITERATOR",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/VUZION/GP [Percentage]"
+		},
+		"annotations": []
+	}
+}
