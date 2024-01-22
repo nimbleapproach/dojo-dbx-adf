@@ -20,7 +20,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"pm_FileName": {
-								"value": "'@{concat('\"',pipeline().parameters.pm_FileName,'\"')}'",
+								"value": "'@{concat('',pipeline().parameters.pm_FileName,'')}'",
 								"type": "Expression"
 							}
 						},
