@@ -42,13 +42,17 @@ with cte as
   coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
   'AE1' AS VendorGeography,
   to_date('1900-01-01') AS VendorStartDate,
-  coalesce(cu.Customer_Name,'NaN') AS ResellerCode,
-  coalesce(cu.Customer_Name,'NaN') AS ResellerNameInternal,
+  --coalesce(cu.Customer_Name,'NaN') AS ResellerCode,
+  --coalesce(cu.Customer_Name,'NaN') AS ResellerNameInternal,
+  coalesce(rs.Reseller_Name,si.Reseller_Name,'NaN') AS ResellerCode,
+  coalesce(rs.Reseller_Name,si.Reseller_Name,'NaN') AS ResellerNameInternal,
   'AE1' AS ResellerGeographyInternal,
-  to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerStartDate,
+  --to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerStartDate,
+  to_date(coalesce(rs.Date_Created, '1900-01-01' )) AS ResellerStartDate,  
   'NaN' AS ResellerGroupCode,
   'NaN' AS ResellerGroupName,
-  to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,
+  --to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,
+  to_date(coalesce(rs.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,  
   si.Deal_Currency AS CurrencyCode,
   cast(si.Revenue_USD as DECIMAL(10, 2)) AS RevenueAmount,
   cast((si.Revenue_USD - si.GP_USD)*(-1) as DECIMAL(10, 2))  as CostAmount,
@@ -61,8 +65,10 @@ FROM
   and it.Sys_Silver_IsCurrent = 1
   LEFT JOIN silver_{ENVIRONMENT}.netsuite.masterdatavendor AS ven ON si.Vendor_Name = ven.Vendor_Name
   and ven.Sys_Silver_IsCurrent is not false
-  LEFT JOIN silver_{ENVIRONMENT}.netsuite.masterdatacustomer AS cu ON si.Customer_Name = cu.Customer_Name
-  and cu.Sys_Silver_IsCurrent = 1
+  --LEFT JOIN silver_{ENVIRONMENT}.netsuite.masterdatacustomer AS cu ON si.Customer_Name = cu.Customer_Name
+  --and cu.Sys_Silver_IsCurrent = 1
+  LEFT JOIN silver_{ENVIRONMENT}.netsuite.masterdatareseller AS rs ON si.Reseller_Name = rs.Reseller_Name
+  and rs.Sys_Silver_IsCurrent = 1
   LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = it.SKU_ID
 where
   si.Sys_Silver_IsCurrent = 1)
