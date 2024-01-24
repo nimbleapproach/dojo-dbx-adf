@@ -134,7 +134,9 @@ SELECT
   ResellerGroupCode,
   ResellerGroupName,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CASE WHEN regexp_extract(Description,'^(.*?):(.*?).Recurring',2) = "" THEN Description 
+  ELSE trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2)) END AS NewDescription
 FROM initial_query
 )
 
@@ -182,50 +184,35 @@ SELECT
     )
   END AS ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  NewDescription
   FROM main_dates
 """)
 
-df.write.mode("overwrite").saveAsTable("vuzion_globaltransactions_without_gp1")
+df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("vuzion_globaltransactions_without_gp1")
+
+# COMMAND ----------
+
+spark.sql(f"""OPTIMIZE gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1""")
+spark.sql(f"""OPTIMIZE gold_{ENVIRONMENT}.obt.vuzion_gp""")
 
 # COMMAND ----------
 
 # DBTITLE 1,Load GP1
-from pyspark.sql.functions import levenshtein, regexp_extract, col, row_number
+from pyspark.sql.functions import levenshtein, regexp_extract, col, row_number, broadcast
 from pyspark.sql import Window
 
-df_vuzion_gp = spark.sql(f"""SELECT DISTINCT SKUDescription, substring(date,4,2) AS GPMonthNo, substring(date,7,4) AS GPYearNo, cast(replace(GPPercentage,'%','') AS int) AS GPPercentage FROM gold_{ENVIRONMENT}.obt.vuzion_gp WHERE SKUDescription IS NOT NULL""")
+df_vuzion_gp = spark.sql(f"""SELECT Product AS SKUDescription, cast(Percentage as DECIMAL(10,2)) AS GPPercentage FROM gold_{ENVIRONMENT}.obt.vuzion_gp WHERE Product IS NOT NULL""")
 
-df_vuzion_data = spark.sql(f"""SELECT DISTINCT CASE WHEN regexp_extract(Description,'^(.*?):(.*?).Recurring',2) = "" THEN Description ELSE trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2)) END AS NewDescription, substring(TransactionDate,6,2) AS VuzionMonthNo, substring(TransactionDate,0,4) AS VuzionYearNo, TransactionDate, SalesOrderID, SalesOrderItemID, SKUInternal, Description AS OriginalDescription FROM gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1 Where TransactionDate >= '2023-05-01' AND TransactionDate <= '2023-10-31'""")
+df_vuzion_data = spark.sql(f"""SELECT DISTINCT NewDescription FROM gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1""")
 
-df = df_vuzion_data.crossJoin(df_vuzion_gp)
-df = df.filter((col('VuzionYearNo') == col('GPYearNo')) & (col('VuzionMonthNo') == col('GPMonthNo'))) \
-        .withColumn("Similarity",(levenshtein('SKUDescription', 'NewDescription'))).filter('Similarity <= 0')
+df_vuzion_data.cache()
 
-#df.createOrReplaceTempView("data")
+df = df_vuzion_data.crossJoin(broadcast(df_vuzion_gp))
 
-#Partition by NewDescription, VuzionYearNo, VuzionMonthNo, order by Similarity asc get latest record
-window = Window.partitionBy('NewDescription', 'VuzionYearNo', 'VuzionMonthNo').orderBy(col('Similarity').asc())
-df = df.withColumn("RowNumber", row_number().over(window)).where((col('RowNumber') == 1) & (col('NewDescription') != '') & (col('SKUDescription') != '')).drop("RowNumber").select('TransactionDate', 'SalesOrderID', 'SalesOrderItemID', 'SKUInternal', 'OriginalDescription', 'GPPercentage')
+df = df.withColumn("Similarity",(levenshtein('SKUDescription', 'NewDescription'))).filter('Similarity == 0')
 
-df.write.mode("overwrite").saveAsTable("vuzion_globaltransactions_gp1")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC df = spark.sql(f"""          
-# MAGIC SELECT TransactionDate, SalesOrderID, SalesOrderItemID, SKUInternal, OriginalDescription, GPPercentage
-# MAGIC FROM
-# MAGIC (
-# MAGIC     SELECT DISTINCT *,
-# MAGIC     ROW_NUMBER() OVER(PARTITION BY NewDescription, VuzionYearNo, VuzionMonthNo ORDER BY Similarity ASC) AS Row_Number
-# MAGIC     FROM data
-# MAGIC     WHERE NewDescription != '' AND SKUDescription != ''
-# MAGIC )
-# MAGIC WHERE Row_Number = 1
-# MAGIC """)
-# MAGIC
-# MAGIC df.write.mode("overwrite").saveAsTable("vuzion_globaltransactions_gp1")
+df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("vuzion_globaltransactions_gp1")
 
 # COMMAND ----------
 
@@ -263,6 +250,8 @@ SELECT
   ResellerGroupName,  
   ResellerGroupStartDate,
   CurrencyCode,
+  c.GPPercentage,
+  g.NewDescription,  
   RevenueAmount,
   CASE 
   WHEN c.GPPercentage IS NOT NULL THEN
@@ -272,7 +261,7 @@ SELECT
   END AS CostAmount,
   CASE 
   WHEN c.GPPercentage IS NOT NULL THEN
-  CAST((RevenueAmount * c.GPPercentage)/100 AS DECIMAL(10,2)) 
+  CAST((RevenueAmount * c.GPPercentage)/100 AS DECIMAL(10,2))
   ELSE
   0.00
   END AS GP1
@@ -280,16 +269,18 @@ FROM
   gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1 g
 LEFT JOIN 
   gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_gp1 c
-ON 
-  g.TransactionDate = c.TransactionDate
-AND
-  g.SalesOrderID = c.SalesOrderID
-AND 
-  g.SalesOrderItemID = c.SalesOrderItemID
-AND
-  g.SKUInternal = c.SKUInternal
-AND
-  g.Description = c.OriginalDescription
+--ON 
+--  g.TransactionDate = c.TransactionDate
+--ON
+--  g.SalesOrderID = c.SalesOrderID
+--AND 
+--  g.SalesOrderItemID = c.SalesOrderItemID
+--AND
+--  g.SKUInternal = c.SKUInternal
+--AND
+--  g.Description = c.OriginalDescription
+ON
+  g.NewDescription = c.NewDescription
 """)
 
 # COMMAND ----------
