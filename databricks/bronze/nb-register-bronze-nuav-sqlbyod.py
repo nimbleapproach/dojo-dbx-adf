@@ -13,27 +13,7 @@ except:
 
 # COMMAND ----------
 
-try:
-    BRONZE_SCHEMA = dbutils.widgets.get("wg_bronzeSchema")
-except:
-    dbutils.widgets.text(name = "wg_bronzeSchema", defaultValue = 'igsql03')
-    BRONZE_SCHEMA = dbutils.widgets.get("wg_bronzeSchema")
-
-# COMMAND ----------
-
-try:
-    ROOT_PATH = dbutils.widgets.get("wg_rootPath")
-except:
-    dbutils.widgets.text(name = "wg_rootPath", defaultValue = 'igsql03')
-    ROOT_PATH = dbutils.widgets.get("wg_rootPath")
-
-# COMMAND ----------
-
-try:
-    TABLE_FORMAT = dbutils.widgets.get("wg_tableFormat")
-except:
-    dbutils.widgets.dropdown(name = "wg_tableFormat", defaultValue = 'parquet', choices =  ['parquet','delta'])
-    TABLE_FORMAT = dbutils.widgets.get("wg_tableFormat")
+ROOT_PATH = 'nuaz-sqlserver-01'
 
 # COMMAND ----------
 
