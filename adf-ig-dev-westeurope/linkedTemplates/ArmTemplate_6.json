@@ -7,7 +7,15 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
 		},
-		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+		"TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
 			"defaultValue": false
 		}
@@ -1682,12 +1690,6 @@
 								]
 							},
 							{
-								"activity": "PL_00_VUZION_CRM_MASTER",
-								"dependencyConditions": [
-									"Completed"
-								]
-							},
-							{
 								"activity": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
 								"dependencyConditions": [
 									"Succeeded"
@@ -1782,20 +1784,6 @@
 						}
 					},
 					{
-						"name": "PL_00_VUZION_CRM_MASTER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_00_VUZION_CRM_MASTER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
 						"name": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
@@ -1830,12 +1818,11 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NUVIAS_OPERATIONS_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NETSAFE_Load_File_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_DCB_Load_File_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_VUZION_CRM_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY')]",
+			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_DEV')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1848,7 +1835,7 @@
 							"type": "PipelineReference"
 						},
 						"parameters": {
-							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
 						}
 					}
 				],
@@ -1860,6 +1847,97 @@
 						"startTime": "2023-07-26T00:00:00",
 						"timeZone": "W. Europe Standard Time",
 						"schedule": {
+							"hours": [
+								3
+							],
+							"weekDays": [
+								"Monday",
+								"Tuesday",
+								"Wednesday",
+								"Thursday",
+								"Friday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_PROD')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "PL_00_MASTER",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2024-01-25T10:33:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"hours": [
+								0
+							],
+							"weekDays": [
+								"Monday",
+								"Tuesday",
+								"Wednesday",
+								"Thursday",
+								"Friday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_UAT')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "PL_00_MASTER",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2024-01-25T10:32:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"hours": [
+								2
+							],
 							"weekDays": [
 								"Monday",
 								"Tuesday",

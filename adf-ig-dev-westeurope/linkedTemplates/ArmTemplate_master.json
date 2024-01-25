@@ -7,30 +7,42 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
 		},
-		"LS_Oracle_CX_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
-		},
 		"LS_SQLDB_METADATA_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
 		},
-		"LS_ADLS_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
+		"LS_Oracle_CX_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
 		},
 		"LS_ADLS_DV_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dv0ig0@{linkedService().pm_environment}0westeurope.dfs.core.windows.net/"
 		},
-		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+		"LS_ADLS_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+			"defaultValue": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "IG\\inf_svc_azsql_sync01"
+		},
+		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
 		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
+		},
+		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
 		"LS_Oracle_CX_properties_typeProperties_host": {
 			"type": "string",
@@ -47,14 +59,6 @@
 		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
-		},
-		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
-		},
-		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
-			"type": "string",
-			"defaultValue": "IG\\inf_svc_azsql_sync01"
 		},
 		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
@@ -76,13 +80,17 @@
 			"type": "string",
 			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
 		},
-		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+		"TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
 			"defaultValue": false
 		},
-		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
-			"type": "string",
-			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
+		"TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+			"type": "bool",
+			"defaultValue": false
 		},
 		"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"type": "string",
@@ -115,26 +123,32 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"LS_Oracle_CX_password": {
-						"value": "[parameters('LS_Oracle_CX_password')]"
-					},
 					"LS_SQLDB_METADATA_connectionString": {
 						"value": "[parameters('LS_SQLDB_METADATA_connectionString')]"
 					},
-					"LS_KV_properties_typeProperties_baseUrl": {
-						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+					"LS_Oracle_CX_password": {
+						"value": "[parameters('LS_Oracle_CX_password')]"
 					},
 					"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 						"value": "[parameters('shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId')]"
 					},
+					"LS_KV_properties_typeProperties_baseUrl": {
+						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+					},
 					"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
 						"value": "[parameters('shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId')]"
+					},
+					"LS_ADLS_DV_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_DV_properties_typeProperties_url')]"
 					},
 					"LS_ADLS_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_properties_typeProperties_url')]"
 					},
-					"LS_ADLS_DV_properties_typeProperties_url": {
-						"value": "[parameters('LS_ADLS_DV_properties_typeProperties_url')]"
+					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
+						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName')]"
 					},
 					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
@@ -150,12 +164,6 @@
 					},
 					"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
-					},
-					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]"
-					},
-					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
-						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName')]"
 					},
 					"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName')]"
@@ -290,8 +298,14 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
-						"value": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+					"TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+					},
+					"TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+					},
+					"TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
 					}
 				}
 			},

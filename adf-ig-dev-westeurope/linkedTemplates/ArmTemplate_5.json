@@ -459,6 +459,223 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_DELTALINK_Load_File_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetFileNames",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetFileNames').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "PL_20_DELTALINK_Load_File",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_DELTALINK_Load_File",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_FileName": {
+												"value": "@split(item().name,'.')[0]",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "GetFileNames",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_BINARY_DELTALINK",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/DELTALINK"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL01_Load_Table_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get DataBases Control",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT [DATABASE_NAME]\n      ,[TABLE_NAME]\nFROM [adf].[CT_IGSQL01_TABLES]",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_IGSQL01_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get DataBases Control",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get DataBases Control').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_30_IGCRM_Load_Table_ITERATOR_copy1",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_IGSQL01_Load_Table_ITERATOR",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_DataBase": {
+												"value": "@item().DATABASE_NAME",
+												"type": "Expression"
+											},
+											"pm_TableName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"Watermark": {
+						"type": "String"
+					},
+					"ColumnString": {
+						"type": "Array"
+					},
+					"ColumnName": {
+						"type": "String"
+					},
+					"Watermark_value": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL01 [CRM]"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_CLOUDBLUE_OSS_Load_Table_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -812,223 +1029,6 @@
 				},
 				"folder": {
 					"name": "10 Bronze/DCB"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_DELTALINK_Load_File_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ForEachView",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetFileNames",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetFileNames').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_DELTALINK_Load_File",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_DELTALINK_Load_File",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FileName": {
-												"value": "@split(item().name,'.')[0]",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "GetFileNames",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "DS_BINARY_DELTALINK",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/DELTALINK"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL01_Load_Table_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get DataBases Control",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT [DATABASE_NAME]\n      ,[TABLE_NAME]\nFROM [adf].[CT_IGSQL01_TABLES]",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_IGSQL01_TABLES",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEach",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get DataBases Control",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get DataBases Control').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 4,
-							"activities": [
-								{
-									"name": "PL_30_IGCRM_Load_Table_ITERATOR_copy1",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_IGSQL01_Load_Table_ITERATOR",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_DataBase": {
-												"value": "@item().DATABASE_NAME",
-												"type": "Expression"
-											},
-											"pm_TableName": {
-												"value": "@item().TABLE_NAME",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"Watermark": {
-						"type": "String"
-					},
-					"ColumnString": {
-						"type": "Array"
-					},
-					"ColumnName": {
-						"type": "String"
-					},
-					"Watermark_value": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/IGSQL01 [CRM]"
 				},
 				"annotations": []
 			},

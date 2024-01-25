@@ -290,6 +290,221 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_DELTALINK_Load_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_DELTALINK_EXEL_LOAD",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_DELTALINK_EXCEL_LOAD",
+								"type": "DataFlowReference",
+								"parameters": {
+									"pm_FileName": {
+										"value": "@concat('\"',pipeline().parameters.pm_FileName,'\"')",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"GetExcelFile": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									},
+									"WriteDeltaFiles": {}
+								},
+								"linkedServiceParameters": {
+									"WriteDeltaFiles": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_FileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/DELTALINK"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL01_Load_Table_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Watermark Column",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT \nCOLUMN_NAME as [WATERMARK_COLUMN]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DataBase}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_IGSQL01_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach_2",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Watermark Column",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Watermark Column').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_30_IGCRM_Load_View",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_30_IGSQL01_Load_View",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_DatabaseName": {
+												"value": "@pipeline().parameters.pm_DataBase",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											},
+											"pm_TableName": {
+												"value": "@pipeline().parameters.pm_TableName",
+												"type": "Expression"
+											},
+											"pm_SchemaName": {
+												"value": "dbo",
+												"type": "Expression"
+											},
+											"pm_WatermarkColumn": {
+												"value": "@item().WATERMARK_COLUMN",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_Watermark": {
+						"type": "string"
+					},
+					"pm_ColumnName": {
+						"type": "string"
+					},
+					"pm_DataBase": {
+						"type": "string"
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"Watermark": {
+						"type": "String"
+					},
+					"ColumnString": {
+						"type": "Array"
+					},
+					"ColumnName": {
+						"type": "String"
+					},
+					"Watermark_value": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL01 [CRM]"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1368,221 +1583,6 @@
 				},
 				"folder": {
 					"name": "10 Bronze/DCB"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_DELTALINK_Load_File')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "DF_DELTALINK_EXEL_LOAD",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_DELTALINK_EXCEL_LOAD",
-								"type": "DataFlowReference",
-								"parameters": {
-									"pm_FileName": {
-										"value": "@concat('\"',pipeline().parameters.pm_FileName,'\"')",
-										"type": "Expression"
-									}
-								},
-								"datasetParameters": {
-									"GetExcelFile": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										}
-									},
-									"WriteDeltaFiles": {}
-								},
-								"linkedServiceParameters": {
-									"WriteDeltaFiles": {
-										"linkedService": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "ir-ig-managed-dev-westeurope",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/DELTALINK"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL01_Load_Table_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get Watermark Column",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT \nCOLUMN_NAME as [WATERMARK_COLUMN]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DataBase}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_IGSQL01_TABLES",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEach_2",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Watermark Column",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Watermark Column').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 4,
-							"activities": [
-								{
-									"name": "PL_30_IGCRM_Load_View",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_30_IGSQL01_Load_View",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_DatabaseName": {
-												"value": "@pipeline().parameters.pm_DataBase",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											},
-											"pm_TableName": {
-												"value": "@pipeline().parameters.pm_TableName",
-												"type": "Expression"
-											},
-											"pm_SchemaName": {
-												"value": "dbo",
-												"type": "Expression"
-											},
-											"pm_WatermarkColumn": {
-												"value": "@item().WATERMARK_COLUMN",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_Watermark": {
-						"type": "string"
-					},
-					"pm_ColumnName": {
-						"type": "string"
-					},
-					"pm_DataBase": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_FullLoad": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"Watermark": {
-						"type": "String"
-					},
-					"ColumnString": {
-						"type": "Array"
-					},
-					"ColumnName": {
-						"type": "String"
-					},
-					"Watermark_value": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/IGSQL01 [CRM]"
 				},
 				"annotations": []
 			},
