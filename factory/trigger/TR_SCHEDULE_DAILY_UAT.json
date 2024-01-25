@@ -1,0 +1,39 @@
+{
+	"name": "TR_SCHEDULE_DAILY_UAT",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_00_MASTER",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"pm_FullLoad": false
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2024-01-25T10:32:00",
+				"timeZone": "W. Europe Standard Time",
+				"schedule": {
+					"hours": [
+						2
+					],
+					"weekDays": [
+						"Monday",
+						"Tuesday",
+						"Wednesday",
+						"Thursday",
+						"Friday"
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,5 +1,5 @@
 {
-	"name": "TR_SCHEDULE_DAILY",
+	"name": "TR_SCHEDULE_DAILY_DEV",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
@@ -22,6 +22,9 @@
 				"startTime": "2023-07-26T00:00:00",
 				"timeZone": "W. Europe Standard Time",
 				"schedule": {
+					"hours": [
+						3
+					],
 					"weekDays": [
 						"Monday",
 						"Tuesday",
