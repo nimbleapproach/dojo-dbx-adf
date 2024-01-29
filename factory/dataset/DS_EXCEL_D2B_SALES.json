@@ -1,5 +1,5 @@
 {
-	"name": "DS_EXCEL_D2B_SINGLE_SHEET",
+	"name": "DS_EXCEL_D2B_SALES",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_ADLS_DV",
@@ -14,9 +14,6 @@
 		"parameters": {
 			"pm_environment": {
 				"type": "string"
-			},
-			"pm_folder_name": {
-				"type": "string"
 			}
 		},
 		"folder": {
@@ -28,7 +25,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"folderPath": {
-					"value": "d2b/@{dataset().pm_folder_name}",
+					"value": "d2b/sales/pending",
 					"type": "Expression"
 				},
 				"fileSystem": "external"

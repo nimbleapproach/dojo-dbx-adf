@@ -9,7 +9,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "DS_EXCEL_D2B_SINGLE_SHEET",
+						"referenceName": "DS_EXCEL_D2B_SALES",
 						"type": "DatasetReference"
 					},
 					"name": "GetExcelFile"
@@ -42,10 +42,25 @@
 				}
 			],
 			"scriptLines": [
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          CUSTOMER_ID as string,",
+				"          CUSTOMER as string,",
+				"          INVOICE as string,",
+				"          INVOICE_DATE as date,",
+				"          CUSTOMER_PO as string,",
+				"          SKU as string,",
+				"          DESCRIPTION as string,",
+				"          QTY as short,",
+				"          SALES_PRICE as double,",
+				"          PURCHASE_PRICE as double,",
+				"          USD_RATE as double,",
+				"          VENDOR as string,",
+				"          PURCHASE_CURRENCY as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: true,",
-				"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
+				"     moveFiles: ['d2b/sales/pending','d2b/sales/archived'],",
 				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
 				"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
 				"AddIdColumn select(mapColumn(",
