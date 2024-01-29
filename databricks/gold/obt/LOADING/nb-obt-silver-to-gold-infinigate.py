@@ -523,16 +523,16 @@ select
     when msp_usage.BizTalkGuid is null then CostAmount
     else msp_usage.TotalCostLCY
   end as decimal(10, 2)) as CostAmount,
-   cast (
-    case WHEN msp_usage.TotalPrice is null THEN RevenueAmount
+ 
+  cast((case WHEN msp_usage.TotalPrice is null THEN RevenueAmount
           when  msp_usage.TotalPrice is NOT null AND cte.CurrencyFactor > 0 then msp_usage.TotalPrice / cte.CurrencyFactor
           when  msp_usage.TotalPrice is NOT null AND cte.CurrencyFactor = 0  then msp_usage.TotalPrice
       else RevenueAmount
-    end as decimal(10, 2)
-  ) + cast(case
+    end +
+  case
     when msp_usage.BizTalkGuid is null then CostAmount
     else msp_usage.TotalCostLCY
-  end as decimal(10, 2))as GP1
+  end) as decimal(10, 2))as GP1
 from
   cte
   left join msp_usage on cte.EntityCode = msp_usage.EntityCode
