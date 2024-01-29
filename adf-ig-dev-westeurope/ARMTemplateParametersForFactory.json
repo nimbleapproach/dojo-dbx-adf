@@ -5,11 +5,11 @@
 		"factoryName": {
 			"value": "adf-ig-dev-westeurope"
 		},
-		"LS_SQLDB_METADATA_connectionString": {
-			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
-		},
 		"LS_Oracle_CX_password": {
 			"value": ""
+		},
+		"LS_SQLDB_METADATA_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
 		},
 		"LS_ADLS_properties_typeProperties_url": {
 			"value": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"

@@ -7,14 +7,14 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
 		},
+		"LS_Oracle_CX_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
+		},
 		"LS_SQLDB_METADATA_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
-		},
-		"LS_Oracle_CX_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
 		},
 		"LS_ADLS_properties_typeProperties_url": {
 			"type": "string",
@@ -123,11 +123,11 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"LS_SQLDB_METADATA_connectionString": {
-						"value": "[parameters('LS_SQLDB_METADATA_connectionString')]"
-					},
 					"LS_Oracle_CX_password": {
 						"value": "[parameters('LS_Oracle_CX_password')]"
+					},
+					"LS_SQLDB_METADATA_connectionString": {
+						"value": "[parameters('LS_SQLDB_METADATA_connectionString')]"
 					},
 					"LS_KV_properties_typeProperties_baseUrl": {
 						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
