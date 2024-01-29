@@ -64,6 +64,26 @@ class PowerBIHandle():
         print(f'BEGIN: Refreshing dataset {datasetId} in workspace {workspaceId}.')
         self.session.post(f'{self.baseURL}groups/{workspaceId}/datasets/{datasetId}/refreshes' , auth=InfinigateAuth())
 
+    def getDataflowTransactions(self, dataflowId : int , workspaceId : str):
+        metaData = self.session.get(f'{self.baseURL}groups/{workspaceId}/dataflows/{dataflowId}/transactions' , auth=InfinigateAuth())
+        return json.loads(metaData.text)
+
+    def postRefreshDataflow(self, dataflowId : int , workspaceId : str):
+        print(f'BEGIN: Refreshing dataflow {dataflowId} in workspace {workspaceId}.')
+        request_body = json.dumps(
+            {"refreshRequest": 'y'})
+        
+        requestHeader = {}
+        requestHeader["Content-Type"] = "application/json"
+                                  
+        return self.session.post(f'{self.baseURL}groups/{workspaceId}/dataflows/{dataflowId}/refreshes', headers=requestHeader,data=request_body, auth=InfinigateAuth())
+    
+    def getLatestDataflowAPIRefreshStatus(self, dataflowId : int , workspaceId : str):
+        metaData = self.session.get(f'{self.baseURL}groups/{workspaceId}/dataflows/{dataflowId}/transactions' , auth=InfinigateAuth())
+        response = json.loads(metaData.text)
+        refreshHistory = response['value']
+        return sorted([refresh for refresh in refreshHistory if refresh['refreshType'] == 'ViaApi'], key=lambda x: x['startTime'],reverse=True)[0]["status"]
+
 # COMMAND ----------
 
 infinigateSession = requests.Session()
@@ -76,6 +96,38 @@ PowerBIHandler = PowerBIHandle(infinigateSession)
 
 workspaceId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-workspace-id-{ENVIRONMENT}")
 datasetId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-dataset-id-{ENVIRONMENT}")
+dataflowWorkspaceId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-dataflow-workspace-id-{ENVIRONMENT}")
+dataflowId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-dataflow-id-{ENVIRONMENT}")
+
+# COMMAND ----------
+
+response = PowerBIHandler.postRefreshDataflow(dataflowId=dataflowId,workspaceId=dataflowWorkspaceId)
+
+# COMMAND ----------
+
+response = PowerBIHandler.getDataflowTransactions(dataflowId=dataflowId,workspaceId=dataflowWorkspaceId)
+
+# COMMAND ----------
+
+currentStatus = PowerBIHandler.getLatestDataflowAPIRefreshStatus(dataflowId=dataflowId,workspaceId=dataflowWorkspaceId)
+
+# COMMAND ----------
+
+import time
+
+while currentStatus == 'InProgress':
+    print('Checking current Dataflow status:')
+    currentStatus = currentStatus = PowerBIHandler.getLatestDataflowAPIRefreshStatus(dataflowId=dataflowId,workspaceId=dataflowWorkspaceId)
+    print(f'Status is sill {currentStatus}')
+    time.sleep(60)
+
+# COMMAND ----------
+
+if not currentStatus == 'Success':
+  raise Exception(
+    f'ERROR: Refreshing dataset {dataflowId} in workspace {dataflowWorkspaceId} with status {currentStatus}.'
+    )
+print(f'FINISHED: Refreshing dataset {dataflowId} in workspace {dataflowWorkspaceId} with status {currentStatus}.')
 
 # COMMAND ----------
 
@@ -86,8 +138,6 @@ response_post = PowerBIHandler.postRefreshDataset(datasetId=datasetId,workspaceI
 currentStatus = PowerBIHandler.getLatestDatasetAPIRefreshStatus(datasetId=datasetId,workspaceId=workspaceId)
 
 # COMMAND ----------
-
-import time
 
 while currentStatus == 'Unknown':
     print('Checking current Power BI Dataset status:')
