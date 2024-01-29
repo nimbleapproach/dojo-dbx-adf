@@ -116,8 +116,8 @@ cte as (
         )
       )
     ) AS Description,
-   /* coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
-    coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
+   coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
+   /*coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
     coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
     coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
     coalesce(datanowarr.Billing_Frequency, 'NaN') AS BillingFrequencyMaster,
