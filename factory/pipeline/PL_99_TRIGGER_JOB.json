@@ -15,6 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"method": "POST",
 					"url": {
 						"value": "@{pipeline().globalParameters.gpm_Databrick_Workspace_URL}/api/2.0/jobs/run-now",
 						"type": "Expression"
@@ -23,7 +24,6 @@
 						"referenceName": "ir-ig-managed-dev-westeurope",
 						"type": "IntegrationRuntimeReference"
 					},
-					"method": "POST",
 					"body": {
 						"value": "{\n  \"job_id\": @{pipeline().parameters.pm_JobID}\n}",
 						"type": "Expression"
@@ -65,6 +65,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
+								"method": "GET",
 								"url": {
 									"value": "@{pipeline().globalParameters.gpm_Databrick_Workspace_URL}/api/2.0/jobs/runs/get?run_id=@{activity('Execute Jobs API').output.run_id}",
 									"type": "Expression"
@@ -73,7 +74,6 @@
 									"referenceName": "ir-ig-managed-dev-westeurope",
 									"type": "IntegrationRuntimeReference"
 								},
-								"method": "GET",
 								"authentication": {
 									"type": "MSI",
 									"resource": "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
@@ -125,6 +125,42 @@
 						}
 					],
 					"timeout": "0.12:00:00"
+				}
+			},
+			{
+				"name": "CheckStatus",
+				"type": "Switch",
+				"dependsOn": [
+					{
+						"activity": "Wait Until Job is done",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"on": {
+						"value": "@variables('v_JobStatus')",
+						"type": "Expression"
+					},
+					"cases": [
+						{
+							"value": "SUCCESS_WITH_FAILURES",
+							"activities": [
+								{
+									"name": "SUCCESS_WITH_FAILURES",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "SUCCESS_WITH_FAILURES",
+										"errorCode": "600"
+									}
+								}
+							]
+						}
+					]
 				}
 			}
 		],
