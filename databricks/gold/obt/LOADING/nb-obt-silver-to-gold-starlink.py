@@ -49,15 +49,20 @@ with cte as
   'AE1' AS ResellerGeographyInternal,
   --to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerStartDate,
   to_date(coalesce(rs.Date_Created, '1900-01-01' )) AS ResellerStartDate,  
-  'NaN' AS ResellerGroupCode,
-  'NaN' AS ResellerGroupName,
+  --'NaN' AS ResellerGroupCode,
+  --'NaN' AS ResellerGroupName,
+  --Comment by MS (30/01/2024) - Start
+  --Added reseller group code and reseller group name
+  coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
+  coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
+  --Comment by MS (30/01/2024) - End
   --to_date(coalesce(cu.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,
   to_date(coalesce(rs.Date_Created, '1900-01-01' )) AS ResellerGroupStartDate,  
   si.Deal_Currency AS CurrencyCode,
   cast(si.Revenue_USD as DECIMAL(10, 2)) AS RevenueAmount,
   cast((si.Revenue_USD - si.GP_USD)*(-1) as DECIMAL(10, 2))  as CostAmount,
   CAST(si.GP_USD AS  DECIMAL(10, 2)) as GP1
-  
+
 
 FROM
   silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si
@@ -70,6 +75,12 @@ FROM
   LEFT JOIN silver_{ENVIRONMENT}.netsuite.masterdatareseller AS rs ON si.Reseller_Name = rs.Reseller_Name
   and rs.Sys_Silver_IsCurrent = 1
   LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = it.SKU_ID
+  --Comment by MS (30/01/2024) - Start
+  LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg 
+  ON si.Reseller_Name = rg.ResellerName
+  AND rg.InfinigateCompany = 'Starlink'
+  AND rg.Sys_Silver_IsCurrent = true
+  --Comment by MS (30/01/2024) - End
 where
   si.Sys_Silver_IsCurrent = 1)
 
