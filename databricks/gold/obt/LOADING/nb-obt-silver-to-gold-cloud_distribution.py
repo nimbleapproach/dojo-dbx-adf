@@ -59,8 +59,11 @@ WITH initial_query AS (
     coalesce(invoice.CustomerName, 'NaN') AS ResellerNameInternal,
     'NaN' AS ResellerGeographyInternal,
     to_date('1900-01-01') AS ResellerStartDate,
-    'NaN' AS ResellerGroupCode,
-    'NaN' AS ResellerGroupName,
+    --Comment by MS (30/01/2024) - Start
+    --Added reseller group code and reseller group name
+    coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
+    coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
+    --Comment by MS (30/01/2024) - End
     to_date('1900-01-01') AS ResellerGroupStartDate,
     Currency AS CurrencyCode,
     cast(RevenueLocal as DECIMAL(10, 2)) AS RevenueAmount,
@@ -69,6 +72,13 @@ WITH initial_query AS (
   from
     silver_{ENVIRONMENT}.cloud_distribution.invoicedata as invoice
     LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = invoice.SKU
+  --Comment by MS (30/01/2024) - Start
+  LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg 
+  ON invoice.CustomerAccount = rg.ResellerID
+  AND rg.InfinigateCompany = 'Nuvias'
+  AND rg.Entity = 'UK4'
+  AND rg.Sys_Silver_IsCurrent = true
+  --Comment by MS (30/01/2024) - End
   WHERE
     invoice.Sys_Silver_IsCurrent = true
     and  invoice.MarginLocal is not null

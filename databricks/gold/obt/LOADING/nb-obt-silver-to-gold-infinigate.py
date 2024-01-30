@@ -138,8 +138,8 @@ cte as (
     END AS ResellerNameInternal,
     cu.Country_RegionCode AS ResellerGeographyInternal,
     to_date(cu.Createdon) AS ResellerStartDate,
-    rg.ResellerGroupCode AS ResellerGroupCode,
-    rg.ResellerGroupName AS ResellerGroupName,
+    coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
+    coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
     to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
     Case
       WHEN sih.CurrencyCode = 'NaN'
@@ -194,12 +194,20 @@ cte as (
     LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
+    /*
     LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON concat(
       RIGHT(sih.Sys_DatabaseName, 2),
       sih.`Sell-toCustomerNo_`
     ) = concat(rg.Entity, rg.ResellerID)
     AND rg.Sys_Silver_IsCurrent = true -- LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr ON it.No_ = datanowarr.sku
+    */
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
+    --Comment by MS (30/01/2024) - Start
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg
+    ON rg.ResellerID = cu.No_
+    AND rg.Entity = UPPER(entity.TagetikEntityCode)
+    AND rg.Sys_Silver_IsCurrent = true
+    --Comment by MS (30/01/2024) - End
     LEFT JOIN (
       select
         sla.Sys_DatabaseName,
@@ -315,8 +323,8 @@ cte as (
     END AS ResellerNameInternal,
     cu.Country_RegionCode AS ResellerGeographyInternal,
     to_date(cu.Createdon) AS ResellerStartDate,
-    rg.ResellerGroupCode AS ResellerGroupCode,
-    rg.ResellerGroupName AS ResellerGroupName,
+    coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
+    coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
     to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
     Case
       WHEN sih.CurrencyCode = 'NaN'
@@ -373,12 +381,20 @@ cte as (
     LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
+    /*
     LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON concat(
       RIGHT(sih.Sys_DatabaseName, 2),
       sih.`Sell-toCustomerNo_`
     ) = concat(rg.Entity, rg.ResellerID)
     AND rg.Sys_Silver_IsCurrent = TRUE -- LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr ON it.No_ = datanowarr.sku
+    */
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
+    --Comment by MS (30/01/2024) - Start
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg
+    ON rg.ResellerID = cu.No_
+    AND rg.Entity = UPPER(entity.TagetikEntityCode)
+    AND rg.Sys_Silver_IsCurrent = true
+    --Comment by MS (30/01/2024) - End
     LEFT JOIN (
       select
         sla.Sys_DatabaseName,

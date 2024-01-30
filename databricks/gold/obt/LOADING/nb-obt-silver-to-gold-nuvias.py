@@ -106,11 +106,12 @@ with cte as (
     ELSE UPPER(disit.CompanyID)
     END
     AND disit.Sys_Silver_IsCurrent = true
+    /*
     LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON inv.InvoiceAccount = rg.ResellerID
     and rg.InfinigateCompany = 'Nuvias'
     AND upper(trans.DataAreaId) = rg.Entity
     AND rg.Sys_Silver_IsCurrent = 1
-
+    */
     LEFT JOIN (
       SELECT
         DISTINCT prod.SAG_NGS1VendorID AS VendorCode,
@@ -189,6 +190,12 @@ with cte as (
     and so_it.DataAreaId = salestrans.DataAreaId
     and so_it.Sys_Silver_IsCurrent = 1
     LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON upper(trans.DataAreaId) = entity.SourceEntityCode
+    --Comment by MS (30/01/2024) - Start
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg ON inv.InvoiceAccount = rg.ResellerID
+    and rg.InfinigateCompany = 'Nuvias'
+    AND UPPER(entity.TagetikEntityCode) = rg.Entity
+    AND rg.Sys_Silver_IsCurrent = true
+    --Comment by MS (30/01/2024) - End
   WHERE
     trans.Sys_Silver_IsCurrent = 1
     AND UPPER(trans.DataAreaId) NOT IN ('NGS1', 'NNL2')

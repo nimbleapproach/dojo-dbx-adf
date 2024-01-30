@@ -47,8 +47,11 @@ coalesce(ClientNumber,'NaN') AS ResellerCode,
 coalesce(Company,'NaN') AS ResellerNameInternal,
 'BE3' AS ResellerGeographyInternal,
 to_date( '1900-01-01' ) AS ResellerStartDate,
-'NaN' AS ResellerGroupCode,
-'NaN' AS ResellerGroupName,
+--Comment by MS (30/01/2024) - Start
+--Added reseller group code and reseller group name
+coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
+coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
+--Comment by MS (30/01/2024) - End
 to_date('1900-01-01' ) AS ResellerGroupStartDate,
 Currency AS CurrencyCode,
 cast(RevenueTransaction as DECIMAL(10, 2)) AS RevenueAmount,
@@ -57,6 +60,13 @@ cast(case when CostTransaction <0 then CostTransaction
 cast(MarginTransaction  as DECIMAL(10, 2)) as GP1
  from silver_{ENVIRONMENT}.deltalink.invoicedata as invoice
 LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = invoice.ArtSupCode
+--Comment by MS (30/01/2024) - Start
+LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg 
+ON invoice.ClientNumber = rg.ResellerID
+AND rg.InfinigateCompany = 'Nuvias'
+AND rg.Entity = 'BE3'
+AND rg.Sys_Silver_IsCurrent = true
+--Comment by MS (30/01/2024) - End
 where invoice.Sys_Silver_IsCurrent = 1)
 
   select
