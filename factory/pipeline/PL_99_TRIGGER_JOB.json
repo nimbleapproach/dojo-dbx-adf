@@ -159,6 +159,21 @@
 									}
 								}
 							]
+						},
+						{
+							"value": "FAILED",
+							"activities": [
+								{
+									"name": "FAILED",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "FAILED",
+										"errorCode": "700"
+									}
+								}
+							]
 						}
 					]
 				}
