@@ -1,8 +1,7 @@
 # Databricks notebook source
-# MAGIC %python
-# MAGIC import os
-# MAGIC
-# MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
@@ -74,8 +73,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_FileName STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Sys_ID STRING
-# MAGIC       COMMENT 'System Identifier for line records'
+# MAGIC     ,LineNo int
+# MAGIC       COMMENT 'Artificial LineNo added from dataflow'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
@@ -90,11 +89,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Flag if this is the current version.'
 # MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the deleted version.'
-# MAGIC ,CONSTRAINT cloud_distribution_invoicedata_pk PRIMARY KEY(InvoiceNumber, Sys_ID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC ,CONSTRAINT cloud_distribution_invoicedata_pk PRIMARY KEY(InvoiceNumber, LineNo, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ardoc. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (InvoiceNumber, Sys_ID)
+# MAGIC CLUSTER BY (InvoiceNumber, LineNo)
 
 # COMMAND ----------
 
