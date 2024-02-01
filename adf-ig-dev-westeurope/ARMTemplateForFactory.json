@@ -16,22 +16,6 @@
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
 		},
-		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
-		},
-		"LS_KV_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
-		},
-		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-tagetikdbserver01-connectionstring"
-		},
-		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
-			"type": "string",
-			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
-		},
 		"LS_ADLS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
@@ -43,6 +27,10 @@
 		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
+		"LS_KV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
 		},
 		"LS_Oracle_CX_properties_typeProperties_host": {
 			"type": "string",
@@ -76,6 +64,18 @@
 			"type": "string",
 			"defaultValue": "IG\\inf_svc_azsql_sync01"
 		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
+		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-tagetikdbserver01-connectionstring"
+		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
+		},
 		"TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
 			"defaultValue": false
@@ -101,175 +101,6 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_NUVIAS_FO')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					},
-					"pm_DatabaseType": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"connectionString": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
-						},
-						"secretName": {
-							"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]",
-							"type": "Expression"
-						}
-					}
-				},
-				"connectVia": {
-					"referenceName": "ir-ig-managed-dev-westeurope",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ir-ig-managed-dev-westeurope')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "West Europe",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 8,
-							"timeToLive": 10,
-							"cleanup": true
-						}
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_KV')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "AzureKeyVault",
-				"typeProperties": {
-					"baseUrl": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_TAGETIK')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"connectionString": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
-						},
-						"secretName": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
-					}
-				},
-				"connectVia": {
-					"referenceName": "ir-ig-managed-dev-westeurope",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_VUZION_CRM_DYNAMICS')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Service_Uri": {
-						"type": "string"
-					},
-					"pm_Service_Principal_Id": {
-						"type": "string"
-					},
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "DynamicsCrm",
-				"typeProperties": {
-					"deploymentType": "Online",
-					"serviceUri": "@{linkedService().pm_Service_Uri}",
-					"authenticationType": "AADServicePrincipal",
-					"servicePrincipalId": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]",
-					"servicePrincipalCredential": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
-						},
-						"secretName": "secret-vuzion-crm-service-principal-secret-value"
-					},
-					"servicePrincipalCredentialType": "ServicePrincipalKey"
-				},
-				"connectVia": {
-					"referenceName": "ir-ig-managed-dev-westeurope",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
-			]
-		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_BRONZE_REGISTER_TABLES_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -13678,6 +13509,24 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_KV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_Oracle_CX')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -13923,6 +13772,137 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_NUVIAS_FO')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": {
+							"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]",
+							"type": "Expression"
+						}
+					}
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_TAGETIK')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_VUZION_CRM_DYNAMICS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Service_Uri": {
+						"type": "string"
+					},
+					"pm_Service_Principal_Id": {
+						"type": "string"
+					},
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DynamicsCrm",
+				"typeProperties": {
+					"deploymentType": "Online",
+					"serviceUri": "@{linkedService().pm_Service_Uri}",
+					"authenticationType": "AADServicePrincipal",
+					"servicePrincipalId": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalCredential": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "secret-vuzion-crm-service-principal-secret-value"
+					},
+					"servicePrincipalCredentialType": "ServicePrincipalKey"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_DEV')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
@@ -14055,6 +14035,26 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ir-ig-managed-dev-westeurope')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "West Europe",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": true
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/shir-igapphost02-shared')]",
 			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
 			"apiVersion": "2018-06-01",
@@ -14120,7 +14120,7 @@
 							"name": "RenameColumns"
 						},
 						{
-							"name": "AddIdColumn"
+							"name": "Partition"
 						}
 					],
 					"udfLibraries": [
@@ -14130,21 +14130,83 @@
 						}
 					],
 					"scriptLines": [
-						"source(allowSchemaDrift: true,",
+						"source(output(",
+						"          Entity as string,",
+						"          {Invoice Date} as date,",
+						"          {Sales Order} as integer,",
+						"          {Invoice Number} as string,",
+						"          {Item ID} as integer,",
+						"          SKU as string,",
+						"          {Customer Name} as string,",
+						"          Qty as short,",
+						"          {Revenue Local} as double,",
+						"          {Cost Local} as double,",
+						"          {Adjustment Local} as boolean,",
+						"          Currency as string,",
+						"          {Margin Local} as double,",
+						"          {Exchange Rate} as double,",
+						"          {Revenue GBP} as double,",
+						"          {Cost GBP} as double,",
+						"          {Margin GBP} as double,",
+						"          {Vendor ID} as string,",
+						"          {Vendor Name} as string,",
+						"          {Account Manager} as string,",
+						"          {Order Type} as string,",
+						"          {Quote ID} as integer,",
+						"          {Customer Account} as string,",
+						"          {SKU Description} as string,",
+						"          {Customer Reference} as string,",
+						"          {Item Type} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: true,",
 						"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
 						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
 						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"AddIdColumn select(mapColumn(",
+						"Partition select(mapColumn(",
 						"          each(match(true()),",
 						"               applyParquetNaming($$) = $$)",
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
-						"GetExcelFile derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['Entity','Invoice Date','Sales Order','Invoice Number','Item ID','SKU','SKU Description']))))) ~> AddIdColumn",
+						"GetExcelFile window(over({Invoice Number}),",
+						"     asc({Item ID}, true),",
+						"     asc(SKU, true),",
+						"     LineNo = rowNumber()) ~> Partition",
 						"AddSystemColumns sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     input(",
+						"          Entity as string,",
+						"          InvoiceDate as string,",
+						"          SalesOrder as string,",
+						"          InvoiceNumber as string,",
+						"          ItemID as string,",
+						"          SKU as string,",
+						"          CustomerName as string,",
+						"          Qty as string,",
+						"          RevenueLocal as string,",
+						"          CostLocal as string,",
+						"          AdjustmentLocal as string,",
+						"          Currency as string,",
+						"          MarginLocal as string,",
+						"          ExchangeRate as string,",
+						"          RevenueGBP as string,",
+						"          CostGBP as string,",
+						"          MarginGBP as string,",
+						"          VendorID as string,",
+						"          VendorName as string,",
+						"          AccountManager as string,",
+						"          OrderType as string,",
+						"          QuoteID as string,",
+						"          CustomerAccount as string,",
+						"          SKUDescription as string,",
+						"          CustomerReference as string,",
+						"          ItemType as string,",
+						"          Sys_FileName as string,",
+						"          Sys_ID as string,",
+						"          Sys_Bronze_InsertDateTime_UTC as timestamp",
+						"     ),",
 						"     format: 'delta',",
 						"     compressionType: 'snappy',",
 						"     compressionLevel: 'Fastest',",

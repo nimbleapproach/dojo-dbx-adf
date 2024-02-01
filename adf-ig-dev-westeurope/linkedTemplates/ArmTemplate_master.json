@@ -16,22 +16,6 @@
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
 		},
-		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
-		},
-		"LS_KV_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
-		},
-		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-tagetikdbserver01-connectionstring"
-		},
-		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
-			"type": "string",
-			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
-		},
 		"LS_ADLS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
@@ -43,6 +27,10 @@
 		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
+		"LS_KV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
 		},
 		"LS_Oracle_CX_properties_typeProperties_host": {
 			"type": "string",
@@ -75,6 +63,18 @@
 		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "IG\\inf_svc_azsql_sync01"
+		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
+		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-tagetikdbserver01-connectionstring"
+		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
 		},
 		"TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
@@ -138,15 +138,6 @@
 					"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
 						"value": "[parameters('shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId')]"
 					},
-					"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]"
-					},
-					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
-					},
-					"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
-						"value": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]"
-					},
 					"LS_ADLS_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_properties_typeProperties_url')]"
 					},
@@ -179,6 +170,15 @@
 					},
 					"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
 						"value": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName')]"
+					},
+					"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]"
 					}
 				}
 			},
