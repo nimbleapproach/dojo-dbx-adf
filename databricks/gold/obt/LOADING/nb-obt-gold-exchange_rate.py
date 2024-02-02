@@ -127,9 +127,11 @@ select * from FX
 
 # COMMAND ----------
 
+import pyspark.sql.functions as F
+
 # create helper date column
 (spark.sql(f""" select sequence(to_date(concat_ws('-',2020,'04','01')), to_date(concat_ws('-',year(now()),month(now()),'01')), interval 1 month) as DateID""")
- .withColumn("DateID", explode(col("DateID")))
+ .withColumn("DateID", F.explode(F.col("DateID")))
  .createOrReplaceTempView('date'))
 
 
@@ -163,13 +165,11 @@ select * from cte""")
 
 from pyspark.sql import *
 
-df = df.withColumn('Period_FX_rate',when(df.Period_FX_rate>0,df.Period_FX_rate).otherwise(last(df.Period_FX_rate,ignorenulls=True).over(Window.orderBy(["COD_AZIENDA",'DateID']))))
+df = df.withColumn('Period_FX_rate',F.when(df.Period_FX_rate>0,df.Period_FX_rate).otherwise(F.last(df.Period_FX_rate,ignorenulls=True).over(Window.orderBy(["COD_AZIENDA",'DateID']))))
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 from pyspark.sql.window import Window
-
 
 df = (df
  .withColumn('Calendar_Year', F.last('Calendar_Year', ignorenulls=True).over(
@@ -180,8 +180,8 @@ df = (df
      Window.partitionBy(['COD_AZIENDA']).orderBy(['COD_AZIENDA','DateID']).rangeBetween(Window.unboundedPreceding, 0)))
  .withColumn('Currency', F.last('Currency', ignorenulls=True).over(
      Window.partitionBy(['COD_AZIENDA']).orderBy(['COD_AZIENDA','DateID']).rangeBetween(Window.unboundedPreceding, 0)))
- .withColumn('Month', coalesce(df.Month, F.date_format("DateID", "MM")))
- .withColumn('Period', coalesce(df.Period, when( F.date_format("DateID", "MM")<4 ,F.date_format("DateID", "MM")+9
+ .withColumn('Month', F.coalesce(df.Month, F.date_format("DateID", "MM")))
+ .withColumn('Period', F.coalesce(df.Period, F.when(F.date_format("DateID", "MM")<4 ,F.date_format("DateID", "MM")+9
                                                    ).otherwise(F.date_format("DateID", "MM")-3)))
 )
 
