@@ -59,11 +59,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Flag if this is the current version.'
 # MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the deleted version.'
-# MAGIC ,CONSTRAINT inventtrans_pk PRIMARY KEY(InvoiceId,ItemId,DataAreaId,DataLakeModified_DateTime)
+# MAGIC ,CONSTRAINT inventtrans_pk PRIMARY KEY(_SysRowId,InvoiceId,ItemId,DataAreaId,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for inventtable. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (InvoiceId,ItemId,DataAreaId)
+# MAGIC CLUSTER BY (_SysRowId,InvoiceId,ItemId,DataAreaId)
 
 # COMMAND ----------
 
