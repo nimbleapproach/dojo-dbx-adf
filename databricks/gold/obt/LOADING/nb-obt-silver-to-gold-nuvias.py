@@ -16,8 +16,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # DBTITLE 1,Silver to Gold Nuvias
 spark.sql(
-    f"""         
-CREATE OR REPLACE VIEW nuvias_globaltransactions AS
+
+f"""
+CREATE OR REPLACE view gold_{ENVIRONMENT}.obt.nuvias_globaltransactions AS
 
 with cte as (
  SELECT
@@ -57,7 +58,9 @@ with cte as (
     coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
     to_date('1900-01-01') AS ResellerGroupStartDate,
     trans.CurrencyCode,
-    CAST(trans.LineAmountMST AS DECIMAL(10,2)) AS RevenueAmount
+    CAST(trans.LineAmountMST AS DECIMAL(10,2)) AS RevenueAmount,
+    CAST(inventtrans.CostAmountPosted AS DECIMAL(10,2)) AS CostAmount,
+    CAST(inventtrans.CostAmountAdjustment AS DECIMAL(10,2)) AS CostAmountAdjustment
   FROM
     silver_{ENVIRONMENT}.nuvias_operations.custinvoicetrans AS trans
     LEFT JOIN (
@@ -89,6 +92,22 @@ with cte as (
     and invitgroup.Sys_Silver_IsCurrent = 1
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.ecoresproduct AS prod ON trans.ItemId = prod.DisplayProductNumber
     AND prod.Sys_Silver_IsCurrent = 1
+    /*[yz 02.02.2024]: join inventtrans to custinvoicetrans on invoiceid and itemid to get the cost for margin calculation*/
+    LEFT JOIN
+        (SELECT
+          InvoiceId
+          ,ItemId
+          ,max(CurrencyCode)CurrencyCode
+          ,SUM(CostAmountPosted) as CostAmountPosted
+          ,SUM(CostAmountAdjustment) as CostAmountAdjustment
+        FROM silver_{ENVIRONMENT}.nuvias_operations.inventtrans
+        WHERE
+          DataAreaId NOT IN ('NNL2', 'NGS1')
+          and Sys_Silver_IsCurrent = 1
+        GROUP BY InvoiceId
+          ,ItemId) inventtrans
+    ON trans.InvoiceId =inventtrans.InvoiceId
+    and trans.ItemId = inventtrans.ItemId
     /*
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.vendtable AS ven ON ven.AccountNum = prod.SAG_NGS1VendorID
     AND ven.Sys_Silver_IsCurrent = 1
@@ -252,7 +271,10 @@ select
     )
   end AS ResellerGroupStartDate,
   case when length(EntityCode)>3 then 'USD' ELSE CurrencyCode END AS CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  cast (RevenueAmount+CostAmount as decimal(10,2)) as GP1,
+  cast(CostAmountAdjustment as decimal(10,2))as CostAmountAdjustment
 from
   cte"""
 )
