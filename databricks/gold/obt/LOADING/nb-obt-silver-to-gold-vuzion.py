@@ -14,6 +14,10 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
 
+spark.sql(f"""TRUNCATE TABLE gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1""")
+
+# COMMAND ----------
+
 df = spark.sql(f"""
 
 WITH initial_query
@@ -135,8 +139,8 @@ SELECT
   ResellerGroupName,
   CurrencyCode,
   RevenueAmount,
-  CASE WHEN regexp_extract(Description,'^(.*?):(.*?).Recurring',2) = "" THEN Description 
-  ELSE trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2)) END AS NewDescription
+  CASE WHEN trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2)) = "" THEN initcap(trim(Description))
+  ELSE initcap(trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2))) END AS NewDescription
 FROM initial_query
 )
 
@@ -202,7 +206,17 @@ spark.sql(f"""OPTIMIZE gold_{ENVIRONMENT}.obt.vuzion_gp""")
 from pyspark.sql.functions import levenshtein, regexp_extract, col, row_number, broadcast
 from pyspark.sql import Window
 
-df_vuzion_gp = spark.sql(f"""SELECT Product AS SKUDescription, cast(Percentage as DECIMAL(10,2)) AS GPPercentage FROM gold_{ENVIRONMENT}.obt.vuzion_gp WHERE Product IS NOT NULL""")
+df_vuzion_gp = spark.sql(f"""
+SELECT SKUDescription, GPPercentage
+FROM
+(
+SELECT ROW_NUMBER() OVER(Partition by initcap(trim(Product)) ORDER BY cast(Percentage as DECIMAL(10,2)) DESC) AS Row_Number,
+initcap(trim(Product)) AS SKUDescription,
+cast(Percentage as DECIMAL(10,2)) AS GPPercentage 
+FROM gold_{ENVIRONMENT}.obt.vuzion_gp 
+WHERE trim(Product) IS NOT NULL
+)
+WHERE Row_Number = 1""")
 
 df_vuzion_data = spark.sql(f"""SELECT DISTINCT NewDescription FROM gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1""")
 
@@ -211,6 +225,7 @@ df_vuzion_data.cache()
 df = df_vuzion_data.crossJoin(broadcast(df_vuzion_gp))
 
 df = df.withColumn("Similarity",(levenshtein('SKUDescription', 'NewDescription'))).filter('Similarity == 0')
+#df = df.withColumn("Similarity",(levenshtein('SKUDescription', 'NewDescription'))).filter('Similarity <= 4')
 
 df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("vuzion_globaltransactions_gp1")
 
