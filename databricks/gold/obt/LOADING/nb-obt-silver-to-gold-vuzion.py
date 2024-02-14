@@ -40,7 +40,17 @@ SELECT
 ,coalesce(vuzionarr.billing_frequency,'NaN') AS BillingFrequencyMaster
 ,coalesce(vuzionarr.consumption_model,'NaN') AS ConsumptionModelMaster
 ,cast(coalesce(s.serviceTemplateID,'NaN') AS string) AS VendorCode
-,coalesce(bm.ManufacturerName,'NaN') AS VendorNameInternal
+/*
+Change Date [14/02/2024]
+Change BY [MS]
+Branch Name users/mso/vuzion_hf_manufacturername
+Fix ManufacturerName for Microsoft products
+*/
+--,coalesce(bm.ManufacturerName,'NaN') AS VendorNameInternal
+,CASE 
+WHEN bm.Manufacturer = 'VA-888-104' THEN 'Microsoft'
+ELSE coalesce(bm.ManufacturerName,'NaN') 
+END AS VendorNameInternal
 ,coalesce(vuzionarr.vendor_name,'NaN') AS VendorNameMaster
 ,'NaN' AS VendorGeography
 ,cast(coalesce(r.ResellerID,'NaN') AS string) AS ResellerCode
