@@ -74,7 +74,7 @@ cte as(
     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
     AND COD_CATEGORIA LIKE '%AMOUNT'
     AND Sys_Silver_IsCurrent = 1
-    AND Sys_Silver_IsDeleted = 0
+    AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null)
   group by
     COD_PERIODO,
     COD_VALUTA,
