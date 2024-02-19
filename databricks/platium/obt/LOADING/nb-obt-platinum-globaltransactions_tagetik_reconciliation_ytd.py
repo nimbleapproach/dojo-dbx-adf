@@ -16,14 +16,18 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 
 spark.sql(f"""
 CREATE
-OR Replace VIEW globaltransactions_tagetik_reconciliation_ytd AS with obt as (
-  select
+OR Replace VIEW globaltransactions_tagetik_reconciliation_ytd AS 
+with obt as(
+select
     'OBT' AS Source,
     GroupEntityCode,
     case
       when GroupEntityCode = 'VU' THEN 'VU'
       ELSE EntityCode
     END AS EntityCode,
+    VendorCode,
+    VendorNameInternal as VendorName,
+    VendorNameMaster,
     YEAR(TransactionDate) AS Year,
     MONTH(TransactionDate) AS Month,
     sum(RevenueAmount_Euro) Revenue_EUR,
@@ -39,7 +43,11 @@ OR Replace VIEW globaltransactions_tagetik_reconciliation_ytd AS with obt as (
     case
       when GroupEntityCode = 'VU' THEN 'VU'
       ELSE EntityCode
-    END
+    END,
+        VendorCode,
+    VendorNameInternal,
+    VendorNameMaster
+  having sum(RevenueAmount_Euro)+ sum(GP1_Euro) <>0
 ),
 TAG AS (
   select
@@ -52,6 +60,9 @@ TAG AS (
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
     END AS EntityCode,
+    Vendor_ID,
+    Vendor_Name,
+    '' as VendorNameMaster,
     Year(Date_ID) as Year,
     month(Date_ID) as Month,
     'Revenue_EUR' as Type,
@@ -70,7 +81,10 @@ TAG AS (
       when Entity_ID = 'FR2' THEN 'FR1'
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
-    END
+    END,
+    Vendor_ID,
+    Vendor_Name
+
   union ALL
   select
     'TAG' AS Source,
@@ -82,6 +96,9 @@ TAG AS (
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
     END AS EntityCode,
+    Vendor_ID,
+        Vendor_Name,
+    '' as VendorNameMaster,
     year(Date_ID) as Year,
     month(Date_ID) as Month,
     'GP1_EUR' as Type,
@@ -100,7 +117,8 @@ TAG AS (
       when Entity_ID = 'FR2' THEN 'FR1'
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
-    END
+    END,
+    Vendor_ID,Vendor_Name
 ),
 tag_rev_gp as (
   SELECT
@@ -126,6 +144,9 @@ result as(
     Source,
     entity.GroupEntityCode,
     tag_rev_gp.EntityCode,
+    tag_rev_gp.Vendor_ID,
+    tag_rev_gp.Vendor_Name,
+    tag_rev_gp.VendorNameMaster,
     Year,
     Month,
     Revenue_EUR,
@@ -135,6 +156,7 @@ result as(
     tag_rev_gp
     left join (select distinct GroupEntityCode,EntityCode from
     obt) entity on tag_rev_gp.EntityCode = entity.EntityCode
+    where Revenue_EUR + GP1_EUR<>0
 )
 select
   *

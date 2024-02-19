@@ -14,7 +14,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
 
-# DBTITLE 1,Gold Transactions Platinum
+# DBTITLE 0,Gold Transactions Platinum
 spark.sql(f"""
           
 
@@ -49,6 +49,15 @@ with FX AS(
     AND COD_SCENARIO not like '%OB%'
     AND Sys_Silver_IsCurrent =1
 ),
+--[(17.02.2024) yz: Tagetik consolidation Vendor]
+  vendor as (select 
+  Code as Vendor_ID,
+  Name as Vendor_Name
+
+  from silver_{ENVIRONMENT}.igsql03.dimension_value
+  where Sys_Silver_IsCurrent =1
+  and DimensionCode = 'VENDOR'
+  and Sys_DatabaseName='ReportsDE'),
 cte as(
   SELECT
     fb.COD_PERIODO AS Period,
@@ -404,6 +413,8 @@ act as(
     ) AS fxr ON Currency_ID = fxr.Currency
     AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) = CONCAT(fxr.Scenario , fxr.Period)
 )
-select * from act
+select act.*, coalesce(vendor.Vendor_Name,act.Vendor_ID)  as Vendor_Name
+from act
+left join vendor on act.Vendor_ID = vendor.Vendor_ID
 
 """)
