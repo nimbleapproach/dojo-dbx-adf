@@ -5,10 +5,9 @@
 
 # COMMAND ----------
 
-# MAGIC %python
-# MAGIC import os
-# MAGIC
-# MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
