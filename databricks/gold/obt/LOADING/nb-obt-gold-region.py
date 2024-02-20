@@ -24,7 +24,7 @@ WITH level_1 as(
   where
     COD_DEST2_ELEGER_PADRE = 'LS01'
     AND COD_DEST2_GERARCHIA = '03'
-    and Sys_Silver_IsCurrent = 1
+     and Sys_Silver_IsCurrent = 1
 ),
 level_2 as (
   SELECT
@@ -47,8 +47,10 @@ level_3 as (
 ),
 region as (
   select
-    distinct level12.*,
-    Level_3_Code
+    distinct level12.Level_1_Code,
+   level12.Level_2_Code ,
+    Level_3_Code,
+    Level_3_join
   from
     level_3
     left join (
@@ -62,12 +64,11 @@ region as (
         level_1
         left join level_2 on level_1.Level_1_Code = level_2.Level_2_join
     ) level12 on level_3.Level_3_join = level12.Level_2_Code
-  where
-    Level_1_Code is not null
+
 )
 
 select 
-Level_1_Code as RegionCode,
+case when Level_1_Code is null then Level_3_join else Level_1_Code end as RegionCode,
 Level_2_Code as CountryCode,
 Level_3_Code as RegionID
  from region""")

@@ -30,8 +30,8 @@ select
     VendorNameMaster,
     YEAR(TransactionDate) AS Year,
     MONTH(TransactionDate) AS Month,
-    sum(RevenueAmount_Euro) Revenue_EUR,
-    sum(GP1_Euro) GP1_EUR
+    Sum(coalesce(RevenueAmount_Euro,0 )) Revenue_EUR,
+    Sum(coalesce(GP1_Euro,0 )) GP1_EUR
   from
     platinum_{ENVIRONMENT}.obt.globaltransactions
   where
@@ -47,8 +47,8 @@ select
         VendorCode,
     VendorNameInternal,
     VendorNameMaster
-  having sum(RevenueAmount_Euro)+ sum(GP1_Euro) <>0
-),
+    HAVING sum(coalesce(RevenueAmount_Euro,0 ))+ sum(coalesce(GP1_Euro,0 )) <>0
+  ),
 TAG AS (
   select
     'TAG' AS Source,
