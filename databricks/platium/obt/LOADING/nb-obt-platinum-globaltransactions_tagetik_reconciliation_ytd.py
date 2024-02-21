@@ -25,9 +25,14 @@ select
       when GroupEntityCode = 'VU' THEN 'VU'
       ELSE EntityCode
     END AS EntityCode,
+    case
+      when GroupEntityCode = 'VU' THEN 'VU'
+      ELSE EntityCode
+    END  AS Region_ID ,
     VendorCode,
     VendorNameInternal as VendorName,
     VendorNameMaster,
+    ''AS Category,
     YEAR(TransactionDate) AS Year,
     MONTH(TransactionDate) AS Month,
     Sum(coalesce(RevenueAmount_Euro,0 )) Revenue_EUR,
@@ -60,9 +65,11 @@ TAG AS (
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
     END AS EntityCode,
+    Region_ID,
     Vendor_ID,
     Vendor_Name,
     '' as VendorNameMaster,
+    Category,
     Year(Date_ID) as Year,
     month(Date_ID) as Month,
     'Revenue_EUR' as Type,
@@ -82,8 +89,10 @@ TAG AS (
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
     END,
+    Region_ID,
     Vendor_ID,
-    Vendor_Name
+    Vendor_Name,
+    Category
 
   union ALL
   select
@@ -96,9 +105,11 @@ TAG AS (
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
     END AS EntityCode,
+    Region_ID,
     Vendor_ID,
         Vendor_Name,
     '' as VendorNameMaster,
+    Category,
     year(Date_ID) as Year,
     month(Date_ID) as Month,
     'GP1_EUR' as Type,
@@ -118,7 +129,9 @@ TAG AS (
       WHEN Entity_ID IN('IE1', 'UK2') THEN 'VU'
       ELSE Entity_ID
     END,
-    Vendor_ID,Vendor_Name
+    Region_ID,
+    Vendor_ID,Vendor_Name,
+    Category
 ),
 tag_rev_gp as (
   SELECT
@@ -144,9 +157,11 @@ result as(
     Source,
     entity.GroupEntityCode,
     tag_rev_gp.EntityCode,
+    tag_rev_gp.Region_ID,
     tag_rev_gp.Vendor_ID,
     tag_rev_gp.Vendor_Name,
     tag_rev_gp.VendorNameMaster,
+    Category,
     Year,
     Month,
     Revenue_EUR,

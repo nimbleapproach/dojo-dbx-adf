@@ -20,35 +20,19 @@ spark.sql(f"""
 
 CREATE OR Replace VIEW tagetik_consolidation AS
 
+
 with FX AS(
   /****** FX Rate  ******/
-    SELECT
-    distinct 
-    COD_SCENARIO as Scenario,
-    COD_PERIODO as Period,case
-      when COD_PERIODO between '10'
-      and '12' then LEFT(COD_SCENARIO, 4)
-      else cast(LEFT(COD_SCENARIO, 4) as int) -1
-    end as Calendar_Year,case
-      when COD_PERIODO between '01'
-      and '09' then right(CONCAT('0' , CAST((COD_PERIODO + 3) AS INT)),2)
-      when COD_PERIODO between '10'
-      and '12' then right(CONCAT('0' , CAST((COD_PERIODO - 9) AS INT)),2)
-    end as Month,
-    COD_VALUTA as Currency,
-    CAST(CAMBIO_PERIODO AS decimal(18, 4)) as Period_FX_rate
-  FROM
-    silver_{ENVIRONMENT}.tag02.dati_cambio
-  where
-    LEFT(COD_SCENARIO, 4) RLIKE '[0-9]'
-    and (
-      COD_SCENARIO LIKE '%ACT%'
 
-    )
-    AND COD_SCENARIO not like '%AUD%'
-    AND COD_SCENARIO not like '%OB%'
-    AND Sys_Silver_IsCurrent =1
-),
+--[(21.02.2024) yz: Adjust FX from gold exchange rate table]
+select distinct
+Scenario,
+Period,
+Month,
+Currency,
+Period_FX_rate
+ from gold_{ENVIRONMENT}.obt.exchange_rate
+ ),
 --[(17.02.2024) yz: Tagetik consolidation Vendor]
   vendor as (select 
   Code as Vendor_ID,
@@ -58,12 +42,13 @@ with FX AS(
   where Sys_Silver_IsCurrent =1
   and DimensionCode = 'VENDOR'
   and Sys_DatabaseName='ReportsDE'),
-cte as(
+  -- base table with original entity amounts
+  base as(
   SELECT
     fb.COD_PERIODO AS Period,
     COD_VALUTA AS Currency_ID,
     COD_CONTO AS Account_ID,
-    COD_DEST2 AS RPTRegion_ID,
+    COD_DEST2 AS Region_ID,
     COD_DEST4 AS SpecialDeal_ID,CASE
       WHEN COD_DEST1 IS NULL
       OR COD_DEST1 = ''
@@ -73,6 +58,7 @@ cte as(
     END AS Vendor_ID,
     fb.COD_SCENARIO AS Scenario_ID,
     COD_AZIENDA AS Entity_ID,
+    COD_CATEGORIA as Category,
     CAST( sum(IMPORTO) * (-1) AS DECIMAL(18, 2)) AS Amount_LCY_Original
   FROM
     silver_{ENVIRONMENT}.tag02.dati_saldi_lordi FB
@@ -81,7 +67,23 @@ cte as(
     and (COD_SCENARIO  like '%04')
     and (COD_SCENARIO not like '%OB%')
     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
-    AND COD_CATEGORIA LIKE '%AMOUNT'
+ -- [yz] 2024.02.21 include all categories for finance report 
+    AND (COD_CATEGORIA  like"%AMOUNT" or 
+COD_CATEGORIA in (
+'ADJ01'
+,'ADJ02'
+,'ADJ03'
+,'CF_GROUP'
+,'CF_LOCAL'
+,'CF_TDA'
+,'INP_HQ03'
+,'INP_HQ04'
+,'INP_HQ05'
+,'INP_HQ06'
+,'INP_HQ07'
+,'INP_MSP2018'
+,'SYN2'
+ ) )
     AND Sys_Silver_IsCurrent = 1
     AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null)
   group by
@@ -97,7 +99,57 @@ cte as(
       OR COD_DEST1 IS NULL THEN 'N/A'
       ELSE COD_DEST1
     END,
-    COD_DEST4
+    COD_DEST4,
+    COD_CATEGORIA
+),
+adjustments as(
+  SELECT
+    fb.COD_PERIODO AS Period,
+    COD_VALUTA AS Currency_ID,
+    COD_CONTO AS Account_ID,
+    COD_DEST2 AS Region_ID,
+    COD_DEST4 AS SpecialDeal_ID,CASE
+      WHEN COD_DEST1 IS NULL
+      OR COD_DEST1 = ''
+      OR COD_DEST1 = 'NULL'
+      OR COD_DEST1 IS NULL THEN 'N/A'
+      ELSE COD_DEST1
+    END AS Vendor_ID,
+    fb.COD_SCENARIO AS Scenario_ID,
+    COD_AZIENDA AS Entity_ID,
+    COD_CATEGORIA AS Category,
+    CAST( sum(IMPORTO) * (-1) AS DECIMAL(18, 2)) AS Amount_LCY_Original
+  FROM
+    silver_{ENVIRONMENT}.tag02.dati_rett_riga FB
+  WHERE
+    (COD_SCENARIO like '%ACT%')
+    and (COD_SCENARIO  like '%04')
+    and (COD_SCENARIO not like '%OB%')
+    AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
+-- [yz] 2024.02.21 include all manual journals categories for finance report 
+    AND COD_CATEGORIA like '%ADJ%'
+    AND Sys_Silver_IsCurrent = 1
+    AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null)
+  group by
+    COD_PERIODO,
+    COD_VALUTA,
+    COD_CONTO,
+    COD_DEST2,
+    COD_SCENARIO,
+    COD_AZIENDA,CASE
+      WHEN COD_DEST1 IS NULL
+      OR COD_DEST1 = ''
+      OR COD_DEST1 = 'NULL'
+      OR COD_DEST1 IS NULL THEN 'N/A'
+      ELSE COD_DEST1
+    END,
+    COD_DEST4,
+    COD_CATEGORIA
+),
+cte as(
+  select *from base
+  union all
+  select * from adjustments
 ),
 cte_2 as (
   select
@@ -106,13 +158,14 @@ cte_2 as (
       Partition by Currency_ID,
       Account_ID,
       SpecialDeal_ID,
-      RPTRegion_ID,
+      Region_ID,
       Vendor_ID,
       Scenario_ID,
-      Entity_ID
+      Entity_ID,
+      Category
     ) as maxMonth
   FROM
-    cte as base --where  Account_ID ='309988'
+    cte as base 
 ),
 cte_3 as(
   select
@@ -120,10 +173,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -136,10 +190,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -152,10 +207,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -168,10 +224,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -184,10 +241,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -200,10 +258,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -216,10 +275,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -232,10 +292,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -248,10 +309,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -264,10 +326,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -280,10 +343,11 @@ cte_3 as(
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
      0 AS Amount_LCY_Original
   from
     cte_2
@@ -296,10 +360,11 @@ UNION ALL
     Currency_ID,
     Account_ID,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
     Amount_LCY_Original
   from
     cte
@@ -311,10 +376,11 @@ cta as(
       PARTITION BY Currency_ID,
       Account_ID,
       SpecialDeal_ID,
-      RPTRegion_ID,
+      Region_ID,
       Vendor_ID,
       Scenario_ID,
-      Entity_ID
+      Entity_ID,
+      Category
       ORDER BY
         Period ASC
     ) AS Amount_LCY_Original_Prev
@@ -388,10 +454,11 @@ act as(
         '309988' ,'310188' ,'310288' ,'310388' ,'310488' ,'310588' ,'310688' ,'310788' ,'310888' ,'310988' ,'311088' ,'312088' ,'313088' ,'314088' ,'320988' ,'322988' ,'350988' ,'351988' ,'370988' ,'371988' ,'391988' ,'400988' ,'401988' ,'402988' ,'409999_REF' ,'420988' ,'420999_REF' ,'421988' ,'422988' ,'440188' ,'440288' ,'440388' ,'440488' ,'440588' ,'440688' ,'440788' ,'440888' ,'449988' ,'450888' ,'450988' ,'451988' ,'452788' ,'452888' ,'452988' ,'468988' ,'469988' ,'471988' ,'499988'
      ) THEN 'GP1' ELSE 'Others' end as GP1Accounts,
     SpecialDeal_ID,
-    RPTRegion_ID,
+    Region_ID,
     Vendor_ID,
     Scenario_ID,
     Entity_ID,
+    Category,
     (Amount_LCY_Original - Amount_LCY_Original_Prev) AS Amount_LCY_Original,
     ROUND(
      
@@ -416,5 +483,6 @@ act as(
 select act.*, coalesce(vendor.Vendor_Name,act.Vendor_ID)  as Vendor_Name
 from act
 left join vendor on act.Vendor_ID = vendor.Vendor_ID
+where act.Amount_LCY_Original <>0
 
 """)
