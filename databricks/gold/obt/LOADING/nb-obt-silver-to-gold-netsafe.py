@@ -64,7 +64,7 @@ FROM
 LEFT JOIN
   gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr
 ON
-  datanowarr.SKU = invoice.SKU
+  invoice.SKU = datanowarr.SKU
 LEFT JOIN 
 (
   SELECT DISTINCT ResellerID, ResellerGroupCode, ResellerGroupName, ResellerName, Entity

@@ -1,8 +1,7 @@
 # Databricks notebook source
-# MAGIC %python
-# MAGIC import os
-# MAGIC
-# MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
@@ -88,11 +87,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Flag if this is the current version.'
 # MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the deleted version.'
-# MAGIC ,CONSTRAINT netsafe_invoicedata_pk PRIMARY KEY(Invoice_Number, Invoice_Line_Nb, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC ,CONSTRAINT netsafe_invoicedata_pk PRIMARY KEY(Invoice_Number, Invoice_Line_Nb,Country, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ardoc. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (Invoice_Number, Invoice_Line_Nb)
+# MAGIC CLUSTER BY (Invoice_Number, Country)
 
 # COMMAND ----------
 
