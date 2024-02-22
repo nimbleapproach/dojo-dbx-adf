@@ -31,9 +31,6 @@
 				}
 			],
 			"scriptLines": [
-				"parameters{",
-				"     pm_FileName as string",
-				"}",
 				"source(output(",
 				"          {Invoice Date} as string,",
 				"          {Sales Order Number} as string,",
@@ -64,7 +61,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: true,",
-				"     moveFiles: [('netsafe/pending/'+ $pm_FileName + '.xlsx'),('netsafe/archived' + $pm_FileName + '.xlsx')],",
+				"     moveFiles: [('netsafe/pending/'),('netsafe/archived/')],",
 				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
 				"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
 				"AddSystemColumns sink(allowSchemaDrift: true,",
@@ -73,7 +70,7 @@
 				"     fileSystem: 'bronze',",
 				"     folderPath: 'netsafe/invoicedata',",
 				"     compressionCodec: 'snappy',",
-				"     partitionFileNames:[(concat('bronze-netsafe-',$pm_FileName,'-',toString(currentUTC()),'.snappy.parquet')\r",
+				"     partitionFileNames:[(concat('bronze-netsafe-',toString(currentUTC()),'.snappy.parquet')\r",
 				")],",
 				"     umask: 0022,",
 				"     preCommands: [],",
