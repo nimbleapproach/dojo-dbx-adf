@@ -4862,7 +4862,7 @@
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['netsafe/pending','netsafe/archived'],",
+						"     moveFiles: [('netsafe/pending/'+ $pm_FileName + '.xlsx'),('netsafe/archived' + $pm_FileName + '.xlsx')],",
 						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
 						"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
 						"AddSystemColumns sink(allowSchemaDrift: true,",
