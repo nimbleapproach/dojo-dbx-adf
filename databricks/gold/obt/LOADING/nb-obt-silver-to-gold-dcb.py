@@ -67,9 +67,25 @@ LEFT JOIN
   FROM silver_{ENVIRONMENT}.masterdata.resellergroups
   WHERE InfinigateCompany = 'Nuvias'
   AND Sys_Silver_IsCurrent = true
+  /*
+  Change Date [22/02/2024]
+  Change BY [MS]
+  Filter only relevant entities
+  */
+  AND Entity IN ('BE2', 'NL3')
 ) rg
 ON 
   cast(invoice.Reseller_ID as string) = rg.ResellerID
+/*
+Change Date [22/02/2024]
+Change BY [MS]
+Join with entity as well
+*/
+AND
+  CASE
+    WHEN invoice.Entity = '1' THEN 'BE2'
+    WHEN invoice.Entity = '2' THEN 'NL3'
+  END = rg.Entity
 WHERE
   invoice.Sys_Silver_IsCurrent = true
 )

@@ -71,9 +71,27 @@ LEFT JOIN
   FROM silver_{ENVIRONMENT}.masterdata.resellergroups
   WHERE InfinigateCompany = 'Nuvias'
   AND Sys_Silver_IsCurrent = true
+  /*
+  Change Date [22/02/2024]
+  Change BY [MS]
+  Filter only relevant entities
+  */
+  AND Entity IN ('RO2', 'HR2', 'SI1', 'BG1')
 ) rg
 ON 
   cast(invoice.Customer_Account as string) = rg.ResellerID
+/*
+Change Date [22/02/2024]
+Change BY [MS]
+Join with entity as well
+*/
+AND
+  CASE
+    WHEN invoice.Country = 'Romania' THEN 'RO2'
+    WHEN invoice.Country = 'Croatia' THEN 'HR2'
+    WHEN invoice.Country = 'Slovenia' THEN 'SI1'
+    WHEN invoice.Country = 'Bulgaria' THEN 'BG1'
+  END = rg.Entity
 WHERE
   invoice.Sys_Silver_IsCurrent = true
 )
