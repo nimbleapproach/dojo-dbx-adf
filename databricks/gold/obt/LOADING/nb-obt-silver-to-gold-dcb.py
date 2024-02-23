@@ -54,7 +54,12 @@ coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
 coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
 to_date('1900-01-01') AS ResellerGroupStartDate,
 'EUR' AS CurrencyCode,
-cast(invoice.Total_Invoice as DECIMAL(10, 2)) AS RevenueAmount
+/*
+Change Date [23/02/2024]
+Change BY [MS]
+Use net_price column as revenue amount
+*/
+cast(invoice.Net_Price as DECIMAL(10, 2)) AS RevenueAmount
 FROM 
   silver_{ENVIRONMENT}.dcb.invoicedata AS invoice
 LEFT JOIN
