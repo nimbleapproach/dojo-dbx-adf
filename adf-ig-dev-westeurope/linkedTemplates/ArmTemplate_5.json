@@ -13,7 +13,7 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Load_View_ITERATOR')]",
+			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Recreate_View_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -23,7 +23,7 @@
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Get EDW Views",
+								"activity": "Get DatabasesControl Table",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -32,14 +32,12 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('Get EDW Views').output.value",
+								"value": "@activity('Get DatabasesControl Table').output.value",
 								"type": "Expression"
 							},
-							"isSequential": false,
-							"batchCount": 4,
 							"activities": [
 								{
-									"name": "PL_30_IGSQL03_Load_View",
+									"name": "PL_30_IGSQL03_Recreate_View",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"policy": {
@@ -48,21 +46,17 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_30_IGSQL03_Load_View",
+											"referenceName": "PL_30_IGSQL03_Recreate_View",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
 										"parameters": {
+											"pm_TableName": {
+												"value": "@pipeline().parameters.pm_TableName",
+												"type": "Expression"
+											},
 											"pm_DatabaseName": {
-												"value": "@pipeline().parameters.pm_DatabaseName",
-												"type": "Expression"
-											},
-											"pm_ViewName": {
-												"value": "@item().TABLE_NAME",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
+												"value": "@item().DATABASE_NAME",
 												"type": "Expression"
 											}
 										}
@@ -72,7 +66,7 @@
 						}
 					},
 					{
-						"name": "Get EDW Views",
+						"name": "Get DatabasesControl Table",
 						"type": "Lookup",
 						"dependsOn": [],
 						"policy": {
@@ -85,29 +79,22 @@
 						"userProperties": [],
 						"typeProperties": {
 							"source": {
-								"type": "SqlServerSource",
+								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "Select [TABLE_NAME] FROM INFORMATION_SCHEMA.TABLES\nwhere [TABLE_SCHEMA] = 'edw_@{pipeline().globalParameters.gpm_Environment}'\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}'",
+									"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
 							"dataset": {
-								"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
 								"type": "DatasetReference",
 								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_IGSQL03_DATABASES",
 									"pm_Environment": {
 										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "TABLES",
-										"type": "Expression"
-									},
-									"pm_SchemaName": "INFORMATION_SCHEMA",
-									"pm_DatabaseName": {
-										"value": "@pipeline().parameters.pm_DatabaseName",
 										"type": "Expression"
 									}
 								}
@@ -120,16 +107,12 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"pm_DatabaseName": {
+					"pm_TableName": {
 						"type": "string"
-					},
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/IGSQL03 [Navision]"
+					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
 				},
 				"annotations": []
 			},
@@ -456,6 +439,118 @@
 				},
 				"folder": {
 					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_CRM_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get EDW Tables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_VUZION_D365_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_20_VUZION_CRM_ITERATOR",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_VUZION_CRM_Load_Entity",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_TableName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_full_load": {
+												"value": "@pipeline().parameters.pm_full_load",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "bool"
+					}
+				},
+				"variables": {
+					"Watermark_New": {
+						"type": "String"
+					},
+					"Watermark_Delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/VUZION [CRM]"
 				},
 				"annotations": []
 			},
@@ -1209,9 +1304,7 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Load_View_ITERATOR')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL03_Recreate_View_ITERATOR')]",
@@ -1309,7 +1402,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Recreate_View_ITERATOR')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_10_NETSUITE_Load_File_ITERATOR')]",
@@ -1414,118 +1509,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_20_NETSUITE_Load_File')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_CRM_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get EDW Tables",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_VUZION_D365_TABLES",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEachView",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get EDW Tables",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get EDW Tables').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 4,
-							"activities": [
-								{
-									"name": "PL_20_VUZION_CRM_ITERATOR",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_VUZION_CRM_Load_Entity",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_TableName": {
-												"value": "@item().TABLE_NAME",
-												"type": "Expression"
-											},
-											"pm_full_load": {
-												"value": "@pipeline().parameters.pm_full_load",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_full_load": {
-						"type": "bool"
-					}
-				},
-				"variables": {
-					"Watermark_New": {
-						"type": "String"
-					},
-					"Watermark_Delta": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/VUZION [CRM]"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__6')]",
