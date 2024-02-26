@@ -64,7 +64,7 @@
 				"     moveFiles: [('netsafe/pending/'),('netsafe/archived/')],",
 				"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
 				"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC(),",
-				"          Sys_Country = regexExtract(Sys_FileName, '(Romania)|(Bulgaria)|(Slovenia)|(Croatia)/gmi')) ~> AddSystemColumns",
+				"          Sys_Country = regexExtract(Sys_FileName,'(Romania|Croatia|Slovenia|Bulgaria)')) ~> AddSystemColumns",
 				"AddSystemColumns sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
