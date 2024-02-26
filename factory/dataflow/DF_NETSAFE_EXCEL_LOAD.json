@@ -104,6 +104,7 @@
 				"          SKU_Description = {SKU Description},",
 				"          Country,",
 				"          Invoice_Line_Nb = {Invoice Line Nb},",
+				"          Sys_Country,",
 				"          Sys_FileName,",
 				"          Sys_Bronze_InsertDateTime_UTC",
 				"     ),",
