@@ -73,6 +73,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_FileName STRING
 # MAGIC       COMMENT 'TODO'
+# MAGIC     ,Sys_Country STRING
+# MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
@@ -87,7 +89,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Flag if this is the current version.'
 # MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the deleted version.'
-# MAGIC ,CONSTRAINT netsafe_invoicedata_pk PRIMARY KEY(Invoice_Number, Invoice_Line_Nb,Sys_FileName, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC ,CONSTRAINT netsafe_invoicedata_pk PRIMARY KEY(Invoice_Number, Invoice_Line_Nb,Sys_Country, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ardoc. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
