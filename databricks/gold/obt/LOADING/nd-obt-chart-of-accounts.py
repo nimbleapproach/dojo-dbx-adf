@@ -4,6 +4,15 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC
+# MAGIC
+# MAGIC Original Date [27/02/2024]\
+# MAGIC Created BY [YZ]\
+# MAGIC Generate a flattend Chart of accounts hierarcy from three tagetik objects. 
+
+# COMMAND ----------
+
 import os
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]

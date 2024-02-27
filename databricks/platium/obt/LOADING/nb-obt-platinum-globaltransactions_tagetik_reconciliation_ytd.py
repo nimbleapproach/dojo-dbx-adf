@@ -14,6 +14,11 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 
 # COMMAND ----------
 
+
+# Original Date [27/02/2024]
+# Created BY [YZ]
+# Generate a view for tagetik vs obt reconciliation use as source for reconciliation report ib powerbi
+
 spark.sql(f"""
 CREATE
 OR Replace VIEW globaltransactions_tagetik_reconciliation_ytd AS 

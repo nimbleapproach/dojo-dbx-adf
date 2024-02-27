@@ -14,6 +14,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
 
+
+# Original Date [27/02/2024]
+# Created BY [YZ]
+# Generate a flattend region hierarcy from three tagetik objects. Grouping entities into their espected region (ex, NO1 DK2, FI1 belong to Nordic as region)
+
 spark.sql(f"""
 create or replace view region as 
 WITH level_1 as(
