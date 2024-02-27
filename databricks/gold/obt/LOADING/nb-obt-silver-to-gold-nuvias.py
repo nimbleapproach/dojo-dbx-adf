@@ -318,4 +318,4 @@ selection_columns = [
 
 df_selection = df_nuvias.select(selection_columns)
 df_selection = df_selection.fillna(value= 'NaN').replace('', 'NaN')
-df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NU' AND EntityCode NOT IN ('BE3', 'RO2', 'HR2', 'SI1', 'BG1')").saveAsTable("globaltransactions")
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NU' AND EntityCode NOT IN ('BE3','BE2', 'NL3', 'RO2', 'HR2', 'SI1', 'BG1')").saveAsTable("globaltransactions")

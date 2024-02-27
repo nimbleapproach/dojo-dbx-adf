@@ -131,7 +131,17 @@ SELECT
   BillingFrequencyMaster,
   ConsumptionModelMaster,
   VendorCode,
-  VendorNameInternal,
+  --VendorNameInternal,
+  /*
+  Change Date [14/02/2024]
+  Change BY [MS]
+  Branch Name users/mso/vuzion_hf_vendorname
+  Fix VendorNameInternal and VendorNameMaster for Microsoft products
+  */
+  CASE
+  WHEN VendorNameMaster IN ('Acronis','BitTitan','Bluedog','Exclaimer','Infinigate Cloud','LastPass','Microsoft','SignNow')
+  THEN VendorNameMaster
+  ELSE VendorNameInternal END AS VendorNameInternal,
   VendorNameMaster,
   VendorGeography,
   CASE
