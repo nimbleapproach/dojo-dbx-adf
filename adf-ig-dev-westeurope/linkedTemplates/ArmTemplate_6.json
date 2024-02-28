@@ -2037,7 +2037,7 @@
 						"timeZone": "W. Europe Standard Time",
 						"schedule": {
 							"hours": [
-								3
+								2
 							],
 							"weekDays": [
 								"Monday",
@@ -2125,7 +2125,7 @@
 						"timeZone": "W. Europe Standard Time",
 						"schedule": {
 							"hours": [
-								2
+								1
 							],
 							"weekDays": [
 								"Monday",
