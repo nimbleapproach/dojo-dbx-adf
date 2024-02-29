@@ -20,6 +20,13 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "GetBronzeData"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_SQLDB_METADATA",
+						"type": "LinkedServiceReference"
+					},
+					"name": "GetKeysControlTable"
 				}
 			],
 			"sinks": [
@@ -29,6 +36,16 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "WriteDeltaTable"
+				},
+				{
+					"name": "Cache"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "WriteKeys"
 				}
 			],
 			"transformations": [
@@ -49,6 +66,21 @@
 				},
 				{
 					"name": "CastTimestamps"
+				},
+				{
+					"name": "SelectKeys"
+				},
+				{
+					"name": "Deduplicate"
+				},
+				{
+					"name": "AddHashKey"
+				},
+				{
+					"name": "DropSysHashKey"
+				},
+				{
+					"name": "AddLoadTime"
 				}
 			],
 			"scriptLines": [
@@ -72,6 +104,15 @@
 				"     compressionLevel: 'Fastest',",
 				"     fileSystem: 'bronze',",
 				"     folderPath: ('netsuite/'+ $pm_FileName)) ~> GetBronzeData",
+				"source(output(",
+				"          Business_Keys as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'sqlserver',",
+				"     query: (\"Select Business_Keys from [adf].[CT_NETSUITE_KEYS] where TABLE_NAME = '\" +$pm_FileName + \"'\"),",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> GetKeysControlTable",
 				"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
 				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('Last_Modified')))) ~> GetMaxWatermark",
 				"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('Last_Modified')) > CurrentWatermark)) ~> Increment",
@@ -87,6 +128,20 @@
 				"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
 				"GetFile derive(Last_Modified = toTimestamp(byName('Last_Modified'),'dd/MM/yyyy h:mm a'),",
 				"          Date_Created = toTimestamp(byName('Date_Created'),'dd/MM/yyyy h:mm a')) ~> CastTimestamps",
+				"GetFile select(mapColumn(",
+				"          each(match(contains(split(Cache#output().Business_Keys,','), #item == name)))",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectKeys",
+				"AddHashKey aggregate(groupBy(Sys_HashKey),",
+				"     each(match(name != 'Sys_HashKey'), $$ = first($$))) ~> Deduplicate",
+				"SelectKeys derive(Sys_HashKey = sha2(256, concatWS('~',toString(columns())))) ~> AddHashKey",
+				"Deduplicate select(mapColumn(",
+				"          each(match(name != 'Sys_HashKey'))",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> DropSysHashKey",
+				"DropSysHashKey derive(Sys_DataFactory_LoadDateTime_UTC = currentUTC()) ~> AddLoadTime",
 				"AddBronzeLoadDate sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delta',",
@@ -106,7 +161,35 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable",
+				"GetKeysControlTable sink(validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     store: 'cache',",
+				"     format: 'inline',",
+				"     output: false,",
+				"     saveOrder: 1) ~> Cache",
+				"AddLoadTime sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     compressionType: 'snappy',",
+				"     compressionLevel: 'Fastest',",
+				"     fileSystem: 'keys',",
+				"     folderPath: ('netsuite/'+ $pm_FileName),",
+				"     overwrite: true,",
+				"     mergeSchema: true,",
+				"     autoCompact: true,",
+				"     optimizedWrite: true,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteKeys"
 			]
 		}
 	}
