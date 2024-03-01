@@ -31,14 +31,25 @@ SELECT
 ,cast(sa.OrderID AS STRING) AS SalesOrderID
 ,cast(od.DetID AS STRING) AS SalesOrderItemID
 ,coalesce(bm.MPNumber,'NaN') AS SKUInternal
-,coalesce(vuzionarr.sku,'NaN') AS SKUMaster
+--,coalesce(vuzionarr.sku,'NaN') AS SKUMaster
+,coalesce(datanowarr.SKU, 'NaN')  AS SKUMaster
 ,coalesce(od.Descr,'NaN') AS Description
 ,'NaN' AS ProductTypeInternal
-,coalesce(vuzionarr.product_type,'NaN') AS ProductTypeMaster
-,coalesce(vuzionarr.commitment_duration,'NaN') AS CommitmentDuration1Master
-,'DataNowArr data not available' AS CommitmentDuration2Master
-,coalesce(vuzionarr.billing_frequency,'NaN') AS BillingFrequencyMaster
-,coalesce(vuzionarr.consumption_model,'NaN') AS ConsumptionModelMaster
+/*
+Change Date [28/02/2024]
+Change BY [MS]
+Change to use main datanow arr for vuzion data
+*/
+--,coalesce(vuzionarr.product_type,'NaN') AS ProductTypeMaster
+--,coalesce(vuzionarr.commitment_duration,'NaN') AS CommitmentDuration1Master
+--,'DataNowArr data not available' AS CommitmentDuration2Master
+--,coalesce(vuzionarr.billing_frequency,'NaN') AS BillingFrequencyMaster
+--,coalesce(vuzionarr.consumption_model,'NaN') AS ConsumptionModelMaster
+,coalesce(datanowarr.Product_Type,'NaN') AS ProductTypeMaster
+,coalesce(datanowarr.Commitment_Duration_in_months,'NaN') AS CommitmentDuration1Master
+,coalesce(datanowarr.Commitment_Duration_Value,'NaN') AS CommitmentDuration2Master
+,coalesce(datanowarr.Billing_Frequency,'NaN') AS BillingFrequencyMaster
+,coalesce(datanowarr.Consumption_Model,'NaN') AS ConsumptionModelMaster
 ,cast(coalesce(s.serviceTemplateID,'NaN') AS string) AS VendorCode
 /*
 Change Date [14/02/2024]
@@ -51,7 +62,8 @@ Fix ManufacturerName for Microsoft products
 WHEN bm.Manufacturer = 'VA-888-104' THEN 'Microsoft'
 ELSE coalesce(bm.ManufacturerName,'NaN') 
 END AS VendorNameInternal
-,coalesce(vuzionarr.vendor_name,'NaN') AS VendorNameMaster
+--,coalesce(vuzionarr.vendor_name,'NaN') AS VendorNameMaster
+,coalesce(datanowarr.Vendor_Name,'NaN') AS VendorNameMaster
 ,'NaN' AS VendorGeography
 ,cast(coalesce(r.ResellerID,'NaN') AS string) AS ResellerCode
 ,coalesce(r.ResellerName,'NaN') AS ResellerNameInternal
@@ -102,12 +114,20 @@ LEFT JOIN
 ) rg
 ON 
   cast(r.ResellerID as string) = rg.ResellerID
-LEFT JOIN 
-  silver_{ENVIRONMENT}.masterdata.vuzionarr
+LEFT JOIN
+  /*
+  Change Date [28/02/2024]
+  Change BY [MS]
+  Change to use main datanow arr for vuzion data
+  */
+  --silver_{ENVIRONMENT}.masterdata.vuzionarr
+--ON
+  --vuzionarr.sku = bm.MPNumber
+--AND
+  --vuzionarr.Sys_Silver_IsCurrent = true
+  gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr
 ON
-  vuzionarr.sku = bm.MPNumber
-AND
-  vuzionarr.Sys_Silver_IsCurrent = true
+  datanowarr.SKU = bm.MPNumber
 WHERE
   sa.OrderTypeID IN ('BO','SO','CF','CH')
 )
@@ -131,7 +151,17 @@ SELECT
   BillingFrequencyMaster,
   ConsumptionModelMaster,
   VendorCode,
-  VendorNameInternal,
+  --VendorNameInternal,
+  /*
+  Change Date [14/02/2024]
+  Change BY [MS]
+  Branch Name users/mso/vuzion_hf_vendorname
+  Fix VendorNameInternal and VendorNameMaster for Microsoft products
+  */
+  CASE
+  WHEN VendorNameMaster IN ('Acronis','BitTitan','Bluedog','Exclaimer','Infinigate Cloud','LastPass','Microsoft','SignNow')
+  THEN VendorNameMaster
+  ELSE VendorNameInternal END AS VendorNameInternal,
   VendorNameMaster,
   VendorGeography,
   CASE

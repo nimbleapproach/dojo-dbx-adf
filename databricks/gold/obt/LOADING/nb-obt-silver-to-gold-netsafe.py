@@ -24,11 +24,16 @@ AS
 (
 SELECT 
 'NU' AS GroupEntityCode,
+  /*
+  Change Date [26/02/2024]
+  Change BY [YZ]
+  suse file name as source for entity
+  */
 CASE
-WHEN invoice.Country = 'Romania' THEN 'RO2'
-WHEN invoice.Country = 'Croatia' THEN 'HR2'
-WHEN invoice.Country = 'Slovenia' THEN 'SI1'
-WHEN invoice.Country = 'Bulgaria' THEN 'BG1'
+WHEN lower(invoice.Sys_Country) like '%romania%' THEN 'RO2'
+WHEN lower(invoice.Sys_Country) like '%croatia%' THEN 'HR2'
+WHEN lower(invoice.Sys_Country) like '%slovenia%' THEN 'SI1'
+WHEN lower(invoice.Sys_Country) like '%bulgaria%' THEN 'BG1'
 END AS EntityCode,
 to_date(invoice.Invoice_Date) AS TransactionDate,
 to_date(invoice.Invoice_Date) AS SalesOrderDate,
@@ -64,16 +69,34 @@ FROM
 LEFT JOIN
   gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr
 ON
-  datanowarr.SKU = invoice.SKU
+  invoice.SKU = datanowarr.SKU
 LEFT JOIN 
 (
   SELECT DISTINCT ResellerID, ResellerGroupCode, ResellerGroupName, ResellerName, Entity
   FROM silver_{ENVIRONMENT}.masterdata.resellergroups
   WHERE InfinigateCompany = 'Nuvias'
   AND Sys_Silver_IsCurrent = true
+  /*
+  Change Date [22/02/2024]
+  Change BY [MS]
+  Filter only relevant entities
+  */
+  AND Entity IN ('RO2', 'HR2', 'SI1', 'BG1')
 ) rg
 ON 
   cast(invoice.Customer_Account as string) = rg.ResellerID
+/*
+Change Date [22/02/2024]
+Change BY [MS]
+Join with entity as well
+*/
+AND
+  CASE
+WHEN lower(invoice.Sys_Country) like '%romania%' THEN 'RO2'
+WHEN lower(invoice.Sys_Country) like '%croatia%' THEN 'HR2'
+WHEN lower(invoice.Sys_Country) like '%slovenia%' THEN 'SI1'
+WHEN lower(invoice.Sys_Country) like '%bulgaria%' THEN 'BG1'
+END = rg.Entity
 WHERE
   invoice.Sys_Silver_IsCurrent = true
 )

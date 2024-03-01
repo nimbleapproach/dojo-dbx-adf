@@ -3,13 +3,16 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "PL_10_NETSAFE_Load_File_ITERATOR",
+				"name": "PL_20_NETSAFE_Load_File",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_10_NETSAFE_Load_File_ITERATOR",
+						"referenceName": "PL_20_NETSAFE_Load_File",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true

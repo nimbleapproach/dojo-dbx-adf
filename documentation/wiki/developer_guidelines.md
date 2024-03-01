@@ -62,6 +62,34 @@ If there is no similar example and you are not confident about a good name for y
 
 All our code based development (data factory and databricks at the moment) are using one [Azure DevOps Repo ](https://dev.azure.com/InfinigateHolding/Group%20IT%20Program/_git/inf-edw). Our main branch is "main" and we are not commiting directly on the main. Insteed we are creating a new branch which should look like that "users/ksa/subject" and should contain one closed change which will be squash commited to the main branch afterwards.
 
+### Continuous Integration
+Developers practicing continuous integration merge their changes back to the main branch as often as possible. The developer's changes are validated and technical tested by the dev team. By doing so, you avoid integration challenges that can happen when waiting for release day to merge changes into the release branch.
+
+This is done by creating a new branch from main and name it USERS/{yourname}/{subject} do a change their and create a pull request from this branch back to main.
+
+In addition to that we are followign the following principals:
+
+- Your Pull Requests in Dev to commit your Branch to Main can no longer be approved just by you. Any PR Must be reviewed / approved by 1 other member of the Dev Team (Kevin, Ying-Zhen, Murtaza, or Jason)
+ 
+
+- We need to comment our code systematically – All of your changes to Main from your Branch Must have inline comments which as a minimum state:
+/* Change Date [DD/MM/YY] , Developer Initials [JM, YZ etc.] , Branch Name */
+
+ 
+
+- An overview email on the changes being introduced by a Branch merge must exist the PR Requestor is responsible for this. Send a quick email to KS, JM, MS, YZ with the Branch Name as the email title and a brief description covering: What the change is / Why it’s needed / What testing you’ve undertaken / Who has reviewed your PR
+ 
+
+- We should be talking about PR’s and Branch Merges with the wider Team in Stand Up so that they are aware and so that wider questions can be asked / answered. We need to be clear and transparent about what we’re doing. For example, we might say in our update that;
+
+### Continuous Delivery
+Continuous delivery is an extension of continuous integration since it automatically deploys all code changes to our testing and production environment.
+
+This is done by creating a Pull Request (PR) from main to testing and testing to release.
+
+When we do a new PR from main to testing we add a TAG on that commit Release-vX.Y, where X indicates a new major version and y a new minor version. Typically a major version is one that is not competable with the version before in all cases and cannot be reverted easilly.
+### Limitations
+All changes outside of our repo, like Azure Key Vault, Metadata SQL, Databricks Workflows, Excel Sheets (ARR for example or new deltalink csvs) needs to be brought over MANUALLY.
 
 ## Azure Data Factory
 In this section we will point out more precise information on how we are using data factory.

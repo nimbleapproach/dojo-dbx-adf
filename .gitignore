@@ -419,3 +419,6 @@ Thumbs.db
 *.mov
 *.wmv
 
+
+.databricks
+.vscode
