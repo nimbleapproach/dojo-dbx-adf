@@ -34,14 +34,16 @@ Period_FX_rate
  from gold_{ENVIRONMENT}.obt.exchange_rate
  ),
 --[(17.02.2024) yz: Tagetik consolidation Vendor]
-  vendor as (select 
-  Code as Vendor_ID,
-  Name as Vendor_Name
+--[(29.02.2024) yz: Take vendor from tagetik vendor table]
+  vendor as (
+    select 
+      COD_DEST1 as Vendor_ID,
+      DESC_DEST10 as Vendor_Name
 
-  from silver_{ENVIRONMENT}.igsql03.dimension_value
+  from silver_{ENVIRONMENT}.tag02.dest1
   where Sys_Silver_IsCurrent =1
-  and DimensionCode = 'VENDOR'
-  and Sys_DatabaseName='ReportsDE'),
+
+  ),
   -- base table with original entity amounts
   base as(
   SELECT
