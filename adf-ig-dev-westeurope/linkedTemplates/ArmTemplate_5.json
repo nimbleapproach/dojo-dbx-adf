@@ -121,7 +121,10 @@
 													}
 												},
 												"GetBronzeData": {},
-												"WriteDeltaTable": {}
+												"GetKeysControlTable": {},
+												"WriteDeltaTable": {},
+												"Cache": {},
+												"WriteKeys": {}
 											},
 											"linkedServiceParameters": {
 												"GetBronzeData": {
@@ -132,7 +135,23 @@
 														}
 													}
 												},
+												"GetKeysControlTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
 												"WriteDeltaTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"WriteKeys": {
 													"linkedService": {
 														"pm_Environment": {
 															"value": "@pipeline().globalParameters.gpm_Environment",
