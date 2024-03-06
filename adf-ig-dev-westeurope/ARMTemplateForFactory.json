@@ -13749,7 +13749,8 @@
 								}
 							}
 						},
-						"secretName": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
+						"secretName": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]",
+						"secretVersion": "9cb5ed96b3fd4e04b9ef7b1c83617604"
 					}
 				},
 				"connectVia": {
