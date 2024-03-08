@@ -82,7 +82,15 @@ FROM
   AND rg.Sys_Silver_IsCurrent = true
   --Comment by MS (30/01/2024) - End
 where
-  si.Sys_Silver_IsCurrent = 1)
+  si.Sys_Silver_IsCurrent = 1
+/*
+Change Date [29/02/2024]
+Change BY [MS]
+Exclude deleted revenue rows
+*/
+AND
+  si.Sys_Silver_IsDeleted != true
+  )
 
   select
   GroupEntityCode,
