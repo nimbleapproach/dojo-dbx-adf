@@ -87,11 +87,10 @@ cte as (
   SELECT
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
-    entity.TagetikEntityCode AS EntityCode,
-  --- [yz]21.02.2024 adding region code for identifying region within entity using customer region
+  --- [yz]15.03.2024 split AT out from DE and BE from NL
     case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
         when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
-        ELSE entity.TagetikEntityCode END AS RegionCode,
+        ELSE entity.TagetikEntityCode END AS EntityCode,
     sil.DocumentNo_ AS DocumentNo,
     sil.LineNo_ AS LineNo,
     -- Comment by YZ (26/01/2023)-Start
@@ -288,11 +287,9 @@ cte as (
   SELECT
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
-    entity.TagetikEntityCode AS EntityCode,
-  --- [yz]21.02.2024 adding region code for identifying region within entity using customer region
     case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
-        when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
-        ELSE entity.TagetikEntityCode END AS RegionCode,
+    when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
+    ELSE entity.TagetikEntityCode END AS EntityCode,
     sil.DocumentNo_ AS DocumentNo,
     sil.LineNo_ AS LineNo,
     sih.MSPUsageHeaderBizTalkGuid,
@@ -479,7 +476,6 @@ cte as (
 select
   cte.GroupEntityCode,
   cte.EntityCode,
-  cte.RegionCode,
   cte.DocumentNo,
   cte.LineNo,
   cte.MSPUsageHeaderBizTalkGuid,
