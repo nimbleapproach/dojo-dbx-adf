@@ -480,7 +480,7 @@ act as(
           Scenario LIKE '%ACT%' 
         )
     ) AS fxr ON Currency_ID = fxr.Currency
-    AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) = CONCAT(fxr.Scenario , fxr.Period)
+    AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) =  CONCAT(fxr.Scenario, left(fxr.Period,2))
 )
 select act.*, coalesce(vendor.Vendor_Name,act.Vendor_ID)  as Vendor_Name
 from act

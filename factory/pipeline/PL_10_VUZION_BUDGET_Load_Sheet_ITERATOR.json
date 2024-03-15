@@ -1,0 +1,101 @@
+{
+	"name": "PL_10_VUZION_BUDGET_Load_Sheet_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetSheetNames",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT [SheetName]\n  FROM [adf].[CT_VUZION_BUDGET_SHEETS]\n  where ShouldBeLoaded = 1",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_VUZION_BUDGET_SHEETS",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachSheet",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetSheetNames",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetSheetNames').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "PL_20_VUZION_BUDGET_Load_Sheet",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_VUZION_BUDGET_Load_Sheet",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_SheetName": {
+										"value": "@item().SheetName",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "@pipeline().parameters.pm_FileName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION/BUDGET"
+		},
+		"annotations": []
+	}
+}
