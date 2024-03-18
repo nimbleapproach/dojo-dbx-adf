@@ -83,7 +83,8 @@ ON
 AND
   e.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
 AND
-  g.EntityCode = e.COD_AZIENDA
+/*[YZ] 15.03.2024 : Add Replace BE1 with NL1 since it is not a valid entity in tagetik for fx*/
+  CASE WHEN g.EntityCode = 'BE1' THEN 'NL1' ELSE  g.EntityCode  END   = e.COD_AZIENDA
 AND
   e.ScenarioGroup = 'Actual'
 --Only for VU and entitycode 'NOTINTAGETIK'
