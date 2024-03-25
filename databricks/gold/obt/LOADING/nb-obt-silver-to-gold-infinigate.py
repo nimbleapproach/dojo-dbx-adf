@@ -34,20 +34,29 @@ with msp_usage as (
       else msp_l.SalesInvoiceLineNo_
     end as DocumentLineNo,
     Case
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
-      ELSE msp_h.CurrencyCode
+      ELSE msp_l.PurchaseCurrencyCode
     END AS CurrencyCode,
+    /*[yz] 2024-03-22 add local currency filed to convert purchase currency back from EUR to LCY*/
+    Case
+      WHEN  right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+        END AS LocalCurrencyCode,
     msp_h.VENDORDimensionValue,
     msp_l.LineNo_ as MSPLineNo,
     msp_l.ItemNo_,
@@ -56,10 +65,11 @@ with msp_usage as (
       when msp_h.CreditMemo = '1' THEN msp_l.TotalPrice *(-1)
       else msp_l.TotalPrice
     end as TotalPrice,
+
     cast (
       case
         when msp_l.PurchaseCurrencyCode = 'NaN' then msp_l.TotalCostPCY
-        else msp_l.TotalCostPCY / fx.Period_FX_rate
+        else msp_l.TotalCostPCY / fx.Period_FX_rate * fx2.Period_FX_rate
       end *(-1) as decimal(10, 2)
     ) as TotalCostLCY
   FROM
@@ -81,6 +91,26 @@ with msp_usage as (
     ) fx on msp_l.PurchaseCurrencyCode = fx.Currency
     and year(msp_h.DocumentDate) = fx.Calendar_Year
     and month(msp_h.DocumentDate) = fx.Month
+    left join (
+      SELECT
+        DISTINCT Calendar_Year,
+        Month,
+        Currency,
+        Period_FX_rate
+      FROM
+        gold_{ENVIRONMENT}.obt.exchange_rate
+      WHERE
+        ScenarioGroup = 'Actual'
+    ) fx2 on Case
+      WHEN  right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+        END = fx2.Currency
+    and year(msp_h.DocumentDate) = fx2.Calendar_Year
+    and month(msp_h.DocumentDate) = fx2.Month
 ),
 cte as (
   --- sales invoice
@@ -88,9 +118,12 @@ cte as (
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
   --- [yz]15.03.2024 split AT out from DE and BE from NL
-    case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
-        when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
-        ELSE entity.TagetikEntityCode END AS EntityCode,
+
+  -- case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
+  --     when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
+  --     ELSE entity.TagetikEntityCode END AS EntityCode,
+   entity.TagetikEntityCode  AS EntityCode,
+    cu.Country_RegionCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
     sil.LineNo_ AS LineNo,
     -- Comment by YZ (26/01/2023)-Start
@@ -287,9 +320,11 @@ cte as (
   SELECT
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
-    case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
-    when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
-    ELSE entity.TagetikEntityCode END AS EntityCode,
+  -- case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
+  --     when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
+  --     ELSE entity.TagetikEntityCode END AS EntityCode,
+   entity.TagetikEntityCode  AS EntityCode,
+    cu.Country_RegionCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
     sil.LineNo_ AS LineNo,
     sih.MSPUsageHeaderBizTalkGuid,
@@ -475,7 +510,10 @@ cte as (
 
 select
   cte.GroupEntityCode,
-  cte.EntityCode,
+    --- [yz]22.03.2024 Add country split here after the msp usage join
+ case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
+     when cte.Reseller_Country_RegionCode = 'AT' AND cte.EntityCode = 'DE1' THEN 'AT1'
+     ELSE cte.EntityCode END AS EntityCode,
   cte.DocumentNo,
   cte.LineNo,
   cte.MSPUsageHeaderBizTalkGuid,

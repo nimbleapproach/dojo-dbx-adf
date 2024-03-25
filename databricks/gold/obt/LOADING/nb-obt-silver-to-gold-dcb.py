@@ -30,12 +30,12 @@ WHEN invoice.Entity = '2' THEN 'NL3'
 END AS EntityCode,
 to_date(invoice.Invoice_Date) AS TransactionDate,
 to_date(invoice.SO_Date) AS SalesOrderDate,
-coalesce(invoice.SO_Number,'NaN') AS SalesOrderID,
+coalesce(invoice.SO,'NaN') AS SalesOrderID,
 'NaN' AS SalesOrderItemID,
 COALESCE(invoice.SKU,'NaN') AS SKUInternal,
 COALESCE(datanowarr.SKU,'NaN') AS SKUMaster,
 COALESCE(invoice.Description,'NaN') AS Description,
-COALESCE(invoice.Product_Type,'NaN')  AS ProductTypeInternal,
+COALESCE(invoice.Product_Type,'NaN') AS ProductTypeInternal,
 COALESCE(datanowarr.Product_Type,'NaN') AS ProductTypeMaster,
 coalesce(datanowarr.Commitment_Duration_in_months,'NaN') AS CommitmentDuration1Master,
 coalesce(datanowarr.Commitment_Duration_Value,'NaN') AS CommitmentDuration2Master,
@@ -47,7 +47,7 @@ coalesce(datanowarr.Vendor_Name,'NaN') AS VendorNameMaster,
 'NaN' AS VendorGeography,
 to_date('1900-01-01') AS VendorStartDate,
 coalesce(invoice.Reseller_ID,'NaN') AS ResellerCode,
-coalesce(invoice.Reseller,'NaN') AS ResellerNameInternal,
+coalesce(invoice.Reseller_Name,'NaN') AS ResellerNameInternal,
 'NaN' AS ResellerGeographyInternal,
 to_date('1900-01-01') AS ResellerStartDate,
 coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
@@ -59,7 +59,9 @@ Change Date [23/02/2024]
 Change BY [MS]
 Use net_price column as revenue amount
 */
-cast(invoice.Net_Price as DECIMAL(10, 2)) AS RevenueAmount
+cast(invoice.Net_Price AS DECIMAL(10, 2)) AS RevenueAmount,
+cast((invoice.Net_Price - invoice.Margin) AS DECIMAL(10, 2)) AS CostAmount,
+cast(invoice.Margin AS  DECIMAL(10, 2)) AS GP1
 FROM 
   silver_{ENVIRONMENT}.dcb.invoicedata AS invoice
 LEFT JOIN
@@ -133,7 +135,9 @@ SELECT
     ELSE ResellerStartDate
   END AS ResellerGroupStartDate,
   CurrencyCode,
-  RevenueAmount
+  RevenueAmount,
+  CostAmount,
+  GP1
 FROM
   initial_query""")
 

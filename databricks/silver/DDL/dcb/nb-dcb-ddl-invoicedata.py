@@ -1,8 +1,7 @@
 # Databricks notebook source
-# MAGIC %python
-# MAGIC import os
-# MAGIC
-# MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
@@ -24,6 +23,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Surrogate Key'
 # MAGIC     ,Invoice STRING
 # MAGIC       COMMENT 'TODO'
+# MAGIC     ,Vlgnr INT
+# MAGIC       COMMENT 'TODO'
 # MAGIC     ,LineNo INT
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Invoice_Date STRING
@@ -32,13 +33,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Invoice_Year INT
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,SO_Number STRING
+# MAGIC     ,SO STRING
 # MAGIC       COMMENT 'TODO'  
 # MAGIC     ,SO_Date STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Reseller_ID INT
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Reseller STRING
+# MAGIC     ,Reseller_Name STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,VAT_Number STRING
 # MAGIC       COMMENT 'TODO'
@@ -54,7 +55,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Line_Discount_Percentage DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Line_Discount_Euro DECIMAL(18,2)
+# MAGIC     ,Line_Discount_Amount DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Net_Price DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO' 
@@ -66,9 +67,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Vendor_ID STRING
 # MAGIC       COMMENT 'TODO'
+# MAGIC     ,Article_Group STRING
+# MAGIC       COMMENT 'TODO'
 # MAGIC     ,Product_Type STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,Article_Group STRING
+# MAGIC     ,Margin DECIMAL(18,2)
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,Margin_Percentage DECIMAL(18,2)
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_FileName STRING
 # MAGIC       COMMENT 'TODO'
