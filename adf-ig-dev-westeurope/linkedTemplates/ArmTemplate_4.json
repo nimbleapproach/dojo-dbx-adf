@@ -1961,12 +1961,7 @@
 							"dataflow": {
 								"referenceName": "DF_DCB_EXCEL_LOAD",
 								"type": "DataFlowReference",
-								"parameters": {
-									"pm_FileName": {
-										"value": "@concat('\"',pipeline().parameters.pm_FileName,'\"')",
-										"type": "Expression"
-									}
-								},
+								"parameters": {},
 								"datasetParameters": {
 									"GetExcelFile": {
 										"pm_Environment": {
@@ -1998,11 +1993,6 @@
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FileName": {
-						"type": "string"
-					}
 				},
 				"folder": {
 					"name": "10 Bronze/DCB"

@@ -1194,6 +1194,40 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_DCB_Load_File_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_20_DCB_Load_File_ITERATOR",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_DCB_Load_File",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/DCB"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_NETSAFE_Load_File_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1303,103 +1337,6 @@
 				},
 				"folder": {
 					"name": "10 Bronze/VUZION"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_DCB_Load_File_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ForEachView",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetFileNames",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetFileNames').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_DC_Load_File",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_DCB_Load_File",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FileName": {
-												"value": "@split(item().name,'.')[0]",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "GetFileNames",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "DS_BINARY_DCB",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/DCB"
 				},
 				"annotations": []
 			},
