@@ -140,23 +140,3 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC ALTER TABLE ora_account ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
 # MAGIC ALTER TABLE ora_account ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
 # MAGIC ALTER TABLE ora_account ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC select count(*), Sys_Bronze_InsertDateTime_UTC
-# MAGIC from bronze_dev.nuav_prodtrans_sqlbyod.ora_vardetail
-# MAGIC group by Sys_Bronze_InsertDateTime_UTC
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC select count(*) as numberofrows, Sys_Bronze_InsertDateTime_UTC, Type, PartyId
-# MAGIC from bronze_dev.nuav_prodtrans_sqlbyod.ora_account
-# MAGIC where to_date(Sys_Bronze_InsertDateTime_UTC) = '2024-04-04'
-# MAGIC group by Sys_Bronze_InsertDateTime_UTC, Type, PartyId
-# MAGIC having count(*) > 1
-
-# COMMAND ----------
-
-
