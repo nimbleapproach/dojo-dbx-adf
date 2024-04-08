@@ -512,7 +512,7 @@ select
   cte.GroupEntityCode,
     --- [yz]22.03.2024 Add country split here after the msp usage join
  case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
-     when cte.Reseller_Country_RegionCode = 'AT' AND cte.EntityCode = 'DE1' THEN 'AT1'
+     when cte.Reseller_Country_RegionCode = 'AT' AND cte.VendorCode NOT LIKE '%SOW%' AND cte.EntityCode = 'DE1' THEN 'AT1'     --- [yz]08.04.2024 n-able should be excluded from AT/DE split logic
      ELSE cte.EntityCode END AS EntityCode,
   cte.DocumentNo,
   cte.LineNo,
