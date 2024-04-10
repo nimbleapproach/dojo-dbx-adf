@@ -5,18 +5,10 @@
 			"referenceName": "Afas",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"getconnector": {
-				"type": "string"
-			}
-		},
 		"annotations": [],
 		"type": "RestResource",
 		"typeProperties": {
-			"relativeUrl": {
-				"value": "@dataset().getconnector",
-				"type": "Expression"
-			}
+			"relativeUrl": "SKUs_PowerBI"
 		},
 		"schema": []
 	}
