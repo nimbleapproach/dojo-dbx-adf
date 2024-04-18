@@ -125,6 +125,7 @@ cte as (
    entity.TagetikEntityCode  AS EntityCode,
     cu.Country_RegionCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
+    SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
     -- Comment by YZ (26/01/2023)-Start
     -- add MSPBizTalkGuid as key to join on MSP usage header and line to resolve MSP cost issue
@@ -141,6 +142,7 @@ cte as (
     coalesce(sih.OrderNo_, so.SalesOrderID, 'NaN') AS SalesOrderID,
     coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, sil.No_, 'NaN') AS SKUInternal,
+    sil.Gen_Prod_PostingGroup,
     -- coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
     trim(
       (
@@ -326,6 +328,7 @@ cte as (
    entity.TagetikEntityCode  AS EntityCode,
     cu.Country_RegionCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
+    SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
     sih.MSPUsageHeaderBizTalkGuid,
     sil.Type AS Type,
@@ -336,6 +339,7 @@ cte as (
     --coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, sil.No_, 'NaN') AS SKUInternal,
+       sil.Gen_Prod_PostingGroup,
     -- coalesce(datanowarr.SKU, 'NaN')  AS SKUMaster,
     trim(
       concat(
@@ -504,8 +508,9 @@ cte as (
       AND UPPER(sil.No_) NOT LIKE 'FRACHT%'
       AND UPPER(sil.No_) NOT LIKE 'EXP%'
     )
-    AND sil.Gen_Bus_PostingGroup not like 'IC%'
+  AND sil.Gen_Bus_PostingGroup not like 'IC%'
     and sil.Type <> 0 -- filter out type 0 because it is only placeholder lines (yzc)
+
 ) 
 
 select
@@ -516,6 +521,7 @@ select
      ELSE cte.EntityCode END AS EntityCode,
   cte.DocumentNo,
   cte.LineNo,
+  cte.Gen_Bus_PostingGroup,
   cte.MSPUsageHeaderBizTalkGuid,
   cte.Type,
   cte.SalesInvoiceDescription,
@@ -527,6 +533,7 @@ select
     when msp_usage.ItemNo_ is null then cte.SKUInternal
     else msp_usage.ItemNo_
   end as SKUInternal,
+ Gen_Prod_PostingGroup,
   coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
   cte.Description,
   cte.ProductTypeInternal,
@@ -603,6 +610,10 @@ from
     when msp_usage.ItemNo_ is null then cte.SKUInternal
     else msp_usage.ItemNo_
   end = datanowarr.sku
+  WHERE   CASE WHEN cte.EntityCode = 'CH1' AND cte.Gen_Bus_PostingGroup  LIKE '%IC%' THEN 0
+            WHEN cte.EntityCode ='FR1' AND cte.Gen_Bus_PostingGroup  LIKE '%-IC%' THEN 0
+            ELSE 1
+            END =1
 
 
 """

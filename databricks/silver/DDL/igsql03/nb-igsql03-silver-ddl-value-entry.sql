@@ -47,6 +47,8 @@ CREATE OR REPLACE TABLE value_entry
     ,EntryType int
     ,Adjustment int
     ,DimensionSetID int
+    ,Gen_Prod_PostingGroup STRING
+    ,Gen_Bus_PostingGroup STRING
     ,Sys_DatabaseName STRING NOT NULL
       COMMENT 'Name of the Source Database.'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
