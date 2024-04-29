@@ -134,7 +134,11 @@ case
   CostAmount,
   GP1
 from
-  cte""")
+  cte
+where SKUInternal not like '%Funded%'
+and ProductTypeInternal not like '%Shipping%'
+--and lower(SKUInternal) not like '%round%'
+""")
 
 # COMMAND ----------
 

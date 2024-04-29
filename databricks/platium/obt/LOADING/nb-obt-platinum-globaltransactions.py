@@ -18,12 +18,11 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 spark.sql(f"""
           
 
-CREATE OR Replace VIEW globaltransactions AS
-
-
+create or replace table globaltransactions as 
 SELECT
   g.GroupEntityCode,
   g.EntityCode,
+  'NaN' AS DocumentNo,
   g.TransactionDate,
   g.SalesOrderDate,
   g.SalesOrderID,
@@ -73,7 +72,8 @@ SELECT
   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
   THEN cast(g.CostAmount / e1.Period_FX_rate AS DECIMAL(10,2))
   ELSE cast(g.CostAmount / e.Period_FX_rate AS DECIMAL(10,2))
-  END AS COGS_Euro
+  END AS COGS_Euro,
+  'Revenue' as GL_Group
 FROM 
   gold_{ENVIRONMENT}.obt.globaltransactions g
 LEFT JOIN
@@ -96,4 +96,65 @@ AND
   e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
 AND
   g.CurrencyCode = cast(e1.Currency as string)
+WHERE g.GroupEntityCode <>'IG'
+
+--[yz] 19.04.2024: split out IG from other entities due to cost adjustments need to be added
+
+UNION ALL
+SELECT
+  g.GroupEntityCode,
+  g.EntityCode,
+  g.DocumentNo,
+  g.TransactionDate,
+  g.SalesOrderDate,
+  g.SalesOrderID,
+  g.SalesOrderItemID,
+  g.SKUInternal,
+  g.SKUMaster,
+  g.Description,
+  g.ProductTypeInternal,
+  g.ProductTypeMaster,
+  g.CommitmentDuration1Master,
+  g.CommitmentDuration2Master,
+  g.BillingFrequencyMaster,
+  g.ConsumptionModelMaster,
+  g.VendorCode,
+  g.VendorNameInternal,
+  g.VendorNameMaster,
+  g.VendorGeography,
+  g.VendorStartDate,
+  g.ResellerCode,
+  g.ResellerNameInternal,
+  g.ResellerGeographyInternal,
+  g.ResellerStartDate,
+  g.ResellerGroupCode,
+  g.ResellerGroupName,  
+  g.ResellerGroupStartDate,
+  g.CurrencyCode,
+ g.RevenueAmount as RevenueAmount,
+  e.Period_FX_rate ,
+  -- cast(g.RevenueAmount / e.Period_FX_rate AS DECIMAL(10,2)) as RevenueAmount_Euro,
+  cast(g.RevenueAmount/ e.Period_FX_rate AS DECIMAL(10,2)) as RevenueAmount_Euro,
+  g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 ))  AS GP1,
+ cast(( g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) )/ e.Period_FX_rate AS DECIMAL(10,2)) AS GP1_Euro,
+  --Added Cost Amount
+  g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 ) AS COGS,
+ cast((g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) / e.Period_FX_rate AS DECIMAL(10,2)) AS COGS_Euro,
+ coalesce(GL_Group, 'NaN') AS GL_Group
+FROM 
+  gold_{ENVIRONMENT}.obt.infinigate_globaltransactions_cost_adjusted_gl g
+LEFT JOIN
+  gold_{ENVIRONMENT}.obt.exchange_rate e
+ON
+  e.Calendar_Year = cast(year(g.TransactionDate) as string)
+AND
+  e.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
+AND
+/*[YZ] 15.03.2024 : Add Replace BE1 with NL1 since it is not a valid entity in tagetik for fx*/
+  CASE WHEN g.EntityCode = 'BE1' THEN 'NL1' ELSE  g.EntityCode  END   = e.COD_AZIENDA
+AND
+  e.ScenarioGroup = 'Actual'
+
+WHERE g.GroupEntityCode ='IG'
+
   """)
