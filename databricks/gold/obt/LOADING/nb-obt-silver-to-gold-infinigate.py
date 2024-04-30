@@ -37,7 +37,7 @@ with msp_usage as (
       WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
       WHEN msp_l.PurchaseCurrencyCode = 'NaN'
-      AND right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      AND right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT') THEN 'EUR'
       WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
       WHEN msp_l.PurchaseCurrencyCode = 'NaN'
@@ -51,7 +51,7 @@ with msp_usage as (
     /*[yz] 2024-03-22 add local currency filed to convert purchase currency back from EUR to LCY*/
     Case
       WHEN  right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
-      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
       WHEN right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
       WHEN right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
       WHEN right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
@@ -103,7 +103,7 @@ with msp_usage as (
         ScenarioGroup = 'Actual'
     ) fx2 on Case
       WHEN  right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
-      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT') THEN 'EUR'
       WHEN right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
       WHEN right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
       WHEN right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
@@ -123,8 +123,10 @@ cte as (
   --     when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
   --     ELSE entity.TagetikEntityCode END AS EntityCode,
    entity.TagetikEntityCode  AS EntityCode,
+   sil.Sys_DatabaseName,
     cu.Country_RegionCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
+    SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
     -- Comment by YZ (26/01/2023)-Start
     -- add MSPBizTalkGuid as key to join on MSP usage header and line to resolve MSP cost issue
@@ -141,6 +143,7 @@ cte as (
     coalesce(sih.OrderNo_, so.SalesOrderID, 'NaN') AS SalesOrderID,
     coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, sil.No_, 'NaN') AS SKUInternal,
+    sil.Gen_Prod_PostingGroup,
     -- coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
     trim(
       (
@@ -181,7 +184,7 @@ cte as (
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
       WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
       WHEN sih.CurrencyCode = 'NaN'
@@ -312,8 +315,9 @@ cte as (
       AND UPPER(sil.No_) NOT LIKE 'FREI%'
       AND UPPER(sil.No_) NOT LIKE 'FRACHT%'
       AND UPPER(sil.No_) NOT LIKE 'EXP%'
+      AND UPPER(sil.No_) NOT LIKE '%MARKETING%'
     )
-    AND sil.Gen_Bus_PostingGroup not like 'IC%'
+    -- AND sil.Gen_Bus_PostingGroup not like 'IC%'
     and sil.Type <> 0 -- filter out type 0 because it is only placeholder lines (yzc)
   UNION all
     --- SALES CR MEMO
@@ -324,8 +328,10 @@ cte as (
   --     when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
   --     ELSE entity.TagetikEntityCode END AS EntityCode,
    entity.TagetikEntityCode  AS EntityCode,
+     sil.Sys_DatabaseName,
     cu.Country_RegionCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
+    SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
     sih.MSPUsageHeaderBizTalkGuid,
     sil.Type AS Type,
@@ -336,6 +342,7 @@ cte as (
     --coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, sil.No_, 'NaN') AS SKUInternal,
+       sil.Gen_Prod_PostingGroup,
     -- coalesce(datanowarr.SKU, 'NaN')  AS SKUMaster,
     trim(
       concat(
@@ -370,7 +377,7 @@ cte as (
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
       WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
       WHEN sih.CurrencyCode = 'NaN'
@@ -503,19 +510,23 @@ cte as (
       AND UPPER(sil.No_) NOT LIKE 'FREI%'
       AND UPPER(sil.No_) NOT LIKE 'FRACHT%'
       AND UPPER(sil.No_) NOT LIKE 'EXP%'
+      AND UPPER(sil.No_) NOT LIKE '%MARKETING%'
     )
-    AND sil.Gen_Bus_PostingGroup not like 'IC%'
+ -- AND sil.Gen_Bus_PostingGroup not like 'IC%'
     and sil.Type <> 0 -- filter out type 0 because it is only placeholder lines (yzc)
+
 ) 
 
 select
   cte.GroupEntityCode,
     --- [yz]22.03.2024 Add country split here after the msp usage join
  case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
-     when cte.Reseller_Country_RegionCode = 'AT' AND cte.EntityCode = 'DE1' THEN 'AT1'
+     when cte.Reseller_Country_RegionCode = 'AT' AND cte.VendorCode NOT LIKE '%SOW%' AND cte.EntityCode = 'DE1' THEN 'AT1'     --- [yz]08.04.2024 n-able should be excluded from AT/DE split logic
      ELSE cte.EntityCode END AS EntityCode,
+  CTE.Sys_DatabaseName,
   cte.DocumentNo,
   cte.LineNo,
+  cte.Gen_Bus_PostingGroup,
   cte.MSPUsageHeaderBizTalkGuid,
   cte.Type,
   cte.SalesInvoiceDescription,
@@ -527,6 +538,7 @@ select
     when msp_usage.ItemNo_ is null then cte.SKUInternal
     else msp_usage.ItemNo_
   end as SKUInternal,
+ Gen_Prod_PostingGroup,
   coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
   cte.Description,
   cte.ProductTypeInternal,
@@ -603,6 +615,11 @@ from
     when msp_usage.ItemNo_ is null then cte.SKUInternal
     else msp_usage.ItemNo_
   end = datanowarr.sku
+  --WHERE   CASE WHEN cte.EntityCode = 'CH1' AND cte.Gen_Bus_PostingGroup  LIKE '%-IC%' THEN 0
+  --          WHEN cte.EntityCode ='FR1' AND cte.Gen_Bus_PostingGroup  LIKE '%-IC%' THEN 0
+  --          WHEN cte.EntityCode NOT IN ('DE1','AT1') AND cte.Gen_Bus_PostingGroup LIKE 'IC%'THEN 0
+  --          ELSE 1
+  --          END =1
 
 
 """
@@ -610,33 +627,33 @@ from
 
 # COMMAND ----------
 
-spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+# spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
 
 # COMMAND ----------
 
-df_obt = spark.read.table("globaltransactions")
-df_infinigate = spark.read.table(
-    f"gold_{ENVIRONMENT}.obt.infinigate_globaltransactions"
-)
+# df_obt = spark.read.table("globaltransactions")
+# df_infinigate = spark.read.table(
+#     f"gold_{ENVIRONMENT}.obt.infinigate_globaltransactions"
+# )
 
 # COMMAND ----------
 
-from pyspark.sql.functions import col
+# from pyspark.sql.functions import col
 
-target_columns = df_obt.columns
-source_columns = df_infinigate.columns
-intersection_columns = [column for column in target_columns if column in source_columns]
-selection_columns = [
-    col(column) for column in intersection_columns if column not in ["SID"]
-]
-
-# COMMAND ----------
-
-df_selection = df_infinigate.select(selection_columns)
-df_selection = df_selection.fillna(value="NaN").replace("", "NaN")
+# target_columns = df_obt.columns
+# source_columns = df_infinigate.columns
+# intersection_columns = [column for column in target_columns if column in source_columns]
+# selection_columns = [
+#     col(column) for column in intersection_columns if column not in ["SID"]
+# ]
 
 # COMMAND ----------
 
-df_selection.write.mode("overwrite").option(
-    "replaceWhere", "GroupEntityCode = 'IG'  AND EntityCode NOT IN ('FR2')"
-).saveAsTable("globaltransactions")
+# df_selection = df_infinigate.select(selection_columns)
+# df_selection = df_selection.fillna(value="NaN").replace("", "NaN")
+
+# COMMAND ----------
+
+# df_selection.write.mode("overwrite").option(
+#     "replaceWhere", "GroupEntityCode = 'IG'  AND EntityCode NOT IN ('FR2')"
+# ).saveAsTable("globaltransactions")

@@ -22,7 +22,7 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 spark.sql(f"""
 CREATE
 OR Replace VIEW globaltransactions_tagetik_reconciliation_ytd AS 
-with obt as(
+/*with obt as(
 select
     'OBT' AS Source,
     GroupEntityCode,
@@ -58,7 +58,8 @@ select
     VendorNameInternal,
     VendorNameMaster
     HAVING sum(coalesce(RevenueAmount_Euro,0 ))+ sum(coalesce(GP1_Euro,0 )) <>0
-  ),
+  ),*/
+with 
 TAG AS (
   select
     'TAG' AS Source,
@@ -71,8 +72,8 @@ TAG AS (
       ELSE Entity_ID
     END AS EntityCode,
     Region_ID,
-    Vendor_ID,
-    Vendor_Name,
+    Vendor_ID as VendorCode,
+    Vendor_Name as  VendorName,
     '' as VendorNameMaster,
     Category,
     Year(Date_ID) as Year,
@@ -95,7 +96,8 @@ TAG AS (
       ELSE Entity_ID
     END,
     Region_ID,
-    Vendor_ID,
+
+    Vendor_ID ,
     Vendor_Name,
     Category
 
@@ -111,8 +113,9 @@ TAG AS (
       ELSE Entity_ID
     END AS EntityCode,
     Region_ID,
-    Vendor_ID,
-        Vendor_Name,
+
+    Vendor_ID  as VendorCode,
+    Vendor_Name as  VendorName,
     '' as VendorNameMaster,
     Category,
     year(Date_ID) as Year,
@@ -135,7 +138,9 @@ TAG AS (
       ELSE Entity_ID
     END,
     Region_ID,
-    Vendor_ID,Vendor_Name,
+
+    Vendor_ID,
+    Vendor_Name,
     Category
 ),
 tag_rev_gp as (
@@ -152,19 +157,19 @@ tag_rev_gp as (
     )
 ),
 result as(
-  select
-    *,
-    CAST (concat_ws('-', Year, Month, '01') AS DATE) DATE_ID
-  from
-    obt
-  union all
+  --select
+  --  *,
+  --  CAST (concat_ws('-', Year, Month, '01') AS DATE) DATE_ID
+  --from
+  --  obt
+  --union all
   select
     Source,
     entity.GroupEntityCode,
     tag_rev_gp.EntityCode,
     tag_rev_gp.Region_ID,
-    tag_rev_gp.Vendor_ID,
-    tag_rev_gp.Vendor_Name,
+    tag_rev_gp.VendorCode,
+    tag_rev_gp.VendorName,
     tag_rev_gp.VendorNameMaster,
     Category,
     Year,
@@ -174,8 +179,11 @@ result as(
     CAST (concat_ws('-', Year, Month, '01') AS DATE) DATE_ID
   from
     tag_rev_gp
-    left join (select distinct GroupEntityCode,EntityCode from
-    obt) entity on tag_rev_gp.EntityCode = entity.EntityCode
+    left join (select distinct GroupEntityCode,case
+      when GroupEntityCode = 'VU' THEN 'VU'
+      ELSE EntityCode
+    END AS EntityCode from
+    platinum_{ENVIRONMENT}.obt.globaltransactions) entity on tag_rev_gp.EntityCode = entity.EntityCode
     where Revenue_EUR + GP1_EUR<>0
 )
 select

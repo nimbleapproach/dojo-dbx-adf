@@ -53,6 +53,7 @@ CREATE OR REPLACE TABLE item
     COMMENT 'TODO'
   ,PhysicalGoods BIGINT
     COMMENT 'TODO'
+  ,ManufacturerItemNo_ STRING
   ,Sys_RowNumber BIGINT NOT NULL
     COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
   ,Sys_DatabaseName STRING NOT NULL
