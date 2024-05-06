@@ -24,6 +24,7 @@ with gl as
 gle.DocumentNo_,
 GLE.PostingDate,
 concat(right(gle.Sys_DatabaseName,2 ),'1') as EntityCode,
+gle.Sys_DatabaseName,
 SUM(gle.Amount) as CostAmount
  from silver_{ENVIRONMENT}.igsql03.g_l_entry gle
  left join silver_{ENVIRONMENT}.igsql03.g_l_account ga
@@ -119,10 +120,11 @@ sum(obt.CostAmount)CostAmount_OBT,
 cast(sum(coalesce(gl_doc.CostAmount, 0) - obt.CostAmount) as decimal(38,2))CostAmount_Gap
 from
   obt
-left join (SELECT EntityCode,DocumentNo_,SUM(CostAmount)*(-1) CostAmount FROM gl
+left join (SELECT EntityCode,Sys_DatabaseName,DocumentNo_,SUM(CostAmount)*(-1) CostAmount FROM gl
 group by all
 )gl_doc on obt.EntityCode=gl_doc.EntityCode
 and obt.DocumentNo = gl_doc.DocumentNo_
+and obt.Sys_DatabaseName = gl_doc.Sys_DatabaseName
 
 group by all ),
 value_entry_adjustments as(
@@ -158,6 +160,7 @@ group by all
   select
     EntityCode,
     DocumentNo,
+    Sys_DatabaseName,
     Sum(CostAmount_Gap) CostAmount_Gap
   from
     ig_adjustedCost_sum
@@ -174,7 +177,7 @@ SELECT
   -- CAST(
   --   try_divide(obt.RevenueAmount, obt_sum.RevenueAmount_Sum) AS DECIMAL(10, 4)
   -- ) LineRate,
-  cast(coalesce(VE.CostPostedtoG_L,0)AS DECIMAL(10, 4)) AS CostAmount_ValueEntry,
+  cast(coalesce(VE.CostPostedtoG_L,0)AS DECIMAL(20, 4)) AS CostAmount_ValueEntry,
    case when coalesce(obt_sum.RevenueAmount_Sum,0) = 0 then CostAmount_Gap/LineCount
           else CAST(
           try_divide(obt.RevenueAmount, obt_sum.RevenueAmount_Sum) AS DECIMAL(10, 4)
@@ -205,6 +208,7 @@ from
     SELECT
       EntityCode,
       DocumentNo,
+      Sys_DatabaseName,
       sum(RevenueAmount) RevenueAmount_Sum,
         count(LineNo)LineCount
     from
@@ -215,6 +219,7 @@ from
       ALL
   ) obt_sum on obt.EntityCode = obt_sum.EntityCode
   and obt.DocumentNo = obt_sum.DocumentNo
+  and obt.Sys_DatabaseName = obt_sum.Sys_DatabaseName
   left join cost_adjustment on 
   CASE
     WHEN obt.EntityCode = 'AT1' THEN 'DE1'
@@ -222,6 +227,7 @@ from
     ELSE obt.EntityCode
   END = cost_adjustment.EntityCode
   and obt.DocumentNo = cost_adjustment.DocumentNo
+  and obt.Sys_DatabaseName= cost_adjustment.Sys_DatabaseName
 where
   obt.TransactionDate >= '2023-04-01'
 

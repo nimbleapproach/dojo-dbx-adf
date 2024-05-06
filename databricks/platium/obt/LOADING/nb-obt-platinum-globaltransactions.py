@@ -73,7 +73,12 @@ SELECT
   THEN cast(g.CostAmount / e1.Period_FX_rate AS DECIMAL(10,2))
   ELSE cast(g.CostAmount / e.Period_FX_rate AS DECIMAL(10,2))
   END AS COGS_Euro,
-  'Revenue' as GL_Group
+  case when g.VendorNameInternal in('Mouse & Bear Solutions Ltd','Blackthorne International Transport Ltd','Transport','Nuvias Internal Logistics') then 'Logistics'
+        when g.SKUInternal in('TRADEFAIR_A','TRAVELEXP') then 'Marketing'
+        when g.SKUInternal ='BEBAT' THEN 'Others'
+        when g.ProductTypeInternal ='Shipping & Delivery Income' then 'Logistics'
+        when g.ProductTypeInternal in('Quarterly Rebate','Instant Rebate') then 'Rebate'
+  else 'Revenue'end as GL_Group
 FROM 
   gold_{ENVIRONMENT}.obt.globaltransactions g
 LEFT JOIN
@@ -140,7 +145,7 @@ SELECT
   --Added Cost Amount
   g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 ) AS COGS,
  cast((g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) / e.Period_FX_rate AS DECIMAL(10,2)) AS COGS_Euro,
- coalesce(GL_Group, 'NaN') AS GL_Group
+ coalesce(GL_Group, 'Others') AS GL_Group
 FROM 
   gold_{ENVIRONMENT}.obt.infinigate_globaltransactions_cost_adjusted_gl g
 LEFT JOIN
