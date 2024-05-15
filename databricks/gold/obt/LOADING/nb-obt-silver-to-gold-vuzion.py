@@ -49,6 +49,7 @@ SELECT
 ,cast(ar.DocID AS STRING) AS SalesOrderID
 ,cast(dd.DetID AS STRING) AS SalesOrderItemID
 ,coalesce(dd.SKU,'NaN') AS SKUInternal
+,dd.resourceID
 ,CASE bm.resourceID
 WHEN 1002543 then "Azure RI''s"
 WHEN 1001618 then "Azure Plan v1"
@@ -133,6 +134,7 @@ SELECT
 ,cast(ar.DocID AS STRING) AS SalesOrderID
 ,cast(dd.DetID AS STRING) AS SalesOrderItemID
 ,coalesce(dd.SKU,'NaN') AS SKUInternal
+,dd.resourceID
 ,CASE bm.resourceID
 WHEN 1002543 then "Azure RI''s"
 WHEN 1001618 then "Azure Plan v1"
@@ -230,7 +232,9 @@ SELECT
   CASE
   WHEN VendorNameMaster IN ('Acronis','BitTitan','Bluedog','Exclaimer','Infinigate Cloud','LastPass','Microsoft','SignNow')
   THEN VendorNameMaster
-  ELSE VendorNameInternal END AS VendorNameInternal,
+  when lower(Description) like '%acronis%' then 'Acronis'
+  WHEN  coalesce(coalesce(r1.ManufacturerName, r2.ManufacturerName),VendorNameInternal) = 'VA-888-104' THEN  'Microsoft' 
+  ELSE coalesce(coalesce(r1.ManufacturerName, r2.ManufacturerName),VendorNameInternal) END AS VendorNameInternal ,
   VendorNameMaster,
   VendorGeography,
   CASE
@@ -251,6 +255,23 @@ SELECT
   CASE WHEN trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2)) = "" THEN initcap(trim(Description))
   ELSE initcap(trim(regexp_extract(Description,'^(.*?):(.*?).Recurring',2))) END AS NewDescription
 FROM initial_query
+ left join (
+        select split(MPNumber, ':')[0] as  MPNumber,
+        resourceID,
+      max(ManufacturerName)ManufacturerName
+      from  silver_{ENVIRONMENT}.cloudblue_pba.bmresource
+      where Sys_Silver_IsCurrent=1
+      AND  ManufacturerName<>'NaN'
+      group by all)r1
+on initial_query.resourceID = r1.resourceID
+ left join (
+        select split(MPNumber, ':')[0] as  MPNumber,
+      max(ManufacturerName)ManufacturerName
+      from  silver_{ENVIRONMENT}.cloudblue_pba.bmresource
+      where Sys_Silver_IsCurrent=1
+      and ManufacturerName<>'NaN'
+      group by all)r2
+on split(initial_query.SKUInternal, ':')[0]= r2.MPNumber
 )
 , results
 (

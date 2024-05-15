@@ -228,8 +228,6 @@ from
   END = cost_adjustment.EntityCode
   and obt.DocumentNo = cost_adjustment.DocumentNo
   and obt.Sys_DatabaseName= cost_adjustment.Sys_DatabaseName
-where
-  obt.TransactionDate >= '2023-04-01'
 
 """).createOrReplaceTempView('temp')
 
@@ -249,7 +247,8 @@ with gl_doc_category as (
         '452788',
         '499988',
         '351988',
-        '451988'
+        '451988',
+        '391988'
       ) THEN 'IC'
       ELSE 'Revenue'
     end as GL_Group,
@@ -279,6 +278,7 @@ with gl_doc_category as (
       '310788',
       '312088',
       '314088',
+      '310488',
       '313088',
       '310588',
       '310288',
@@ -290,7 +290,8 @@ with gl_doc_category as (
       '452788',
       '499988',
       '351988',
-      '451988'
+      '451988',
+      '391988'
     )
   group by
     all
