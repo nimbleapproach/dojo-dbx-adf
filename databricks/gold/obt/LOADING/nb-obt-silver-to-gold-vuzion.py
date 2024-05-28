@@ -220,6 +220,7 @@ SELECT
   SalesOrderID,
   SalesOrderItemID,
   CASE WHEN MPNInternal = 'NaN' THEN SKUInternal ELSE MPNInternal END AS SKUInternal,
+  initial_query.resourceID,
   SKUMaster,
   Description,
   ProductTypeInternal,
@@ -284,6 +285,7 @@ SELECT
   SalesOrderID,
   SalesOrderItemID,
   SKUInternal,
+  resourceID,
   SKUMaster,
   Description,
   ProductTypeInternal,
@@ -293,7 +295,11 @@ SELECT
   BillingFrequencyMaster,
   ConsumptionModelMaster,
   VendorCode,
-  VendorNameInternal,
+  case  
+      WHEN VendorNameInternal ='NaN'  and lower(Description) like '%signnow%' THEN 'SignNow'
+      when VendorNameInternal ='NaN'  and  lower(Description) like '%domain%' THEN 'Domains'
+      when VendorNameInternal ='NaN'  and  lower(Description) like '%wavenet%' THEN 'Wavenet' 
+    else VendorNameInternal end as VendorNameInternal,
   VendorNameMaster,
   VendorGeography,
   to_date(VendorStartDate,'yyyy-MM-dd') AS VendorStartDate,
@@ -357,6 +363,7 @@ SELECT
   SalesOrderID,
   SalesOrderItemID,
   SKUInternal,
+  resourceID,
   SKUMaster,
   Description,
   ProductTypeInternal,
@@ -431,6 +438,7 @@ SELECT
   g.SalesOrderID,
   g.SalesOrderItemID,
   g.SKUInternal,
+  g.resourceID,
   SKUMaster,
   g.Description,
   ProductTypeInternal,
