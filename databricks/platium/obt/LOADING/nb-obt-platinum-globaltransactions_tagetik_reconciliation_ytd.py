@@ -84,7 +84,8 @@ TAG AS (
     gold_{ENVIRONMENT}.obt.tagetik_consolidation
   where
     RevenueAccounts = 'TotalRevenue'
-    and Scenario_ID like '%ACT-PFA-04'
+    and (Scenario_ID like '%ACT-PFA-04'
+    or Scenario_ID='2025ACT-PFA-01')
   GROUP BY
     year(Date_ID),
     month(Date_ID),
@@ -126,7 +127,8 @@ TAG AS (
     gold_{ENVIRONMENT}.obt.tagetik_consolidation
   where
     GP1Accounts = 'GP1'
-    and Scenario_ID like '%ACT-PFA-04'
+    and  (Scenario_ID like '%ACT-PFA-04'
+    or Scenario_ID='2025ACT-PFA-01')
   GROUP BY
     year(Date_ID),
     month(Date_ID),
