@@ -27,6 +27,7 @@ gle.DocumentNo_,
 GLE.PostingDate,
 gle.Sys_DatabaseName,
 concat(right(gle.Sys_DatabaseName,2 ),'1') as EntityCode,
+region.DimensionValueCode AS RegionID,
 gle.GlobalDimension1Code as VendorCode,
 ven.Name as VendorName,
 SUM( gle.Amount) as CostAmount
@@ -48,7 +49,12 @@ SUM( gle.Amount) as CostAmount
         AND Sys_Silver_IsCurrent = true
     ) ven ON gle.GlobalDimension1Code = ven.Code
     and ven.Sys_DatabaseName = gle.Sys_DatabaseName
- 
+LEFT JOIN silver_dev.igsql03.dimension_set_entry as region
+on region.DimensionSetID = gle.DimensionSetID
+and region.Sys_DatabaseName = gle.Sys_DatabaseName
+and region.Sys_Silver_IsCurrent = 1
+and region.DimensionCode = 'RPTREGION'
+
 where gle.Sys_Silver_IsCurrent=1
 
 and ga.Consol_CreditAcc_ in (
@@ -56,6 +62,7 @@ and ga.Consol_CreditAcc_ in (
 ,'310188'
 ,'310288'
 ,'310388'
+,'310488'
 ,'310588'
 ,'310688'
 ,'310788'
@@ -71,6 +78,7 @@ and ga.Consol_CreditAcc_ in (
 ,'351988'
 ,'370988'
 ,'371988'
+,'391988'
 ,'400988'
 ,'401988'
 ,'402988'
@@ -94,38 +102,21 @@ and ga.Consol_CreditAcc_ in (
 ,'468988'
 ,'469988'
 ,'499988')
-/*'371988',
-'350988',
-'351988',
-'452788',
-'499988',
-'469988',
-'451988',
-'402988',
-'440888',
-'450988',
-'421988',
-'400988',
-'452988',
-'440688',
-'440388',
-'440288',
-'440788',
-'422988',
-'450888',
-'440188',
-'468988',
-'401988',
-'420988',
-'452888',
-'440588',
-'449988')*/
+
 group by all
 having sum(Amount)<>0)
 
 select 
-gl.*,
-coalesce(gl.CostAmount, 0)/e.Period_FX_rate as CostAmount_EUR
+gl.DocumentNo_
+,gl.PostingDate
+,gl.Sys_DatabaseName
+,case when gl.EntityCode ='DE1' AND gl.RegionID = 'AT' and gl.VendorCode not in ('ZZ_INF','SOW','DAT','ITG', 'RFT') THEN 'AT1'
+      when gl.EntityCode ='NL1' AND gl.RegionID = 'BE' THEN 'BE1'
+      ELSE gl.EntityCode END AS EntityCode
+,gl.VendorCode
+,gl.VendorName
+,gl.CostAmount
+,coalesce(gl.CostAmount, 0)/e.Period_FX_rate as CostAmount_EUR
 from gl 
 LEFT JOIN
   gold_{ENVIRONMENT}.obt.exchange_rate e

@@ -59,11 +59,11 @@ CREATE OR REPLACE TABLE dimension_set_entry
       COMMENT 'Flag if this is the current version.'
     ,Sys_Silver_IsDeleted BOOLEAN
       COMMENT 'Flag if this is the deleted version.'
-,CONSTRAINT dimension_set_entry_pk PRIMARY KEY(DimensionSetID,Sys_DatabaseName,Sys_RowNumber)
+,CONSTRAINT dimension_set_entry_pk PRIMARY KEY(DimensionSetID,DimensionCode,DimensionValueCode,DimensionValueID,Sys_DatabaseName,Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for dimension value. \n' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (DimensionSetID,Sys_DatabaseName)
+CLUSTER BY (DimensionSetID,DimensionCode,DimensionValueCode,DimensionValueID,Sys_DatabaseName)
 
 -- COMMAND ----------
 

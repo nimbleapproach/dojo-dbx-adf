@@ -124,7 +124,7 @@ cte as (
   --     ELSE entity.TagetikEntityCode END AS EntityCode,
    entity.TagetikEntityCode  AS EntityCode,
    sil.Sys_DatabaseName,
-    cu.Country_RegionCode as Reseller_Country_RegionCode,
+    dim.DimensionValueCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
     SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
@@ -230,6 +230,12 @@ cte as (
     ) ven ON it.GlobalDimension1Code = ven.Code
     AND it.Sys_DatabaseName = ven.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
+      /*[yz] 30.04.2024: change the Region split to base on dimension instead of customer region*/
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
+    and dim.DimensionCode = 'RPTREGION'
+    AND sih.Sys_DatabaseName = dim.Sys_DatabaseName
+    AND dim.Sys_Silver_IsCurrent = true
+
     LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
@@ -329,7 +335,7 @@ cte as (
   --     ELSE entity.TagetikEntityCode END AS EntityCode,
    entity.TagetikEntityCode  AS EntityCode,
      sil.Sys_DatabaseName,
-    cu.Country_RegionCode as Reseller_Country_RegionCode,
+    dim.DimensionValueCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
     SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
@@ -425,6 +431,12 @@ cte as (
     ) ven ON it.GlobalDimension1Code = ven.Code
     AND it.Sys_DatabaseName = ven.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
+    /*[yz] 30.04.2024: change the Region split to base on dimension instead of customer region*/
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
+    and dim.DimensionCode = 'RPTREGION'
+    AND sih.Sys_DatabaseName = dim.Sys_DatabaseName
+    AND dim.Sys_Silver_IsCurrent = true
+
     LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
@@ -521,7 +533,11 @@ select
   cte.GroupEntityCode,
     --- [yz]22.03.2024 Add country split here after the msp usage join
  case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
-     when cte.Reseller_Country_RegionCode = 'AT' AND cte.VendorCode NOT LIKE '%SOW%' AND cte.EntityCode = 'DE1' THEN 'AT1'     --- [yz]08.04.2024 n-able should be excluded from AT/DE split logic
+          --- [yz]03.05.2024 Vendor specific region split
+      WHEN CTE.Sys_DatabaseName = 'ReportsAT' AND cte.VendorCode ='ZZ_INF' THEN 'DE1' 
+     when cte.Reseller_Country_RegionCode = 'AT' AND cte.VendorCode NOT LIKE '%SOW%'
+                                                AND cte.VendorCode NOT IN ('DAT','ITG', 'RFT') AND cte.EntityCode = 'DE1' THEN 'AT1' 
+
      ELSE cte.EntityCode END AS EntityCode,
   CTE.Sys_DatabaseName,
   cte.DocumentNo,

@@ -27,6 +27,8 @@ CREATE OR REPLACE TABLE g_l_entry
         COMMENT 'Surrogate Key'
     ,EntryNo_ int NOT NULL 
       COMMENT 'Business Key'
+    ,DimensionSetID INT
+      COMMENT 'TODO'
     ,G_LAccountNo_ STRING 
     ,PostingDate TIMESTAMP
     ,DocumentNo_ STRING
