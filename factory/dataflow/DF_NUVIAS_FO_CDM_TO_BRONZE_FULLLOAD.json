@@ -57,7 +57,7 @@
 				"     format: 'delta',",
 				"     compressionType: 'snappy',",
 				"     compressionLevel: 'Fastest',",
-				"     fileSystem: 'bronze-nuvias',",
+				"     fileSystem: 'bronze',",
 				"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
 				"     mergeSchema: true,",
 				"     autoCompact: true,",
