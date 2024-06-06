@@ -76,7 +76,7 @@
 				"     format: 'delta',",
 				"     compressionType: 'snappy',",
 				"     compressionLevel: 'Fastest',",
-				"     fileSystem: 'bronze-nuvias',",
+				"     fileSystem: 'bronze',",
 				"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
 				"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
 				"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('DataLakeModified_DateTime')))) ~> GetMaxWatermark",
@@ -96,7 +96,7 @@
 				"     format: 'delta',",
 				"     compressionType: 'snappy',",
 				"     compressionLevel: 'Fastest',",
-				"     fileSystem: 'bronze-nuvias',",
+				"     fileSystem: 'bronze',",
 				"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
 				"     mergeSchema: true,",
 				"     autoCompact: true,",
@@ -112,7 +112,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     partitionBy('key',",
-				"          1,",
+				"          0,",
 				"          Sys_Bronze_InsertDateTime_UTC",
 				"     )) ~> WriteDeltaTable"
 			]
