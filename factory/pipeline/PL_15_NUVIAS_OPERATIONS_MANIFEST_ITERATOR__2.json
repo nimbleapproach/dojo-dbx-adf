@@ -1,0 +1,120 @@
+{
+	"name": "PL_15_NUVIAS_OPERATIONS_MANIFEST_ITERATOR__2",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetManifest",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_ManifestPath": {
+								"value": "@pipeline().parameters.pm_ManifestPath",
+								"type": "Expression"
+							},
+							"pm_ManifestName": {
+								"value": "@pipeline().parameters.pm_ManifestFile",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "ForEachSubmanifest",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetManifest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "PL_15_NUVIAS_OPERATIONS_MANIFEST_SUBITERATOR__3",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_15_NUVIAS_OPERATIONS_MANIFEST_ITERATOR__3",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
+										"type": "Expression"
+									},
+									"pm_ManifestPath": {
+										"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
+										"type": "Expression"
+									},
+									"pm_ManifestFile": {
+										"value": "@{item().manifestName}",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			},
+			"pm_ManifestPath": {
+				"type": "string"
+			},
+			"pm_ManifestFile": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/NUVIAS/MANIFEST"
+		},
+		"annotations": []
+	}
+}

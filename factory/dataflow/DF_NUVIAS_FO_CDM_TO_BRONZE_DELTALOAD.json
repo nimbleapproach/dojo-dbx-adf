@@ -110,7 +110,11 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('key',",
+				"          1,",
+				"          Sys_Bronze_InsertDateTime_UTC",
+				"     )) ~> WriteDeltaTable"
 			]
 		}
 	}
