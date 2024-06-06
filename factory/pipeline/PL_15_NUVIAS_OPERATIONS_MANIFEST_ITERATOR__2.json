@@ -5,7 +5,14 @@
 			{
 				"name": "GetManifest",
 				"type": "Lookup",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "CopyManifestToADLS",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -64,7 +71,7 @@
 						"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
 						"type": "Expression"
 					},
-					"isSequential": true,
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "PL_15_NUVIAS_OPERATIONS_MANIFEST_SUBITERATOR__3",
@@ -100,7 +107,7 @@
 				}
 			},
 			{
-				"name": "CoppyManifestToADLS",
+				"name": "CopyManifestToADLS",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {

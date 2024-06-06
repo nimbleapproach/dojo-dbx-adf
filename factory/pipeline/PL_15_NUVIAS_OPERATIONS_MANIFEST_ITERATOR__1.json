@@ -71,7 +71,7 @@
 						"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
 						"type": "Expression"
 					},
-					"isSequential": true,
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__2",
@@ -83,7 +83,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__2",
+									"referenceName": "PL_15_NUVIAS_OPERATIONS_MANIFEST_ITERATOR__2",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
