@@ -1,0 +1,41 @@
+{
+	"name": "DS_ADLS_JSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_Environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_FileName": {
+				"type": "string"
+			},
+			"pm_Environment": {
+				"type": "string",
+				"defaultValue": "dev"
+			}
+		},
+		"folder": {
+			"name": "ADLS"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@{dataset().pm_FileName}.json",
+					"type": "Expression"
+				},
+				"folderPath": "manifest",
+				"fileSystem": "bronze-nuvias"
+			}
+		},
+		"schema": {}
+	}
+}
