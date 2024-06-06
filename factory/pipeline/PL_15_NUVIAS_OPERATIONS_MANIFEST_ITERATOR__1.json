@@ -168,7 +168,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_FileName": {
-								"value": "@pipeline().parameters.pm_ManifestFile",
+								"value": "@concat(replace(pipeline().parameters.pm_ManifestPath,'/','.'),'.', pipeline().parameters.pm_ManifestFile)",
 								"type": "Expression"
 							},
 							"pm_Environment": {
