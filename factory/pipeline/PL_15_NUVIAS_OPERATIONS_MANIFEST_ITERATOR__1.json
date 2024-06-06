@@ -74,7 +74,7 @@
 					"isSequential": false,
 					"activities": [
 						{
-							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__2",
+							"name": "PL_15_NUVIAS_OPERATIONS_MANIFEST_SUBITERATOR__2",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
