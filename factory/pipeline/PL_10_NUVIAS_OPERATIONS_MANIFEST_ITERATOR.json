@@ -71,7 +71,7 @@
 						"value": "@activity('GetManifest').output.firstRow.subManifests",
 						"type": "Expression"
 					},
-					"isSequential": true,
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "PL_15_NUVIAS_OPERATIONS_MANIFEST_SUBITERATOR__1",
