@@ -7,7 +7,7 @@
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "CoppyManifestToADLS",
+						"activity": "CopyManifestToADLS",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -107,7 +107,7 @@
 				}
 			},
 			{
-				"name": "CoppyManifestToADLS",
+				"name": "CopyManifestToADLS",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
