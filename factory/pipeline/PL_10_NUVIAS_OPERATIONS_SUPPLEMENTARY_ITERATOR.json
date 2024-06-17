@@ -67,7 +67,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_NUVIAS_OPERATIONS_MAIN_LOAD_ENTITY",
+									"referenceName": "PL_20_NUVIAS_OPERATIONS_SUPPLEMENTARY_LOAD_ENTITY",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
