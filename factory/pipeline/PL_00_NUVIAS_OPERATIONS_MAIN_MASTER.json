@@ -1,0 +1,39 @@
+{
+	"name": "PL_00_NUVIAS_OPERATIONS_MAIN_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_NUVIAS_OPERATIONS_ITERATOR",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_NUVIAS_OPERATIONS_ITERATOR",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_FullLoad": {
+							"value": "@pipeline().parameters.pm_FullLoad",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/NUVIAS/MAIN"
+		},
+		"annotations": []
+	}
+}

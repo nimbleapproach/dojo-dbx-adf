@@ -102,6 +102,9 @@
 							"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
