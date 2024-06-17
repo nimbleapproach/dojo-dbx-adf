@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "GetManifest",
+				"name": "GetMainManifest",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -16,43 +16,33 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "JsonSource",
+						"type": "ParquetSource",
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
 							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
-							"type": "JsonReadSettings"
+							"type": "ParquetReadSettings"
 						}
 					},
 					"dataset": {
-						"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
+						"referenceName": "DS_ADLS_PARQUET",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_Environment": {
-								"value": "@pipeline().globalParameters.gpm_Environment",
-								"type": "Expression"
-							},
-							"pm_ManifestPath": {
-								"value": "Tables",
-								"type": "Expression"
-							},
-							"pm_ManifestName": {
-								"value": "Tables",
-								"type": "Expression"
-							}
+							"pm_Environment": "dev",
+							"pm_FileSystem": "bronze-nuvias",
+							"pm_Directory": "table_list\\main"
 						}
 					},
-					"firstRowOnly": true
+					"firstRowOnly": false
 				}
 			},
 			{
-				"name": "ForEachSubmanifest",
+				"name": "ForEachEntities",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "GetManifest",
+						"activity": "GetMainManifest",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -61,13 +51,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('GetManifest').output.firstRow.subManifests",
+						"value": "@activity('GetMainManifest').output",
 						"type": "Expression"
 					},
-					"isSequential": true,
+					"isSequential": false,
+					"batchCount": 10,
 					"activities": [
 						{
-							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
+							"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -76,21 +67,25 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__1",
+									"referenceName": "PL_20_NUVIAS_OPERATIONS_MAIN_LOAD_ENTITY",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_FullLoad": {
-										"value": "@pipeline().parameters.pm_FullLoad",
+									"pm_Entity": {
+										"value": "@item().entityName",
 										"type": "Expression"
 									},
 									"pm_ManifestPath": {
-										"value": "Tables/@{item().manifestName}",
+										"value": "@item().manifestPath",
 										"type": "Expression"
 									},
 									"pm_ManifestFile": {
-										"value": "@item().manifestName",
+										"value": "@item().manifestFile",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									}
 								}
@@ -104,6 +99,12 @@
 			"pm_FullLoad": {
 				"type": "bool",
 				"defaultValue": false
+			},
+			"pm_ManifestPath": {
+				"type": "string"
+			},
+			"pm_ManifestFile": {
+				"type": "string"
 			}
 		},
 		"folder": {

@@ -13,13 +13,16 @@
 		},
 		"parameters": {
 			"pm_Environment": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "dev"
 			},
 			"pm_FileSystem": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "bronze-nuvias"
 			},
 			"pm_Directory": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "table_list"
 			}
 		},
 		"folder": {
