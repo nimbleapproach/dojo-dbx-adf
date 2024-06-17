@@ -164,13 +164,10 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_ADLS_JSON",
+						"referenceName": "DS_ADLS_JSON_PLATFORM_METADATA",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_FileName": {
-								"value": "Tables",
-								"type": "Expression"
-							},
+							"pm_FileName": "Tables",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"

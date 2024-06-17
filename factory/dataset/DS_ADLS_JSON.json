@@ -33,7 +33,7 @@
 					"type": "Expression"
 				},
 				"folderPath": "manifest",
-				"fileSystem": "bronze-nuvias"
+				"fileSystem": "bronze"
 			}
 		},
 		"schema": {}
