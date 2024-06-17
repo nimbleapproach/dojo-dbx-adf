@@ -6,6 +6,9 @@
 				"name": "PL_10_NUVIAS_OPERATIONS_ITERATOR",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
