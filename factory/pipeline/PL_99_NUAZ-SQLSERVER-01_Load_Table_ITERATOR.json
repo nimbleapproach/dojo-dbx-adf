@@ -75,7 +75,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "Select * from adf.[CT_NUAZ-SQLSERVER-01_TABLES] where [DATABASE_NAME] = '@{pipeline().parameters.pm_DatabaseName}' and ShouldBeLoaded = 1",
+							"value": "SELECT  \ndistinct   \n[TABLE_CATALOG]  DATABASE_NAME\n      ,[TABLE_SCHEMA] Schema_Name\n      ,[TABLE_NAME] Table_Name\n      , NULL WATERMARK\nFROM [adf].[CT_NUAZ-SQLSERVER-01_SCHEMA]\nwhere COLUMN_NAME like '%group%'\nand COLUMN_NAME like '%vendor%'\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}' \n",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -99,7 +99,8 @@
 		],
 		"parameters": {
 			"pm_DatabaseName": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "NUAV_PRODTRANS_SQLBYOD"
 			},
 			"pm_FullLoad": {
 				"type": "bool",
