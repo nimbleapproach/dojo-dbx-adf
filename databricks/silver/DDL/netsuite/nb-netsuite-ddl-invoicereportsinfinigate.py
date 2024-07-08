@@ -5,10 +5,9 @@
 
 # COMMAND ----------
 
-# MAGIC %python
-# MAGIC import os
-# MAGIC
-# MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
@@ -70,6 +69,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'To identiry type of business'
 # MAGIC     ,Vendor_Name	STRING	      
 # MAGIC         COMMENT 'Vendor Name'
+# MAGIC     ,Region STRING
+# MAGIC         COMMENT 'Country code'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
@@ -80,7 +81,11 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC ,CONSTRAINT invoicereportsinfinigate_pk PRIMARY KEY(Invoice_Number,Line_ID, Last_Modified)
+# MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC         
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
+# MAGIC         
+# MAGIC ,CONSTRAINT invoicereportsinfinigate_pk PRIMARY KEY(Invoice_Number,Line_ID, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for invoicereportsinfinigate. \n'
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
