@@ -1,0 +1,78 @@
+{
+	"name": "PL_99_NUAZ-SQKSERVER-01_Load_Type",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy Task Information Schema",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"additionalColumns": [
+							{
+								"name": "InsertedDateTime",
+								"value": {
+									"value": "@utcNow()",
+									"type": "Expression"
+								}
+							}
+						],
+						"sqlReaderQuery": "SELECT * FROM INFORMATION_SCHEMA.COLUMNS",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": "dev",
+							"pm_DatabaseType": "prod"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_NUAZ-SQLSERVER-01_SCHEMA",
+							"pm_Environment": "DEV"
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+		},
+		"annotations": []
+	}
+}
