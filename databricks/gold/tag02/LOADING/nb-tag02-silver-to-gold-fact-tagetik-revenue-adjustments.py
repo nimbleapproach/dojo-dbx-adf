@@ -23,7 +23,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC
 # MAGIC CREATE OR REPLACE TEMPORARY VIEW vw_fact_tagetik_revenue_drr_to_load AS
 # MAGIC
-# MAGIC SELECT CAST(date_format(drr.Sys_Silver_ModifedDateTime_UTC, 'yyyyMMdd') AS INT) AS date_sk,
+# MAGIC SELECT CAST(date_format(CAST((CASE WHEN drr.COD_PERIODO BETWEEN '01' AND '09' THEN DATEADD(YEAR,-1,(DATEADD(MONTH,3,CONCAT(LEFT(drr.COD_SCENARIO, 4), '-', CAST(drr.COD_PERIODO AS STRING),'-01' ))))
+# MAGIC                                    WHEN drr.COD_PERIODO BETWEEN '10' AND '12' THEN DATEADD(MONTH,-9,CONCAT(LEFT(drr.COD_SCENARIO, 4),'-',CAST(drr.COD_PERIODO AS STRING),'-01')) END) AS DATE), 'yyyyMMdd') AS INT) AS date_sk,
 # MAGIC        drr.COD_PERIODO AS period,
 # MAGIC        COALESCE(er.dim_exchange_rate_pk,-1) AS exchange_rate_sk,
 # MAGIC        LOWER(CONCAT(TRIM(drr.COD_SCENARIO),'_',TRIM(drr.COD_PERIODO),'_',TRIM(drr.COD_VALUTA))) AS exchange_rate_code,
@@ -41,7 +42,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC        COALESCE(e.dim_entity_pk,-1) AS entity_sk,
 # MAGIC        LOWER(drr.COD_AZIENDA) AS entity_code,      
 # MAGIC        drr.COD_CATEGORIA as Category,
-# MAGIC        CAST(drr.IMPORTO AS DECIMAL(20,2)) AS revenue_LCY,
+# MAGIC        CAST((drr.IMPORTO * -1) AS DECIMAL(20,2)) AS revenue_LCY,
 # MAGIC        CAST(2 AS INTEGER) AS silver_source,       
 # MAGIC        CAST(drr.SID AS INTEGER) AS silver_SID,
 # MAGIC        CAST(drr.DATEUPD AS TIMESTAMP) AS source_date_updated,
@@ -71,9 +72,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_region reg
 # MAGIC   ON LOWER(drr.COD_DEST2) = LOWER(reg.region_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN reg.start_datetime AND COALESCE(reg.end_datetime,'9999-12-31')
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_special_deal sd
-# MAGIC   ON LOWER(COD_DEST4) = LOWER(sd.special_deal_code)    -- at the moment this dimension is only stubbed out
-# MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN sd.start_datetime AND COALESCE(sd.end_datetime,'9999-12-31')
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_vendor v
 # MAGIC   ON LOWER(drr.COD_DEST1) = LOWER(v.vendor_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN v.start_datetime AND COALESCE(v.end_datetime,'9999-12-31')
@@ -86,10 +84,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_entity e
 # MAGIC   ON LOWER(drr.COD_AZIENDA) = LOWER(e.entity_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
-# MAGIC WHERE (drr.COD_SCENARIO like '%ACT%')
-# MAGIC   AND (drr.COD_SCENARIO like '%04')
-# MAGIC   AND (drr.COD_SCENARIO not like '%OB%')
-# MAGIC   AND (LEFT(drr.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all manual journals categories for finance report
+# MAGIC WHERE (LEFT(drr.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all manual journals categories for finance report
 # MAGIC   AND drr.COD_CATEGORIA like '%ADJ%'
 # MAGIC   AND drr.Sys_Silver_IsCurrent = 1
 # MAGIC
@@ -191,7 +186,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC deltaTableFactRevenue.alias('fact_revenue') \
 # MAGIC   .merge(
 # MAGIC     sqldf.alias('updates'),
-# MAGIC           'fact_revenue.period = updates.period AND fact_revenue.exchange_rate_sk = updates.exchange_rate_sk AND fact_revenue.account_sk = updates.account_sk AND fact_revenue.region_sk = updates.region_sk AND fact_revenue.vendor_sk = updates.vendor_sk AND fact_revenue.cost_centre_sk = updates.cost_centre_sk AND fact_revenue.scenario_sk = updates.scenario_sk AND fact_revenue.entity_sk = updates.entity_sk AND fact_revenue.Category = updates.Category'
+# MAGIC           'fact_revenue.period = updates.period AND fact_revenue.exchange_rate_sk = updates.exchange_rate_sk AND fact_revenue.account_sk = updates.account_sk AND fact_revenue.region_sk = updates.region_sk AND fact_revenue.vendor_sk = updates.vendor_sk AND fact_revenue.cost_centre_sk = updates.cost_centre_sk AND fact_revenue.scenario_sk = updates.scenario_sk AND fact_revenue.entity_sk = updates.entity_sk AND fact_revenue.Category = updates.Category AND fact_revenue.silver_source = updates.silver_source AND fact_revenue.silver_SID = updates.silver_SID'
 # MAGIC   ) \
 # MAGIC   .whenMatchedUpdate(set =
 # MAGIC     {

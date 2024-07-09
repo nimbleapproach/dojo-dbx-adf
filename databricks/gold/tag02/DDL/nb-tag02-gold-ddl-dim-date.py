@@ -95,6 +95,7 @@ while loop_date <= end_date:
         "week_of_year": int(loop_date.strftime("%U"))+1,
         "month": loop_date.month,
         "month_name": loop_date.strftime('%B'),
+        "short_month_name_year": loop_date.strftime('%B')[:3] + "-" +str(loop_date.year),
         "short_month_name": loop_date.strftime("%b"),
         "quarter": ceil(loop_date.month / 3),
         "year": loop_date.year,
