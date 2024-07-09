@@ -6,10 +6,36 @@
 				"name": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_20_SILVER_TO_GOLD_TAG02_TRIGGER",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_20_SILVER_TO_GOLD_TAG02_TRIGGER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true

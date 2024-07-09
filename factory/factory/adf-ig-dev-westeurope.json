@@ -33,6 +33,10 @@
 			"gpm_Vuzion_CRM_Service_Principal_Id": {
 				"type": "string",
 				"value": "923bb5ac-b49e-4846-8186-274d5c5ce237"
+			},
+			"gpm_Databricks_JobID_Silver_to_Gold_tag02": {
+				"type": "string",
+				"value": "13137093789100"
 			}
 		},
 		"globalConfigurations": {
