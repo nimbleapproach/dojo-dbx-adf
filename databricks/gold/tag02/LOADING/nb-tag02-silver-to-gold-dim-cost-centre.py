@@ -79,7 +79,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.cost_centre_code ORDER BY date_upd
 # MAGIC %py
 # MAGIC
 # MAGIC # Convert the SQL query result into a DataFrame
-# MAGIC sqldf = spark.sql("""SELECT cost_centre_code, NOW() AS Sys_Gold_ModifiedDateTime_UTC, MIN(start_datetime) AS min_start_datetime FROM staging_cost_centre GROUP BY cost_centre_code""")
+# MAGIC sqldf = spark.sql("""SELECT cost_centre_code, NOW() AS Sys_Gold_ModifiedDateTime_UTC, MIN(start_datetime) AS min_start_datetime FROM staging_dim_cost_centre GROUP BY cost_centre_code""")
 # MAGIC
 # MAGIC deltaTableAccount = DeltaTable.forName(spark, f"gold_{ENVIRONMENT}.tag02.dim_cost_centre")
 # MAGIC

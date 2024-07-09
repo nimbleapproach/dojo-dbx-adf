@@ -77,11 +77,6 @@ FROM (SELECT row_number() OVER(PARTITION BY a.exchange_rate_code  ORDER BY date_
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_exchange_rate b
                 ON LOWER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = LOWER(b.exchange_rate_code)
               WHERE LOWER(b.exchange_rate_code) IS NULL
-                AND LEFT(a.COD_SCENARIO, 4) rlike '[0-9]'
-                AND a.COD_SCENARIO LIKE '%ACT%'
-                AND (a.COD_SCENARIO like '%PFA-04' or  (a.COD_SCENARIO ='2025ACT-PFA-01'))
-                AND a.COD_SCENARIO not like '%AUD%'
-                AND a.COD_SCENARIO not like '%OB%'
               UNION -- We either want to insert all exchagne rate codes we haven't seen before or we want to insert only exchange rate codes with changed attributes 
               SELECT DISTINCT CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA)) AS exchange_rate_code,      
                              CAST(TRIM(a.COD_SCENARIO) AS STRING) AS scenario_code,
@@ -95,12 +90,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.exchange_rate_code  ORDER BY date_
                 ON LOWER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = LOWER(b.exchange_rate_code)
                AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
                AND SHA2(COALESCE(TRIM(cast(a.CAMBIO_PERIODO as decimal(18, 4))),''), 256) <> b.exchange_rate_hash_key
-               AND b.is_current = 1
-              WHERE LEFT(a.COD_SCENARIO, 4) rlike '[0-9]'
-                AND a.COD_SCENARIO LIKE '%ACT%'
-                AND (a.COD_SCENARIO like '%PFA-04' or  (a.COD_SCENARIO ='2025ACT-PFA-01'))
-                AND a.COD_SCENARIO not like '%AUD%'
-                AND a.COD_SCENARIO not like '%OB%') a) hk) x) y) z
+               AND b.is_current = 1) a) hk) x) y) z
 """)
 
 

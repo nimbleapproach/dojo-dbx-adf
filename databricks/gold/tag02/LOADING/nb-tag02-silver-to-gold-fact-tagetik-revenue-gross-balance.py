@@ -23,7 +23,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC
 # MAGIC CREATE OR REPLACE TEMPORARY VIEW vw_fact_tagetik_revenue_dsl_to_load AS
 # MAGIC
-# MAGIC SELECT CAST(date_format(dsl.Sys_Silver_ModifedDateTime_UTC, 'yyyyMMdd') AS INT) AS date_sk,
+# MAGIC SELECT CAST(date_format(CAST((CASE WHEN dsl.COD_PERIODO BETWEEN '01' AND '09' THEN DATEADD(YEAR,-1,(DATEADD(MONTH,3,CONCAT(LEFT(dsl.COD_SCENARIO,4),'-', CAST(dsl.COD_PERIODO AS STRING),'-01'))))
+# MAGIC                                    WHEN dsl.COD_PERIODO BETWEEN '10' AND '12' THEN DATEADD(MONTH,-9,CONCAT(LEFT(dsl.COD_SCENARIO, 4),'-',CAST(dsl.COD_PERIODO AS STRING),'-01')) END) AS DATE), 'yyyyMMdd') AS INT) AS date_sk,
 # MAGIC        dsl.COD_PERIODO AS period,
 # MAGIC        COALESCE(er.dim_exchange_rate_pk,-1) AS exchange_rate_sk,
 # MAGIC        LOWER(CONCAT(TRIM(dsl.COD_SCENARIO),'_',TRIM(dsl.COD_PERIODO),'_',TRIM(dsl.COD_VALUTA))) AS exchange_rate_code,
@@ -41,7 +42,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC        COALESCE(e.dim_entity_pk,-1) AS entity_sk,
 # MAGIC        LOWER(dsl.COD_AZIENDA) AS entity_code,      
 # MAGIC        dsl.COD_CATEGORIA as Category,
-# MAGIC        CAST(dsl.IMPORTO AS DECIMAL(20,2)) AS revenue_LCY,
+# MAGIC        CAST((dsl.IMPORTO * -1) AS DECIMAL(20,2)) AS revenue_LCY,
 # MAGIC        CAST(1 AS INTEGER) AS silver_source,       
 # MAGIC        CAST(dsl.SID AS INTEGER) AS silver_SID,
 # MAGIC        CAST(dsl.DATEUPD AS TIMESTAMP) AS source_date_updated,
@@ -83,10 +84,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_entity e
 # MAGIC   ON LOWER(dsl.COD_AZIENDA) = LOWER(e.entity_code)
 # MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
-# MAGIC WHERE (dsl.COD_SCENARIO LIKE '%ACT%')
-# MAGIC   AND (dsl.COD_SCENARIO LIKE '%04')
-# MAGIC   AND (dsl.COD_SCENARIO NOT LIKE '%OB%')
-# MAGIC   AND (LEFT(dsl.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all categories for finance report
+# MAGIC WHERE (LEFT(dsl.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all categories for finance report
 # MAGIC   AND ( dsl.COD_CATEGORIA LIKE "%AMOUNT"
 # MAGIC       OR dsl.COD_CATEGORIA IN ( 'ADJ01',
 # MAGIC                             'ADJ02',
@@ -203,7 +201,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC deltaTableFactRevenue.alias('fact_revenue') \
 # MAGIC   .merge(
 # MAGIC     sqldf.alias('updates'),
-# MAGIC           'fact_revenue.period = updates.period AND fact_revenue.exchange_rate_sk = updates.exchange_rate_sk AND fact_revenue.account_sk = updates.account_sk AND fact_revenue.region_sk = updates.region_sk AND fact_revenue.vendor_sk = updates.vendor_sk AND fact_revenue.cost_centre_sk = updates.cost_centre_sk AND fact_revenue.scenario_sk = updates.scenario_sk AND fact_revenue.entity_sk = updates.entity_sk AND fact_revenue.Category = updates.Category'
+# MAGIC           'fact_revenue.period = updates.period AND fact_revenue.exchange_rate_sk = updates.exchange_rate_sk AND fact_revenue.account_sk = updates.account_sk AND fact_revenue.region_sk = updates.region_sk AND fact_revenue.vendor_sk = updates.vendor_sk AND fact_revenue.cost_centre_sk = updates.cost_centre_sk AND fact_revenue.scenario_sk = updates.scenario_sk AND fact_revenue.entity_sk = updates.entity_sk AND fact_revenue.Category = updates.Category AND fact_revenue.silver_source = updates.silver_source AND fact_revenue.silver_SID = updates.silver_SID'
 # MAGIC   ) \
 # MAGIC   .whenMatchedUpdate(set =
 # MAGIC     {

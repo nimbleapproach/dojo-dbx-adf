@@ -81,7 +81,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC %py
 # MAGIC
 # MAGIC sqldf= spark.sql("""
-# MAGIC SELECT -1 AS dim_account_pk,
+# MAGIC SELECT -1 AS dim_cost_centre_pk,
 # MAGIC        CAST('N/A' AS STRING) AS cost_centre_code,
 # MAGIC        CAST(NULL AS STRING) AS cost_centre_name,
 # MAGIC        CAST(NULL AS STRING) AS cost_centre_hash_key,
