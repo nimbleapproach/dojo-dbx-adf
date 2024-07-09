@@ -1,0 +1,33 @@
+{
+	"name": "PL_20_SILVER_TO_GOLD_TAG02_TRIGGER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_99_TRIGGER_JOB",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_99_TRIGGER_JOB",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_JobID": {
+							"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Silver_to_Gold_tag02",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "30 Gold"
+		},
+		"annotations": []
+	}
+}
