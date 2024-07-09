@@ -401,6 +401,7 @@ df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("vuzion
 
 # COMMAND ----------
 
+# DBTITLE 1,Optimize Gold Transactions
 spark.sql(f"""OPTIMIZE gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1""")
 spark.sql(f"""OPTIMIZE gold_{ENVIRONMENT}.obt.vuzion_gp""")
 
@@ -486,6 +487,8 @@ LEFT JOIN
   gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_gp1 c
 ON
   g.NewDescription = c.NewDescription
+WHERE
+upper(g.SKUInternal) <> 'VUZION-TSA'
 """)
 
 # COMMAND ----------

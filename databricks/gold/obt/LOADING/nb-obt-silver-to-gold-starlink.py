@@ -100,7 +100,9 @@ AND
   SalesOrderID,
   SalesOrderItemID,
   SKUInternal,
-  SKUMaster,
+  case when lower(SKUInternal)  like '%discount%' then 'Discount'
+       when lower(SKUInternal)  like '%round%' then 'Rounding'
+       else SKUMaster end as SKUMaster,
   Description,
   ProductTypeInternal,
   ProductTypeMaster,

@@ -68,8 +68,14 @@ with msp_usage as (
 
     cast (
       case
-        when msp_l.PurchaseCurrencyCode = 'NaN' then msp_l.TotalCostPCY
-        else msp_l.TotalCostPCY / fx.Period_FX_rate * fx2.Period_FX_rate
+        when msp_l.PurchaseCurrencyCode = 'NaN' and coalesce( msp_l.TotalCostPCY,0 ) =0 
+          then msp_l.UnitCostPCY * msp_l.Quantity
+        when msp_l.PurchaseCurrencyCode = 'NaN'
+          then msp_l.TotalCostPCY
+        when msp_l.PurchaseCurrencyCode != 'NaN' and coalesce( msp_l.TotalCostPCY,0 ) =0  
+          then( msp_l.UnitCostPCY * msp_l.Quantity)/ fx.Period_FX_rate * fx2.Period_FX_rate
+        when msp_l.PurchaseCurrencyCode != 'NaN'
+          then msp_l.TotalCostPCY / fx.Period_FX_rate * fx2.Period_FX_rate
       end *(-1) as decimal(10, 2)
     ) as TotalCostLCY
   FROM
