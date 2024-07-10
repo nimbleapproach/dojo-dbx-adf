@@ -851,8 +851,8 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "PL_20_IGCRM_Load_Table_ITERATOR",
-						"description": "Aravin",
+						"name": "PL_10_IGCRM_Load_Table_ITERATOR",
+						"description": "",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
 						"policy": {
@@ -879,7 +879,8 @@
 				},
 				"parameters": {
 					"pm_FullLoad": {
-						"type": "string"
+						"type": "bool",
+						"defaultValue": true
 					}
 				},
 				"variables": {
@@ -1547,6 +1548,30 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
+					},
+					{
+						"name": "PL_20_SILVER_TO_GOLD_TAG02_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_SILVER_TO_GOLD_TAG02_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -1558,7 +1583,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_10_SILVER_TO_GOLD_OBT_TRIGGER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_10_SILVER_TO_GOLD_OBT_TRIGGER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_20_SILVER_TO_GOLD_TAG02_TRIGGER')]"
 			]
 		},
 		{
@@ -2246,7 +2272,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "SELECT [DATABASE_NAME]\n      ,[TABLE_NAME]\nFROM [adf].[CT_IGSQL01_TABLES]",
+									"value": "SELECT * \nFROM[adf].[CT_IGSQL01_DATABASES]\nwhere ACTIVE=1",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
@@ -2257,7 +2283,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_IGSQL01_TABLES",
+									"pm_TableName": "CT_IGSQL01_DATABASES",
 									"pm_Environment": {
 										"value": "@pipeline().globalParameters.gpm_Environment",
 										"type": "Expression"
@@ -2288,7 +2314,7 @@
 							"batchCount": 4,
 							"activities": [
 								{
-									"name": "PL_30_IGCRM_Load_Table_ITERATOR_copy1",
+									"name": "PL_20_IGCRM_Load_Table_ITERATOR",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"policy": {
@@ -2304,10 +2330,6 @@
 										"parameters": {
 											"pm_DataBase": {
 												"value": "@item().DATABASE_NAME",
-												"type": "Expression"
-											},
-											"pm_TableName": {
-												"value": "@item().TABLE_NAME",
 												"type": "Expression"
 											},
 											"pm_FullLoad": {
@@ -2326,7 +2348,7 @@
 				},
 				"parameters": {
 					"pm_FullLoad": {
-						"type": "string"
+						"type": "bool"
 					}
 				},
 				"variables": {
@@ -6837,48 +6859,11 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Get Watermark Column",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT \nCOLUMN_NAME as [WATERMARK_COLUMN]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DataBase}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_IGSQL01_TABLES",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
 						"name": "ForEach_2",
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Get Watermark Column",
+								"activity": "Get Table Names and Load Types",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -6887,7 +6872,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('Get Watermark Column').output.value",
+								"value": "@activity('Get Table Names and Load Types').output.value\n\n",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -6913,19 +6898,15 @@
 												"type": "Expression"
 											},
 											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
+												"value": "@if(equals(pipeline().parameters.pm_FullLoad, true), pipeline().parameters.pm_FullLoad, item().FULL_LOAD)\n",
 												"type": "Expression"
 											},
 											"pm_TableName": {
-												"value": "@pipeline().parameters.pm_TableName",
+												"value": "@item().TABLE_NAME",
 												"type": "Expression"
 											},
 											"pm_SchemaName": {
 												"value": "dbo",
-												"type": "Expression"
-											},
-											"pm_WatermarkColumn": {
-												"value": "@item().WATERMARK_COLUMN",
 												"type": "Expression"
 											}
 										}
@@ -6933,8 +6914,46 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "Get Table Names and Load Types",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT distinct\n[TABLE_NAME],[FULL_LOAD] from [adf].[CT_IGSQL01_TABLES]\n WHERE DATABASE_NAME='@{pipeline().parameters.pm_DataBase}' ",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_IGSQL01_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
 					}
 				],
+				"concurrency": 8,
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
@@ -6946,9 +6965,6 @@
 						"type": "string"
 					},
 					"pm_DataBase": {
-						"type": "string"
-					},
-					"pm_TableName": {
 						"type": "string"
 					},
 					"pm_FullLoad": {
@@ -7768,6 +7784,47 @@
 				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
 				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
 				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_SILVER_TO_GOLD_TAG02_TRIGGER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_99_TRIGGER_JOB",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_99_TRIGGER_JOB",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_JobID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Silver_to_Gold_tag02",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
 			]
 		},
 		{
@@ -9250,7 +9307,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{pipeline().parameters.pm_WatermarkColumn}\">= '@{variables('Watermark_Value_Delta')}'\n",
+												"value": "SELECT \ncast(@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} as int) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\">= @{variables('Watermark_Value_Delta')}\n\n\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -9359,7 +9416,7 @@
 													"value": "@variables('Watermark_Value_Delta')",
 													"type": "Expression"
 												},
-												"type": "Datetime"
+												"type": "String"
 											},
 											"database_name": {
 												"value": {
@@ -9404,7 +9461,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT COALESCE([WATERMARK]),'1900-01-01') AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
+												"value": "SELECT COALESCE([WATERMARK],0) AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -9441,7 +9498,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT \nCOLUMN_NAME as [COLUMN NAME]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
+												"value": "SELECT \nCOLUMN_NAME\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE \n  TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -9530,7 +9587,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{pipeline().parameters.pm_WatermarkColumn}\"<= '@{variables('Watermark_value')}'\n",
+												"value": "SELECT \n*\nFROM dbo.[@{pipeline().parameters.pm_TableName}]\n\n\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -9639,7 +9696,7 @@
 													"value": "@variables('Watermark_value')",
 													"type": "Expression"
 												},
-												"type": "Datetime"
+												"type": "String"
 											},
 											"database_name": {
 												"value": {
@@ -9684,7 +9741,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "SELECT \nCOALESCE(MAX(\"@{pipeline().parameters.pm_WatermarkColumn}\"),'1900-01-01') AS WATERMARK_NEW FROM dbo.[@{pipeline().parameters.pm_TableName}]",
+												"value": "SELECT\nMAX(\ncase when @{activity('Get Watermark Column').output.firstRow.COLUMN_NAME } =  0 then 0\nelse \n@{activity('Get Watermark Column').output.firstRow.COLUMN_NAME } end ) AS WATERMARK_NEW \n FROM dbo.[@{pipeline().parameters.pm_TableName}]\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -9731,7 +9788,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT \nCOLUMN_NAME as [COLUMN NAME]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
+												"value": "select case when '@{pipeline().parameters.pm_TableName}' = 'AppointmentBase'\nthen  '0'\nelse \n(SELECT distinct \n COLUMN_NAME \n  FROM [adf].[CT_IGSQL01_COLUMNS]  WHERE TABLE_NAME= '@{pipeline().parameters.pm_TableName}'\n  and WATERMARK_COLUMN =1)\n  end as COLUMN_NAME",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -9832,7 +9889,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "SELECT [COLUMN_NAME]\n      FROM [adf].[CT_IGSQL01_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}' and [DATABASE_NAME] ='@{pipeline().parameters.pm_DatabaseName}'\nAND [ACTIVE] =1",
+									"value": "SELECT [COLUMN_NAME]\n      FROM [adf].[CT_IGSQL01_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}' \nAND [ACTIVE] =1\nand [WATERMARK_COLUMN] <>1",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
@@ -9876,13 +9933,7 @@
 					"pm_SchemaName": {
 						"type": "string"
 					},
-					"pm_Watermark": {
-						"type": "string"
-					},
 					"pm_ColumnName": {
-						"type": "string"
-					},
-					"pm_WatermarkColumn": {
 						"type": "string"
 					}
 				},
@@ -9903,10 +9954,10 @@
 						"type": "String"
 					},
 					"Watermark_value": {
-						"type": "String"
+						"type": "Integer"
 					},
 					"Watermark_Value_Delta": {
-						"type": "String"
+						"type": "Integer"
 					}
 				},
 				"folder": {

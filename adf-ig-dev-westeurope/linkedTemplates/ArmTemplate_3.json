@@ -13,6 +13,201 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_RESELLERGROUPS_Load_Sheet')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load Sheet",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									}
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "resellergroups",
+										"type": "Expression"
+									},
+									"wildcardFileName": {
+										"value": "*.xlsx",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "Infinigate Company",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "InfinigateCompany",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "ResellerID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ResellerID",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "ResellerName",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ResellerName",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "ResellerGroupCode",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ResellerGroupCode",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "ResellerGroupName",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ResellerGroupName",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Entity",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Entity",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"type": "String"
+										},
+										"sink": {
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_DV_RESELLERGROUPS_EXCEL",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET_STATIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": {
+										"value": "bronze",
+										"type": "Expression"
+									},
+									"pm_Directory": {
+										"value": "masterdata/resellergroups",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "bronze-resellergroups-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/RESELLERGROUPS"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_CLOUDBLUE_OSS_Copy_Data')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2849,7 +3044,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{pipeline().parameters.pm_WatermarkColumn}\">= '@{variables('Watermark_Value_Delta')}'\n",
+												"value": "SELECT \ncast(@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} as int) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\">= @{variables('Watermark_Value_Delta')}\n\n\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -2958,7 +3153,7 @@
 													"value": "@variables('Watermark_Value_Delta')",
 													"type": "Expression"
 												},
-												"type": "Datetime"
+												"type": "String"
 											},
 											"database_name": {
 												"value": {
@@ -3003,7 +3198,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT COALESCE([WATERMARK]),'1900-01-01') AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
+												"value": "SELECT COALESCE([WATERMARK],0) AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3040,7 +3235,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT \nCOLUMN_NAME as [COLUMN NAME]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
+												"value": "SELECT \nCOLUMN_NAME\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE \n  TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3129,7 +3324,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \n@{concat(join(variables('ColumnString'),',' ) )} FROM dbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{pipeline().parameters.pm_WatermarkColumn}\"<= '@{variables('Watermark_value')}'\n",
+												"value": "SELECT \n*\nFROM dbo.[@{pipeline().parameters.pm_TableName}]\n\n\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3238,7 +3433,7 @@
 													"value": "@variables('Watermark_value')",
 													"type": "Expression"
 												},
-												"type": "Datetime"
+												"type": "String"
 											},
 											"database_name": {
 												"value": {
@@ -3283,7 +3478,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "SELECT \nCOALESCE(MAX(\"@{pipeline().parameters.pm_WatermarkColumn}\"),'1900-01-01') AS WATERMARK_NEW FROM dbo.[@{pipeline().parameters.pm_TableName}]",
+												"value": "SELECT\nMAX(\ncase when @{activity('Get Watermark Column').output.firstRow.COLUMN_NAME } =  0 then 0\nelse \n@{activity('Get Watermark Column').output.firstRow.COLUMN_NAME } end ) AS WATERMARK_NEW \n FROM dbo.[@{pipeline().parameters.pm_TableName}]\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3330,7 +3525,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT \nCOLUMN_NAME as [COLUMN NAME]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
+												"value": "select case when '@{pipeline().parameters.pm_TableName}' = 'AppointmentBase'\nthen  '0'\nelse \n(SELECT distinct \n COLUMN_NAME \n  FROM [adf].[CT_IGSQL01_COLUMNS]  WHERE TABLE_NAME= '@{pipeline().parameters.pm_TableName}'\n  and WATERMARK_COLUMN =1)\n  end as COLUMN_NAME",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3431,7 +3626,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "SELECT [COLUMN_NAME]\n      FROM [adf].[CT_IGSQL01_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}' and [DATABASE_NAME] ='@{pipeline().parameters.pm_DatabaseName}'\nAND [ACTIVE] =1",
+									"value": "SELECT [COLUMN_NAME]\n      FROM [adf].[CT_IGSQL01_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}' \nAND [ACTIVE] =1\nand [WATERMARK_COLUMN] <>1",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
@@ -3475,13 +3670,7 @@
 					"pm_SchemaName": {
 						"type": "string"
 					},
-					"pm_Watermark": {
-						"type": "string"
-					},
 					"pm_ColumnName": {
-						"type": "string"
-					},
-					"pm_WatermarkColumn": {
 						"type": "string"
 					}
 				},
@@ -3502,10 +3691,10 @@
 						"type": "String"
 					},
 					"Watermark_value": {
-						"type": "String"
+						"type": "Integer"
 					},
 					"Watermark_Value_Delta": {
-						"type": "String"
+						"type": "Integer"
 					}
 				},
 				"folder": {
@@ -5673,139 +5862,6 @@
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_DCB_EXCEL_LOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "DCB"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_ADLS_DV_DCB_EXCEL",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "Partition"
-						},
-						{
-							"name": "AddSystemColumns",
-							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          Invoice as string,",
-						"          {Vlgnr.} as string,",
-						"          {Invoice date} as string,",
-						"          {Invoice month} as string,",
-						"          {Invoice year} as string,",
-						"          SO as string,",
-						"          {SO date} as string,",
-						"          {Reseller ID} as string,",
-						"          {Reseller name} as string,",
-						"          {VAT number} as string,",
-						"          SKU as string,",
-						"          Description as string,",
-						"          Remark as string,",
-						"          Qty as string,",
-						"          {Price/unit} as string,",
-						"          {% line discount} as string,",
-						"          {Amount line discount} as string,",
-						"          {Net price} as string,",
-						"          {Total invoice} as string,",
-						"          Entity as string,",
-						"          {Article group} as string,",
-						"          {Product Type} as string,",
-						"          {Vendor number} as string,",
-						"          {Vendor ID} as string,",
-						"          Vendor as string,",
-						"          {Cred.order} as string,",
-						"          Margin as string,",
-						"          {margin in %} as string,",
-						"          Invoice_linenumber as string,",
-						"          line_verkoopfactuurregels as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['dcb/pending','dcb/archived'],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"GetExcelFile window(over(Invoice),",
-						"     asc(SKU, true),",
-						"     LineNo = rowNumber()) ~> Partition",
-						"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: 'dcb/invoicedata',",
-						"     compressionCodec: 'snappy',",
-						"     partitionFileNames:[(concat('bronze-dcb-',toString(currentUTC()),'.snappy.parquet')\r",
-						")],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     mapColumn(",
-						"          Invoice,",
-						"          Vlgnr = {Vlgnr.},",
-						"          Invoice_Date = {Invoice date},",
-						"          Invoice_Month = {Invoice month},",
-						"          Invoice_Year = {Invoice year},",
-						"          SO,",
-						"          SO_Date = {SO date},",
-						"          Reseller_ID = {Reseller ID},",
-						"          Reseller_Name = {Reseller name},",
-						"          VAT_Number = {VAT number},",
-						"          SKU,",
-						"          Description,",
-						"          Remark,",
-						"          Qty,",
-						"          Unit_Price = {Price/unit},",
-						"          Line_Discount_Percentage = {% line discount},",
-						"          Line_Discount_Amount = {Amount line discount},",
-						"          Net_Price = {Net price},",
-						"          Total_Invoice = {Total invoice},",
-						"          Entity,",
-						"          Article_Group = {Article group},",
-						"          Product_Type = {Product Type},",
-						"          Vendor_Number = {Vendor number},",
-						"          Vendor_ID = {Vendor ID},",
-						"          Vendor,",
-						"          Cred_Order = {Cred.order},",
-						"          Margin,",
-						"          Margin_Percentage = {margin in %},",
-						"          Invoice_linenumber,",
-						"          line_verkoopfactuurregels,",
-						"          Sys_FileName,",
-						"          LineNo,",
-						"          Sys_Bronze_InsertDateTime_UTC",
-						"     ),",
-						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
 					]
 				}
 			},

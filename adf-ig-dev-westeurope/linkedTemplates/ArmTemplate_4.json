@@ -13,6 +13,139 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DF_DCB_EXCEL_LOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DCB"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_ADLS_DV_DCB_EXCEL",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Partition"
+						},
+						{
+							"name": "AddSystemColumns",
+							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Invoice as string,",
+						"          {Vlgnr.} as string,",
+						"          {Invoice date} as string,",
+						"          {Invoice month} as string,",
+						"          {Invoice year} as string,",
+						"          SO as string,",
+						"          {SO date} as string,",
+						"          {Reseller ID} as string,",
+						"          {Reseller name} as string,",
+						"          {VAT number} as string,",
+						"          SKU as string,",
+						"          Description as string,",
+						"          Remark as string,",
+						"          Qty as string,",
+						"          {Price/unit} as string,",
+						"          {% line discount} as string,",
+						"          {Amount line discount} as string,",
+						"          {Net price} as string,",
+						"          {Total invoice} as string,",
+						"          Entity as string,",
+						"          {Article group} as string,",
+						"          {Product Type} as string,",
+						"          {Vendor number} as string,",
+						"          {Vendor ID} as string,",
+						"          Vendor as string,",
+						"          {Cred.order} as string,",
+						"          Margin as string,",
+						"          {margin in %} as string,",
+						"          Invoice_linenumber as string,",
+						"          line_verkoopfactuurregels as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['dcb/pending','dcb/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"GetExcelFile window(over(Invoice),",
+						"     asc(SKU, true),",
+						"     LineNo = rowNumber()) ~> Partition",
+						"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: 'dcb/invoicedata',",
+						"     compressionCodec: 'snappy',",
+						"     partitionFileNames:[(concat('bronze-dcb-',toString(currentUTC()),'.snappy.parquet')\r",
+						")],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          Invoice,",
+						"          Vlgnr = {Vlgnr.},",
+						"          Invoice_Date = {Invoice date},",
+						"          Invoice_Month = {Invoice month},",
+						"          Invoice_Year = {Invoice year},",
+						"          SO,",
+						"          SO_Date = {SO date},",
+						"          Reseller_ID = {Reseller ID},",
+						"          Reseller_Name = {Reseller name},",
+						"          VAT_Number = {VAT number},",
+						"          SKU,",
+						"          Description,",
+						"          Remark,",
+						"          Qty,",
+						"          Unit_Price = {Price/unit},",
+						"          Line_Discount_Percentage = {% line discount},",
+						"          Line_Discount_Amount = {Amount line discount},",
+						"          Net_Price = {Net price},",
+						"          Total_Invoice = {Total invoice},",
+						"          Entity,",
+						"          Article_Group = {Article group},",
+						"          Product_Type = {Product Type},",
+						"          Vendor_Number = {Vendor number},",
+						"          Vendor_ID = {Vendor ID},",
+						"          Vendor,",
+						"          Cred_Order = {Cred.order},",
+						"          Margin,",
+						"          Margin_Percentage = {margin in %},",
+						"          Invoice_linenumber,",
+						"          line_verkoopfactuurregels,",
+						"          Sys_FileName,",
+						"          LineNo,",
+						"          Sys_Bronze_InsertDateTime_UTC",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DF_DELTALINK_EXCEL_LOAD')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1934,68 +2067,6 @@
 				},
 				"folder": {
 					"name": "10 Bronze/D2B"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_DCB_Load_File')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "DF_DCB_EXCEL_LOAD",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_DCB_EXCEL_LOAD",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"GetExcelFile": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										}
-									},
-									"WriteDeltaFiles": {}
-								},
-								"linkedServiceParameters": {
-									"WriteDeltaFiles": {
-										"linkedService": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "ir-ig-managed-dev-westeurope",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/DCB"
 				},
 				"annotations": []
 			},
