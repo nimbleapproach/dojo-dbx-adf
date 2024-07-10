@@ -18,7 +18,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT [DATABASE_NAME]\n      ,[TABLE_NAME]\nFROM [adf].[CT_IGSQL01_TABLES]",
+							"value": "SELECT * \nFROM[adf].[CT_IGSQL01_DATABASES]\nwhere ACTIVE=1",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -29,7 +29,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_IGSQL01_TABLES",
+							"pm_TableName": "CT_IGSQL01_DATABASES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
@@ -60,9 +60,12 @@
 					"batchCount": 4,
 					"activities": [
 						{
-							"name": "PL_30_IGCRM_Load_Table_ITERATOR_copy1",
+							"name": "PL_20_IGCRM_Load_Table_ITERATOR",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
@@ -73,10 +76,6 @@
 								"parameters": {
 									"pm_DataBase": {
 										"value": "@item().DATABASE_NAME",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "@item().TABLE_NAME",
 										"type": "Expression"
 									},
 									"pm_FullLoad": {
@@ -92,7 +91,7 @@
 		],
 		"parameters": {
 			"pm_FullLoad": {
-				"type": "string"
+				"type": "bool"
 			}
 		},
 		"variables": {

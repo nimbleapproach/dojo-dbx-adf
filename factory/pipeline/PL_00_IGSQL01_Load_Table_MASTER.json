@@ -3,10 +3,13 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "PL_20_IGCRM_Load_Table_ITERATOR",
-				"description": "Aravin",
+				"name": "PL_10_IGCRM_Load_Table_ITERATOR",
+				"description": "",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -25,7 +28,8 @@
 		],
 		"parameters": {
 			"pm_FullLoad": {
-				"type": "string"
+				"type": "bool",
+				"defaultValue": true
 			}
 		},
 		"variables": {
