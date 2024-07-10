@@ -6,6 +6,9 @@
 				"name": "PL_00_TAG02_Load_View_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -25,6 +28,9 @@
 				"name": "PL_00_IGSQL03_Load_View_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -44,6 +50,9 @@
 				"name": "PL_00_NETSUITE_Load_File_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -63,6 +72,9 @@
 				"name": "PL_00_NUVIAS_OPERATIONS_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -89,6 +101,9 @@
 						]
 					}
 				],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -108,6 +123,9 @@
 				"name": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -188,6 +206,9 @@
 						]
 					}
 				],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -208,6 +229,9 @@
 						]
 					}
 				],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -221,6 +245,9 @@
 				"name": "PL_00_VUZION_ARR_Load_Sheet_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -234,6 +261,9 @@
 				"name": "PL_00_NETSAFE_Load_File_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -247,6 +277,9 @@
 				"name": "PL_00_CLOUD_DISTRIBUTION_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -260,6 +293,9 @@
 				"name": "PL_00_DCB_Load_File_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -273,10 +309,36 @@
 				"name": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_20_SILVER_TO_GOLD_TAG02_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_00_BRONZE_TO_SILVER_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_20_SILVER_TO_GOLD_TAG02_MASTER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
