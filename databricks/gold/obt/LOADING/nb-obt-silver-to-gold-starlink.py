@@ -102,6 +102,8 @@ AND
   SKUInternal,
   case when lower(SKUInternal)  like '%discount%' then 'Discount'
        when lower(SKUInternal)  like '%round%' then 'Rounding'
+       when SKUInternal  like '%Funded%' then 'Funding'
+       when ProductTypeInternal  like '%Shipping%' then 'Shipping'
        else SKUMaster end as SKUMaster,
   Description,
   ProductTypeInternal,
@@ -137,9 +139,7 @@ case
   GP1
 from
   cte
-where SKUInternal not like '%Funded%'
-and ProductTypeInternal not like '%Shipping%'
---and lower(SKUInternal) not like '%round%'
+
 """)
 
 # COMMAND ----------
