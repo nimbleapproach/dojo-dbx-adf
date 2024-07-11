@@ -42,6 +42,7 @@ def registerTable(rootPath : str, tableName : str,schemaName : str,databaseName:
 
 # COMMAND ----------
 
+
 for databaseName in dbutils.fs.ls(f'mnt/bronze/nuaz-sqlserver-01'):
     for schemaName in dbutils.fs.ls(f'mnt/bronze/nuaz-sqlserver-01/{databaseName.name[:-1]}'):
         for tableName in dbutils.fs.ls(f'mnt/bronze/nuaz-sqlserver-01/{databaseName.name[:-1]}/{schemaName.name[:-1]}'):
