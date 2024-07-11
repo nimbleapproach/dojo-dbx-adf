@@ -75,7 +75,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT  \ndistinct   \n[TABLE_CATALOG]  DATABASE_NAME\n      ,[TABLE_SCHEMA] Schema_Name\n      ,[TABLE_NAME] Table_Name\n      , NULL WATERMARK\nFROM [adf].[CT_NUAZ-SQLSERVER-01_SCHEMA]\nwhere COLUMN_NAME like '%group%'\nand COLUMN_NAME like '%vendor%'\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}' \n",
+							"value": "SELECT  \ndistinct   \n[TABLE_CATALOG]  DATABASE_NAME\n      ,[TABLE_SCHEMA] Schema_Name\n      ,[TABLE_NAME] Table_Name\n      , NULL WATERMARK\nFROM [adf].[CT_NUAZ-SQLSERVER-01_SCHEMA]\nwhere \n(\n      (\n            COLUMN_NAME like '%group%'\n            and COLUMN_NAME like '%reseller%'\n      )\n      or (\n            TABLE_NAME in ('Account', 'Oracle_Accounts')\n      )\n)\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}' \n\norder by 3 ",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -100,7 +100,7 @@
 		"parameters": {
 			"pm_DatabaseName": {
 				"type": "string",
-				"defaultValue": "NUAV_PRODTRANS_SQLBYOD"
+				"defaultValue": "NUAV_ProdTran_SQLBYOD"
 			},
 			"pm_FullLoad": {
 				"type": "bool",
