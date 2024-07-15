@@ -47,6 +47,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Region Code'
 # MAGIC     ,region_name STRING
 # MAGIC       COMMENT 'The description name of the region'
+# MAGIC     ,country_code STRING
+# MAGIC       COMMENT 'The country code to which the region relates'      
 # MAGIC     ,region_hash_key STRING
 # MAGIC       COMMENT 'Hash value of the dimensional attributes per region code'
 # MAGIC     ,start_datetime TIMESTAMP NOT NULL 

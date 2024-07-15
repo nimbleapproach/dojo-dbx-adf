@@ -17,35 +17,106 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
 
+# MAGIC %py
+# MAGIC
+# MAGIC spark.sql(f"""
+# MAGIC           
+# MAGIC CREATE OR REPLACE VIEW region_with_country_code AS
+# MAGIC
+# MAGIC WITH level_1 as(
+# MAGIC   SELECT
+# MAGIC     COD_DEST2_ELEGER as Level_1_Code
+# MAGIC   FROM
+# MAGIC     silver_{ENVIRONMENT}.tag02.dest2_gerarchia
+# MAGIC   where
+# MAGIC     COD_DEST2_ELEGER_PADRE = 'LS01'
+# MAGIC     AND COD_DEST2_GERARCHIA = '03'
+# MAGIC     and Sys_Silver_IsCurrent = 1
+# MAGIC ),
+# MAGIC level_2 as (
+# MAGIC   SELECT
+# MAGIC     COD_DEST2_ELEGER as Level_2_Code,
+# MAGIC     COD_DEST2_ELEGER_PADRE as Level_2_join
+# MAGIC   FROM
+# MAGIC     silver_{ENVIRONMENT}.tag02.dest2_gerarchia
+# MAGIC   where
+# MAGIC     Sys_Silver_IsCurrent = 1
+# MAGIC ),
+# MAGIC level_3 as (
+# MAGIC   SELECT
+# MAGIC     distinct COD_DEST2 Level_3_Code,
+# MAGIC     COD_DEST2_ELEGER Level_3_join
+# MAGIC   FROM
+# MAGIC     silver_{ENVIRONMENT}.tag02.dest2_gerarchia_abbi
+# MAGIC   where
+# MAGIC     Sys_Silver_IsCurrent = 1
+# MAGIC     and COD_DEST2_GERARCHIA = '03'
+# MAGIC ),
+# MAGIC region as (
+# MAGIC   select
+# MAGIC     distinct level12.Level_1_Code,
+# MAGIC     level12.Level_2_Code,
+# MAGIC     Level_3_Code,
+# MAGIC     Level_3_join
+# MAGIC   from
+# MAGIC     level_3
+# MAGIC     left join (
+# MAGIC       select
+# MAGIC         distinct level_1.*,
+# MAGIC         case
+# MAGIC           when Level_2_Code is null then level_1.Level_1_Code
+# MAGIC           else Level_2_Code
+# MAGIC         end as Level_2_Code
+# MAGIC       from
+# MAGIC         level_1
+# MAGIC         left join level_2 on level_1.Level_1_Code = level_2.Level_2_join
+# MAGIC     ) level12 on level_3.Level_3_join = level12.Level_2_Code
+# MAGIC )
+# MAGIC select
+# MAGIC   case
+# MAGIC     when Level_1_Code is null then Level_3_join
+# MAGIC     else Level_1_Code
+# MAGIC   end as RegionCode,
+# MAGIC   Level_2_Code as CountryCode,
+# MAGIC   Level_3_Code as RegionID
+# MAGIC from
+# MAGIC   region
+# MAGIC WHERE Level_2_Code IS NOT NULL
+# MAGIC
+# MAGIC """)
+
+# COMMAND ----------
+
 spark.sql(f"""
           
 CREATE OR REPLACE VIEW staging_dim_region AS
 
-SELECT DISTINCT region_code,
-                region_name,
-                region_hash_key,
-                start_datetime,
-               (CASE WHEN CAST('9999-12-31' AS TIMESTAMP) = end_datetime THEN NULL ELSE end_datetime END) AS end_datetime,
-               (CASE WHEN CAST('9999-12-31' AS TIMESTAMP) = end_datetime THEN 1 ELSE 0 END) AS is_current,
+SELECT DISTINCT z.region_code,
+                z.region_name,
+                z.region_hash_key,
+                rcc.CountryCode As country_code,
+                z.start_datetime,
+               (CASE WHEN CAST('9999-12-31' AS TIMESTAMP) = z.end_datetime THEN NULL ELSE z.end_datetime END) AS end_datetime,
+               (CASE WHEN CAST('9999-12-31' AS TIMESTAMP) = z.end_datetime THEN 1 ELSE 0 END) AS is_current,
                 NOW() AS Sys_Gold_InsertedDateTime_UTC,
                 NOW() AS Sys_Gold_ModifiedDateTime_UTC               
 FROM (
-SELECT grp_id2 AS region_id,
-       region_code,
-       region_name,
-       region_hash_key,
-       MIN(date_updated) OVER(PARTITION BY region_code, grp_id2) AS start_datetime,
-       MAX(COALESCE(next_date_updated,CAST('9999-12-31' AS TIMESTAMP))) OVER(PARTITION BY region_code, grp_id2) AS end_datetime
+SELECT y.grp_id2 AS region_id,
+       y.region_code,
+       y.region_name,
+       y.region_hash_key,
+       MIN(y.date_updated) OVER(PARTITION BY y.region_code, y.grp_id2) AS start_datetime,
+       MAX(COALESCE(y.next_date_updated,CAST('9999-12-31' AS TIMESTAMP))) OVER(PARTITION BY y.region_code, y.grp_id2) AS end_datetime
 FROM (
-SELECT *,
-      MAX(grp_id) OVER(PARTITION BY region_code, region_name ORDER BY date_updated ROWS UNBOUNDED PRECEDING) as grp_id2
+SELECT x.*,
+      MAX(x.grp_id) OVER(PARTITION BY x.region_code, x.region_name ORDER BY x.date_updated ROWS UNBOUNDED PRECEDING) as grp_id2
 FROM (
-SELECT region_code,
-       region_name,
-       region_hash_key,
-       date_updated,
-      (CASE WHEN LAG(region_name) OVER (PARTITION BY region_code ORDER BY date_updated) IS NULL OR 
-                 region_name <> LAG(region_name) OVER (PARTITION BY region_code ORDER BY date_updated) THEN row_id
+SELECT hk.region_code,
+       hk.region_name,
+       hk.region_hash_key,
+       hk.date_updated,
+      (CASE WHEN LAG(hk.region_name) OVER (PARTITION BY hk.region_code ORDER BY hk.date_updated) IS NULL OR 
+                 hk.region_name <> LAG(hk.region_name) OVER (PARTITION BY hk.region_code ORDER BY hk.date_updated) THEN row_id
                  ELSE NULL END) AS grp_id,
        LEAD(date_updated) OVER (PARTITION BY region_code ORDER BY date_updated) AS next_date_updated
 FROM (SELECT row_number() OVER(PARTITION BY a.region_code ORDER BY date_updated) AS row_id,
@@ -72,6 +143,8 @@ FROM (SELECT row_number() OVER(PARTITION BY a.region_code ORDER BY date_updated)
                AND CAST(DATEUPD AS TIMESTAMP) > b.start_datetime
                AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST20), '')), 256) <> b.region_hash_key
                AND b.is_current = 1) a) hk) x) y) z
+LEFT OUTER JOIN region_with_country_code rcc
+      ON z.region_code = rcc.RegionID         
 """)
 
 
@@ -105,6 +178,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.region_code ORDER BY date_updated)
 # MAGIC sqldf= spark.sql("""
 # MAGIC SELECT region_code,
 # MAGIC        region_name,
+# MAGIC        country_code,
 # MAGIC        region_hash_key,
 # MAGIC        start_datetime,
 # MAGIC        end_datetime,

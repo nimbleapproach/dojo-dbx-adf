@@ -5,7 +5,7 @@ from delta.tables import DeltaTable
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
-spark.conf.set("tableObject.environement", ENVIRONMENT)
+spark.conf.set("tableObject.environment", ENVIRONMENT)
 
 # COMMAND ----------
 
@@ -51,37 +51,37 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC        CAST(1 AS INTEGER) AS Sys_Gold_is_active,
 # MAGIC        drr.Sys_Silver_IsDeleted
 # MAGIC FROM (SELECT SID
-# MAGIC       FROM silver_${tableObject.environement}.tag02.dati_rett_riga a
-# MAGIC       LEFT OUTER JOIN (SELECT silver_sid FROM gold_${tableObject.environement}.tag02.fact_tagetik_revenue WHERE silver_source = 2) b
+# MAGIC       FROM silver_${tableObject.environment}.tag02.dati_rett_riga a
+# MAGIC       LEFT OUTER JOIN (SELECT silver_sid FROM gold_${tableObject.environment}.tag02.fact_tagetik_revenue WHERE silver_source = 2) b
 # MAGIC         ON a.SID = b.silver_sid
 # MAGIC       WHERE b.silver_sid IS NULL
 # MAGIC       UNION -- we either want to load the transactional record where it hasn't been seen before or we want to load a more recent version of one that has
 # MAGIC       SELECT SID
-# MAGIC       FROM silver_${tableObject.environement}.tag02.dati_rett_riga a2
-# MAGIC       INNER JOIN (SELECT silver_sid, tagetik_date_updated FROM gold_${tableObject.environement}.tag02.fact_tagetik_revenue WHERE silver_source = 2) b2
+# MAGIC       FROM silver_${tableObject.environment}.tag02.dati_rett_riga a2
+# MAGIC       INNER JOIN (SELECT silver_sid, tagetik_date_updated FROM gold_${tableObject.environment}.tag02.fact_tagetik_revenue WHERE silver_source = 2) b2
 # MAGIC         ON a2.SID = b2.silver_sid
 # MAGIC       WHERE CAST(a2.DATEUPD AS TIMESTAMP) > b2.tagetik_date_updated) sid
-# MAGIC INNER JOIN silver_${tableObject.environement}.tag02.dati_rett_riga drr
+# MAGIC INNER JOIN silver_${tableObject.environment}.tag02.dati_rett_riga drr
 # MAGIC   ON sid.SID = drr.SID       
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_exchange_rate er
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_exchange_rate er
 # MAGIC   ON LOWER(CONCAT(TRIM(drr.COD_SCENARIO),'_',TRIM(drr.COD_PERIODO),'_',TRIM(drr.COD_VALUTA))) = LOWER(er.exchange_rate_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN er.start_datetime AND COALESCE(er.end_datetime,'9999-12-31')
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_account acc
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_account acc
 # MAGIC   ON LOWER(drr.COD_CONTO) = LOWER(acc.account_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN acc.start_datetime AND COALESCE(acc.end_datetime,'9999-12-31')
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_region reg
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_region reg
 # MAGIC   ON LOWER(drr.COD_DEST2) = LOWER(reg.region_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN reg.start_datetime AND COALESCE(reg.end_datetime,'9999-12-31')
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_vendor v
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_vendor v
 # MAGIC   ON LOWER(drr.COD_DEST1) = LOWER(v.vendor_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN v.start_datetime AND COALESCE(v.end_datetime,'9999-12-31')
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_cost_centre cc
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_cost_centre cc
 # MAGIC   ON LOWER(drr.COD_DEST3) = LOWER(cc.cost_centre_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN cc.start_datetime AND COALESCE(cc.end_datetime,'9999-12-31')
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_scenario s
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_scenario s
 # MAGIC   ON LOWER(drr.COD_SCENARIO) = LOWER(s.scenario_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN s.start_datetime AND COALESCE(s.end_datetime,'9999-12-31')
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environement}.tag02.dim_entity e
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_entity e
 # MAGIC   ON LOWER(drr.COD_AZIENDA) = LOWER(e.entity_code)
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
 # MAGIC WHERE (LEFT(drr.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all manual journals categories for finance report
@@ -119,37 +119,37 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC FROM vw_fact_tagetik_revenue_drr_to_load x
 # MAGIC LEFT OUTER JOIN ( SELECT dim_exchange_rate_pk, exchange_rate_code, start_datetime
 # MAGIC                   FROM ( SELECT dim_exchange_rate_pk, exchange_rate_code, start_datetime, ROW_NUMBER() OVER (PARTITION BY exchange_rate_code ORDER BY 
-# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environement}.tag02.dim_exchange_rate ) s2
+# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environment}.tag02.dim_exchange_rate ) s2
 # MAGIC                   WHERE row_id = 1 ) adj_exchange_rate_key
 # MAGIC   ON x.exchange_rate_code = LOWER(adj_exchange_rate_key.exchange_rate_code)
 # MAGIC LEFT OUTER JOIN ( SELECT dim_account_pk, account_code, start_datetime
 # MAGIC                   FROM ( SELECT dim_account_pk, account_code, start_datetime, ROW_NUMBER() OVER (PARTITION BY account_code ORDER BY 
-# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environement}.tag02.dim_account ) s2
+# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environment}.tag02.dim_account ) s2
 # MAGIC                   WHERE row_id = 1 ) adj_account_key
 # MAGIC   ON x.account_code = LOWER(adj_account_key.account_code)
 # MAGIC LEFT OUTER JOIN ( SELECT dim_region_pk, region_code, start_datetime
 # MAGIC                   FROM ( SELECT dim_region_pk, region_code, start_datetime, ROW_NUMBER() OVER (PARTITION BY region_code ORDER BY 
-# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environement}.tag02.dim_region ) s2
+# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environment}.tag02.dim_region ) s2
 # MAGIC                   WHERE row_id = 1 ) adj_region_key
 # MAGIC   ON x.region_code = LOWER(adj_region_key.region_code)
 # MAGIC LEFT OUTER JOIN ( SELECT dim_vendor_pk, vendor_code, start_datetime
 # MAGIC                   FROM ( SELECT dim_vendor_pk, vendor_code, start_datetime, ROW_NUMBER() OVER (PARTITION BY vendor_code ORDER BY 
-# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environement}.tag02.dim_vendor ) s2
+# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environment}.tag02.dim_vendor ) s2
 # MAGIC                   WHERE row_id = 1 ) adj_vendor_key
 # MAGIC   ON x.vendor_code = LOWER(adj_vendor_key.vendor_code)
 # MAGIC LEFT OUTER JOIN ( SELECT dim_cost_centre_pk, cost_centre_code, start_datetime
 # MAGIC                   FROM ( SELECT dim_cost_centre_pk, cost_centre_code, start_datetime, ROW_NUMBER() OVER (PARTITION BY cost_centre_code ORDER BY 
-# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environement}.tag02.dim_cost_centre ) s2
+# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environment}.tag02.dim_cost_centre ) s2
 # MAGIC                   WHERE row_id = 1 ) adj_cost_centre_key
 # MAGIC   ON x.cost_centre_code = LOWER(adj_cost_centre_key.cost_centre_code)
 # MAGIC LEFT OUTER JOIN ( SELECT dim_scenario_pk, scenario_code, start_datetime
 # MAGIC                   FROM ( SELECT dim_scenario_pk, scenario_code, start_datetime, ROW_NUMBER() OVER (PARTITION BY scenario_code ORDER BY 
-# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environement}.tag02.dim_scenario ) s2
+# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environment}.tag02.dim_scenario ) s2
 # MAGIC                   WHERE row_id = 1 ) adj_scenario_key
 # MAGIC   ON x.scenario_code = LOWER(adj_scenario_key.scenario_code)
 # MAGIC LEFT OUTER JOIN ( SELECT dim_entity_pk, entity_code, start_datetime
 # MAGIC                   FROM ( SELECT dim_entity_pk, entity_code, start_datetime, ROW_NUMBER() OVER (PARTITION BY entity_code ORDER BY 
-# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environement}.tag02.dim_entity ) s2
+# MAGIC                                 start_datetime) AS row_id FROM gold_${tableObject.environment}.tag02.dim_entity ) s2
 # MAGIC                   WHERE row_id = 1 ) adj_entity_key
 # MAGIC   ON x.entity_code = LOWER(adj_entity_key.entity_code)
 # MAGIC   

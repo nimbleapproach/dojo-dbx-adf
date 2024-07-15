@@ -1,4 +1,14 @@
 # Databricks notebook source
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+
+# COMMAND ----------
+
+spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
+
+# COMMAND ----------
+
 #import needed functions
 from datetime import date, timedelta, datetime,time
 from dateutil.relativedelta import relativedelta
@@ -8,8 +18,8 @@ import string
 # COMMAND ----------
 
 #dates range for dim
-start_date = date(datetime.today().year-6, 1, 1)
-end_date = date(datetime.today().year+1, 12, 31)
+start_date = date(datetime.today().year-10, 1, 1)
+end_date = date(datetime.today().year+10, 12, 31)
 
 # COMMAND ----------
 
@@ -124,7 +134,7 @@ display(dates_df)
 # COMMAND ----------
 
 #write dataframe to table
-dates_df.write.mode("overwrite").saveAsTable("gold_dev.tag02.dim_date")
+dates_df.write.mode("overwrite").saveAsTable(f"gold_{ENVIRONMENT}.tag02.dim_date")
 
 # COMMAND ----------
 
