@@ -59,7 +59,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "SELECT \ncast(@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} as int) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\">= @{variables('Watermark_Value_Delta')}\n\n\n",
+										"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\"> @{variables('Watermark_Value_Delta')}\n\n\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -339,7 +339,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "SELECT \n*\nFROM dbo.[@{pipeline().parameters.pm_TableName}]\n\n\n",
+										"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\n\n\n\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
