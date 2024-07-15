@@ -1767,6 +1767,40 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_SILVER_TO_GOLD_TAG02_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_TAG02_Load_View')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -3044,7 +3078,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \ncast(@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} as int) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\">= @{variables('Watermark_Value_Delta')}\n\n\n",
+												"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\"> @{variables('Watermark_Value_Delta')}\n\n\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3324,7 +3358,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \n*\nFROM dbo.[@{pipeline().parameters.pm_TableName}]\n\n\n",
+												"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\n\n\n\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -5750,105 +5784,6 @@
 						"     compressionLevel: 'Fastest',",
 						"     fileSystem: 'bronze',",
 						"     folderPath: ('d2b/customers'),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_SALES')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "D2B"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_EXCEL_D2B_SALES",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddSystemColumns"
-						},
-						{
-							"name": "RenameColumns"
-						},
-						{
-							"name": "AddIdColumn"
-						}
-					],
-					"udfLibraries": [
-						{
-							"referenceName": "General",
-							"type": "DataFlowReference"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          CUSTOMER_ID as string,",
-						"          CUSTOMER as string,",
-						"          INVOICE as string,",
-						"          INVOICE_DATE as date,",
-						"          CUSTOMER_PO as string,",
-						"          SKU as string,",
-						"          DESCRIPTION as string,",
-						"          QTY as short,",
-						"          SALES_PRICE as double,",
-						"          PURCHASE_PRICE as double,",
-						"          USD_RATE as double,",
-						"          VENDOR as string,",
-						"          PURCHASE_CURRENCY as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['d2b/sales/pending','d2b/sales/archived'],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"AddIdColumn select(mapColumn(",
-						"          each(match(true()),",
-						"               applyParquetNaming($$) = $$)",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
-						"GetExcelFile derive(Sys_ID = nextSequence()) ~> AddIdColumn",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('d2b/sales'),",
 						"     mergeSchema: true,",
 						"     autoCompact: true,",
 						"     optimizedWrite: true,",

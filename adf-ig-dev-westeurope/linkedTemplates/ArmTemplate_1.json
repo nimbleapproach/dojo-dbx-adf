@@ -91,7 +91,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_SILVER_TO_GOLD_TAG02_TRIGGER')]",
+			"name": "[concat(parameters('factoryName'), '/PL_30_SILVER_TO_GOLD_TAG02_TRIGGER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
