@@ -23,7 +23,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC
 # MAGIC SELECT account_code,
 # MAGIC        account_description,
-# MAGIC        account_extended_additional
+# MAGIC        account_description_extended
 # MAGIC FROM gold_${tableObject.environment}.tag02.dim_account
 # MAGIC WHERE is_current = 1
 # MAGIC
