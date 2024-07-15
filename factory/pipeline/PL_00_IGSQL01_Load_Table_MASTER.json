@@ -29,7 +29,7 @@
 		"parameters": {
 			"pm_FullLoad": {
 				"type": "bool",
-				"defaultValue": true
+				"defaultValue": false
 			}
 		},
 		"variables": {

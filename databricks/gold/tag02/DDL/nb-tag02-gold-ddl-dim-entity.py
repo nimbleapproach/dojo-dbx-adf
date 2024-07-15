@@ -44,18 +44,20 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   ( dim_entity_pk bigint
 # MAGIC     GENERATED ALWAYS AS IDENTITY
 # MAGIC     ,entity_code STRING NOT NULL 
-# MAGIC       COMMENT 'Cost Centre Code'
+# MAGIC       COMMENT 'Entity Code'
 # MAGIC     ,entity_description STRING
 # MAGIC       COMMENT 'The descriptive name of the associated entity'
 # MAGIC     ,entity_type STRING
 # MAGIC     ,legal_headquarters STRING
 # MAGIC       COMMENT 'The address of the legal entity'
 # MAGIC     ,administrative_city STRING
-# MAGIC       COMMENT 'The source of the cost centre record'
+# MAGIC       COMMENT 'City registered for administration of the entity'
 # MAGIC     ,date_established TIMESTAMP
 # MAGIC       COMMENT 'Date the entity was first established'
 # MAGIC     ,entity_local_currency STRING
-# MAGIC       COMMENT 'Local currency where the entity is based'                        
+# MAGIC       COMMENT 'Local currency where the entity is based'    
+# MAGIC     ,consolidation_type STRING
+# MAGIC       COMMENT 'The type of consolidation applied to the entity, if any'                        
 # MAGIC     ,entity_hash_key STRING
 # MAGIC       COMMENT 'Hash value of the dimensional attributes per entity code'
 # MAGIC     ,start_datetime TIMESTAMP NOT NULL 
