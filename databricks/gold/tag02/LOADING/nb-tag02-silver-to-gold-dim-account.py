@@ -24,7 +24,7 @@ CREATE OR REPLACE VIEW staging_dim_account AS
 
 SELECT DISTINCT account_code,
                 account_description,
-                account_extended_additional,
+                account_description_extended,
                 account_hash_key,
                 start_datetime,
                (CASE WHEN CAST('9999-12-31' AS TIMESTAMP) = end_datetime THEN NULL ELSE end_datetime END) AS end_datetime,
@@ -34,7 +34,7 @@ SELECT DISTINCT account_code,
 FROM (
 SELECT account_code,
        account_description,
-       account_extended_additional,
+       account_description_extended,
        account_hash_key,
        MIN(date_updated) OVER(PARTITION BY account_code, grp_id2) AS start_datetime,
        MAX(COALESCE(next_date_updated,CAST('9999-12-31' AS TIMESTAMP))) OVER(PARTITION BY account_code, grp_id2) AS end_datetime
@@ -44,7 +44,7 @@ SELECT *,
 FROM (
 SELECT account_code,
        account_description,
-       account_extended_additional,
+       account_description_extended,
        account_hash_key,
        date_updated,
       (CASE WHEN LAG(account_hash_key) OVER (PARTITION BY account_code ORDER BY date_updated) IS NULL OR 
@@ -54,13 +54,13 @@ SELECT account_code,
 FROM (SELECT row_number() OVER(PARTITION BY a.account_code ORDER BY date_updated) AS row_id,
              a.account_code,
              a.account_description,
-             a.account_extended_additional,
+             a.account_description_extended,
              a.account_hash_key,
              a.date_updated     
       FROM ( SELECT DISTINCT 
                     TRIM(a.COD_CONTO) AS account_code,
                     TRIM(a.DESC_CONTO0) AS account_description,
-                    TRIM(a.DESC_CONTO1) AS account_extended_additional,
+                    TRIM(a.DESC_CONTO1) AS account_description_extended,
                     SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_CONTO0), ''), COALESCE(TRIM(a.DESC_CONTO1), '')), 256) AS account_hash_key,
                     CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
              FROM silver_{ENVIRONMENT}.tag02.conto a
@@ -71,7 +71,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.account_code ORDER BY date_updated
              SELECT DISTINCT 
                     TRIM(a.COD_CONTO) AS account_code,
                     TRIM(a.DESC_CONTO0) AS account_description,
-                    TRIM(a.DESC_CONTO1) AS account_extended_additional,
+                    TRIM(a.DESC_CONTO1) AS account_description_extended,
                     SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_CONTO0), ''), COALESCE(TRIM(a.DESC_CONTO1), '')), 256) AS account_hash_key,
                     CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
              FROM silver_{ENVIRONMENT}.tag02.conto a
@@ -115,7 +115,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.account_code ORDER BY date_updated
 # MAGIC sqldf= spark.sql("""
 # MAGIC SELECT account_code,
 # MAGIC        account_description,
-# MAGIC        account_extended_additional,
+# MAGIC        account_description_extended,
 # MAGIC        account_hash_key,
 # MAGIC        start_datetime,
 # MAGIC        end_datetime,

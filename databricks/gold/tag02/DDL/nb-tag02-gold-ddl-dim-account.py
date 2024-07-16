@@ -47,7 +47,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Account Code'
 # MAGIC     ,account_description STRING
 # MAGIC       COMMENT 'The description text of the account'
-# MAGIC     ,account_extended_additional STRING
+# MAGIC     ,account_description_extended STRING
 # MAGIC       COMMENT 'The extended description of the account'
 # MAGIC     ,account_hash_key STRING
 # MAGIC       COMMENT 'Hash value of the dimensional attributes per account code'
@@ -86,7 +86,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC SELECT CAST(-1 AS BIGINT) AS dim_account_pk,
 # MAGIC        CAST('N/A' AS STRING) AS account_code,
 # MAGIC        CAST(NULL AS STRING) AS account_description,
-# MAGIC        CAST(NULL AS STRING) AS account_extended_additional,
+# MAGIC        CAST(NULL AS STRING) AS account_description_extended,
 # MAGIC        CAST(NULL AS STRING) AS account_hash_key,
 # MAGIC        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
 # MAGIC        CAST(NULL AS TIMESTAMP) AS end_datetime,
