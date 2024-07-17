@@ -190,7 +190,7 @@ cte as (
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
       WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
+      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT','BE')  THEN 'EUR'
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
       WHEN sih.CurrencyCode = 'NaN'
