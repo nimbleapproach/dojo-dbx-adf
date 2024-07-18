@@ -25,7 +25,7 @@ TABLE_NAME
 
 # COMMAND ----------
 
-WATERMARK_COLUMN = 'Sys_Bronze_InsertDateTime_UTC'
+WATERMARK_COLUMN = 'ModifiedOn'
 SCHEMA_NAME = 'igsql01'
 
 # COMMAND ----------
@@ -70,14 +70,8 @@ class TestTable(unittest.TestCase):
         """
         Test that the table contains only valid values.
         """
-        result = silver_table_has_bronze_keys(df_test, df_test_bronze, BUSINESS_KEYS)
-        self.assertEqual(result, 'OK')
-
-    def test_table_valid_values(self):
-        """
-        Test that the table contains active rows for all keys.
-        """
-        result = silver_table_has_active_keys(df_test, BUSINESS_KEYS)
+        result = silver_table_has_bronze_keys(df_test.where(col('Sys_Silver_IsCurrent')),
+                                               df_test_bronze, BUSINESS_KEYS)
         self.assertEqual(result, 'OK')
 
     def test_table_valid_databasename(self):

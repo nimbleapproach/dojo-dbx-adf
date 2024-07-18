@@ -44,9 +44,15 @@ CREATE OR REPLACE TABLE accountbase (
       COMMENT 'Name of Customer'
     ,AccountNumber STRING 
       COMMENT 'Business Customer ID'
+    ,Telephone1 STRING 
+      COMMENT 'TODO'
+    ,Fax STRING 
+      COMMENT 'TODO'
     ,CreatedOn TIMESTAMP 
       COMMENT 'TODO'
-    ,ModifiedOn TIMESTAMP 
+    ,ModifiedOn TIMESTAMP NOT NULL
+      COMMENT 'Watermark'
+    ,ParentAccountId STRING
       COMMENT 'TODO'
     ,StatusCode INT 
       COMMENT 'TODO'
@@ -94,7 +100,7 @@ CREATE OR REPLACE TABLE accountbase (
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
       COMMENT 'Flag if this is the current version.'
-  ,CONSTRAINT accountbase_pk PRIMARY KEY(AccountId, Sys_DatabaseName, Sys_Bronze_InsertDateTime_UTC)
+  ,CONSTRAINT accountbase_pk PRIMARY KEY(AccountId, Sys_DatabaseName, ModifiedOn)
 )
 COMMENT 'This table contains the data for customer account.' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')

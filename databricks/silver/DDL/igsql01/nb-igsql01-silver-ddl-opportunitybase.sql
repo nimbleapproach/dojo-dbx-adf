@@ -38,8 +38,8 @@ CREATE OR REPLACE TABLE opportunitybase (
         COMMENT 'Surrogate Key'
     ,OpportunityId STRING NOT NULL
       COMMENT 'Business Key'
-    ,CreatedOn TIMESTAMP 
-      COMMENT 'TODO'
+    ,CreatedOn TIMESTAMP NOT NULL
+      COMMENT 'Watermark'
     ,ModifiedOn TIMESTAMP 
       COMMENT 'TODO'
     ,CustomerId STRING 
@@ -68,7 +68,7 @@ CREATE OR REPLACE TABLE opportunitybase (
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
       COMMENT 'Flag if this is the current version.'
-  ,CONSTRAINT OpportunityId_pk PRIMARY KEY(OpportunityId, Sys_DatabaseName, Sys_Bronze_InsertDateTime_UTC)
+  ,CONSTRAINT OpportunityId_pk PRIMARY KEY(OpportunityId, Sys_DatabaseName, ModifiedOn)
 )
 COMMENT 'This table contains the data for crm opportunities.' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
