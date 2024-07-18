@@ -186,7 +186,7 @@ result as(
       ELSE EntityCode
     END AS EntityCode from
     platinum_{ENVIRONMENT}.obt.globaltransactions) entity on tag_rev_gp.EntityCode = entity.EntityCode
-    where Revenue_EUR + GP1_EUR<>0
+    where COALESCE(Revenue_EUR,0) + COALESCE(GP1_EUR,0)<>0
 )
 select
   *

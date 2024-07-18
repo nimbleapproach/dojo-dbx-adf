@@ -40,8 +40,8 @@ CREATE OR REPLACE TABLE inf_countrybase (
       COMMENT 'Business Key'
     ,CreatedOn TIMESTAMP 
       COMMENT 'TODO'
-    ,ModifiedOn TIMESTAMP 
-      COMMENT 'TODO'
+    ,ModifiedOn TIMESTAMP NOT NULL
+      COMMENT 'Watermark'
     ,Inf_name STRING 
       COMMENT 'Country Code'
     ,Inf_Description STRING 
@@ -60,7 +60,7 @@ CREATE OR REPLACE TABLE inf_countrybase (
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
       COMMENT 'Flag if this is the current version.'
-  ,CONSTRAINT inf_countrybase_pk PRIMARY KEY(Inf_countryId, Sys_DatabaseName, Sys_Bronze_InsertDateTime_UTC)
+  ,CONSTRAINT inf_countrybase_pk PRIMARY KEY(Inf_countryId, Sys_DatabaseName, ModifiedOn)
 )
 COMMENT 'This table contains the data for countries.' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
