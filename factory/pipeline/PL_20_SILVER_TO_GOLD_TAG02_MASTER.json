@@ -1,0 +1,27 @@
+{
+	"name": "PL_20_SILVER_TO_GOLD_TAG02_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "30 Gold"
+		},
+		"annotations": []
+	}
+}

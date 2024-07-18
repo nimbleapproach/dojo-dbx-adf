@@ -6,6 +6,9 @@
 				"name": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {

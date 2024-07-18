@@ -1,0 +1,112 @@
+# Databricks notebook source
+import os
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+
+# COMMAND ----------
+
+spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC -- Databricks notebook source
+# MAGIC -- MAGIC %md
+# MAGIC -- MAGIC Widgets are used to give Data Factory a way to hand over parameters. In that we we can control the environment.
+# MAGIC -- MAGIC If there is no widget defined, Data Factory will automatically create them.
+# MAGIC -- MAGIC For us while developing we can use the try and excep trick here.
+# MAGIC
+# MAGIC -- COMMAND ----------
+# MAGIC
+# MAGIC -- MAGIC %python
+# MAGIC -- MAGIC import os
+# MAGIC -- MAGIC
+# MAGIC -- MAGIC ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+# MAGIC
+# MAGIC -- COMMAND ----------
+# MAGIC
+# MAGIC -- MAGIC %md
+# MAGIC -- MAGIC The target catalog depens on the enivronment. Since we are using Unity Catalog we need to use a unqiue name for the catalog. This is the reason why we name the dev silver catalog "silver_dev" for example.
+# MAGIC
+# MAGIC -- COMMAND ----------
+# MAGIC
+# MAGIC -- MAGIC %python
+# MAGIC -- MAGIC spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
+# MAGIC
+# MAGIC -- COMMAND ----------
+# MAGIC
+# MAGIC USE SCHEMA tag02;
+# MAGIC
+# MAGIC -- COMMAND ----------
+# MAGIC
+# MAGIC CREATE OR REPLACE TABLE dim_entity
+# MAGIC   ( dim_entity_pk bigint
+# MAGIC     GENERATED ALWAYS AS IDENTITY
+# MAGIC     ,entity_code STRING NOT NULL 
+# MAGIC       COMMENT 'Entity Code'
+# MAGIC     ,entity_description STRING
+# MAGIC       COMMENT 'The descriptive name of the associated entity'
+# MAGIC     ,entity_type STRING
+# MAGIC     ,legal_headquarters STRING
+# MAGIC       COMMENT 'The address of the legal entity'
+# MAGIC     ,administrative_city STRING
+# MAGIC       COMMENT 'City registered for administration of the entity'
+# MAGIC     ,date_established TIMESTAMP
+# MAGIC       COMMENT 'Date the entity was first established'
+# MAGIC     ,entity_local_currency STRING
+# MAGIC       COMMENT 'Local currency where the entity is based'    
+# MAGIC     ,consolidation_type STRING
+# MAGIC       COMMENT 'The type of consolidation applied to the entity, if any'                        
+# MAGIC     ,entity_hash_key STRING
+# MAGIC       COMMENT 'Hash value of the dimensional attributes per entity code'
+# MAGIC     ,start_datetime TIMESTAMP NOT NULL 
+# MAGIC       COMMENT 'The dimensional start date of the record'
+# MAGIC     ,end_datetime TIMESTAMP
+# MAGIC       COMMENT 'The dimensional end date of the record, those with a NULL value is curent'                      
+# MAGIC     ,is_current INTEGER
+# MAGIC       COMMENT 'Flag to indicate if this is the active dimension record per code'
+# MAGIC     ,Sys_Gold_InsertedDateTime_UTC TIMESTAMP
+# MAGIC       COMMENT 'The timestamp when this record was inserted into gold'
+# MAGIC     ,Sys_Gold_ModifiedDateTime_UTC TIMESTAMP
+# MAGIC       COMMENT 'The timestamp when this record was last updated in gold'      
+# MAGIC ,CONSTRAINT dim_entity_primary_key PRIMARY KEY(dim_entity_pk)
+# MAGIC   )
+# MAGIC
+# MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
+# MAGIC CLUSTER BY (entity_code);
+# MAGIC
+# MAGIC -- COMMAND ----------
+# MAGIC
+# MAGIC ALTER TABLE dim_entity ADD CONSTRAINT dateWithinRange_start_datetime CHECK (start_datetime >= '1900-01-01');
+# MAGIC ALTER TABLE dim_entity ADD CONSTRAINT valid_is_current_value CHECK (is_current IN ('1','0'));
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **Now the table is created we want to insert the unknown member...**
+
+# COMMAND ----------
+
+# MAGIC %py
+# MAGIC
+# MAGIC sqldf= spark.sql("""
+# MAGIC SELECT -1 AS entity_id,
+# MAGIC        CAST('N/A' AS STRING) AS entity_code,
+# MAGIC        CAST(NULL AS STRING) AS entity_description,
+# MAGIC        CAST(NULL AS STRING) AS entity_type,
+# MAGIC        CAST(NULL AS STRING) AS legal_headquarters,
+# MAGIC        CAST(NULL AS STRING) AS administrative_city,
+# MAGIC        CAST(NULL AS TIMESTAMP) AS date_established,
+# MAGIC        CAST(NULL AS STRING) AS entity_local_currency,
+# MAGIC        CAST(NULL AS STRING) AS entity_hash_key,
+# MAGIC        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
+# MAGIC        CAST(NULL AS TIMESTAMP) AS end_datetime,
+# MAGIC        CAST(1 AS INTEGER) AS is_current,
+# MAGIC        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+# MAGIC        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+# MAGIC """)
+# MAGIC
+# MAGIC sqldf.write.mode("append").option("mergeSchema", "true").saveAsTable(f"gold_{ENVIRONMENT}.tag02.dim_entity")
+# MAGIC

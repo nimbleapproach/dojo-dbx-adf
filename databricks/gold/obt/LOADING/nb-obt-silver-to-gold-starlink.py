@@ -100,7 +100,11 @@ AND
   SalesOrderID,
   SalesOrderItemID,
   SKUInternal,
-  SKUMaster,
+  case when lower(SKUInternal)  like '%discount%' then 'Discount'
+       when lower(SKUInternal)  like '%round%' then 'Rounding'
+       when SKUInternal  like '%Funded%' then 'Funding'
+       when ProductTypeInternal  like '%Shipping%' then 'Shipping'
+       else SKUMaster end as SKUMaster,
   Description,
   ProductTypeInternal,
   ProductTypeMaster,
@@ -134,7 +138,9 @@ case
   CostAmount,
   GP1
 from
-  cte""")
+  cte
+
+""")
 
 # COMMAND ----------
 

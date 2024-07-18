@@ -155,7 +155,8 @@ with cte as (
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.salesline AS salestrans ON trans.SalesId = salestrans.Salesid
     and salestrans.Sys_Silver_IsCurrent = 1
     AND salestrans.SalesStatus <> '4' --This is removed as it identifies cancelled lines on the sales order
-    AND salestrans.itemid NOT IN ('Delivery_Out', '6550896') -- This removes the Delivery_Out and Swedish Chemical Tax lines that are on some orders which is never included in the Revenue Number
+    AND salestrans.itemid NOT IN ('Delivery_Out', '6550896')
+ -- This removes the Delivery_Out and Swedish Chemical Tax lines that are on some orders which is never included in the Revenue Number
     AND trans.DataAreaId = salestrans.DataAreaId
     AND trans.ItemId = salestrans.ItemId
     and trans.InventTransId = salestrans.InventTransId
@@ -171,6 +172,12 @@ with cte as (
     trans.Sys_Silver_IsCurrent = 1
     AND UPPER(trans.DataAreaId) NOT IN ('NGS1', 'NNL2')
     AND UPPER(LEFT(trans.InvoiceId, 2)) IN ('IN', 'CR')
+/*[yz] 09.02.2024 filter out the delivery items by item ID*/
+    AND trans.ItemId  not IN ( 'Delivery_Out'
+                              ,'6500660'
+                              ,'6550886'
+                              ,'6550895'
+                              ,'6550896')
 ),
 /*[yz] 09.02.2024 custinvoicetrans is on line level whereas inventtrans for cost is on item level so needs to group first the revenue to item level before brining in the cost*/ 
 invoice as(
@@ -318,4 +325,4 @@ selection_columns = [
 
 df_selection = df_nuvias.select(selection_columns)
 df_selection = df_selection.fillna(value= 'NaN').replace('', 'NaN')
-df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NU' AND EntityCode NOT IN ('BE3','BE2', 'NL3', 'RO2', 'HR2', 'SI1', 'BG1')").saveAsTable("globaltransactions")
+df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NU' AND EntityCode NOT IN ('BE3','BE2', 'NL3', 'RO2', 'HR2', 'SI1', 'BG1','UK4')").saveAsTable("globaltransactions")

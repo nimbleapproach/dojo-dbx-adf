@@ -49,6 +49,8 @@ CREATE OR REPLACE TABLE sales_invoice_header
       COMMENT 'TODO'
     ,ProcessCode STRING
       COMMENT 'TODO'
+    ,DimensionSetID STRING
+     COMMENT 'TODO'
     ,`MSPUsageHeaderBizTalkGuid` STRING
       COMMENT 'identifier if an invoice is created via MSP portal'
     ,Sys_RowNumber BIGINT NOT NULL

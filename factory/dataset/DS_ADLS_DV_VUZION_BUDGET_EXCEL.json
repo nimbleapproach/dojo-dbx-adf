@@ -1,0 +1,41 @@
+{
+	"name": "DS_ADLS_DV_VUZION_BUDGET_EXCEL",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_SheetName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/VUZION/BUDGET"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": {
+				"value": "@dataset().pm_SheetName",
+				"type": "Expression"
+			},
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "vuzion/budget/pending",
+				"fileSystem": "external"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	}
+}

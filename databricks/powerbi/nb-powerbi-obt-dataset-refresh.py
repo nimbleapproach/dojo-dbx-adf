@@ -5,6 +5,22 @@ ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
+try:
+    DATASET_ID = dbutils.widgets.get("wg_datasetID")
+except:
+    dbutils.widgets.text(name = "wg_datasetID", defaultValue = 'secret-powerbi-dataset-id')
+    DATASET_ID = dbutils.widgets.get("wg_datasetID")
+
+# COMMAND ----------
+
+try:
+    WORKSPACE_ID = dbutils.widgets.get("wg_workspaceID")
+except:
+    dbutils.widgets.text(name = "wg_workspaceID", defaultValue = 'secret-powerbi-workspace-id')
+    WORKSPACE_ID = dbutils.widgets.get("wg_workspaceID")
+
+# COMMAND ----------
+
 import requests
 import base64
 import json
@@ -94,8 +110,8 @@ PowerBIHandler = PowerBIHandle(infinigateSession)
 
 # COMMAND ----------
 
-workspaceId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-workspace-id-{ENVIRONMENT}")
-datasetId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-dataset-id-{ENVIRONMENT}")
+workspaceId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"{WORKSPACE_ID}-{ENVIRONMENT}")
+datasetId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"{DATASET_ID}-{ENVIRONMENT}")
 dataflowWorkspaceId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-dataflow-workspace-id-{ENVIRONMENT}")
 dataflowId = dbutils.secrets.get(scope="kv-ig-westeurope-shared",key=f"secret-powerbi-dataflow-id-{ENVIRONMENT}")
 

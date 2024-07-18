@@ -115,7 +115,7 @@ with FX AS (
   where
     LEFT(COD_SCENARIO, 4) rlike '[0-9]'
     and COD_SCENARIO LIKE '%ACT%'
-    and COD_SCENARIO like '%PFA-04'
+    and (COD_SCENARIO like '%PFA-04' or  (COD_SCENARIO ='2025ACT-PFA-01'))
     AND COD_SCENARIO not like '%AUD%'
     AND COD_SCENARIO not like '%OB%'
     and dati_cambio.Sys_Silver_IsCurrent = 1

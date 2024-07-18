@@ -34,20 +34,29 @@ with msp_usage as (
       else msp_l.SalesInvoiceLineNo_
     end as DocumentLineNo,
     Case
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
-      WHEN msp_h.CurrencyCode = 'NaN'
-      AND right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
+      AND right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT') THEN 'EUR'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
-      WHEN msp_h.CurrencyCode = 'NaN'
+      WHEN msp_l.PurchaseCurrencyCode = 'NaN'
       AND right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
-      ELSE msp_h.CurrencyCode
+      ELSE msp_l.PurchaseCurrencyCode
     END AS CurrencyCode,
+    /*[yz] 2024-03-22 add local currency filed to convert purchase currency back from EUR to LCY*/
+    Case
+      WHEN  right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+        END AS LocalCurrencyCode,
     msp_h.VENDORDimensionValue,
     msp_l.LineNo_ as MSPLineNo,
     msp_l.ItemNo_,
@@ -56,10 +65,17 @@ with msp_usage as (
       when msp_h.CreditMemo = '1' THEN msp_l.TotalPrice *(-1)
       else msp_l.TotalPrice
     end as TotalPrice,
+
     cast (
       case
-        when msp_l.PurchaseCurrencyCode = 'NaN' then msp_l.TotalCostPCY
-        else msp_l.TotalCostPCY / fx.Period_FX_rate
+        when msp_l.PurchaseCurrencyCode = 'NaN' and coalesce( msp_l.TotalCostPCY,0 ) =0 
+          then msp_l.UnitCostPCY * msp_l.Quantity
+        when msp_l.PurchaseCurrencyCode = 'NaN'
+          then msp_l.TotalCostPCY
+        when msp_l.PurchaseCurrencyCode != 'NaN' and coalesce( msp_l.TotalCostPCY,0 ) =0  
+          then( msp_l.UnitCostPCY * msp_l.Quantity)/ fx.Period_FX_rate * fx2.Period_FX_rate
+        when msp_l.PurchaseCurrencyCode != 'NaN'
+          then msp_l.TotalCostPCY / fx.Period_FX_rate * fx2.Period_FX_rate
       end *(-1) as decimal(10, 2)
     ) as TotalCostLCY
   FROM
@@ -81,18 +97,42 @@ with msp_usage as (
     ) fx on msp_l.PurchaseCurrencyCode = fx.Currency
     and year(msp_h.DocumentDate) = fx.Calendar_Year
     and month(msp_h.DocumentDate) = fx.Month
+    left join (
+      SELECT
+        DISTINCT Calendar_Year,
+        Month,
+        Currency,
+        Period_FX_rate
+      FROM
+        gold_{ENVIRONMENT}.obt.exchange_rate
+      WHERE
+        ScenarioGroup = 'Actual'
+    ) fx2 on Case
+      WHEN  right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+      WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT') THEN 'EUR'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+      WHEN right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+        END = fx2.Currency
+    and year(msp_h.DocumentDate) = fx2.Calendar_Year
+    and month(msp_h.DocumentDate) = fx2.Month
 ),
 cte as (
   --- sales invoice
   SELECT
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
-    entity.TagetikEntityCode AS EntityCode,
-  --- [yz]21.02.2024 adding region code for identifying region within entity using customer region
-    case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
-        when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
-        ELSE entity.TagetikEntityCode END AS RegionCode,
+  --- [yz]15.03.2024 split AT out from DE and BE from NL
+
+  -- case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
+  --     when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
+  --     ELSE entity.TagetikEntityCode END AS EntityCode,
+   entity.TagetikEntityCode  AS EntityCode,
+   sil.Sys_DatabaseName,
+    dim.DimensionValueCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
+    SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
     -- Comment by YZ (26/01/2023)-Start
     -- add MSPBizTalkGuid as key to join on MSP usage header and line to resolve MSP cost issue
@@ -109,6 +149,7 @@ cte as (
     coalesce(sih.OrderNo_, so.SalesOrderID, 'NaN') AS SalesOrderID,
     coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, sil.No_, 'NaN') AS SKUInternal,
+    sil.Gen_Prod_PostingGroup,
     -- coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
     trim(
       (
@@ -149,7 +190,7 @@ cte as (
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
       WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT','BE')  THEN 'EUR'
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
       WHEN sih.CurrencyCode = 'NaN'
@@ -195,6 +236,12 @@ cte as (
     ) ven ON it.GlobalDimension1Code = ven.Code
     AND it.Sys_DatabaseName = ven.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
+      /*[yz] 30.04.2024: change the Region split to base on dimension instead of customer region*/
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
+    and dim.DimensionCode = 'RPTREGION'
+    AND sih.Sys_DatabaseName = dim.Sys_DatabaseName
+    AND dim.Sys_Silver_IsCurrent = true
+
     LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
@@ -280,20 +327,23 @@ cte as (
       AND UPPER(sil.No_) NOT LIKE 'FREI%'
       AND UPPER(sil.No_) NOT LIKE 'FRACHT%'
       AND UPPER(sil.No_) NOT LIKE 'EXP%'
+      AND UPPER(sil.No_) NOT LIKE '%MARKETING%'
     )
-    AND sil.Gen_Bus_PostingGroup not like 'IC%'
+    -- AND sil.Gen_Bus_PostingGroup not like 'IC%'
     and sil.Type <> 0 -- filter out type 0 because it is only placeholder lines (yzc)
   UNION all
     --- SALES CR MEMO
   SELECT
     sil.SID AS SID,
     'IG' AS GroupEntityCode,
-    entity.TagetikEntityCode AS EntityCode,
-  --- [yz]21.02.2024 adding region code for identifying region within entity using customer region
-    case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
-        when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
-        ELSE entity.TagetikEntityCode END AS RegionCode,
+  -- case when cu.Country_RegionCode = 'BE' AND entity.TagetikEntityCode = 'NL1' THEN 'BE1'
+  --     when cu.Country_RegionCode = 'AT' AND entity.TagetikEntityCode = 'DE1' THEN 'AT1'
+  --     ELSE entity.TagetikEntityCode END AS EntityCode,
+   entity.TagetikEntityCode  AS EntityCode,
+     sil.Sys_DatabaseName,
+    dim.DimensionValueCode as Reseller_Country_RegionCode,
     sil.DocumentNo_ AS DocumentNo,
+    SIL.Gen_Bus_PostingGroup,
     sil.LineNo_ AS LineNo,
     sih.MSPUsageHeaderBizTalkGuid,
     sil.Type AS Type,
@@ -304,6 +354,7 @@ cte as (
     --coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
     coalesce(it.No_, sil.No_, 'NaN') AS SKUInternal,
+       sil.Gen_Prod_PostingGroup,
     -- coalesce(datanowarr.SKU, 'NaN')  AS SKUMaster,
     trim(
       concat(
@@ -338,7 +389,7 @@ cte as (
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
       WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI') THEN 'EUR'
+      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
       WHEN sih.CurrencyCode = 'NaN'
@@ -386,6 +437,12 @@ cte as (
     ) ven ON it.GlobalDimension1Code = ven.Code
     AND it.Sys_DatabaseName = ven.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
+    /*[yz] 30.04.2024: change the Region split to base on dimension instead of customer region*/
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
+    and dim.DimensionCode = 'RPTREGION'
+    AND sih.Sys_DatabaseName = dim.Sys_DatabaseName
+    AND dim.Sys_Silver_IsCurrent = true
+
     LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
@@ -471,17 +528,27 @@ cte as (
       AND UPPER(sil.No_) NOT LIKE 'FREI%'
       AND UPPER(sil.No_) NOT LIKE 'FRACHT%'
       AND UPPER(sil.No_) NOT LIKE 'EXP%'
+      AND UPPER(sil.No_) NOT LIKE '%MARKETING%'
     )
-    AND sil.Gen_Bus_PostingGroup not like 'IC%'
+ -- AND sil.Gen_Bus_PostingGroup not like 'IC%'
     and sil.Type <> 0 -- filter out type 0 because it is only placeholder lines (yzc)
+
 ) 
 
 select
   cte.GroupEntityCode,
-  cte.EntityCode,
-  cte.RegionCode,
+    --- [yz]22.03.2024 Add country split here after the msp usage join
+ case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
+          --- [yz]03.05.2024 Vendor specific region split
+      WHEN CTE.Sys_DatabaseName = 'ReportsAT' AND cte.VendorCode ='ZZ_INF' THEN 'DE1' 
+     when cte.Reseller_Country_RegionCode = 'AT' AND cte.VendorCode NOT LIKE '%SOW%'
+                                                AND cte.VendorCode NOT IN ('DAT','ITG', 'RFT') AND cte.EntityCode = 'DE1' THEN 'AT1' 
+
+     ELSE cte.EntityCode END AS EntityCode,
+  CTE.Sys_DatabaseName,
   cte.DocumentNo,
   cte.LineNo,
+  cte.Gen_Bus_PostingGroup,
   cte.MSPUsageHeaderBizTalkGuid,
   cte.Type,
   cte.SalesInvoiceDescription,
@@ -493,6 +560,7 @@ select
     when msp_usage.ItemNo_ is null then cte.SKUInternal
     else msp_usage.ItemNo_
   end as SKUInternal,
+ Gen_Prod_PostingGroup,
   coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
   cte.Description,
   cte.ProductTypeInternal,
@@ -569,6 +637,11 @@ from
     when msp_usage.ItemNo_ is null then cte.SKUInternal
     else msp_usage.ItemNo_
   end = datanowarr.sku
+  --WHERE   CASE WHEN cte.EntityCode = 'CH1' AND cte.Gen_Bus_PostingGroup  LIKE '%-IC%' THEN 0
+  --          WHEN cte.EntityCode ='FR1' AND cte.Gen_Bus_PostingGroup  LIKE '%-IC%' THEN 0
+  --          WHEN cte.EntityCode NOT IN ('DE1','AT1') AND cte.Gen_Bus_PostingGroup LIKE 'IC%'THEN 0
+  --          ELSE 1
+  --          END =1
 
 
 """
@@ -576,33 +649,33 @@ from
 
 # COMMAND ----------
 
-spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+# spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
 
 # COMMAND ----------
 
-df_obt = spark.read.table("globaltransactions")
-df_infinigate = spark.read.table(
-    f"gold_{ENVIRONMENT}.obt.infinigate_globaltransactions"
-)
+# df_obt = spark.read.table("globaltransactions")
+# df_infinigate = spark.read.table(
+#     f"gold_{ENVIRONMENT}.obt.infinigate_globaltransactions"
+# )
 
 # COMMAND ----------
 
-from pyspark.sql.functions import col
+# from pyspark.sql.functions import col
 
-target_columns = df_obt.columns
-source_columns = df_infinigate.columns
-intersection_columns = [column for column in target_columns if column in source_columns]
-selection_columns = [
-    col(column) for column in intersection_columns if column not in ["SID"]
-]
-
-# COMMAND ----------
-
-df_selection = df_infinigate.select(selection_columns)
-df_selection = df_selection.fillna(value="NaN").replace("", "NaN")
+# target_columns = df_obt.columns
+# source_columns = df_infinigate.columns
+# intersection_columns = [column for column in target_columns if column in source_columns]
+# selection_columns = [
+#     col(column) for column in intersection_columns if column not in ["SID"]
+# ]
 
 # COMMAND ----------
 
-df_selection.write.mode("overwrite").option(
-    "replaceWhere", "GroupEntityCode = 'IG'  AND EntityCode NOT IN ('FR2')"
-).saveAsTable("globaltransactions")
+# df_selection = df_infinigate.select(selection_columns)
+# df_selection = df_selection.fillna(value="NaN").replace("", "NaN")
+
+# COMMAND ----------
+
+# df_selection.write.mode("overwrite").option(
+#     "replaceWhere", "GroupEntityCode = 'IG'  AND EntityCode NOT IN ('FR2')"
+# ).saveAsTable("globaltransactions")

@@ -3,7 +3,64 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Watermark Column",
+				"name": "ForEach_2",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Table Names and Load Types",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Table Names and Load Types').output.value\n\n",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "PL_30_IGCRM_Load_View",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_30_IGSQL01_Load_View",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_DatabaseName": {
+										"value": "@pipeline().parameters.pm_DataBase",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@if(equals(pipeline().parameters.pm_FullLoad, true), pipeline().parameters.pm_FullLoad, item().FULL_LOAD)\n",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"pm_SchemaName": {
+										"value": "dbo",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Get Table Names and Load Types",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -18,7 +75,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT \nCOLUMN_NAME as [WATERMARK_COLUMN]\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE DATABASE_NAME='@{pipeline().parameters.pm_DataBase}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
+							"value": "SELECT distinct\n[TABLE_NAME],[FULL_LOAD] from [adf].[CT_IGSQL01_TABLES]\n WHERE DATABASE_NAME='@{pipeline().parameters.pm_DataBase}' ",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -38,66 +95,9 @@
 					},
 					"firstRowOnly": false
 				}
-			},
-			{
-				"name": "ForEach_2",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Get Watermark Column",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Get Watermark Column').output.value",
-						"type": "Expression"
-					},
-					"isSequential": false,
-					"batchCount": 4,
-					"activities": [
-						{
-							"name": "PL_30_IGCRM_Load_View",
-							"type": "ExecutePipeline",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "PL_30_IGSQL01_Load_View",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"pm_DatabaseName": {
-										"value": "@pipeline().parameters.pm_DataBase",
-										"type": "Expression"
-									},
-									"pm_FullLoad": {
-										"value": "@pipeline().parameters.pm_FullLoad",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "@pipeline().parameters.pm_TableName",
-										"type": "Expression"
-									},
-									"pm_SchemaName": {
-										"value": "dbo",
-										"type": "Expression"
-									},
-									"pm_WatermarkColumn": {
-										"value": "@item().WATERMARK_COLUMN",
-										"type": "Expression"
-									}
-								}
-							}
-						}
-					]
-				}
 			}
 		],
+		"concurrency": 8,
 		"parameters": {
 			"pm_Watermark": {
 				"type": "string"
@@ -106,9 +106,6 @@
 				"type": "string"
 			},
 			"pm_DataBase": {
-				"type": "string"
-			},
-			"pm_TableName": {
 				"type": "string"
 			},
 			"pm_FullLoad": {

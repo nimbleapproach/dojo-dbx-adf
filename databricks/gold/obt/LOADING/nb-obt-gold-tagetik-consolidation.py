@@ -66,7 +66,7 @@ Period_FX_rate
     silver_{ENVIRONMENT}.tag02.dati_saldi_lordi FB
   WHERE
     (COD_SCENARIO like '%ACT%')
-    and (COD_SCENARIO  like '%04')
+    and( (COD_SCENARIO  like '%04') or  (COD_SCENARIO ='2025ACT-PFA-01'))
     and (COD_SCENARIO not like '%OB%')
     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
  -- [yz] 2024.02.21 include all categories for finance report 
@@ -480,7 +480,7 @@ act as(
           Scenario LIKE '%ACT%' 
         )
     ) AS fxr ON Currency_ID = fxr.Currency
-    AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) = CONCAT(fxr.Scenario , fxr.Period)
+    AND CONCAT(Scenario_ID ,CAST(CTA.Period AS STRING)) =  CONCAT(fxr.Scenario, left(fxr.Period,2))
 )
 select act.*, coalesce(vendor.Vendor_Name,act.Vendor_ID)  as Vendor_Name
 from act

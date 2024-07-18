@@ -15,6 +15,10 @@
 			"pm_Environment": {
 				"type": "string",
 				"defaultValue": "dev"
+			},
+			"pm_SheetName": {
+				"type": "string",
+				"defaultValue": "DCB_Margin"
 			}
 		},
 		"folder": {
@@ -23,12 +27,15 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
+			"sheetName": {
+				"value": "@dataset().pm_SheetName",
+				"type": "Expression"
+			},
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"folderPath": "dcb/pending",
 				"fileSystem": "external"
 			},
-			"sheetIndex": 0,
 			"firstRowAsHeader": true
 		},
 		"schema": [
@@ -37,15 +44,27 @@
 				"type": "String"
 			},
 			{
-				"name": "Date",
+				"name": "Vlgnr.",
 				"type": "String"
 			},
 			{
-				"name": "Month",
+				"name": "Invoice date",
 				"type": "String"
 			},
 			{
-				"name": "Year",
+				"name": "Invoice month",
+				"type": "String"
+			},
+			{
+				"name": "Invoice year",
+				"type": "String"
+			},
+			{
+				"name": "SO",
+				"type": "String"
+			},
+			{
+				"name": "SO date",
 				"type": "String"
 			},
 			{
@@ -53,7 +72,7 @@
 				"type": "String"
 			},
 			{
-				"name": "Reseller",
+				"name": "Reseller name",
 				"type": "String"
 			},
 			{
@@ -69,6 +88,10 @@
 				"type": "String"
 			},
 			{
+				"name": "Remark",
+				"type": "String"
+			},
+			{
 				"name": "Qty",
 				"type": "String"
 			},
@@ -81,11 +104,11 @@
 				"type": "String"
 			},
 			{
-				"name": "€ line discount",
+				"name": "Amount line discount",
 				"type": "String"
 			},
 			{
-				"name": "Net/price",
+				"name": "Net price",
 				"type": "String"
 			},
 			{
@@ -93,11 +116,47 @@
 				"type": "String"
 			},
 			{
-				"name": "Entity (1 BELUX, 2 NL)",
+				"name": "Entity",
+				"type": "String"
+			},
+			{
+				"name": "Article group",
+				"type": "String"
+			},
+			{
+				"name": "Product Type",
+				"type": "String"
+			},
+			{
+				"name": "Vendor number",
+				"type": "String"
+			},
+			{
+				"name": "Vendor ID",
 				"type": "String"
 			},
 			{
 				"name": "Vendor",
+				"type": "String"
+			},
+			{
+				"name": "Cred.order",
+				"type": "String"
+			},
+			{
+				"name": "Margin",
+				"type": "String"
+			},
+			{
+				"name": "margin in %",
+				"type": "String"
+			},
+			{
+				"name": "Invoice_linenumber",
+				"type": "String"
+			},
+			{
+				"name": "line_verkoopfactuurregels",
 				"type": "String"
 			}
 		]

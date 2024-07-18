@@ -27,13 +27,15 @@ CREATE OR REPLACE TABLE g_l_entry
         COMMENT 'Surrogate Key'
     ,EntryNo_ int NOT NULL 
       COMMENT 'Business Key'
+    ,DimensionSetID INT
+      COMMENT 'TODO'
     ,G_LAccountNo_ STRING 
     ,PostingDate TIMESTAMP
     ,DocumentNo_ STRING
     ,GlobalDimension1Code STRING
       COMMENT 'Vendor Code'
-    ,FCYFactor DECIMAL(10,2)
-    ,Amount DECIMAL(10,2)
+    ,FCYFactor DECIMAL (38,20)
+    ,Amount DECIMAL (38,20)
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL
