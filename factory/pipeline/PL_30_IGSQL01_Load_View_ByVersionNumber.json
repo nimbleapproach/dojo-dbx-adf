@@ -1,5 +1,5 @@
 {
-	"name": "PL_30_IGSQL01_Load_View",
+	"name": "PL_30_IGSQL01_Load_View_ByVersionNumber",
 	"properties": {
 		"activities": [
 			{
@@ -25,7 +25,13 @@
 							"type": "Copy",
 							"dependsOn": [
 								{
-									"activity": "Set Source SQLString_Delta",
+									"activity": "Watermarkvalue_Delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "WatermarkMaxValue",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -59,7 +65,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "@variables('SQLString')",
+										"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{variables('ColumnString')} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \nconvert(bigint,\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\")> @{variables('Watermark_Value_Delta')}\nAND \nconvert(bigint,\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\")<= @{variables('Max_Watermark')}\n\n\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -213,7 +219,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "SELECT [WATERMARK] AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
+										"value": "SELECT COALESCE([WATERMARK],0) AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -321,7 +327,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "SELECT \nMAX(@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}) as MAXWATERMARK FROM \n[@{pipeline().parameters.pm_SchemaName}].[@{pipeline().parameters.pm_TableName}] \n\n\n",
+										"value": "SELECT \nMAX(convert(bigint, @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME})) as MAXWATERMARK FROM \n[@{pipeline().parameters.pm_SchemaName}].[@{pipeline().parameters.pm_TableName}] \n\n\n",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -375,36 +381,6 @@
 									"type": "Expression"
 								}
 							}
-						},
-						{
-							"name": "Set Source SQLString_Delta",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "WatermarkMaxValue",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								},
-								{
-									"activity": "Watermarkvalue_Delta",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "SQLString",
-								"value": {
-									"value": "SELECT  @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME},\n@{variables('ColumnString')} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE [@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}]> '@{variables('Watermark_Value_Delta')}'\nAND [@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}]<='@{variables('Max_Watermark')}'",
-									"type": "Expression"
-								}
-							}
 						}
 					],
 					"ifTrueActivities": [
@@ -447,7 +423,7 @@
 										}
 									],
 									"sqlReaderQuery": {
-										"value": "@variables('SQLString')",
+										"value": "@variables('ColumnString')",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -601,7 +577,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),'SELECT ''1900/01/01'' WATERMARK_NEW',\n    concat(\n        'SELECT MAX(CASE WHEN ',\n        activity('Get Watermark Column').output.firstRow.COLUMN_NAME,\n        ' = ''1900/01/01'' THEN ''1900/01/01'' ELSE ',\n        activity('Get Watermark Column').output.firstRow.COLUMN_NAME,\n        ' END) AS WATERMARK_NEW FROM dbo.[',\n        pipeline().parameters.pm_TableName,\n        ']'\n    )\n)\n",
+										"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),'SELECT 0 WATERMARK_NEW',\n    concat(\n        'SELECT MAX(\ncase when ', activity('Get Watermark Column').output.firstRow.COLUMN_NAME,' =  0 then 0\nelse ', activity('Get Watermark Column').output.firstRow.COLUMN_NAME, 'end) AS WATERMARK_NEW FROM dbo.[',\n        pipeline().parameters.pm_TableName,\n        ']'\n    )\n)",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -715,7 +691,7 @@
 							"typeProperties": {
 								"variableName": "SQLString",
 								"value": {
-									"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),\n    concat('SELECT ', variables('ColumnString'), ' FROM dbo.[', pipeline().parameters.pm_TableName, ']'),\n    concat('SELECT ', activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ',', variables('ColumnString'), ' FROM dbo.[', pipeline().parameters.pm_TableName, ']')\n)\n",
+									"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),\n    concat('SELECT ', variables('ColumnString'), ' FROM dbo.[', pipeline().parameters.pm_TableName, ']'),concat('SELECT convert(bigint, [' , activity('Get Watermark Column').output.firstRow.COLUMN_NAME ,']) as VersionNumber, ', variables('ColumnString') ,' FROM dbo.[', pipeline().parameters.pm_TableName,'] WHERE convert(bigint,[', activity('Get Watermark Column').output.firstRow.COLUMN_NAME ,'])<= ', variables('Watermark_value')))\n",
 									"type": "Expression"
 								}
 							}
@@ -829,13 +805,13 @@
 				"type": "String"
 			},
 			"Watermark_value": {
-				"type": "String"
+				"type": "Integer"
 			},
 			"Watermark_Value_Delta": {
-				"type": "String"
+				"type": "Integer"
 			},
 			"Max_Watermark": {
-				"type": "String"
+				"type": "Integer"
 			},
 			"SQLString": {
 				"type": "String"
