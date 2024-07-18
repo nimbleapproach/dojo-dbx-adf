@@ -13,6 +13,142 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_CUSTOMER')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "D2B"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_EXCEL_D2B_CUSTOMERS",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns"
+						},
+						{
+							"name": "RenameColumns"
+						},
+						{
+							"name": "AddIdColumn"
+						},
+						{
+							"name": "IsNotNull"
+						},
+						{
+							"name": "AddIdColumnIsNotNull"
+						},
+						{
+							"name": "Union"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPTETCTNUM as string,",
+						"          COMPTETcbmarq as short,",
+						"          BANQUECBMARQ as short,",
+						"          REGLEMENTcbmarq as short,",
+						"          CODEREVENDEUR as short,",
+						"          NAME_ as string,",
+						"          GROUPEDETAIL as string,",
+						"          BILLACCOUNT as boolean,",
+						"          EntryNo as short,",
+						"          enduserLegacyNo as integer,",
+						"          Name as string,",
+						"          Name2 as string,",
+						"          Address as string,",
+						"          Address2 as string,",
+						"          PhoneNo as string,",
+						"          TerritoryCode as string,",
+						"          Currency as string,",
+						"          LanguageCode as string,",
+						"          PaymentTerms as string,",
+						"          Salesperson as string,",
+						"          CountryRegionCode as string,",
+						"          PaymentMethodCode as string,",
+						"          VATRegistration as string,",
+						"          GenBusPostingGroup as string,",
+						"          PostCode as string,",
+						"          EMail as string,",
+						"          CompanyName as string,",
+						"          PrintManufacturerItemNo as boolean,",
+						"          TaxNo as string,",
+						"          ShiptoContactCompanyNo as string,",
+						"          BilltoCustomerNo as string,",
+						"          Status as string,",
+						"          LegacyNo as string,",
+						"          CUSTOMERCustomerNo as string,",
+						"          CUSTOMERBusinessRelationInfo as string,",
+						"          CUSTOMERNo as string,",
+						"          CUSTOMERType as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['d2b/customers/pending','d2b/customers/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"Union select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"IsNotNull@IsNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CODEREVENDEUR']))))) ~> AddIdColumn",
+						"GetExcelFile split(isNull(toString(byName('CUSTOMERCustomerNo'))),",
+						"     disjoint: false) ~> IsNotNull@(IsNull, IsNotNull)",
+						"IsNotNull@IsNotNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CUSTOMERCustomerNo']))))) ~> AddIdColumnIsNotNull",
+						"AddIdColumn, AddIdColumnIsNotNull union(byName: true)~> Union",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('d2b/customers'),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_SALES')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1990,68 +2126,6 @@
 				},
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_CLOUD_DISTRIBUTION_Load_File')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "DF_CLOUD_DISTRIBUTION_EXEL_LOAD",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_CLOUD_DISTRIBUTION_EXEL_LOAD",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"GetExcelFile": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										}
-									},
-									"WriteDeltaFiles": {}
-								},
-								"linkedServiceParameters": {
-									"WriteDeltaFiles": {
-										"linkedService": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "ir-ig-managed-dev-westeurope",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/CLOUD_DISTRIBUTION"
 				},
 				"annotations": []
 			},

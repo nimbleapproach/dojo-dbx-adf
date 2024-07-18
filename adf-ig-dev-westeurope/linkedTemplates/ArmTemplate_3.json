@@ -3026,7 +3026,7 @@
 						"type": "IfCondition",
 						"dependsOn": [
 							{
-								"activity": "For Each Column",
+								"activity": "Set COLUMNNAME string",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -3044,7 +3044,7 @@
 									"type": "Copy",
 									"dependsOn": [
 										{
-											"activity": "Watermarkvalue_Delta",
+											"activity": "Set Source SQLString_Delta",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -3078,7 +3078,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \n\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\"> @{variables('Watermark_Value_Delta')}\n\n\n",
+												"value": "@variables('SQLString')",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3184,7 +3184,7 @@
 											},
 											"watermark": {
 												"value": {
-													"value": "@variables('Watermark_Value_Delta')",
+													"value": "@variables('Max_Watermark')",
 													"type": "Expression"
 												},
 												"type": "String"
@@ -3232,7 +3232,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "SELECT COALESCE([WATERMARK],0) AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
+												"value": "SELECT [WATERMARK] AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3316,6 +3316,114 @@
 											"type": "Expression"
 										}
 									}
+								},
+								{
+									"name": "Get Source Max Watermark Value",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "Get Watermark Column_Delta",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"sqlReaderQuery": {
+												"value": "SELECT \nMAX(@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}) as MAXWATERMARK FROM \n[@{pipeline().parameters.pm_SchemaName}].[@{pipeline().parameters.pm_TableName}] \n\n\n",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "DS_SQLDB_CRM_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_TableName": {
+													"value": "@pipeline().parameters.pm_TableName",
+													"type": "Expression"
+												},
+												"pm_DatabaseName": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												},
+												"pm_SchemaName": {
+													"value": "@pipeline().parameters.pm_SchemaName",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "WatermarkMaxValue",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Get Source Max Watermark Value",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Max_Watermark",
+										"value": {
+											"value": "@activity('Get Source Max Watermark Value').output.firstRow.MAXWATERMARK",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Source SQLString_Delta",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "WatermarkMaxValue",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										},
+										{
+											"activity": "Watermarkvalue_Delta",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "SQLString",
+										"value": {
+											"value": "SELECT  @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME},\n@{variables('ColumnString')} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE [@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}]> '@{variables('Watermark_Value_Delta')}'\nAND [@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}]<='@{variables('Max_Watermark')}'",
+											"type": "Expression"
+										}
+									}
 								}
 							],
 							"ifTrueActivities": [
@@ -3324,7 +3432,7 @@
 									"type": "Copy",
 									"dependsOn": [
 										{
-											"activity": "Watermarkvalue",
+											"activity": "Set Source SQLString",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -3358,7 +3466,7 @@
 												}
 											],
 											"sqlReaderQuery": {
-												"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{concat(join(variables('ColumnString'),',' ) )} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\n\n\n\n",
+												"value": "@variables('SQLString')",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3512,7 +3620,7 @@
 										"source": {
 											"type": "SqlServerSource",
 											"sqlReaderQuery": {
-												"value": "SELECT\nMAX(\ncase when @{activity('Get Watermark Column').output.firstRow.COLUMN_NAME } =  0 then 0\nelse \n@{activity('Get Watermark Column').output.firstRow.COLUMN_NAME } end ) AS WATERMARK_NEW \n FROM dbo.[@{pipeline().parameters.pm_TableName}]\n",
+												"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),'SELECT ''1900/01/01'' WATERMARK_NEW',\n    concat(\n        'SELECT MAX(CASE WHEN ',\n        activity('Get Watermark Column').output.firstRow.COLUMN_NAME,\n        ' = ''1900/01/01'' THEN ''1900/01/01'' ELSE ',\n        activity('Get Watermark Column').output.firstRow.COLUMN_NAME,\n        ' END) AS WATERMARK_NEW FROM dbo.[',\n        pipeline().parameters.pm_TableName,\n        ']'\n    )\n)\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3559,7 +3667,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "select case when '@{pipeline().parameters.pm_TableName}' = 'AppointmentBase'\nthen  '0'\nelse \n(SELECT distinct \n COLUMN_NAME \n  FROM [adf].[CT_IGSQL01_COLUMNS]  WHERE TABLE_NAME= '@{pipeline().parameters.pm_TableName}'\n  and WATERMARK_COLUMN =1)\n  end as COLUMN_NAME",
+												"value": "SELECT ISNULL(\n    (SELECT TOP 1 COLUMN_NAME \n    FROM [adf].[CT_IGSQL01_COLUMNS] \n    WHERE TABLE_NAME = '@{pipeline().parameters.pm_TableName}' \n    AND WATERMARK_COLUMN = 1), \n    '') AS COLUMN_NAME",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -3606,37 +3714,27 @@
 											"type": "Expression"
 										}
 									}
-								}
-							]
-						}
-					},
-					{
-						"name": "For Each Column",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Column Names",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Column Names').output.value",
-								"type": "Expression"
-							},
-							"activities": [
+								},
 								{
-									"name": "Append variable",
-									"type": "AppendVariable",
-									"dependsOn": [],
+									"name": "Set Source SQLString",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Watermarkvalue",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
 									"userProperties": [],
 									"typeProperties": {
-										"variableName": "ColumnString",
+										"variableName": "SQLString",
 										"value": {
-											"value": "[[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(replace(item().COLUMN_NAME,' ',''),'(',''),')',''),',',''),';',''),'{',''),'}','')}]",
+											"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),\n    concat('SELECT ', variables('ColumnString'), ' FROM dbo.[', pipeline().parameters.pm_TableName, ']'),\n    concat('SELECT ', activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ',', variables('ColumnString'), ' FROM dbo.[', pipeline().parameters.pm_TableName, ']')\n)\n",
 											"type": "Expression"
 										}
 									}
@@ -3660,7 +3758,7 @@
 							"source": {
 								"type": "AzureSqlSource",
 								"sqlReaderQuery": {
-									"value": "SELECT [COLUMN_NAME]\n      FROM [adf].[CT_IGSQL01_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}' \nAND [ACTIVE] =1\nand [WATERMARK_COLUMN] <>1",
+									"value": "SELECT STUFF(\n    (SELECT ', ' + [COLUMN_NAME]\n    FROM [adf].[CT_IGSQL01_COLUMNS]\n    WHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}' \n    AND [ACTIVE] = 1\n    AND [WATERMARK_COLUMN] <> 1\n    FOR XML PATH('')), 1, 2, '') AS COLUMN_NAMES\n",
 									"type": "Expression"
 								},
 								"queryTimeout": "02:00:00",
@@ -3684,7 +3782,31 @@
 									}
 								}
 							},
-							"firstRowOnly": false
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Set COLUMNNAME string",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Get Column Names",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ColumnString",
+							"value": {
+								"value": "@activity('Get Column Names').output.firstRow.COLUMN_NAMES",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -3693,16 +3815,20 @@
 				},
 				"parameters": {
 					"pm_DatabaseName": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "infinigateDE"
 					},
 					"pm_FullLoad": {
-						"type": "bool"
+						"type": "bool",
+						"defaultValue": false
 					},
 					"pm_TableName": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "AccountBase"
 					},
 					"pm_SchemaName": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "dbo"
 					},
 					"pm_ColumnName": {
 						"type": "string"
@@ -3713,7 +3839,838 @@
 						"type": "String"
 					},
 					"ColumnString": {
-						"type": "Array"
+						"type": "String"
+					},
+					"ColumnName": {
+						"type": "String"
+					},
+					"OpenBracket": {
+						"type": "String"
+					},
+					"ClosedBracket": {
+						"type": "String"
+					},
+					"Watermark_value": {
+						"type": "String"
+					},
+					"Watermark_Value_Delta": {
+						"type": "String"
+					},
+					"Max_Watermark": {
+						"type": "String"
+					},
+					"SQLString": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL01 [CRM]"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_30_IGSQL01_Load_View_ByVersionNumber')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IfFullLoad",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Set COLUMNNAME string",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Delta Load CRM IG",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Watermarkvalue_Delta",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										},
+										{
+											"activity": "WatermarkMaxValue",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "Sys_DatabaseName",
+													"value": {
+														"value": "@pipeline().parameters.pm_DatabaseName",
+														"type": "Expression"
+													}
+												}
+											],
+											"sqlReaderQuery": {
+												"value": "SELECT \nconvert(bigint, @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME} ) as VersionNumber,\n@{variables('ColumnString')} FROM \ndbo.[@{pipeline().parameters.pm_TableName}]\nWHERE \nconvert(bigint,\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\")> @{variables('Watermark_Value_Delta')}\nAND \nconvert(bigint,\"@{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME}\")<= @{variables('Max_Watermark')}\n\n\n",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings",
+												"maxRowsPerFile": 1000000,
+												"fileNamePrefix": {
+													"value": "bronze-igsql01-@{pipeline().parameters.pm_TableName}-@{pipeline().parameters.pm_DatabaseName}-@{utcNow()}",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_SQLDB_CRM_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_TableName": {
+													"value": "@pipeline().parameters.pm_TableName",
+													"type": "Expression"
+												},
+												"pm_DatabaseName": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												},
+												"pm_SchemaName": {
+													"value": "@pipeline().parameters.pm_SchemaName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_FileSystem": {
+													"value": "bronze",
+													"type": "Expression"
+												},
+												"pm_Directory": {
+													"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "UpdateWatermark_Delta_Load",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Delta Load CRM IG",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[adf].[sp_igsql01_crm_tables_watermark_upsert]",
+										"storedProcedureParameters": {
+											"table_name": {
+												"value": {
+													"value": "@pipeline().parameters.pm_TableName",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"watermark": {
+												"value": {
+													"value": "@variables('Max_Watermark')",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"database_name": {
+												"value": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_SQLDB_METADATA",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Get Watermark data_Delta",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "Get Watermark Column_Delta",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "SELECT COALESCE([WATERMARK],0) AS [WATERMARK_DELTA]\n  FROM [adf].[CT_IGSQL01_TABLES] where DATABASE_NAME='@{pipeline().parameters.pm_DatabaseName}' AND TABLE_NAME='@{pipeline().parameters.pm_TableName}'",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_SchemaName": "adf",
+												"pm_TableName": "CT_IGSQL01_TABLES",
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "Get Watermark Column_Delta",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "SELECT \nCOLUMN_NAME\n\n  FROM [adf].[CT_IGSQL01_COLUMNS] WHERE \n  TABLE_NAME='@{pipeline().parameters.pm_TableName}' AND WATERMARK_COLUMN=1",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_SchemaName": {
+													"value": "adf",
+													"type": "Expression"
+												},
+												"pm_TableName": "CT_IGSQL01_COLUMNS",
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "Watermarkvalue_Delta",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Get Watermark data_Delta",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Watermark_Value_Delta",
+										"value": {
+											"value": "@activity('Get Watermark data_Delta').output.firstRow.WATERMARK_DELTA",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Get Source Max Watermark Value",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "Get Watermark Column_Delta",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"sqlReaderQuery": {
+												"value": "SELECT \nMAX(convert(bigint, @{activity('Get Watermark Column_Delta').output.firstRow.COLUMN_NAME})) as MAXWATERMARK FROM \n[@{pipeline().parameters.pm_SchemaName}].[@{pipeline().parameters.pm_TableName}] \n\n\n",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "DS_SQLDB_CRM_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_TableName": {
+													"value": "@pipeline().parameters.pm_TableName",
+													"type": "Expression"
+												},
+												"pm_DatabaseName": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												},
+												"pm_SchemaName": {
+													"value": "@pipeline().parameters.pm_SchemaName",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "WatermarkMaxValue",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Get Source Max Watermark Value",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Max_Watermark",
+										"value": {
+											"value": "@activity('Get Source Max Watermark Value').output.firstRow.MAXWATERMARK",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Full Load CRM IG",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Set Source SQLString",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "Sys_DatabaseName",
+													"value": {
+														"value": "@pipeline().parameters.pm_DatabaseName",
+														"type": "Expression"
+													}
+												}
+											],
+											"sqlReaderQuery": {
+												"value": "@variables('ColumnString')",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings",
+												"maxRowsPerFile": 1000000,
+												"fileNamePrefix": {
+													"value": "bronze-igsql01-@{pipeline().parameters.pm_TableName}-@{pipeline().parameters.pm_DatabaseName}-@{utcNow()}",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_SQLDB_CRM_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_TableName": {
+													"value": "@pipeline().parameters.pm_TableName",
+													"type": "Expression"
+												},
+												"pm_DatabaseName": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												},
+												"pm_SchemaName": {
+													"value": "@pipeline().parameters.pm_SchemaName",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_FileSystem": {
+													"value": "bronze",
+													"type": "Expression"
+												},
+												"pm_Directory": {
+													"value": "igsql01/@{pipeline().parameters.pm_TableName}/pm_DatabaseName=@{pipeline().parameters.pm_DatabaseName}/",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "UpdateWatermark_FullLoad",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Full Load CRM IG",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[adf].[sp_igsql01_crm_tables_watermark_upsert]",
+										"storedProcedureParameters": {
+											"table_name": {
+												"value": {
+													"value": "@pipeline().parameters.pm_TableName",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"watermark": {
+												"value": {
+													"value": "@variables('Watermark_value')",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"database_name": {
+												"value": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_SQLDB_METADATA",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "Get Watermark data",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "Get Watermark Column",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"sqlReaderQuery": {
+												"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),'SELECT 0 WATERMARK_NEW',\n    concat(\n        'SELECT MAX(\ncase when ', activity('Get Watermark Column').output.firstRow.COLUMN_NAME,' =  0 then 0\nelse ', activity('Get Watermark Column').output.firstRow.COLUMN_NAME, 'end) AS WATERMARK_NEW FROM dbo.[',\n        pipeline().parameters.pm_TableName,\n        ']'\n    )\n)",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "DS_SQLDB_CRM_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_TableName": {
+													"value": "@pipeline().parameters.pm_TableName",
+													"type": "Expression"
+												},
+												"pm_SchemaName": {
+													"value": "@pipeline().parameters.pm_SchemaName",
+													"type": "Expression"
+												},
+												"pm_DatabaseName": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "Get Watermark Column",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "SELECT ISNULL(\n    (SELECT TOP 1 COLUMN_NAME \n    FROM [adf].[CT_IGSQL01_COLUMNS] \n    WHERE TABLE_NAME = '@{pipeline().parameters.pm_TableName}' \n    AND WATERMARK_COLUMN = 1), \n    '') AS COLUMN_NAME",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_SchemaName": {
+													"value": "adf",
+													"type": "Expression"
+												},
+												"pm_TableName": "CT_IGSQL01_COLUMNS",
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "Watermarkvalue",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Get Watermark data",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Watermark_value",
+										"value": {
+											"value": "@activity('Get Watermark data').output.firstRow.WATERMARK_NEW",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Source SQLString",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Watermarkvalue",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "SQLString",
+										"value": {
+											"value": "@if(\n    equals(activity('Get Watermark Column').output.firstRow.COLUMN_NAME, ''),\n    concat('SELECT ', variables('ColumnString'), ' FROM dbo.[', pipeline().parameters.pm_TableName, ']'),concat('SELECT convert(bigint, [' , activity('Get Watermark Column').output.firstRow.COLUMN_NAME ,']) as VersionNumber, ', variables('ColumnString') ,' FROM dbo.[', pipeline().parameters.pm_TableName,'] WHERE convert(bigint,[', activity('Get Watermark Column').output.firstRow.COLUMN_NAME ,'])<= ', variables('Watermark_value')))\n",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Get Column Names",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT STUFF(\n    (SELECT ', ' + [COLUMN_NAME]\n    FROM [adf].[CT_IGSQL01_COLUMNS]\n    WHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}' \n    AND [ACTIVE] = 1\n    AND [WATERMARK_COLUMN] <> 1\n    FOR XML PATH('')), 1, 2, '') AS COLUMN_NAMES\n",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": {
+										"value": "@pipeline().parameters.pm_SchemaName",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "@pipeline().parameters.pm_TableName",
+										"type": "Expression"
+									},
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Set COLUMNNAME string",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Get Column Names",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ColumnString",
+							"value": {
+								"value": "@activity('Get Column Names').output.firstRow.COLUMN_NAMES",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseName": {
+						"type": "string",
+						"defaultValue": "infinigateDE"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"pm_TableName": {
+						"type": "string",
+						"defaultValue": "AccountBase"
+					},
+					"pm_SchemaName": {
+						"type": "string",
+						"defaultValue": "dbo"
+					},
+					"pm_ColumnName": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"Watermark": {
+						"type": "String"
+					},
+					"ColumnString": {
+						"type": "String"
 					},
 					"ColumnName": {
 						"type": "String"
@@ -3729,6 +4686,12 @@
 					},
 					"Watermark_Value_Delta": {
 						"type": "Integer"
+					},
+					"Max_Watermark": {
+						"type": "Integer"
+					},
+					"SQLString": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -5648,142 +6611,6 @@
 						"     compressionLevel: 'Fastest',",
 						"     fileSystem: 'bronze',",
 						"     folderPath: 'cloud_distribution/invoicedata',",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_CUSTOMER')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "D2B"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_EXCEL_D2B_CUSTOMERS",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddSystemColumns"
-						},
-						{
-							"name": "RenameColumns"
-						},
-						{
-							"name": "AddIdColumn"
-						},
-						{
-							"name": "IsNotNull"
-						},
-						{
-							"name": "AddIdColumnIsNotNull"
-						},
-						{
-							"name": "Union"
-						}
-					],
-					"udfLibraries": [
-						{
-							"referenceName": "General",
-							"type": "DataFlowReference"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          COMPTETCTNUM as string,",
-						"          COMPTETcbmarq as short,",
-						"          BANQUECBMARQ as short,",
-						"          REGLEMENTcbmarq as short,",
-						"          CODEREVENDEUR as short,",
-						"          NAME_ as string,",
-						"          GROUPEDETAIL as string,",
-						"          BILLACCOUNT as boolean,",
-						"          EntryNo as short,",
-						"          enduserLegacyNo as integer,",
-						"          Name as string,",
-						"          Name2 as string,",
-						"          Address as string,",
-						"          Address2 as string,",
-						"          PhoneNo as string,",
-						"          TerritoryCode as string,",
-						"          Currency as string,",
-						"          LanguageCode as string,",
-						"          PaymentTerms as string,",
-						"          Salesperson as string,",
-						"          CountryRegionCode as string,",
-						"          PaymentMethodCode as string,",
-						"          VATRegistration as string,",
-						"          GenBusPostingGroup as string,",
-						"          PostCode as string,",
-						"          EMail as string,",
-						"          CompanyName as string,",
-						"          PrintManufacturerItemNo as boolean,",
-						"          TaxNo as string,",
-						"          ShiptoContactCompanyNo as string,",
-						"          BilltoCustomerNo as string,",
-						"          Status as string,",
-						"          LegacyNo as string,",
-						"          CUSTOMERCustomerNo as string,",
-						"          CUSTOMERBusinessRelationInfo as string,",
-						"          CUSTOMERNo as string,",
-						"          CUSTOMERType as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['d2b/customers/pending','d2b/customers/archived'],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"Union select(mapColumn(",
-						"          each(match(true()),",
-						"               applyParquetNaming($$) = $$)",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
-						"IsNotNull@IsNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CODEREVENDEUR']))))) ~> AddIdColumn",
-						"GetExcelFile split(isNull(toString(byName('CUSTOMERCustomerNo'))),",
-						"     disjoint: false) ~> IsNotNull@(IsNull, IsNotNull)",
-						"IsNotNull@IsNotNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CUSTOMERCustomerNo']))))) ~> AddIdColumnIsNotNull",
-						"AddIdColumn, AddIdColumnIsNotNull union(byName: true)~> Union",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('d2b/customers'),",
 						"     mergeSchema: true,",
 						"     autoCompact: true,",
 						"     optimizedWrite: true,",
