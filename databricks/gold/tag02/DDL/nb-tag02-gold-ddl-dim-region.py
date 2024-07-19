@@ -48,7 +48,15 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ,region_name STRING
 # MAGIC       COMMENT 'The description name of the region'
 # MAGIC     ,country_code STRING
-# MAGIC       COMMENT 'The country code to which the region relates'      
+# MAGIC       COMMENT 'The country code to which the region relates' 
+# MAGIC     ,country STRING
+# MAGIC       COMMENT 'The name of the country' 
+# MAGIC     ,country_detail STRING
+# MAGIC       COMMENT 'Context of the country potentially including the reference to entity' 
+# MAGIC     ,country_visuals STRING
+# MAGIC       COMMENT 'Country name to be used in Power BI visualisations' 
+# MAGIC     ,region_group STRING
+# MAGIC       COMMENT 'The high level region grouping'                 
 # MAGIC     ,region_hash_key STRING
 # MAGIC       COMMENT 'Hash value of the dimensional attributes per region code'
 # MAGIC     ,start_datetime TIMESTAMP NOT NULL 
@@ -86,6 +94,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC SELECT CAST(-1 AS BIGINT) AS dim_region_pk,
 # MAGIC        CAST('N/A' AS STRING) AS region_code,
 # MAGIC        CAST(NULL AS STRING) AS region_name,
+# MAGIC        CAST(NULL AS STRING) AS country_code,
+# MAGIC        CAST(NULL AS STRING) AS country,
+# MAGIC        CAST(NULL AS STRING) AS country_detail,
+# MAGIC        CAST(NULL AS STRING) AS country_visuals,
+# MAGIC        CAST(NULL AS STRING) AS region_group,                                
 # MAGIC        CAST(NULL AS STRING) AS region_hash_key,
 # MAGIC        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
 # MAGIC        CAST(NULL AS TIMESTAMP) AS end_datetime,
