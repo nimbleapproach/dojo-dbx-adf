@@ -13,6 +13,74 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_BRONZE_TO_SILVER_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_BRONZE_TO_SILVER_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_BRONZE_TO_SILVER_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "20 Silver"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_SILVER_TO_GOLD_OBT_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_10_RESELLERGROUPS_Load_Sheet')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -6366,266 +6434,6 @@
 					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
 				},
 				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_99_IGSQL03_CREATE_EDW_LAYER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get DatabasesControl Table",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_IGSQL03_DATABASES",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "For Each Database",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get DatabasesControl Table",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get DatabasesControl Table').output.value",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Create EDW Schema",
-									"type": "Script",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "LS_SQLDB_NAV_DYNAMIC",
-										"type": "LinkedServiceReference",
-										"parameters": {
-											"pm_DatabaseName": {
-												"value": "@item().DATABASE_NAME",
-												"type": "Expression"
-											},
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "Query",
-												"text": {
-													"value": "CREATE SCHEMA [edw_@{pipeline().globalParameters.gpm_Environment}]",
-													"type": "Expression"
-												}
-											}
-										],
-										"scriptBlockExecutionTimeout": "02:00:00"
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_CLOUD_DISTRIBUTION_EXEL_LOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "CLOUD_DISTRIBUTION"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_EXCEL_CLOUD_DISTRIBUTION",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddSystemColumns"
-						},
-						{
-							"name": "RenameColumns"
-						},
-						{
-							"name": "Partition"
-						}
-					],
-					"udfLibraries": [
-						{
-							"referenceName": "General",
-							"type": "DataFlowReference"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          Entity as string,",
-						"          {Invoice Date} as date,",
-						"          {Sales Order} as integer,",
-						"          {Invoice Number} as string,",
-						"          {Item ID} as integer,",
-						"          SKU as string,",
-						"          {Customer Name} as string,",
-						"          Qty as short,",
-						"          {Revenue Local} as double,",
-						"          {Cost Local} as double,",
-						"          {Adjustment Local} as boolean,",
-						"          Currency as string,",
-						"          {Margin Local} as double,",
-						"          {Exchange Rate} as double,",
-						"          {Revenue GBP} as double,",
-						"          {Cost GBP} as double,",
-						"          {Margin GBP} as double,",
-						"          {Vendor ID} as string,",
-						"          {Vendor Name} as string,",
-						"          {Account Manager} as string,",
-						"          {Order Type} as string,",
-						"          {Quote ID} as integer,",
-						"          {Customer Account} as string,",
-						"          {SKU Description} as string,",
-						"          {Customer Reference} as string,",
-						"          {Item Type} as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"Partition select(mapColumn(",
-						"          each(match(true()),",
-						"               applyParquetNaming($$) = $$)",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
-						"GetExcelFile window(over({Invoice Number}),",
-						"     asc({Item ID}, true),",
-						"     asc(SKU, true),",
-						"     LineNo = rowNumber()) ~> Partition",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          Entity as string,",
-						"          InvoiceDate as string,",
-						"          SalesOrder as string,",
-						"          InvoiceNumber as string,",
-						"          ItemID as string,",
-						"          SKU as string,",
-						"          CustomerName as string,",
-						"          Qty as string,",
-						"          RevenueLocal as string,",
-						"          CostLocal as string,",
-						"          AdjustmentLocal as string,",
-						"          Currency as string,",
-						"          MarginLocal as string,",
-						"          ExchangeRate as string,",
-						"          RevenueGBP as string,",
-						"          CostGBP as string,",
-						"          MarginGBP as string,",
-						"          VendorID as string,",
-						"          VendorName as string,",
-						"          AccountManager as string,",
-						"          OrderType as string,",
-						"          QuoteID as string,",
-						"          CustomerAccount as string,",
-						"          SKUDescription as string,",
-						"          CustomerReference as string,",
-						"          ItemType as string,",
-						"          Sys_FileName as string,",
-						"          Sys_ID as string,",
-						"          Sys_Bronze_InsertDateTime_UTC as timestamp",
-						"     ),",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: 'cloud_distribution/invoicedata',",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
-					]
-				}
 			},
 			"dependsOn": []
 		}

@@ -1257,6 +1257,156 @@
 								"pm_NumberOfWorkers": "1"
 							}
 						}
+					},
+					{
+						"name": "Run Register IGSQL01",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "/Repos/ADO/inf-edw/databricks/bronze/nb-register-bronze",
+								"type": "Expression"
+							},
+							"baseParameters": {
+								"wg_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"wg_reregister": {
+									"value": "@pipeline().parameters.pm_reregister",
+									"type": "Expression"
+								},
+								"wg_bronzeSchema": "igsql01",
+								"wg_rootPath": "igsql01",
+								"wg_tableFormat": "parquet"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ADB",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Databrick_Workspace_URL": {
+									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+									"type": "Expression"
+								},
+								"pm_Databricks_Workspace_Resource_ID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+									"type": "Expression"
+								},
+								"pm_Databricks_Cluster_ID": {
+									"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": "1"
+							}
+						}
+					},
+					{
+						"name": "Run Register Vuzion CRM",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "/Repos/ADO/inf-edw/databricks/bronze/nb-register-bronze",
+								"type": "Expression"
+							},
+							"baseParameters": {
+								"wg_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"wg_reregister": {
+									"value": "@pipeline().parameters.pm_reregister",
+									"type": "Expression"
+								},
+								"wg_bronzeSchema": "vuzion_crm",
+								"wg_rootPath": "vuzion_crm",
+								"wg_tableFormat": "parquet"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ADB",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Databrick_Workspace_URL": {
+									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+									"type": "Expression"
+								},
+								"pm_Databricks_Workspace_Resource_ID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+									"type": "Expression"
+								},
+								"pm_Databricks_Cluster_ID": {
+									"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": "1"
+							}
+						}
+					},
+					{
+						"name": "Run Register Nuvias BYOD",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "/Repos/ADO/inf-edw/databricks/bronze/nb-register-bronze-nuav-sqlbyod",
+								"type": "Expression"
+							},
+							"baseParameters": {
+								"wg_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"wg_reregister": {
+									"value": "@pipeline().parameters.pm_reregister",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ADB",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Databrick_Workspace_URL": {
+									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+									"type": "Expression"
+								},
+								"pm_Databricks_Workspace_Resource_ID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+									"type": "Expression"
+								},
+								"pm_Databricks_Cluster_ID": {
+									"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": "1"
+							}
+						}
 					}
 				],
 				"policy": {

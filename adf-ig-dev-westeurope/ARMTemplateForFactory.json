@@ -463,6 +463,156 @@
 								"pm_NumberOfWorkers": "1"
 							}
 						}
+					},
+					{
+						"name": "Run Register IGSQL01",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "/Repos/ADO/inf-edw/databricks/bronze/nb-register-bronze",
+								"type": "Expression"
+							},
+							"baseParameters": {
+								"wg_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"wg_reregister": {
+									"value": "@pipeline().parameters.pm_reregister",
+									"type": "Expression"
+								},
+								"wg_bronzeSchema": "igsql01",
+								"wg_rootPath": "igsql01",
+								"wg_tableFormat": "parquet"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ADB",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Databrick_Workspace_URL": {
+									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+									"type": "Expression"
+								},
+								"pm_Databricks_Workspace_Resource_ID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+									"type": "Expression"
+								},
+								"pm_Databricks_Cluster_ID": {
+									"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": "1"
+							}
+						}
+					},
+					{
+						"name": "Run Register Vuzion CRM",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "/Repos/ADO/inf-edw/databricks/bronze/nb-register-bronze",
+								"type": "Expression"
+							},
+							"baseParameters": {
+								"wg_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"wg_reregister": {
+									"value": "@pipeline().parameters.pm_reregister",
+									"type": "Expression"
+								},
+								"wg_bronzeSchema": "vuzion_crm",
+								"wg_rootPath": "vuzion_crm",
+								"wg_tableFormat": "parquet"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ADB",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Databrick_Workspace_URL": {
+									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+									"type": "Expression"
+								},
+								"pm_Databricks_Workspace_Resource_ID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+									"type": "Expression"
+								},
+								"pm_Databricks_Cluster_ID": {
+									"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": "1"
+							}
+						}
+					},
+					{
+						"name": "Run Register Nuvias BYOD",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "/Repos/ADO/inf-edw/databricks/bronze/nb-register-bronze-nuav-sqlbyod",
+								"type": "Expression"
+							},
+							"baseParameters": {
+								"wg_environment": {
+									"value": "@pipeline().globalParameters.gpm_Environment",
+									"type": "Expression"
+								},
+								"wg_reregister": {
+									"value": "@pipeline().parameters.pm_reregister",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ADB",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Databrick_Workspace_URL": {
+									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+									"type": "Expression"
+								},
+								"pm_Databricks_Workspace_Resource_ID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+									"type": "Expression"
+								},
+								"pm_Databricks_Cluster_ID": {
+									"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+									"type": "Expression"
+								},
+								"pm_NumberOfWorkers": "1"
+							}
+						}
 					}
 				],
 				"policy": {
@@ -12260,8 +12410,8 @@
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
+							"retry": 2,
+							"retryIntervalInSeconds": 60,
 							"secureOutput": false,
 							"secureInput": false
 						},
@@ -12923,6 +13073,163 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_NAV_DYNAMIC')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_99_NUAZ-SQLSERVER-01')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Database",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get DatabasesControl Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get DatabasesControl Table').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Copy Task Information Schema",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"additionalColumns": [
+												{
+													"name": "InsertedDateTime",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"sqlReaderQuery": "SELECT * FROM INFORMATION_SCHEMA.COLUMNS",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_DatabaseType": {
+													"value": "@split(item().DATABASE_NAME,'_')[1]",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_SchemaName": "adf",
+												"pm_TableName": "CT_NUAZ-SQLSERVER-01_SCHEMA",
+												"pm_Environment": "DEV"
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get DatabasesControl Table",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT *\n  FROM [adf].[CT_NUAZ-SQLSERVER-01_DATABASES]\n  where Active = 1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_NUAZ-SQLSERVER-01_DATABASES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT')]"
 			]
 		},
 		{
@@ -14871,6 +15178,45 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SQLDB_NUVIAS_FO",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						},
+						"pm_DatabaseType": {
+							"value": "@dataset().pm_DatabaseType",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/NUVIAS/FO"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_NUVIAS_FO')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_TAGETIK_DYNAMIC')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -14965,6 +15311,57 @@
 						"value": "@dataset().pm_TableName",
 						"type": "Expression"
 					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_VUZION_CRM_DYNAMICS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_VUZION_CRM_DYNAMICS_SCRIPT')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_VUZION_CRM_DYNAMICS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Service_Uri": {
+							"value": "@dataset().pm_Service_Uri",
+							"type": "Expression"
+						},
+						"pm_Service_Principal_Id": {
+							"value": "@dataset().pm_Service_Principal_Id",
+							"type": "Expression"
+						},
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_Service_Uri": {
+						"type": "string"
+					},
+					"pm_Service_Principal_Id": {
+						"type": "string"
+					},
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/VUZION [CRM]"
+				},
+				"annotations": [],
+				"type": "DynamicsCrmEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "vz1_coreproducts"
 				}
 			},
 			"dependsOn": [

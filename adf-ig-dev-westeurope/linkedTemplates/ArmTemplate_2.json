@@ -617,6 +617,43 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_SQLDB_NUVIAS_FO",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						},
+						"pm_DatabaseType": {
+							"value": "@dataset().pm_DatabaseType",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/NUVIAS/FO"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_TAGETIK_DYNAMIC')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -709,6 +746,55 @@
 						"value": "@dataset().pm_TableName",
 						"type": "Expression"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_VUZION_CRM_DYNAMICS_SCRIPT')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_VUZION_CRM_DYNAMICS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Service_Uri": {
+							"value": "@dataset().pm_Service_Uri",
+							"type": "Expression"
+						},
+						"pm_Service_Principal_Id": {
+							"value": "@dataset().pm_Service_Principal_Id",
+							"type": "Expression"
+						},
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_Service_Uri": {
+						"type": "string"
+					},
+					"pm_Service_Principal_Id": {
+						"type": "string"
+					},
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/VUZION [CRM]"
+				},
+				"annotations": [],
+				"type": "DynamicsCrmEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "vz1_coreproducts"
 				}
 			},
 			"dependsOn": []
@@ -911,74 +997,6 @@
 						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
 					]
 				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_BRONZE_TO_SILVER_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_BRONZE_TO_SILVER_TRIGGER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_BRONZE_TO_SILVER_TRIGGER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "20 Silver"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_SILVER_TO_GOLD_OBT_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_SILVER_TO_GOLD_OBT_TRIGGER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "30 Gold"
-				},
-				"annotations": []
 			},
 			"dependsOn": []
 		}
