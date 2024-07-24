@@ -103,11 +103,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC ('SE2', 'Sweden','NU Sweden','Sweden','Nordics'),
 # MAGIC ('SI1', 'Slovenia','NS Slovenia','Slovenia','Eastern Europe'),
 # MAGIC ('UK1', 'UK','IG UK','UK','UK'),
-# MAGIC ('UK2', 'IG Cloud','Infinigate Cloud','IG Cloud','IG Cloud'),
+# MAGIC ('UK2', 'Vuzion','VZ UK','UK','UK'),
 # MAGIC ('UK3', 'UK','NU UK','UK','UK'),
 # MAGIC ('UK4', 'UK','Cloud UK','UK','UK'),
 # MAGIC ('NaN', 'Other','Other','Other','Other'),
-# MAGIC ('VU', 'IG Cloud','Infinigate Cloud','IG Cloud','IG Cloud'),
+# MAGIC ('VU', 'Vuzion','Vuzion','UK','UK'),
 # MAGIC ('HL5', 'HQ','','HQ','HQ'),
 # MAGIC ('HL8', 'HQ','','HQ','HQ'),
 # MAGIC ('NL4', 'HQ','','HQ','HQ')

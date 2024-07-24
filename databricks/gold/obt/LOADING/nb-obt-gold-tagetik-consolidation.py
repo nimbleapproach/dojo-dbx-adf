@@ -125,7 +125,7 @@ adjustments as(
     silver_{ENVIRONMENT}.tag02.dati_rett_riga FB
   WHERE
     (COD_SCENARIO like '%ACT%')
-    and (COD_SCENARIO  like '%04')
+    and( (COD_SCENARIO  like '%04') or  (COD_SCENARIO ='2025ACT-PFA-01'))
     and (COD_SCENARIO not like '%OB%')
     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
 -- [yz] 2024.02.21 include all manual journals categories for finance report 

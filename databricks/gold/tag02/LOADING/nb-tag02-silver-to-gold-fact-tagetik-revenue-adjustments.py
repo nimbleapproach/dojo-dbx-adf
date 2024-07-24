@@ -87,8 +87,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC WHERE (LEFT(drr.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all manual journals categories for finance report
 # MAGIC   AND drr.COD_CATEGORIA LIKE '%ADJ%'
 # MAGIC   AND drr.Sys_Silver_IsCurrent = 1
-# MAGIC   AND COD_SCENARIO LIKE '%ACT%'
-# MAGIC   AND COD_SCENARIO LIKE '%04'
 # MAGIC   AND COD_SCENARIO NOT LIKE '%OB%'
 # MAGIC   
 
