@@ -141,7 +141,7 @@ for check in dq_checks:
 # COMMAND ----------
 
 # Read the table into a DataFrame
-df = spark.table("silver_dev.dq.bronze_dq")
+df = spark.table(TARGET)
 
 # Identify and keep the rows with the maximum `as_of` value for each combination of `schema`, `table`, and `col_name`
 from pyspark.sql import functions as F
@@ -154,4 +154,4 @@ display(df_cleaned_dupes)
 if df_cleaned_dupes.count()>1:
 # drop if dupes
     df_cleaned = df.withColumn("row_number", F.row_number().over(window_spec)).filter(F.col("row_number") == 1).drop("row_number")
-    df_cleaned.write.mode("overwrite").saveAsTable("silver_dev.dq.bronze_dq")
+    df_cleaned.write.mode("overwrite").saveAsTable(TARGET)

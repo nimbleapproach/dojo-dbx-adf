@@ -33,6 +33,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC             WHEN de.entity_code = 'BE1' THEN 'NL1'
 # MAGIC             WHEN de.entity_code = 'FR2' THEN 'FR1'
 # MAGIC             WHEN de.entity_code IN ('IE1', 'UK2') THEN 'VU'
+# MAGIC             WHEN dr.region_code = 'HL5' THEN 'HL5'
 # MAGIC             ELSE de.entity_code END) AS entity_code,
 # MAGIC        ftr.category,
 # MAGIC        SUM(ftr.revenue_lcy) AS revenue,
@@ -66,6 +67,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC             WHEN de.entity_code = 'BE1' THEN 'NL1'
 # MAGIC             WHEN de.entity_code = 'FR2' THEN 'FR1'
 # MAGIC             WHEN de.entity_code IN ('IE1', 'UK2') THEN 'VU'
+# MAGIC             WHEN dr.region_code = 'HL5' THEN 'HL5'
 # MAGIC             ELSE de.entity_code END),
 # MAGIC        ftr.category,
 # MAGIC        der.exchange_rate

@@ -42,7 +42,7 @@ class TestTable(unittest.TestCase):
         """
         Test that Sys_DatabaseName contains only valid values.
         """
-        result = column_contains_only_valid_values(df_test, 'Sys_DatabaseName',['ReportsDE','ReportsCH','ReportsDK','ReportsSE','ReportsNL','ReportsFI','ReportsNO','ReportsUK','ReportsFR',])
+        result = column_contains_only_valid_values(df_test, 'Sys_DatabaseName',['ReportsDE','ReportsCH','ReportsDK','ReportsSE','ReportsNL','ReportsFI','ReportsNO','ReportsUK','ReportsFR','ReportsAT','ReportsBE'])
         self.assertEqual(result, 'OK')
     
 
