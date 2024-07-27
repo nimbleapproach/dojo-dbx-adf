@@ -23,8 +23,7 @@ spark.sql(f"""
 
 CREATE OR REPLACE VIEW staging_dim_entity AS
 
-SELECT DISTINCT entity_id,
-                entity_code,
+SELECT DISTINCT entity_code,
                 entity_description,
                 entity_type,
                 legal_headquarters,
@@ -41,8 +40,7 @@ SELECT DISTINCT entity_id,
                 NOW() AS Sys_Gold_InsertedDateTime_UTC,
                 NOW() AS Sys_Gold_ModifiedDateTime_UTC               
 FROM (
-SELECT grp_id2 AS entity_id,
-       entity_code,
+SELECT entity_code,
        entity_description,
        entity_type,
        legal_headquarters,
@@ -158,8 +156,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
 # MAGIC %py
 # MAGIC
 # MAGIC sqldf= spark.sql("""
-# MAGIC SELECT entity_id,
-# MAGIC        entity_code,
+# MAGIC SELECT entity_code,
 # MAGIC        entity_description,
 # MAGIC        entity_type,
 # MAGIC        legal_headquarters,
