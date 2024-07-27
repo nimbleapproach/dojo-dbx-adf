@@ -129,6 +129,8 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC CREATE OR REPLACE VIEW tagetik_revenue AS
 # MAGIC
 # MAGIC SELECT y.date_id,
+# MAGIC        dd.date,
+# MAGIC        CONCAT(dd.short_month_name,' - ',CAST(dd.year AS STRING)) AS short_month_name_year,
 # MAGIC        y.period,
 # MAGIC        y.currency_code,
 # MAGIC        y.account_code,
@@ -198,6 +200,8 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC ) y
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.lup_account_type atyp
 # MAGIC     ON y.account_code = atyp.account_code
+# MAGIC LEFT OUTER JOIN platinum_${tableObject.environment}.tag02.date dd
+# MAGIC     ON y.date_id = dd.date_id
 # MAGIC WHERE y.scenario_code LIKE '%ACT%'
 # MAGIC   AND (y.scenario_code LIKE '%04' OR y.scenario_code ='2025ACT-PFA-01' )
 # MAGIC
