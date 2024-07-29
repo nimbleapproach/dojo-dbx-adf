@@ -25,7 +25,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        x.short_month_name_year
 # MAGIC FROM (
 # MAGIC SELECT DISTINCT CONCAT(short_month_name,' - ',CAST(year AS STRING)) AS short_month_name_year, month, year
-# MAGIC FROM gold_dev.tag02.dim_date
+# MAGIC FROM gold_${tableObject.environment}.tag02.dim_date
 # MAGIC ) x
 # MAGIC
 # MAGIC
