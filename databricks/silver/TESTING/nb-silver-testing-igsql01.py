@@ -89,6 +89,8 @@ class TestTable(unittest.TestCase):
                 'infinigateNO',
                 'infinigateSE',
                 'infinigateUK',
+                # NOTE: upper case 'I' - comparison is case sensitive
+                'InfinigateBE',
         ]
         result = column_contains_only_valid_values(df_test, 'Sys_DatabaseName', valid_dbs)
         self.assertEqual(result, 'OK')
