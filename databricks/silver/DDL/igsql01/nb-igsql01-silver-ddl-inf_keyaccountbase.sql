@@ -32,62 +32,20 @@ USE SCHEMA igsql01;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE accountbase (
+CREATE OR REPLACE TABLE inf_keyaccountbase (
     SID bigint
         GENERATED ALWAYS AS IDENTITY
         COMMENT 'Surrogate Key'
-    ,AccountId STRING NOT NULL
+    ,inf_keyaccountId STRING NOT NULL
       COMMENT 'Business Key'
     ,OwningBusinessUnit STRING
       COMMENT 'TODO'
-    ,Name STRING
-      COMMENT 'Name of Customer'
-    ,AccountNumber STRING
-      COMMENT 'Business Customer ID'
-    ,Telephone1 STRING
-      COMMENT 'TODO'
-    ,Fax STRING
-      COMMENT 'TODO'
+    ,inf_name STRING
+      COMMENT 'Reseller Group Code'
     ,CreatedOn TIMESTAMP
       COMMENT 'TODO'
     ,ModifiedOn TIMESTAMP NOT NULL
       COMMENT 'Watermark'
-    ,ParentAccountId STRING
-      COMMENT 'TODO'
-    ,StatusCode INT
-      COMMENT 'TODO'
-    ,inf_businessrel_VENDOR BOOLEAN
-      COMMENT 'TODO'
-    ,Inf_CountryId STRING
-      COMMENT 'TODO'
-    ,inf_businessrel_NPP BOOLEAN
-      COMMENT 'TODO'
-    ,inf_businessrel_PP BOOLEAN
-      COMMENT 'TODO'
-    ,inf_businessrel_COMP BOOLEAN
-      COMMENT 'TODO'
-    ,inf_businessrel_NPP_COR BOOLEAN
-      COMMENT 'TODO'
-    ,Inf_LastModifiedOn TIMESTAMP
-      COMMENT 'TODO'
-    ,inf_CurrencyCode STRING
-      COMMENT 'TODO'
-    ,inf_customerno STRING
-      COMMENT 'Customer ID'
-    ,inf_Name2 STRING
-      COMMENT 'Alternative Name'
-    ,inf_businessrelationinfo STRING
-      COMMENT 'TODO'
-    ,inf_businessrel_CUSTOMER BOOLEAN
-      COMMENT 'TODO'
-    ,inf_businessrel_SUPPLIER BOOLEAN
-      COMMENT 'TODO'
-    ,inf_invoicedispatchtype INT
-      COMMENT 'TODO'
-    ,inf_businessrel_endcust BOOLEAN
-      COMMENT 'TODO'
-    ,inf_KeyAccount STRING
-      COMMENT 'Key Account ID'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP NOT NULL
       COMMENT 'The timestamp when this entry landed in bronze.'
     ,Sys_DatabaseName STRING NOT NULL
@@ -102,14 +60,14 @@ CREATE OR REPLACE TABLE accountbase (
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
       COMMENT 'Flag if this is the current version.'
-  ,CONSTRAINT accountbase_pk PRIMARY KEY(AccountId, Sys_DatabaseName, ModifiedOn)
+  ,CONSTRAINT inf_keyaccountbase_pk PRIMARY KEY(inf_keyaccountId, Sys_DatabaseName, ModifiedOn)
 )
-COMMENT 'This table contains the data for customer account.'
+COMMENT 'This table contains the data for customer key account (group).'
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY (AccountId, Sys_DatabaseName)
+CLUSTER BY (inf_keyaccountId, Sys_DatabaseName)
 
 -- COMMAND ----------
 
-ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+ALTER TABLE inf_keyaccountbase ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE inf_keyaccountbase ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+ALTER TABLE inf_keyaccountbase ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
