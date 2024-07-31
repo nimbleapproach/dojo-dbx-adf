@@ -60,7 +60,7 @@ AND ga.Consol_CreditAcc_ in (
   ,'469988'
   ,'499988')
 GROUP BY ALL
-HAVING (Amount) <> 0)
+HAVING (CostAmount) <> 0)
 
 , obt_ve AS (
 SELECT
@@ -107,7 +107,7 @@ SELECT
   obt.Sys_DatabaseName,
   DocumentNo,
   OBT.PostingDate,
-  gl_doc.PostingDate AS GL_Doc_PostingDate
+  gl_doc.PostingDate AS GL_Doc_PostingDate,
   SUM(obt.CostAmount) CostAmount_OBT,
   SUM(coalesce(gl_doc.CostAmount, 0)) CostAmount_GL,
   SUM(obt.CostAmount)CostAmount_OBT,
@@ -116,7 +116,7 @@ FROM obt
 LEFT JOIN (SELECT EntityCode
                 ,Sys_DatabaseName
                 ,DocumentNo_
-                ,MIN(Posting_Date) PostingDate
+                ,MIN(PostingDate) PostingDate
                 ,SUM(CostAmount)*(-1) CostAmount 
            FROM gl
            GROUP BY ALL
@@ -152,7 +152,7 @@ SELECT
     EntityCode,
     DocumentNo,
     Sys_DatabaseName,
-    MIN(GL_Doc_PostingDate) GL_Doc_PostingDate
+    MIN(GL_Doc_PostingDate) GL_Doc_PostingDate,
     Sum(CostAmount_Gap) CostAmount_Gap
 FROM ig_adjustedCost_sum
 GROUP BY ALL
@@ -166,7 +166,7 @@ SELECT
        ELSE CAST(TRY_DIVIDE(obt.RevenueAmount, obt_sum.RevenueAmount_Sum) AS DECIMAL(10, 4))
             * CostAmount_Gap
        END AS Cost_ProRata_Adj,
-  COALESCE(cost_adjustment.GL_Doc_PostingDate, obt.Transaction_Date) AS GL_Doc_PostingDate
+  COALESCE(ve.PostingDate,COALESCE(cost_adjustment.GL_Doc_PostingDate, obt.TransactionDate)) AS GL_Doc_PostingDate
 FROM gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
 LEFT JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
                                      AND obt.LineNo = ve.DocumentLineNo_
