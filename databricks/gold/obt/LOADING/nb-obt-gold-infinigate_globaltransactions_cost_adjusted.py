@@ -60,7 +60,7 @@ AND ga.Consol_CreditAcc_ in (
   ,'469988'
   ,'499988')
 GROUP BY ALL
-HAVING (CostAmount) <> 0)
+HAVING sum(Amount)<>0)
 
 , obt_ve AS (
 SELECT
@@ -107,7 +107,7 @@ SELECT
   obt.Sys_DatabaseName,
   DocumentNo,
   OBT.PostingDate,
-  gl_doc.PostingDate AS GL_Doc_PostingDate,
+  MIN(gl_doc.PostingDate) AS GL_Doc_PostingDate,
   SUM(obt.CostAmount) CostAmount_OBT,
   SUM(coalesce(gl_doc.CostAmount, 0)) CostAmount_GL,
   SUM(obt.CostAmount)CostAmount_OBT,
@@ -130,8 +130,8 @@ SELECT
   CONCAT( RIGHT (ve.Sys_DatabaseName,2),'1')  AS EntityCode,
   ve.Sys_DatabaseName,
   DocumentLineNo_,
-  PostingDate,
   DocumentNo_,
+  MIN(PostingDate) PostingDate,
   SUM(CostPostedtoG_L) CostPostedtoG_L
 FROM silver_{ENVIRONMENT}.igsql03.value_entry ve
 LEFT JOIN (
