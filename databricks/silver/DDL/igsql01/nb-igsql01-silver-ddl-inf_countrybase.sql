@@ -38,10 +38,14 @@ CREATE OR REPLACE TABLE inf_countrybase (
         COMMENT 'Surrogate Key'
     ,Inf_countryId STRING NOT NULL
       COMMENT 'Business Key'
-    ,CreatedOn TIMESTAMP 
+    ,CreatedOn TIMESTAMP
+      COMMENT 'TODO'
+    ,CreatedBy STRING 
       COMMENT 'TODO'
     ,ModifiedOn TIMESTAMP NOT NULL
       COMMENT 'Watermark'
+    ,ModifiedBy STRING 
+      COMMENT 'TODO'
     ,Inf_name STRING 
       COMMENT 'Country Code'
     ,Inf_Description STRING 

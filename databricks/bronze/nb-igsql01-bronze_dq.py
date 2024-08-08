@@ -155,3 +155,9 @@ if df_cleaned_dupes.count()>1:
 # drop if dupes
     df_cleaned = df.withColumn("row_number", F.row_number().over(window_spec)).filter(F.col("row_number") == 1).drop("row_number")
     df_cleaned.write.mode("overwrite").saveAsTable(TARGET)
+
+# COMMAND ----------
+
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

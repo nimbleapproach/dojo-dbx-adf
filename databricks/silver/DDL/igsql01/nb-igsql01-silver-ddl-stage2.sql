@@ -154,13 +154,14 @@ CLUSTER BY    (entity_id, sys_database_name)
 
 CREATE OR REPLACE TABLE tbl_reseller (
   reseller_pk BIGINT
-    COMMENT 'Surrogate key from account table'
+    GENERATED ALWAYS AS IDENTITY
+    COMMENT 'Surrogate Key'
   ,reseller_id STRING
-    COMMENT 'Business key from account table'
+    COMMENT 'Source ID from accountbase table'
   ,reseller STRING
     COMMENT 'Name of reseller'
   ,reseller_code STRING
-    COMMENT 'Code recognised across systems'
+    COMMENT 'Code recognised across systems - part of PK'
   ,address_line_1 STRING
     COMMENT 'Not populated'
   ,address_line_2 STRING
@@ -182,7 +183,7 @@ CREATE OR REPLACE TABLE tbl_reseller (
   ,sys_bronze_insert_date_time_utc TIMESTAMP
     COMMENT 'TODO'
   ,sys_database_name STRING
-    COMMENT 'TODO'
+    COMMENT 'Denotes upstream source - part of PK'
   ,sys_silver_insert_date_time_utc TIMESTAMP
     COMMENT 'TODO'
   ,sys_silver_modified_date_time_utc TIMESTAMP
@@ -191,22 +192,26 @@ CREATE OR REPLACE TABLE tbl_reseller (
     COMMENT 'TODO'
   ,sys_silver_is_current BOOLEAN
     COMMENT 'TODO'
+  ,all_names ARRAY<STRING>
+    COMMENT 'All names against reseller'
+  ,CONSTRAINT tbl_reseller_pk PRIMARY KEY(reseller_code, sys_database_name)
 )
 COMMENT 'This table contains the resellers data from accounts.' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY    (reseller_id, sys_database_name)
+CLUSTER BY    (reseller_code, sys_database_name)
 
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE tbl_reseller_group (
   reseller_group_pk BIGINT
-    COMMENT 'TODO'
+    GENERATED ALWAYS AS IDENTITY
+    COMMENT 'Surrogate Key'
   ,reseller_group_id STRING
-    COMMENT 'TODO'
+    COMMENT 'Source ID from inf_keyaccountbase table'
   ,reseller_group STRING
-    COMMENT 'TODO'
+    COMMENT 'Not populated'
   ,reseller_group_code STRING
-    COMMENT 'TODO'
+    COMMENT 'Reseller group code - part of PK'
   ,created_on TIMESTAMP
     COMMENT 'TODO'
   ,created_by STRING
@@ -218,7 +223,7 @@ CREATE OR REPLACE TABLE tbl_reseller_group (
   ,sys_bronze_insert_date_time_utc TIMESTAMP
     COMMENT 'TODO'
   ,sys_database_name STRING
-    COMMENT 'TODO'
+    COMMENT 'Denotes upstream source - part of PK'
   ,sys_silver_insert_date_time_utc TIMESTAMP
     COMMENT 'TODO'
   ,sys_silver_modified_date_time_utc TIMESTAMP
@@ -227,18 +232,44 @@ CREATE OR REPLACE TABLE tbl_reseller_group (
     COMMENT 'TODO'
   ,sys_silver_is_current BOOLEAN
     COMMENT 'TODO'
+  ,CONSTRAINT tbl_reseller_group_pk PRIMARY KEY(reseller_group_code, sys_database_name)
 )
 COMMENT 'This table contains the reseller groups data from accounts.' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-CLUSTER BY    (reseller_group_id, sys_database_name)
+CLUSTER BY    (reseller_group_code, sys_database_name)
 
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE tbl_reseller_group_link (
-  reseller_fk BIGINT
+  reseller_group_link_pk BIGINT
+    GENERATED ALWAYS AS IDENTITY
+    COMMENT 'Surrogate Key'
+  ,reseller_fk BIGINT
     COMMENT 'Key of reseller (tbl_reseller.reseller_pk)'
   ,reseller_group_fk BIGINT
     COMMENT 'Key of reseller group (tbl_reseller_group.reseller_group_pk)'
+  ,sys_bronze_insert_date_time_utc TIMESTAMP
+    COMMENT 'Bronze load time of account that link was sourced from'
+  ,sys_database_name STRING
+    COMMENT 'Denotes upstream source.'
+  ,sys_silver_insert_date_time_utc TIMESTAMP
+    COMMENT 'TODO'
+  ,sys_silver_modified_date_time_utc TIMESTAMP
+    COMMENT 'TODO'
+  ,sys_silver_hash_key BIGINT
+    COMMENT 'TODO'
+  ,sys_silver_is_current BOOLEAN
+    COMMENT 'TODO'
+  ,link_source_account_id STRING
+      COMMENT 'Business Key of account that link was sourced from'
+  ,CONSTRAINT tbl_reseller_group_link_pk PRIMARY KEY(reseller_fk, reseller_group_fk)
 )
 COMMENT 'This table links resellers to reseller groups.' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
+CLUSTER BY    (reseller_fk, reseller_group_fk)
+
+-- COMMAND ----------
+
+-- MAGIC %environment
+-- MAGIC "client": "1"
+-- MAGIC "base_environment": ""

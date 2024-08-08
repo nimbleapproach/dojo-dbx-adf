@@ -50,8 +50,12 @@ CREATE OR REPLACE TABLE accountbase (
       COMMENT 'TODO'
     ,CreatedOn TIMESTAMP
       COMMENT 'TODO'
+    ,CreatedBy STRING 
+      COMMENT 'TODO'
     ,ModifiedOn TIMESTAMP NOT NULL
       COMMENT 'Watermark'
+    ,ModifiedBy STRING 
+      COMMENT 'TODO'
     ,ParentAccountId STRING
       COMMENT 'TODO'
     ,StatusCode INT
@@ -113,3 +117,9 @@ CLUSTER BY (AccountId, Sys_DatabaseName)
 ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
 ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
 ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+
+-- COMMAND ----------
+
+-- MAGIC %environment
+-- MAGIC "client": "1"
+-- MAGIC "base_environment": ""
