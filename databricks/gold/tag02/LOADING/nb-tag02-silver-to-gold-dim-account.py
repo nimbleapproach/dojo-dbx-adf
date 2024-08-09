@@ -58,25 +58,25 @@ FROM (SELECT row_number() OVER(PARTITION BY a.account_code ORDER BY date_updated
              a.account_hash_key,
              a.date_updated     
       FROM ( SELECT DISTINCT 
-                    TRIM(a.COD_CONTO) AS account_code,
+                    UPPER(TRIM(a.COD_CONTO)) AS account_code,
                     TRIM(a.DESC_CONTO0) AS account_description,
                     TRIM(a.DESC_CONTO1) AS account_description_extended,
                     SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_CONTO0), ''), COALESCE(TRIM(a.DESC_CONTO1), '')), 256) AS account_hash_key,
                     CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
              FROM silver_{ENVIRONMENT}.tag02.conto a
              LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_account b
-               ON LOWER(TRIM(a.COD_CONTO)) = LOWER(b.account_code)
-             WHERE LOWER(b.account_code) IS NULL
+               ON UPPER(TRIM(a.COD_CONTO)) = b.account_code
+             WHERE b.account_code IS NULL
              UNION    -- We either want to insert all account codes we haven't seen before or we want to insert only account codes with changed attributes
              SELECT DISTINCT 
-                    TRIM(a.COD_CONTO) AS account_code,
+                    UPPER(TRIM(a.COD_CONTO)) AS account_code,
                     TRIM(a.DESC_CONTO0) AS account_description,
                     TRIM(a.DESC_CONTO1) AS account_description_extended,
                     SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_CONTO0), ''), COALESCE(TRIM(a.DESC_CONTO1), '')), 256) AS account_hash_key,
                     CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
              FROM silver_{ENVIRONMENT}.tag02.conto a
              INNER JOIN gold_{ENVIRONMENT}.tag02.dim_account b
-               ON LOWER(TRIM(a.COD_CONTO)) = LOWER(b.account_code)
+               ON UPPER(TRIM(a.COD_CONTO)) = b.account_code
               AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
               AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_CONTO0), ''), COALESCE(TRIM(a.DESC_CONTO1), '')), 256) <> b.account_hash_key
               AND b.is_current = 1) a) hk) x) y) z

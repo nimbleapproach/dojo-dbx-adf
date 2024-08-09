@@ -73,7 +73,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.region_code ORDER BY date_updated)
              a.region_group,
              a.region_hash_key,
              a.date_updated      
-      FROM ( SELECT DISTINCT TRIM(a.COD_DEST2) AS region_code,
+      FROM ( SELECT DISTINCT UPPER(TRIM(a.COD_DEST2)) AS region_code,
                              TRIM(a.DESC_DEST20) AS region_name,
                              d.country_code,
                              d.country,
@@ -84,12 +84,12 @@ FROM (SELECT row_number() OVER(PARTITION BY a.region_code ORDER BY date_updated)
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.Dest2 a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_region b
-                ON LOWER(TRIM(a.COD_DEST2)) = LOWER(b.region_code)
+                ON UPPER(TRIM(a.COD_DEST2)) = b.region_code
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.region_group_country_mapping d
-                ON LOWER(TRIM(a.COD_DEST2)) = LOWER(d.region_code)                
-              WHERE LOWER(b.region_code) IS NULL
+                ON UPPER(TRIM(a.COD_DEST2)) = UPPER(d.region_code)                
+              WHERE b.region_code IS NULL
               UNION -- We either want to insert all region codes we haven't seen before or we want to insert only region codes with changed attributes
-              SELECT DISTINCT TRIM(a.COD_DEST2) AS region_code,
+              SELECT DISTINCT UPPER(TRIM(a.COD_DEST2)) AS region_code,
                               TRIM(a.DESC_DEST20) AS region_name,
                               d.country_code,
                               d.country,
@@ -100,9 +100,9 @@ FROM (SELECT row_number() OVER(PARTITION BY a.region_code ORDER BY date_updated)
                               CAST(DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.Dest2 a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.region_group_country_mapping d
-                ON LOWER(TRIM(a.COD_DEST2)) = LOWER(d.region_code)
+                ON UPPER(TRIM(a.COD_DEST2)) = UPPER(d.region_code)
               INNER JOIN gold_{ENVIRONMENT}.tag02.dim_region b
-                ON LOWER(TRIM(a.COD_DEST2)) = LOWER(b.region_code)
+                ON UPPER(TRIM(a.COD_DEST2)) = b.region_code
                AND CAST(DATEUPD AS TIMESTAMP) > b.start_datetime
                AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST20), ''), COALESCE(TRIM(d.country_code), ''), COALESCE(TRIM(d.country), ''), COALESCE(TRIM(d.country_detail), ''), COALESCE(TRIM(d.country_visuals), ''), COALESCE(TRIM(d.region_group), '')), 256) <> b.region_hash_key
                AND b.is_current = 1) a) hk) x) y) z

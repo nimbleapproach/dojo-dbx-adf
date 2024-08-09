@@ -86,7 +86,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
              a.entity_code_legacy,
              a.entity_hash_key,
              a.date_updated     
-      FROM ( SELECT DISTINCT TRIM(a.COD_AZIENDA) AS entity_code,
+      FROM ( SELECT DISTINCT UPPER(TRIM(a.COD_AZIENDA)) AS entity_code,
                              TRIM(a.DESC_AZIENDA0) AS entity_description,
                              TRIM(a.FLAG_AZIENDA) AS entity_type,
                              TRIM(a.SEDE_LEGALE) AS legal_headquarters,
@@ -100,12 +100,12 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.azienda a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_entity b
-                ON LOWER(TRIM(a.COD_AZIENDA)) = LOWER(b.entity_code)
+                ON UPPER(TRIM(a.COD_AZIENDA)) = b.entity_code
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.entity_group_mapping egm
-                ON LOWER(TRIM(a.COD_AZIENDA)) = LOWER(egm.entity_code)            
-              WHERE LOWER(b.entity_code) IS NULL
+                ON UPPER(TRIM(a.COD_AZIENDA)) = UPPER(egm.entity_code)            
+              WHERE b.entity_code IS NULL
               UNION -- We either want to insert all entity codes we haven't seen before or we want to insert only entity codes with changed attributes 
-              SELECT DISTINCT TRIM(a.COD_AZIENDA) AS entity_code,
+              SELECT DISTINCT UPPER(TRIM(a.COD_AZIENDA)) AS entity_code,
                               TRIM(a.DESC_AZIENDA0) AS entity_description,
                               TRIM(a.FLAG_AZIENDA) AS entity_type,
                               TRIM(a.SEDE_LEGALE) AS legal_headquarters,
@@ -119,9 +119,9 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
                               CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.azienda a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.entity_group_mapping egm2
-                ON LOWER(TRIM(a.COD_AZIENDA)) = LOWER(egm2.entity_code)  
+                ON UPPER(TRIM(a.COD_AZIENDA)) = UPPER(egm2.entity_code)  
               INNER JOIN gold_{ENVIRONMENT}.tag02.dim_entity b
-                ON LOWER(TRIM(a.COD_AZIENDA)) = LOWER(b.entity_code)
+                ON UPPER(TRIM(a.COD_AZIENDA)) = b.entity_code
                AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
                AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_AZIENDA0), ''), COALESCE(TRIM(a.FLAG_AZIENDA), ''), COALESCE(TRIM(a.SEDE_LEGALE), ''), COALESCE(TRIM(a.SEDE_AMMINISTRATIVA), ''), COALESCE(TRIM(a.DATA_COSTITUZIONE), ''), COALESCE(TRIM(a.TIPO_CONSOLIDAMENTO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(egm2.entity_group), ''), COALESCE(TRIM(egm2.entity_code_legacy), '')), 256) <> b.entity_hash_key
                AND b.is_current = 1) a) hk) x) y) z

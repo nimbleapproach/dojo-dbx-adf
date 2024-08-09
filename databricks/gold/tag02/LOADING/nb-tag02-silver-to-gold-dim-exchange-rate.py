@@ -66,7 +66,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.exchange_rate_code  ORDER BY date_
              a.exchange_rate,
              a.exchange_rate_hash_key,
              a.date_updated      
-      FROM ( SELECT DISTINCT CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA)) AS exchange_rate_code,      
+      FROM ( SELECT DISTINCT UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) AS exchange_rate_code,      
                              CAST(TRIM(a.COD_SCENARIO) AS STRING) AS scenario_code,
                              CAST(TRIM(a.COD_PERIODO) AS STRING) AS period,
                              CAST(TRIM(a.COD_VALUTA) AS STRING) AS currency_code,
@@ -75,10 +75,10 @@ FROM (SELECT row_number() OVER(PARTITION BY a.exchange_rate_code  ORDER BY date_
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.dati_cambio a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_exchange_rate b
-                ON LOWER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = LOWER(b.exchange_rate_code)
+                ON UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = b.exchange_rate_code
               WHERE LOWER(b.exchange_rate_code) IS NULL
               UNION -- We either want to insert all exchagne rate codes we haven't seen before or we want to insert only exchange rate codes with changed attributes 
-              SELECT DISTINCT CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA)) AS exchange_rate_code,      
+              SELECT DISTINCT UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) AS exchange_rate_code,      
                              CAST(TRIM(a.COD_SCENARIO) AS STRING) AS scenario_code,
                              CAST(TRIM(a.COD_PERIODO) AS STRING) AS period,
                              CAST(TRIM(a.COD_VALUTA) AS STRING) AS currency_code,
@@ -87,7 +87,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.exchange_rate_code  ORDER BY date_
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.dati_cambio a
               INNER JOIN gold_{ENVIRONMENT}.tag02.dim_exchange_rate b
-                ON LOWER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = LOWER(b.exchange_rate_code)
+                ON UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = b.exchange_rate_code
                AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
                AND SHA2(COALESCE(TRIM(cast(a.CAMBIO_PERIODO as decimal(18, 4))),''), 256) <> b.exchange_rate_hash_key
                AND b.is_current = 1) a) hk) x) y) z
