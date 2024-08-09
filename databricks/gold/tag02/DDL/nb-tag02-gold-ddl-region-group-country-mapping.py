@@ -90,6 +90,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC ('FR2', 'France','D2B','France','Southern Europe'),
 # MAGIC ('FR3', 'France','NU France','France','Southern Europe'),
 # MAGIC ('HR2', 'Croatia','NS Croatia','Croatia','Eastern Europe'),
+# MAGIC ('IE1', 'Vuzion','VZ UK','UK','UK'),
 # MAGIC ('IT1', 'Italy','NU Italy','Italy','Southern Europe'),
 # MAGIC ('AE1', 'Middle East + Africa','Starlink','UAE','MEA'),
 # MAGIC ('NL1', 'Netherlands','IG Netherlands','Netherlands','BENELUX'),

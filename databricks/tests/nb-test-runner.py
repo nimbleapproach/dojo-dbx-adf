@@ -1,15 +1,23 @@
 # Databricks notebook source
-# MAGIC %run ../library/nb-enable-imports
+# MAGIC %pip install pytest
 
 # COMMAND ----------
 
-import os
-import unittest
+import pytest
+import sys
+
+# Skip writing pyc files on a readonly filesystem.
+sys.dont_write_bytecode = True
+
+# Run pytest.
+retcode = pytest.main([".", "-v", "-p", "no:cacheprovider"])
+# retcode = pytest.main(["./silver", "-vv", "-p", "no:cacheprovider"])
+
+# Fail the cell execution if there are any test failures.
+assert retcode == 0, "The pytest invocation failed. See the log for details."
 
 # COMMAND ----------
 
-start_dir = os.path.abspath(".")
-loader = unittest.defaultTestLoader
-suite = loader.discover(start_dir, pattern='*_test.py')
-runner = unittest.TextTestRunner()
-runner.run(suite)
+# MAGIC %environment
+# MAGIC "client": "1"
+# MAGIC "base_environment": ""

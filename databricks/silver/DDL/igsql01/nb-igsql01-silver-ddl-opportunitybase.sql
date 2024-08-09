@@ -38,9 +38,13 @@ CREATE OR REPLACE TABLE opportunitybase (
         COMMENT 'Surrogate Key'
     ,OpportunityId STRING NOT NULL
       COMMENT 'Business Key'
-    ,CreatedOn TIMESTAMP NOT NULL
+    ,CreatedOn TIMESTAMP
+      COMMENT 'TODO'
+    ,CreatedBy STRING 
+      COMMENT 'TODO'
+    ,ModifiedOn TIMESTAMP NOT NULL
       COMMENT 'Watermark'
-    ,ModifiedOn TIMESTAMP 
+    ,ModifiedBy STRING 
       COMMENT 'TODO'
     ,CustomerId STRING 
       COMMENT 'ID of Customer Account'

@@ -1,0 +1,23 @@
+trigger:
+  - main
+
+variables:
+  - name: docker_image_name
+    value: databricks_pytest
+  - name: docker_image_tag
+    value: $(Build.BuildId)
+  - name: dockerfile_path
+    value: $(Build.SourcesDirectory)/Dockerfile
+
+stages:
+  - stage: ci
+    pool:
+      vmImage: ubuntu-latest
+    jobs:
+      - job: ci
+        steps:
+          - checkout: self
+            persistCredentials: true
+            clean: true
+
+          - template: templates/run-tests.yml

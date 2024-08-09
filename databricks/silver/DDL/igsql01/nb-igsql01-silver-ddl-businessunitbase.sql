@@ -40,10 +40,14 @@ CREATE OR REPLACE TABLE businessunitbase (
       COMMENT 'Business Key'
     ,Name STRING 
       COMMENT 'Name of Business Unit'
-    ,CreatedOn TIMESTAMP 
+    ,CreatedOn TIMESTAMP
+      COMMENT 'TODO'
+    ,CreatedBy STRING 
       COMMENT 'TODO'
     ,ModifiedOn TIMESTAMP NOT NULL
       COMMENT 'Watermark'
+    ,ModifiedBy STRING 
+      COMMENT 'TODO'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP NOT NULL
       COMMENT 'The timestamp when this entry landed in bronze.'
     ,Sys_DatabaseName STRING NOT NULL
