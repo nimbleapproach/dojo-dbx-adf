@@ -116,7 +116,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.scenario_code ORDER BY date_update
              a.scenario_version_description,
              a.scenario_hash_key,
              a.date_updated     
-      FROM ( SELECT DISTINCT TRIM(a.COD_SCENARIO) AS scenario_code,
+      FROM ( SELECT DISTINCT UPPER(TRIM(a.COD_SCENARIO)) AS scenario_code,
                              TRIM(a.TIPO_SCENARIO) AS scenario_type,
                             (CASE WHEN a.COD_SCENARIO LIKE '%ACT%' THEN 'Actual'
                                   WHEN a.COD_SCENARIO LIKE '%FC%' THEN 'Forecast'
@@ -140,10 +140,10 @@ FROM (SELECT row_number() OVER(PARTITION BY a.scenario_code ORDER BY date_update
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
                FROM silver_{ENVIRONMENT}.tag02.scenario a
                LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_scenario b
-                 ON LOWER(TRIM(a.COD_SCENARIO)) = LOWER(b.scenario_code)
-               WHERE LOWER(b.scenario_code) IS NULL
+                 ON UPPER(TRIM(a.COD_SCENARIO)) = b.scenario_code
+               WHERE b.scenario_code IS NULL
                UNION -- We either want to insert all scenario codes we haven't seen before or we want to insert only scenario codes with changed attributes
-               SELECT DISTINCT TRIM(a.COD_SCENARIO) AS scenario_code,
+               SELECT DISTINCT UPPER(TRIM(a.COD_SCENARIO)) AS scenario_code,
                              TRIM(a.TIPO_SCENARIO) AS scenario_type,
                             (CASE WHEN a.COD_SCENARIO LIKE '%ACT%' THEN 'Actual'
                                   WHEN a.COD_SCENARIO LIKE '%FC%' THEN 'Forecast'
@@ -167,7 +167,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.scenario_code ORDER BY date_update
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
                FROM silver_{ENVIRONMENT}.tag02.scenario a
                INNER JOIN gold_{ENVIRONMENT}.tag02.dim_scenario b
-                 ON LOWER(TRIM(a.COD_SCENARIO)) = LOWER(b.scenario_code)
+                 ON UPPER(TRIM(a.COD_SCENARIO)) = b.scenario_code
                 AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
                 AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.TIPO_SCENARIO), ''), COALESCE(TRIM(a.COD_SCENARIO_ORIGINARIO), ''), COALESCE(TRIM(a.DESC_SCENARIO), ''),                 COALESCE(TRIM(a.COD_SCENARIO_PREC), ''), COALESCE(TRIM(a.COD_SCENARIO_SUCC), ''), COALESCE(TRIM(a.COD_SCENARIO_RIF1), ''), COALESCE(TRIM                (a.COD_SCENARIO_RIF2), ''), COALESCE(TRIM(a.COD_SCENARIO_RIF3), ''), COALESCE(TRIM(a.COD_SCENARIO_RIF4), ''), COALESCE(TRIM(a.COD_SCENARIO_RIF5),                 ''), COALESCE(TRIM(a.COD_AZI_CAPOGRUPPO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(a.COD_CATEGORIA_GERARCHIA), ''), COALESCE(TRIM                (a.COD_CATEGORIA_ELEGER), ''), COALESCE(TRIM(a.COD_ESERCIZIO), ''), COALESCE(TRIM(a.DESC_VERSIONE), '')), 256) <> b.scenario_hash_key
                 AND b.is_current = 1) a) hk) x) y) z

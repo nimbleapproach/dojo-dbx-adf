@@ -52,22 +52,22 @@ FROM (SELECT row_number() OVER(PARTITION BY a.cost_centre_code ORDER BY date_upd
              a.cost_centre_name,
              a.cost_centre_hash_key,
              a.date_updated 
-      FROM ( SELECT DISTINCT TRIM(a.COD_DEST3) AS cost_centre_code,
+      FROM ( SELECT DISTINCT UPPER(TRIM(a.COD_DEST3)) AS cost_centre_code,
                              TRIM(a.DESC_DEST30) AS cost_centre_name,
                              SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST30), '')), 256) AS cost_centre_hash_key,
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
              FROM silver_{ENVIRONMENT}.tag02.dest3 a
              LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_cost_centre b
-               ON LOWER(TRIM(a.COD_DEST3)) = LOWER(b.cost_centre_code)
-             WHERE LOWER(b.cost_centre_code) IS NULL
+               ON UPPER(TRIM(a.COD_DEST3)) = b.cost_centre_code
+             WHERE UPPER(b.cost_centre_code) IS NULL
              UNION -- We either want to insert all cost centre codes we haven't seen before or we want to insert only cost centre codes with changed attributes
-             SELECT DISTINCT TRIM(a.COD_DEST3) AS cost_centre_code,
+             SELECT DISTINCT UPPER(TRIM(a.COD_DEST3)) AS cost_centre_code,
                              TRIM(a.DESC_DEST30) AS cost_centre_name,
                              SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST30), '')), 256) AS cost_centre_hash_key,
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
              FROM silver_{ENVIRONMENT}.tag02.dest3 a
              INNER JOIN gold_{ENVIRONMENT}.tag02.dim_cost_centre b
-               ON LOWER(TRIM(a.COD_DEST3)) = LOWER(b.cost_centre_code)
+               ON UPPER(TRIM(a.COD_DEST3)) = b.cost_centre_code
               AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
               AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST30), '')), 256) <> b.cost_centre_hash_key
               AND b.is_current = 1) a) hk) x) y) z
