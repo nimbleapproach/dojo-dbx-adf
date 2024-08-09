@@ -126,7 +126,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE VIEW tagetik_revenue AS
+# MAGIC CREATE OR REPLACE VIEW tagetik_revenue_actuals AS
 # MAGIC
 # MAGIC SELECT y.date_id,
 # MAGIC        dd.date,
@@ -205,3 +205,86 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC WHERE y.scenario_code LIKE '%ACT%'
 # MAGIC   AND (y.scenario_code LIKE '%04' OR y.scenario_code ='2025ACT-PFA-01' )
 # MAGIC
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC CREATE OR REPLACE VIEW tagetik_revenue_budget AS
+# MAGIC
+# MAGIC SELECT y.date_id AS bud_date_id,
+# MAGIC        dd.date AS bud_date_id,
+# MAGIC        CONCAT(dd.short_month_name,' - ',CAST(dd.year AS STRING)) AS bud_short_month_name_year,
+# MAGIC        y.period AS bud_period,
+# MAGIC        y.currency_code AS bud_currency_code,
+# MAGIC        y.account_code AS bud_account_code,
+# MAGIC        y.special_deal_code AS bud_special_deal_code,
+# MAGIC        y.region_code AS bud_region_code,
+# MAGIC        y.vendor_code AS bud_vendor_code,
+# MAGIC        y.cost_centre_code AS bud_cost_centre_code,
+# MAGIC        y.scenario_code AS bud_scenario_code,
+# MAGIC        y.entity_code AS bud_entity_code,
+# MAGIC        y.category AS bud_category,
+# MAGIC        y.revenue - coalesce(y.next_revenue,0) AS bud_monthly_revenue_in_lcy,
+# MAGIC        ROUND(CAST(((y.revenue - coalesce(y.next_revenue,0)) * 1 / y.exchange_rate) AS DECIMAL(20,2)),3) AS bud_monthly_revenue_in_euros,
+# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN bud_monthly_revenue_in_lcy ELSE 0 END) AS bud_total_revenue_in_lcy,
+# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN bud_monthly_revenue_in_euros ELSE 0 END) AS bud_total_revenue_in_euros,
+# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN bud_monthly_revenue_in_lcy ELSE 0 END) AS bud_total_cogs_in_lcy,
+# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN bud_monthly_revenue_in_euros ELSE 0 END) AS bud_total_cogs_in_euros,
+# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN bud_monthly_revenue_in_lcy ELSE 0 END) AS bud_total_gp1_in_lcy,
+# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN bud_monthly_revenue_in_euros ELSE 0 END) AS bud_total_gp1_in_euros
+# MAGIC FROM
+# MAGIC (
+# MAGIC SELECT x.date_id,
+# MAGIC        x.period,
+# MAGIC        x.currency_code,
+# MAGIC        x.account_code,
+# MAGIC        x.special_deal_code,
+# MAGIC        x.region_code,
+# MAGIC        x.vendor_code,
+# MAGIC        x.cost_centre_code,
+# MAGIC        x.scenario_code,
+# MAGIC        x.entity_code,
+# MAGIC        x.category,
+# MAGIC        x.revenue,
+# MAGIC        LAG (x.revenue) OVER (PARTITION BY x.currency_code, x.account_code, x.special_deal_code, x.region_code, x.vendor_code, x.cost_centre_code, x.scenario_code, x.entity_code, x.category ORDER BY x.date_id, x.period ) AS next_revenue,
+# MAGIC        x.exchange_rate
+# MAGIC FROM 
+# MAGIC (
+# MAGIC SELECT str.date_id,
+# MAGIC        str.period,
+# MAGIC        str.currency_code,
+# MAGIC        str.account_code,
+# MAGIC        str.special_deal_code,
+# MAGIC        str.region_code,
+# MAGIC        str.vendor_code,
+# MAGIC        str.cost_centre_code,
+# MAGIC        str.scenario_code,
+# MAGIC        str.entity_code,
+# MAGIC        str.category,
+# MAGIC        str.revenue,
+# MAGIC        str.exchange_rate
+# MAGIC FROM staging_tagetik_revenue str
+# MAGIC UNION ALL
+# MAGIC SELECT strap.date_id,
+# MAGIC        strap.period,
+# MAGIC        strap.currency_code,
+# MAGIC        strap.account_code,
+# MAGIC        strap.special_deal_code,
+# MAGIC        strap.region_code,
+# MAGIC        strap.vendor_code,
+# MAGIC        strap.cost_centre_code,
+# MAGIC        strap.scenario_code,
+# MAGIC        strap.entity_code,
+# MAGIC        strap.category,
+# MAGIC        strap.revenue,
+# MAGIC        strap.exchange_rate
+# MAGIC FROM staging_tagetik_revenue_adjusted_periods strap
+# MAGIC ) x
+# MAGIC ) y
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.lup_account_type atyp
+# MAGIC     ON y.account_code = atyp.account_code
+# MAGIC LEFT OUTER JOIN platinum_${tableObject.environment}.tag02.date dd
+# MAGIC     ON y.date_id = dd.date_id
+# MAGIC WHERE y.scenario_code LIKE '%BUD%'
+# MAGIC   AND (y.scenario_code LIKE '%03' OR y.scenario_code ='2025BUD-YEAR-01' )
