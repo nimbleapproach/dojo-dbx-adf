@@ -91,7 +91,7 @@ reseller_nulls_breakdown = (
             .groupBy("is_null")
             .agg((F.count("*")).alias("count"))
 )
-reseller_not_nulls, reseller_nulls = _get_false_true_vals(account_nulls_breakdown)
+reseller_not_nulls, reseller_nulls = _get_false_true_vals(reseller_nulls_breakdown)
 reseller_not_nulls, reseller_nulls
 
 # COMMAND ----------
