@@ -28,8 +28,8 @@ CASE
 WHEN invoice.Entity = '1' THEN 'BE2'
 WHEN invoice.Entity = '2' THEN 'NL3'
 END AS EntityCode,
-to_date(invoice.Invoice_Date) AS TransactionDate,
-to_date(invoice.SO_Date) AS SalesOrderDate,
+coalesce(to_date(Invoice_Date),TO_DATE(CAST(UNIX_TIMESTAMP(Invoice_Date, 'MM/dd/yyyy') AS timestamp)) )AS TransactionDate,
+ coalesce(to_date(invoice.SO_Date),TO_DATE(CAST(UNIX_TIMESTAMP(invoice.SO_Date, 'MM/dd/yyyy') AS timestamp)) )AS SalesOrderDate,
 coalesce(invoice.SO,'NaN') AS SalesOrderID,
 'NaN' AS SalesOrderItemID,
 COALESCE(invoice.SKU,'NaN') AS SKUInternal,
@@ -161,4 +161,5 @@ df_selection = df_dcb.select(selection_columns)
 
 # COMMAND ----------
 
+spark.conf.set("spark.sql.legacy.timeParserPolicy","LEGACY")
 df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'NU' AND EntityCode IN ('BE2', 'NL3')").saveAsTable("globaltransactions")
