@@ -19,12 +19,6 @@
 			"pm_Environment": {
 				"type": "string"
 			},
-			"pm_TableName": {
-				"type": "string"
-			},
-			"pm_SchemaName": {
-				"type": "string"
-			},
 			"pm_DatabaseName": {
 				"type": "string"
 			}
@@ -37,7 +31,7 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": "dbo",
-			"table": "igv_Report_EndCustomer_Reseller_SalesFeed"
+			"table": "igv_Report_PM_EndCustomers"
 		}
 	}
 }
