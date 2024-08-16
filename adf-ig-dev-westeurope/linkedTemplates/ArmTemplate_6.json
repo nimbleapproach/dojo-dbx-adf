@@ -367,7 +367,7 @@
 								"value": "@activity('Get DatabasesControl Table').output.value",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "PL_20_IGSQL03_Load_View",
