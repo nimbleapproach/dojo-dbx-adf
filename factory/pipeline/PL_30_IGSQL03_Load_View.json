@@ -25,8 +25,8 @@
 								}
 							],
 							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
+								"timeout": "0.00:30:00",
+								"retry": 2,
 								"retryIntervalInSeconds": 30,
 								"secureOutput": false,
 								"secureInput": false
@@ -55,7 +55,8 @@
 										"value": "Select * FROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\nwhere [Sys_RowNumber] > @{variables('v_Watermark')}\n",
 										"type": "Expression"
 									},
-									"queryTimeout": "02:00:00",
+									"queryTimeout": "01:30:00",
+									"isolationLevel": "ReadCommitted",
 									"partitionOption": "None"
 								},
 								"sink": {
@@ -271,8 +272,8 @@
 								}
 							],
 							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
+								"timeout": "0.00:30:00",
+								"retry": 2,
 								"retryIntervalInSeconds": 30,
 								"secureOutput": false,
 								"secureInput": false
@@ -505,8 +506,8 @@
 								}
 							],
 							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
+								"timeout": "0.00:30:00",
+								"retry": 2,
 								"retryIntervalInSeconds": 30,
 								"secureOutput": false,
 								"secureInput": false
@@ -535,7 +536,8 @@
 										"value": "Select * FROM  [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\nwhere [Sys_RowNumber] <= '@{variables('v_NewWatermark')}'",
 										"type": "Expression"
 									},
-									"queryTimeout": "02:00:00",
+									"queryTimeout": "01:30:00",
+									"isolationLevel": "ReadCommitted",
 									"partitionOption": "None"
 								},
 								"sink": {
