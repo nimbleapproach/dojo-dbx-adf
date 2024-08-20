@@ -3,18 +3,36 @@ import os
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
-# COMMAND ----------
-
+# SET TO False BEFORE DEPLOYMENT
+run_local = False # set to False before deploy
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
+if run_local == True :
+    trans = "phil_globaltransactions"
+    vuzion_trans = 'phil_vuzion_globaltransactions'
+    trans_with_gp1 = f"phil_vuzion_globaltransactions_gp1"
+    trans_without_gp1 = f"phil_vuzion_globaltransactions_without_gp1"
+    spark.sql(f"drop table if exists {trans_without_gp1}")
+    spark.sql(f"drop table if exists {trans_with_gp1}")
+    spark.sql(f"drop view if exists {vuzion_trans}")
+    spark.sql("drop view if exists Product_GP1")
+    spark.sql("drop table if exists detid_deferred_periods")
+    spark.sql(f"create table if not exists {trans_with_gp1} as select * from gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_gp1")
+    spark.sql(f"create table if not exists {trans} as select * from gold_{ENVIRONMENT}.obt.globaltransactions")
+else:
+    trans = f"gold_{ENVIRONMENT}.obt.globaltransactions"
+    vuzion_trans = f"gold_{ENVIRONMENT}.obt.vuzion_globaltransactions"
+    trans_with_gp1 = f"gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_gp1"
+    trans_without_gp1 = f"gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1"
+    spark.sql(f"""TRUNCATE TABLE {trans_without_gp1}""")
+
+print("Running with\n")
+print("Tables = ", "\n", trans , "\n", vuzion_trans , "\n", trans_without_gp1)
+
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC Use SCHEMA obt
-
-# COMMAND ----------
-
-spark.sql(f"""TRUNCATE TABLE gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1""")
 
 # COMMAND ----------
 
@@ -33,10 +51,73 @@ WHERE Row_Number = 1
 
 # COMMAND ----------
 
-# DBTITLE 1,Silver to Gold Vuzion
-df = spark.sql(f"""
+# DBTITLE 1,Derived the deferred transactions and periods
 
-WITH initial_query
+from pyspark.sql import functions as F
+from pyspark.sql.types import ArrayType, IntegerType
+from pyspark.sql import Window
+
+# Generate a range of periods for each doc based on DetSDate and DetEDate ranges
+def generate_date_range(start, end):
+    return [x for x in range(start, end + 86400, 86400)]  # 86400 seconds in a day
+
+# register the UDF
+generate_date_range_udf = F.udf(generate_date_range, returnType=ArrayType(IntegerType()))
+
+def create_detid_month_view():
+ 
+    df_docdet = spark.table(f"silver_{ENVIRONMENT}.cloudblue_pba.DocDet")
+                   #where from_unixtime(DetSDate, 'yyyy-MM-dd') >='2024-04-01'")
+
+    # we need to group by DocID to provide a count of the months between start and end
+    # we use this to identify deferred revenue AND to exclude 10+ year revenue (talk to Maneesh)
+    w = Window.partitionBy('DetID')
+
+    # only grab the iscurrent stuff
+    filtered_df = df_docdet.filter(
+        (df_docdet.Sys_Silver_IsCurrent == True) 
+        &
+        (
+            df_docdet.DetSDate < df_docdet.DetEDate
+        )
+    )
+
+    # in order to create a range of dates between start and end, they must first be converted to date columns
+    # subtract 1 from end date to ensure that amounts are deferred into the correct months because we only
+    # defer revenue where the months diff > 2 and < 120. AND the sequence generator below is INCLUSIVE
+    # so for example a year would generate 13 periods, hence the minus 1
+    filtered_df = filtered_df \
+    .withColumn('def_start_date', F.from_unixtime('DetSDate', "yyyy-MM-dd").cast("date")) \
+    .withColumn('def_end_date', F.add_months(F.from_unixtime("DetEDate", "yyyy-MM-dd").cast("date"),-1))
+
+    # DO NOT DEFER ANY REVENUE >= 10 YEARS BETWEEN START AND END DATES
+    # the code picks up > 2 and <=120.  
+    # thats because finance don't defer any revenue where the diff in months is 0-2, they take the full amount
+    deferrals_df = filtered_df.filter(
+        (F.months_between(filtered_df.def_end_date, filtered_df.def_start_date) > 2) # Not deffered revenune if < = 2 months
+        &
+        (F.months_between(filtered_df.def_end_date, filtered_df.def_start_date) < 120) # ignore ten year revenue
+    )
+ 
+    # Now generate the dates inbetween start and end at the MONTH granularity, i.e. month level
+    expanded_df = deferrals_df \
+        .withColumn('DeferredDate', F.explode(F.expr('sequence(def_start_date, def_end_date, interval 1 month)'))).select("DetID","DeferredDate") \
+        .withColumn("DeferredPeriod", F.date_format("DeferredDate","yyyyMM")) \
+        .withColumn("PeriodCount", F.count("DetID").over(w)).distinct()
+
+    # Store this as a temp view for processing later
+    if run_local == True:
+        expanded_df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("detid_deferred_periods")
+    else:
+        expanded_df.select("DetID", "DeferredDate", "DeferredPeriod", "PeriodCount").createOrReplaceTempView("detid_deferred_periods")
+     
+
+create_detid_month_view()
+
+# COMMAND ----------
+
+# DBTITLE 1,Silver to Gold Vuzion
+initial_sql = f"""WITH initial_query
 AS 
 (
 --Main Revenue
@@ -358,7 +439,9 @@ SELECT
   GroupEntityCode,
   RevenueType,  
   EntityCode,
-  TransactionDate,
+  case when dp.deferreddate is null then TransactionDate 
+    else to_date(cast(year(dp.deferreddate) as string)||'-'||right('00'||cast(month(dp.deferreddate) as string),2)||'-01' )
+    end as TransactionDate,
   SalesOrderDate,
   SalesOrderID,
   SalesOrderItemID,
@@ -387,22 +470,34 @@ SELECT
   CurrencyCode,
   p.GPPercentage,
   NewDescription,
-  RevenueAmount,
-  Product
+  case when dp.periodcount is null then RevenueAmount
+    else cast((g.RevenueAmount / dp.periodcount) as decimal(10,2)) 
+    end as RevenueAmount,
+  Product,
+  case when dp.periodcount is null then false
+    else true
+    end as DeferredRevenue,
+  ifnull(dp.PeriodCount, 1) as PeriodCount
 FROM
   product_cte g
 LEFT JOIN
   Product_GP1 p
 ON
   g.Product = p.SKUDescription
-""")
+LEFT JOIN 
+  detid_deferred_periods dp
+ON
+  dp.DetID = g.SalesOrderItemID
 
-df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("vuzion_globaltransactions_without_gp1")
+"""
+df_initial = spark.sql(initial_sql)
+
+df_initial.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{trans_without_gp1}")
 
 # COMMAND ----------
 
 # DBTITLE 1,Optimize Gold Transactions
-spark.sql(f"""OPTIMIZE gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1""")
+spark.sql(f"""OPTIMIZE {trans_without_gp1}""")
 spark.sql(f"""OPTIMIZE gold_{ENVIRONMENT}.obt.vuzion_gp""")
 
 # COMMAND ----------
@@ -413,24 +508,27 @@ from pyspark.sql import Window
 
 df_vuzion_gp = spark.read.table("Product_GP1")
 
-df_vuzion_data = spark.sql(f"""SELECT DISTINCT NewDescription FROM gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1 WHERE Product IS NULL""")
+df_vuzion_data = spark.sql(f"""SELECT DISTINCT NewDescription FROM {trans_without_gp1} WHERE Product IS NULL""")
 
 df_vuzion_data.cache()
 
-df = df_vuzion_data.crossJoin(broadcast(df_vuzion_gp))
+df_crossjoin = df_vuzion_data.crossJoin(broadcast(df_vuzion_gp))
 
-df = df.withColumn("Similarity",(levenshtein('SKUDescription', 'NewDescription'))).filter('Similarity == 0')
+df_crossjoin_similar = df_crossjoin.withColumn("Similarity",(levenshtein('SKUDescription', 'NewDescription'))).filter('Similarity == 0')
 
-df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("vuzion_globaltransactions_gp1")
+df_crossjoin_similar.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{trans_with_gp1}")
+
 
 # COMMAND ----------
 
 # DBTITLE 1,Silver to Gold Vuzion
-spark.sql(f"""
-          
-CREATE OR Replace VIEW vuzion_globaltransactions AS
+if run_local == True:
+  create_sql = f"CREATE OR Replace temporary VIEW {vuzion_trans} AS "
+else:
+  create_sql = f"CREATE OR Replace VIEW {vuzion_trans} AS "
 
-SELECT
+spark.sql(f"""{create_sql}
+SELECT 
   GroupEntityCode,
   RevenueType,  
   EntityCode,
@@ -465,30 +563,34 @@ SELECT
   g.Product,
   g.NewDescription,  
   RevenueAmount,
-  CASE
-  WHEN g.GPPercentage IS NOT NULL THEN
-  CAST(RevenueAmount - ((RevenueAmount * g.GPPercentage)/100) AS DECIMAL(10,2))
-  WHEN c.GPPercentage IS NOT NULL THEN
-  CAST(RevenueAmount - ((RevenueAmount * c.GPPercentage)/100) AS DECIMAL(10,2))
-  ELSE
-  0.00
-  END AS CostAmount,
-  CASE
-  WHEN g.GPPercentage IS NOT NULL THEN
-  CAST((RevenueAmount * g.GPPercentage)/100 AS DECIMAL(10,2))
-  WHEN c.GPPercentage IS NOT NULL THEN
-  CAST((RevenueAmount * c.GPPercentage)/100 AS DECIMAL(10,2))
-  ELSE
-  0.00
-  END AS GP1
+  (
+    CASE
+      WHEN g.GPPercentage IS NOT NULL THEN
+        CAST(RevenueAmount - ((RevenueAmount * g.GPPercentage)/100) AS DECIMAL(10,2))
+      WHEN c.GPPercentage IS NOT NULL THEN
+        CAST(RevenueAmount - ((RevenueAmount * c.GPPercentage)/100) AS DECIMAL(10,2))
+      ELSE
+        0.00
+      END
+  ) AS CostAmount,
+  (
+    CASE
+      WHEN g.GPPercentage IS NOT NULL THEN
+        CAST((RevenueAmount * g.GPPercentage)/100 AS DECIMAL(10,2))
+      WHEN c.GPPercentage IS NOT NULL THEN
+        CAST((RevenueAmount * c.GPPercentage)/100 AS DECIMAL(10,2))
+      ELSE
+        0.00
+      END
+  ) AS GP1
 FROM 
-  gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_without_gp1 g
+  {trans_without_gp1} g
 LEFT JOIN 
-  gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_gp1 c
+  {trans_with_gp1} c
 ON
   g.NewDescription = c.NewDescription
 WHERE
-upper(g.SKUInternal) <> 'VUZION-TSA'
+  upper(g.SKUInternal) <> 'VUZION-TSA'
 """)
 
 # COMMAND ----------
@@ -497,8 +599,9 @@ spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
 
 # COMMAND ----------
 
-df_obt = spark.read.table('globaltransactions')
-df_vuzion = spark.read.table(f'gold_{ENVIRONMENT}.obt.vuzion_globaltransactions')
+df_obt = spark.read.table(f"{trans}")
+df_vuzion = spark.read.table(f"{vuzion_trans}")
+
 
 # COMMAND ----------
 
@@ -515,4 +618,8 @@ df_selection = df_vuzion.select(selection_columns)
 
 # COMMAND ----------
 
-df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'VU'").saveAsTable("globaltransactions")
+if run_local == True:
+  df_selection.createOrReplaceTempView(f"{trans}")
+else:
+  df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'VU'").saveAsTable(f"{trans}")
+

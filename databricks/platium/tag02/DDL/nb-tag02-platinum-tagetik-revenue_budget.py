@@ -103,7 +103,8 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        vendor_code,
 # MAGIC        cost_centre_code,
 # MAGIC        scenario_code,
-# MAGIC        entity_code
+# MAGIC        entity_code,
+# MAGIC        category
 # MAGIC FROM staging_tagetik_revenue
 # MAGIC GROUP BY ALL
 # MAGIC HAVING MAX(Period) != 12
@@ -117,6 +118,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC  AND y.cost_centre_code = x.cost_centre_code
 # MAGIC  AND y.scenario_code = x.scenario_code
 # MAGIC  AND y.entity_code = x.entity_code
+# MAGIC  AND y.category = x.category
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_exchange_rate der
 # MAGIC   ON CONCAT(y.scenario_code,'_',RIGHT(CONCAT('0',CAST(x.max_period + 1 AS STRING)),2),'_',y.currency_code) = der.exchange_rate_code
 # MAGIC  AND CAST(NOW() AS TIMESTAMP) BETWEEN der.start_datetime AND COALESCE(der.end_datetime,'9999-12-31')
