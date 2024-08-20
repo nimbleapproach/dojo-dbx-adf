@@ -27,6 +27,7 @@ SELECT
 CASE
 WHEN invoice.Entity = '1' THEN 'BE2'
 WHEN invoice.Entity = '2' THEN 'NL3'
+ELSE 'BE2'
 END AS EntityCode,
 coalesce(to_date(Invoice_Date),TO_DATE(CAST(UNIX_TIMESTAMP(Invoice_Date, 'MM/dd/yyyy') AS timestamp)) )AS TransactionDate,
  coalesce(to_date(invoice.SO_Date),TO_DATE(CAST(UNIX_TIMESTAMP(invoice.SO_Date, 'MM/dd/yyyy') AS timestamp)) )AS SalesOrderDate,
@@ -95,6 +96,7 @@ AND
   END = rg.Entity
 WHERE
   invoice.Sys_Silver_IsCurrent = true
+  AND coalesce(Net_Price,Margin) is not null
 )
 
 SELECT
@@ -139,7 +141,8 @@ SELECT
   CostAmount,
   GP1
 FROM
-  initial_query""")
+  initial_query
+ """)
 
 # COMMAND ----------
 
