@@ -52,22 +52,22 @@ FROM (SELECT row_number() OVER(PARTITION BY a.vendor_code ORDER BY date_updated)
              a.vendor_name,
              a.vendor_hash_key,
              a.date_updated    
-      FROM ( SELECT DISTINCT TRIM(a.COD_DEST1) AS vendor_code,
+      FROM ( SELECT DISTINCT UPPER(TRIM(a.COD_DEST1)) AS vendor_code,
                              TRIM(a.DESC_DEST10) AS vendor_name,
                              SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST10), '')), 256) AS vendor_hash_key,
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.Dest1 a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_vendor b
-                ON LOWER(TRIM(a.COD_DEST1)) = LOWER(b.vendor_code)
-              WHERE LOWER(b.vendor_code) IS NULL
+                ON UPPER(TRIM(a.COD_DEST1)) = b.vendor_code
+              WHERE b.vendor_code IS NULL
               UNION -- We either want to insert all vendor codes we haven't seen before or we want to insert only vendor codes with changed attributes
-              SELECT DISTINCT TRIM(a.COD_DEST1) AS vendor_code,
+              SELECT DISTINCT UPPER(TRIM(a.COD_DEST1)) AS vendor_code,
                              TRIM(a.DESC_DEST10) AS vendor_name,
                              SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST10), '')), 256) AS vendor_hash_key,
                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.Dest1 a
               INNER JOIN gold_{ENVIRONMENT}.tag02.dim_vendor b
-                ON LOWER(TRIM(a.COD_DEST1)) = LOWER(b.vendor_code)
+                ON UPPER(TRIM(a.COD_DEST1)) = b.vendor_code
                AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
                AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_DEST10), '')), 256) <> b.vendor_hash_key
                AND b.is_current = 1) a) hk) x) y) z

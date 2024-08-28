@@ -20,12 +20,15 @@
 						"type": "Expression"
 					},
 					"isSequential": false,
-					"batchCount": 4,
+					"batchCount": 5,
 					"activities": [
 						{
 							"name": "PL_30_IGSQL03_Load_View",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {

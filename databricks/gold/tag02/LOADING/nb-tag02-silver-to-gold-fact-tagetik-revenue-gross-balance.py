@@ -84,7 +84,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_entity e
 # MAGIC   ON LOWER(dsl.COD_AZIENDA) = LOWER(e.entity_code)
 # MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
-# MAGIC WHERE (LEFT(dsl.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all categories for finance report
+# MAGIC WHERE (COD_SCENARIO NOT LIKE '%OB%')
+# MAGIC   AND (LEFT(dsl.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all categories for finance report
 # MAGIC   AND ( dsl.COD_CATEGORIA LIKE "%AMOUNT"
 # MAGIC       OR dsl.COD_CATEGORIA IN ( 'ADJ01',
 # MAGIC                             'ADJ02',

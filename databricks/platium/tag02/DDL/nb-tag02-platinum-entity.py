@@ -27,7 +27,9 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        legal_headquarters,
 # MAGIC        administrative_city,
 # MAGIC        date_established,
-# MAGIC        entity_local_currency
+# MAGIC        entity_local_currency,
+# MAGIC        entity_group,
+# MAGIC        entity_code_legacy 
 # MAGIC FROM gold_${tableObject.environment}.tag02.dim_entity
 # MAGIC WHERE is_current = 1
 # MAGIC

@@ -540,9 +540,9 @@ select
     --- [yz]22.03.2024 Add country split here after the msp usage join
  case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
           --- [yz]03.05.2024 Vendor specific region split
-      WHEN CTE.Sys_DatabaseName = 'ReportsAT' AND cte.VendorCode ='ZZ_INF' THEN 'DE1' 
+      WHEN CTE.Sys_DatabaseName = 'ReportsAT' AND cte.VendorCode ='ZZ_INF' and cte.Gen_Bus_PostingGroup not like'%-IC'THEN 'DE1' 
      when cte.Reseller_Country_RegionCode = 'AT' AND cte.VendorCode NOT LIKE '%SOW%'
-                                                AND cte.VendorCode NOT IN ('DAT','ITG', 'RFT') AND cte.EntityCode = 'DE1' THEN 'AT1' 
+                                                AND cte.VendorCode NOT IN (/*'DAT',*/'ITG', 'RFT') AND cte.EntityCode = 'DE1' THEN 'AT1' 
 
      ELSE cte.EntityCode END AS EntityCode,
   CTE.Sys_DatabaseName,

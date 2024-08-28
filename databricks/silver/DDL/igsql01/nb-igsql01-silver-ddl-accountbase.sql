@@ -38,48 +38,60 @@ CREATE OR REPLACE TABLE accountbase (
         COMMENT 'Surrogate Key'
     ,AccountId STRING NOT NULL
       COMMENT 'Business Key'
-    ,OwningBusinessUnit STRING 
+    ,OwningBusinessUnit STRING
       COMMENT 'TODO'
-    ,Name STRING 
+    ,Name STRING
       COMMENT 'Name of Customer'
-    ,AccountNumber STRING 
+    ,AccountNumber STRING
       COMMENT 'Business Customer ID'
-    ,CreatedOn TIMESTAMP 
+    ,Telephone1 STRING
       COMMENT 'TODO'
-    ,ModifiedOn TIMESTAMP 
+    ,Fax STRING
       COMMENT 'TODO'
-    ,StatusCode INT 
+    ,CreatedOn TIMESTAMP
       COMMENT 'TODO'
-    ,inf_businessrel_VENDOR BOOLEAN 
+    ,CreatedBy STRING 
       COMMENT 'TODO'
-    ,Inf_CountryId STRING 
+    ,ModifiedOn TIMESTAMP NOT NULL
+      COMMENT 'Watermark'
+    ,ModifiedBy STRING 
       COMMENT 'TODO'
-    ,inf_businessrel_NPP BOOLEAN 
+    ,ParentAccountId STRING
       COMMENT 'TODO'
-    ,inf_businessrel_PP BOOLEAN 
+    ,StatusCode INT
       COMMENT 'TODO'
-    ,inf_businessrel_COMP BOOLEAN 
+    ,inf_businessrel_VENDOR BOOLEAN
       COMMENT 'TODO'
-    ,inf_businessrel_NPP_COR BOOLEAN 
+    ,Inf_CountryId STRING
       COMMENT 'TODO'
-    ,Inf_LastModifiedOn TIMESTAMP 
+    ,inf_businessrel_NPP BOOLEAN
       COMMENT 'TODO'
-    ,inf_CurrencyCode STRING 
+    ,inf_businessrel_PP BOOLEAN
       COMMENT 'TODO'
-    ,inf_customerno STRING 
+    ,inf_businessrel_COMP BOOLEAN
+      COMMENT 'TODO'
+    ,inf_businessrel_NPP_COR BOOLEAN
+      COMMENT 'TODO'
+    ,Inf_LastModifiedOn TIMESTAMP
+      COMMENT 'TODO'
+    ,inf_CurrencyCode STRING
+      COMMENT 'TODO'
+    ,inf_customerno STRING
       COMMENT 'Customer ID'
-    ,inf_Name2 STRING 
+    ,inf_Name2 STRING
       COMMENT 'Alternative Name'
-    ,inf_businessrelationinfo STRING 
+    ,inf_businessrelationinfo STRING
       COMMENT 'TODO'
-    ,inf_businessrel_CUSTOMER BOOLEAN 
+    ,inf_businessrel_CUSTOMER BOOLEAN
       COMMENT 'TODO'
-    ,inf_businessrel_SUPPLIER BOOLEAN 
+    ,inf_businessrel_SUPPLIER BOOLEAN
       COMMENT 'TODO'
-    ,inf_invoicedispatchtype INT 
+    ,inf_invoicedispatchtype INT
       COMMENT 'TODO'
-    ,inf_businessrel_endcust BOOLEAN 
+    ,inf_businessrel_endcust BOOLEAN
       COMMENT 'TODO'
+    ,inf_KeyAccount STRING
+      COMMENT 'Key Account ID'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP NOT NULL
       COMMENT 'The timestamp when this entry landed in bronze.'
     ,Sys_DatabaseName STRING NOT NULL
@@ -94,9 +106,9 @@ CREATE OR REPLACE TABLE accountbase (
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
       COMMENT 'Flag if this is the current version.'
-  ,CONSTRAINT accountbase_pk PRIMARY KEY(AccountId, Sys_DatabaseName, Sys_Bronze_InsertDateTime_UTC)
+  ,CONSTRAINT accountbase_pk PRIMARY KEY(AccountId, Sys_DatabaseName, ModifiedOn)
 )
-COMMENT 'This table contains the data for customer account.' 
+COMMENT 'This table contains the data for customer account.'
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
 CLUSTER BY (AccountId, Sys_DatabaseName)
 
@@ -105,3 +117,9 @@ CLUSTER BY (AccountId, Sys_DatabaseName)
 ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
 ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
 ALTER TABLE accountbase ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+
+-- COMMAND ----------
+
+-- MAGIC %environment
+-- MAGIC "client": "1"
+-- MAGIC "base_environment": ""

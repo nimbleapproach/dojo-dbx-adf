@@ -1,26 +1,25 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+
+trigger:
+  - testing
 
 variables:
-- group: vg-inf-edw-deployment
-trigger:
-- testing
+  - group: vg-inf-edw-deployment
+  - group: inf-edw-uat
+
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- checkout: self
-  path: main
-  clean: false
+  - checkout: self
+    path: main
+    clean: false
 
-- task: AzurePowerShell@5
-  inputs:
-    azureSubscription: 'SC-ARM-EDW-UAT'
-    ScriptType: 'FilePath'
-    ScriptPath: '../main/deployment/scripts/ps_db_update_repo.ps1'
-    ScriptArguments: '-AzureDevOpsBranch $(v-uat-branch) -Token $(v-uat-token) -DatabricksRepoURI $(v-uat-databricks-repo-uri)'
-    azurePowerShellVersion: 'LatestVersion'
-    pwsh: true
+  - task: AzurePowerShell@5
+    inputs:
+      azureSubscription: 'SC-ARM-EDW-UAT'
+      ScriptType: 'FilePath'
+      ScriptPath: '../main/deployment/scripts/ps_db_update_repo.ps1'
+      ScriptArguments: '-AzureDevOpsBranch testing -Token $(databricks-bearer-token) -DatabricksRepoURI $(v-uat-databricks-repo-uri)'
+      azurePowerShellVersion: 'LatestVersion'
+      pwsh: true

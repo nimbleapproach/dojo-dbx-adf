@@ -30,7 +30,28 @@ concat(right(gle.Sys_DatabaseName,2 ),'1') as EntityCode,
 region.DimensionValueCode AS RegionID,
 gle.GlobalDimension1Code as VendorCode,
 ven.Name as VendorName,
-SUM( gle.Amount) as CostAmount
+SUM( gle.Amount) as CostAmount,
+CASE WHEN ga.Consol_CreditAcc_ IN (
+--- Revenue level adj.
+'309988'
+,'310188'
+,'310288'
+,'310388'
+,'310488'
+,'310588'
+,'310688'
+,'310788'
+,'310888'
+,'310988'
+,'311088'
+,'312088'
+,'313088'
+,'314088'
+,'320988'
+,'322988'
+,'370988') THEN 'Revenue' ELSE 'GP1'
+END AS GL_Group
+
  from silver_{ENVIRONMENT}.igsql03.g_l_entry gle
  left join silver_{ENVIRONMENT}.igsql03.g_l_account ga
  on gle.G_LAccountNo_ = ga.No_
@@ -58,7 +79,8 @@ and region.DimensionCode = 'RPTREGION'
 where gle.Sys_Silver_IsCurrent=1
 
 and ga.Consol_CreditAcc_ in (
-  '309988'
+--- Revenue level adj.
+'309988'
 ,'310188'
 ,'310288'
 ,'310388'
@@ -74,11 +96,13 @@ and ga.Consol_CreditAcc_ in (
 ,'314088'
 ,'320988'
 ,'322988'
+,'370988'
+
+--- GP1 level adj.
 ,'350988'
 ,'351988'
-,'370988'
-,'371988'
 ,'391988'
+,'371988'
 ,'400988'
 ,'401988'
 ,'402988'
@@ -110,13 +134,14 @@ select
 gl.DocumentNo_
 ,gl.PostingDate
 ,gl.Sys_DatabaseName
-,case when gl.EntityCode ='DE1' AND gl.RegionID = 'AT' and gl.VendorCode not in ('ZZ_INF','SOW','DAT','ITG', 'RFT') THEN 'AT1'
+,case when gl.EntityCode ='DE1' AND gl.RegionID = 'AT' and gl.VendorCode not in ('ZZ_INF','SOW',/*'DAT',*/'ITG', 'RFT') THEN 'AT1'
       when gl.EntityCode ='NL1' AND gl.RegionID = 'BE' THEN 'BE1'
       ELSE gl.EntityCode END AS EntityCode
 ,gl.VendorCode
 ,gl.VendorName
 ,gl.CostAmount
 ,coalesce(gl.CostAmount, 0)/e.Period_FX_rate as CostAmount_EUR
+,GL_Group
 from gl 
 LEFT JOIN
   gold_{ENVIRONMENT}.obt.exchange_rate e

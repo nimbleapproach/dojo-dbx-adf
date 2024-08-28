@@ -40,9 +40,13 @@ CREATE OR REPLACE TABLE businessunitbase (
       COMMENT 'Business Key'
     ,Name STRING 
       COMMENT 'Name of Business Unit'
-    ,CreatedOn TIMESTAMP 
+    ,CreatedOn TIMESTAMP
       COMMENT 'TODO'
-    ,ModifiedOn TIMESTAMP 
+    ,CreatedBy STRING 
+      COMMENT 'TODO'
+    ,ModifiedOn TIMESTAMP NOT NULL
+      COMMENT 'Watermark'
+    ,ModifiedBy STRING 
       COMMENT 'TODO'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP NOT NULL
       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -58,7 +62,7 @@ CREATE OR REPLACE TABLE businessunitbase (
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
       COMMENT 'Flag if this is the current version.'
-  ,CONSTRAINT businessunitbase_pk PRIMARY KEY(BusinessUnitId, Sys_DatabaseName, Sys_Bronze_InsertDateTime_UTC)
+  ,CONSTRAINT businessunitbase_pk PRIMARY KEY(BusinessUnitId, Sys_DatabaseName, ModifiedOn)
 )
 COMMENT 'This table contains the data for business unit.' 
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')

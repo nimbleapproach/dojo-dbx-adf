@@ -1,0 +1,26 @@
+steps:
+  - task: DockerInstaller@0
+    displayName: Install Docker CLI
+    inputs:
+      dockerVersion: 17.09.0-ce
+
+  - task: Docker@2
+    displayName: Build Docker Image
+    inputs:
+      command: build
+      dockerfile: $(dockerfile_path)
+      repository: $(docker_image_name)
+      tag: $(docker_image_tag)
+
+  - task: Bash@3
+    displayName: Run Integration Tests
+    inputs:
+      failOnStderr: true
+      targetType: inline
+      script: |
+        docker run \
+          --rm \
+          --volume $(System.DefaultWorkingDirectory):/app/ \
+          --workdir /app/ \
+            $(docker_image_name):$(Build.BuildId) \
+              /databricks/python3/bin/python -m pytest
