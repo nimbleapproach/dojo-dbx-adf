@@ -19,7 +19,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE VIEW staging_tagetik_revenue AS
+# MAGIC CREATE OR REPLACE VIEW staging_tagetik_revenue_budget AS
 # MAGIC SELECT ftr.date_sk AS date_id,
 # MAGIC        ftr.period,
 # MAGIC        der.currency_code,
@@ -54,6 +54,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC INNER JOIN gold_${tableObject.environment}.tag02.dim_entity de
 # MAGIC     ON ftr.entity_sk = de.dim_entity_pk
 # MAGIC WHERE ftr.Sys_Gold_is_active = 1
+# MAGIC AND ds.scenario_code IN ('2025BUD-YEAR-01', '2024BUD-YEAR-02')
 # MAGIC GROUP BY ftr.date_sk,
 # MAGIC        ftr.period,
 # MAGIC        der.currency_code,
@@ -77,57 +78,6 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE VIEW staging_tagetik_revenue_adjusted_periods AS
-# MAGIC
-# MAGIC SELECT CAST(date_format(CAST((CASE WHEN x.max_period+1 BETWEEN 1 AND 9 THEN DATEADD(YEAR,-1,(DATEADD(MONTH,3,CONCAT(LEFT(x.scenario_code,4),'-', RIGHT(CONCAT('0',CAST(x.max_period + 1 AS STRING)),2),'-01'))))
-# MAGIC                                    WHEN x.max_period+1 BETWEEN 10 AND 12 THEN DATEADD(MONTH,-9,CONCAT(LEFT(x.scenario_code, 4),'-',RIGHT(CONCAT('0',CAST(x.max_period + 1 AS STRING)),2),'-01')) END) AS DATE), 'yyyyMMdd') AS INT) AS date_id,
-# MAGIC        RIGHT(CONCAT('0',CAST(x.max_period + 1 AS STRING)),2) AS period,
-# MAGIC        y.currency_code,
-# MAGIC        y.account_code,
-# MAGIC        y.special_deal_code,
-# MAGIC        y.region_code,
-# MAGIC        y.vendor_code,
-# MAGIC        y.cost_centre_code,
-# MAGIC        y.scenario_code,
-# MAGIC        y.entity_code,
-# MAGIC        y.category,
-# MAGIC        CAST(0 AS DECIMAL(20,2)) AS revenue,
-# MAGIC        der.exchange_rate
-# MAGIC FROM staging_tagetik_revenue y
-# MAGIC INNER JOIN (
-# MAGIC SELECT CAST(MAX(Period) AS INT) AS max_period,
-# MAGIC        currency_code,
-# MAGIC        account_code,
-# MAGIC        special_deal_code,
-# MAGIC        region_code,
-# MAGIC        vendor_code,
-# MAGIC        cost_centre_code,
-# MAGIC        scenario_code,
-# MAGIC        entity_code,
-# MAGIC        category
-# MAGIC FROM staging_tagetik_revenue
-# MAGIC GROUP BY ALL
-# MAGIC HAVING MAX(Period) != 12
-# MAGIC ) x
-# MAGIC   ON y.period = x.max_period
-# MAGIC  AND y.currency_code = x.currency_code
-# MAGIC  AND y.account_code = x.account_code
-# MAGIC  AND y.special_deal_code = x.special_deal_code
-# MAGIC  AND y.region_code = x.region_code
-# MAGIC  AND y.vendor_code = x.vendor_code
-# MAGIC  AND y.cost_centre_code = x.cost_centre_code
-# MAGIC  AND y.scenario_code = x.scenario_code
-# MAGIC  AND y.entity_code = x.entity_code
-# MAGIC  AND y.category = x.category
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_exchange_rate der
-# MAGIC   ON CONCAT(y.scenario_code,'_',RIGHT(CONCAT('0',CAST(x.max_period + 1 AS STRING)),2),'_',y.currency_code) = der.exchange_rate_code
-# MAGIC  AND CAST(NOW() AS TIMESTAMP) BETWEEN der.start_datetime AND COALESCE(der.end_datetime,'9999-12-31')
-# MAGIC
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
 # MAGIC CREATE OR REPLACE VIEW tagetik_revenue_budget AS
 # MAGIC
 # MAGIC SELECT y.date_id AS date_id,
@@ -143,14 +93,14 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        y.scenario_code AS scenario_code,
 # MAGIC        y.entity_code AS entity_code,
 # MAGIC        y.category AS category,
-# MAGIC        y.revenue - coalesce(y.next_revenue,0) AS monthly_revenue_in_lcy,
-# MAGIC        ROUND(CAST(((y.revenue - coalesce(y.next_revenue,0)) * 1 / y.exchange_rate) AS DECIMAL(20,2)),3) AS monthly_revenue_in_euros,
-# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_revenue_in_lcy,
-# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_revenue_in_euros,
-# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_cogs_in_lcy,
-# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_cogs_in_euros,
-# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_gp1_in_lcy,
-# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_gp1_in_euros
+# MAGIC        y.revenue - coalesce(y.prev_revenue,0) AS monthly_revenue_in_lcy,
+# MAGIC        ROUND(CAST(((y.revenue - coalesce(y.prev_revenue,0)) * 1 / y.exchange_rate) AS DECIMAL(20,2)),3) AS monthly_revenue_in_euros,
+# MAGIC       (CASE WHEN account_code in (309988,320988) THEN monthly_revenue_in_lcy ELSE 0 END) AS total_revenue_in_lcy,
+# MAGIC       (CASE WHEN account_code in (309988,320988) THEN monthly_revenue_in_euros ELSE 0 END) AS total_revenue_in_euros,
+# MAGIC       (CASE WHEN account_code in (310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_lcy ELSE 0 END) AS total_cogs_in_lcy,
+# MAGIC       (CASE WHEN account_code in (310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_euros ELSE 0 END) AS total_cogs_in_euros,
+# MAGIC       (CASE WHEN account_code in (309988,320988,310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_lcy ELSE 0 END) AS total_gp1_in_lcy,
+# MAGIC       (CASE WHEN account_code in (309988,320988,310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_euros ELSE 0 END) AS total_gp1_in_euros
 # MAGIC FROM
 # MAGIC (
 # MAGIC SELECT x.date_id,
@@ -165,44 +115,8 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        x.entity_code,
 # MAGIC        x.category,
 # MAGIC        x.revenue,
-# MAGIC        LAG (x.revenue) OVER (PARTITION BY x.currency_code, x.account_code, x.special_deal_code, x.region_code, x.vendor_code, x.cost_centre_code, x.scenario_code, x.entity_code, x.category ORDER BY x.date_id, x.period ) AS next_revenue,
+# MAGIC        LAG (x.revenue) OVER (PARTITION BY x.currency_code, x.account_code, x.special_deal_code, x.region_code, x.vendor_code, x.cost_centre_code, x.scenario_code, x.entity_code, x.category ORDER BY x.date_id, x.period ) AS prev_revenue,
 # MAGIC        x.exchange_rate
-# MAGIC FROM 
-# MAGIC (
-# MAGIC SELECT str.date_id,
-# MAGIC        str.period,
-# MAGIC        str.currency_code,
-# MAGIC        str.account_code,
-# MAGIC        str.special_deal_code,
-# MAGIC        str.region_code,
-# MAGIC        str.vendor_code,
-# MAGIC        str.cost_centre_code,
-# MAGIC        str.scenario_code,
-# MAGIC        str.entity_code,
-# MAGIC        str.category,
-# MAGIC        str.revenue,
-# MAGIC        str.exchange_rate
-# MAGIC FROM staging_tagetik_revenue str
-# MAGIC UNION ALL
-# MAGIC SELECT strap.date_id,
-# MAGIC        strap.period,
-# MAGIC        strap.currency_code,
-# MAGIC        strap.account_code,
-# MAGIC        strap.special_deal_code,
-# MAGIC        strap.region_code,
-# MAGIC        strap.vendor_code,
-# MAGIC        strap.cost_centre_code,
-# MAGIC        strap.scenario_code,
-# MAGIC        strap.entity_code,
-# MAGIC        strap.category,
-# MAGIC        strap.revenue,
-# MAGIC        strap.exchange_rate
-# MAGIC FROM staging_tagetik_revenue_adjusted_periods strap
-# MAGIC ) x
+# MAGIC FROM staging_tagetik_revenue_budget x
 # MAGIC ) y
-# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.lup_account_type atyp
-# MAGIC     ON y.account_code = atyp.account_code
-# MAGIC LEFT OUTER JOIN platinum_${tableObject.environment}.tag02.date dd
-# MAGIC     ON y.date_id = dd.date_id
-# MAGIC WHERE y.scenario_code LIKE '%BUD%'
-# MAGIC   AND (y.scenario_code LIKE '%03' OR y.scenario_code ='2025BUD-YEAR-01' )
+# MAGIC LEFT OUTER JOIN platinum_${tableObject.environment}.tag02.date dd ON y.date_id = dd.date_id
