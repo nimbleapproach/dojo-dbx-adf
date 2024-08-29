@@ -89,7 +89,8 @@ class TestTable(unittest.TestCase):
                 'infinigateNO',
                 'infinigateSE',
                 'infinigateUK',
-                # NOTE: upper case 'I' - comparison is case sensitive
+                # NOTE: there is inconsistent casing across environments, accept both values as valid:
+                'infinigateBE',
                 'InfinigateBE',
         ]
         result = column_contains_only_valid_values(df_test, 'Sys_DatabaseName', valid_dbs)
