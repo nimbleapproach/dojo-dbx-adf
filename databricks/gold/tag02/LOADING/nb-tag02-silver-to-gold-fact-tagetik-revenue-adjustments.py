@@ -44,8 +44,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC        drr.COD_CATEGORIA as Category,
 # MAGIC        CAST((drr.IMPORTO * -1) AS DECIMAL(20,2)) AS revenue_LCY,
 # MAGIC        CAST(2 AS INTEGER) AS silver_source,       
-# MAGIC        CAST(drr.SID AS INTEGER) AS silver_SID,
-# MAGIC        CAST(drr.DATEUPD AS TIMESTAMP) AS source_date_updated,
+# MAGIC        CAST(drr.SID AS INTEGER) AS silver_SID,       
+# MAGIC        CAST(drr.Sys_Silver_ModifedDateTime_UTC AS TIMESTAMP) AS source_date_updated,
 # MAGIC        NOW() AS Sys_Gold_InsertedDateTime_UTC,
 # MAGIC        NOW() AS Sys_Gold_ModifiedDateTime_UTC,
 # MAGIC        CAST(1 AS INTEGER) AS Sys_Gold_is_active,
@@ -54,13 +54,13 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       FROM silver_${tableObject.environment}.tag02.dati_rett_riga a
 # MAGIC       LEFT OUTER JOIN (SELECT silver_sid FROM gold_${tableObject.environment}.tag02.fact_tagetik_revenue WHERE silver_source = 2) b
 # MAGIC         ON a.SID = b.silver_sid
-# MAGIC       WHERE b.silver_sid IS NULL
+# MAGIC       WHERE b.silver_sid IS NULL AND a.Sys_Silver_IsCurrent = 1
 # MAGIC       UNION -- we either want to load the transactional record where it hasn't been seen before or we want to load a more recent version of one that has
 # MAGIC       SELECT SID
 # MAGIC       FROM silver_${tableObject.environment}.tag02.dati_rett_riga a2
-# MAGIC       INNER JOIN (SELECT silver_sid, tagetik_date_updated FROM gold_${tableObject.environment}.tag02.fact_tagetik_revenue WHERE silver_source = 2) b2
+# MAGIC       INNER JOIN (SELECT silver_sid, source_date_updated FROM gold_${tableObject.environment}.tag02.fact_tagetik_revenue WHERE silver_source = 2 AND Sys_Gold_is_active = 1) b2
 # MAGIC         ON a2.SID = b2.silver_sid
-# MAGIC       WHERE CAST(a2.DATEUPD AS TIMESTAMP) > b2.tagetik_date_updated) sid
+# MAGIC       WHERE CAST(a2.Sys_Silver_ModifedDateTime_UTC AS TIMESTAMP) > b2.source_date_updated AND a2.Sys_Silver_IsDeleted = 'true') sid
 # MAGIC INNER JOIN silver_${tableObject.environment}.tag02.dati_rett_riga drr
 # MAGIC   ON sid.SID = drr.SID       
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_exchange_rate er
@@ -86,7 +86,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC  AND CAST(drr.DATEUPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
 # MAGIC WHERE (LEFT(drr.COD_CONTO, 1) IN ('3', '4')) -- [yz] 2024.02.21 include all manual journals categories for finance report
 # MAGIC   AND drr.COD_CATEGORIA LIKE '%ADJ%'
-# MAGIC   AND drr.Sys_Silver_IsCurrent = 1
 # MAGIC   AND COD_SCENARIO NOT LIKE '%OB%'
 # MAGIC   
 

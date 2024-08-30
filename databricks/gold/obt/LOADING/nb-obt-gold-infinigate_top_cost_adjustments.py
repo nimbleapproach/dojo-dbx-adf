@@ -70,7 +70,7 @@ END AS GL_Group
         AND Sys_Silver_IsCurrent = true
     ) ven ON gle.GlobalDimension1Code = ven.Code
     and ven.Sys_DatabaseName = gle.Sys_DatabaseName
-LEFT JOIN silver_dev.igsql03.dimension_set_entry as region
+LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry as region
 on region.DimensionSetID = gle.DimensionSetID
 and region.Sys_DatabaseName = gle.Sys_DatabaseName
 and region.Sys_Silver_IsCurrent = 1

@@ -197,7 +197,8 @@ obt_sum AS (
     GROUP BY ALL
 ),
 
-combined_obt_ve as (
+
+gt AS (
 SELECT 
    obt.GroupEntityCode
   ,obt.EntityCode
@@ -235,21 +236,124 @@ SELECT
   ,obt.ResellerGroupName
   ,obt.ResellerGroupStartDate
   ,obt.CurrencyCode 
-  ,obt.RevenueAmount  / COALESCE(ve_count,1)  AS RevenueAmount
-  ,obt.CostAmount / COALESCE(ve_count,1)  AS CostAmount
-  ,obt.GP1 / COALESCE(ve_count,1)  AS GP1
+  ,obt.RevenueAmount   AS RevenueAmount
+  ,obt.CostAmount AS CostAmount
+  ,obt.GP1  AS GP1
+  ,CAST(0.00 AS DECIMAL(20, 4)) AS CostAmount_ValueEntry
+  ,CAST(0.00 AS DECIMAL(20,4)) AS Cost_ProRata_Adj
+FROM gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
+),
+
+ve AS (
+SELECT 
+   obt.GroupEntityCode
+  ,obt.EntityCode
+  ,obt.Sys_DatabaseName
+  ,obt.DocumentNo
+  ,obt.LineNo
+  ,obt.Gen_Bus_PostingGroup
+  ,obt.MSPUsageHeaderBizTalkGuid
+  ,obt.Type
+  ,obt.SalesInvoiceDescription
+  ,COALESCE(ve.PostingDate,obt.TransactionDate) AS TransactionDate
+  ,obt.SalesOrderDate
+  ,obt.SalesOrderID
+  ,obt.SalesOrderItemID
+  ,obt.SKUInternal
+  ,obt.Gen_Prod_PostingGroup
+  ,obt.SKUMaster
+  ,obt.Description
+  ,obt.ProductTypeInternal
+  ,obt.ProductTypeMaster
+  ,obt.CommitmentDuration1Master
+  ,obt.CommitmentDuration2Master
+  ,obt.BillingFrequencyMaster
+  ,obt.ConsumptionModelMaster
+  ,obt.VendorCode
+  ,obt.VendorNameInternal
+  ,obt.VendorNameMaster
+  ,obt.VendorGeography
+  ,obt.VendorStartDate
+  ,obt.ResellerCode
+  ,obt.ResellerNameInternal
+  ,obt.ResellerGeographyInternal
+  ,obt.ResellerStartDate
+  ,obt.ResellerGroupCode
+  ,obt.ResellerGroupName
+  ,obt.ResellerGroupStartDate
+  ,obt.CurrencyCode 
+  ,0.00  AS RevenueAmount
+  ,0.00  AS CostAmount
+  ,0.00  AS GP1
   ,CAST(COALESCE(VE.CostPostedtoG_L,0) AS DECIMAL(20, 4)) AS CostAmount_ValueEntry
   ,CAST(0.00 AS DECIMAL(20,4)) AS Cost_ProRata_Adj
-  ,COALESCE(ve.PostingDate,obt.TransactionDate) AS GL_Doc_PostingDate
 FROM gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
-LEFT JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
+INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
                                      AND obt.LineNo = ve.DocumentLineNo_
                                      AND obt.Sys_DatabaseName = ve.Sys_DatabaseName
                                      AND CASE WHEN obt.EntityCode = 'AT1' THEN 'DE1'
                                               WHEN obt.EntityCode = 'BE1' THEN 'NL1'
                                               ELSE obt.EntityCode END = VE.EntityCode 
-)
+),
 
+ ca AS (
+SELECT 
+    obt.GroupEntityCode
+    ,obt.EntityCode
+    ,obt.Sys_DatabaseName
+    ,obt.DocumentNo
+    ,obt.LineNo
+    ,obt.Gen_Bus_PostingGroup
+    ,obt.MSPUsageHeaderBizTalkGuid
+    ,obt.Type
+    ,obt.SalesInvoiceDescription
+    ,COALESCE(ca.GL_Doc_PostingDate,obt.TransactionDate) AS TransactionDate
+    ,obt.SalesOrderDate
+    ,obt.SalesOrderID
+    ,obt.SalesOrderItemID
+    ,obt.SKUInternal
+    ,obt.Gen_Prod_PostingGroup
+    ,obt.SKUMaster
+    ,obt.Description
+    ,obt.ProductTypeInternal
+    ,obt.ProductTypeMaster
+    ,obt.CommitmentDuration1Master
+    ,obt.CommitmentDuration2Master
+    ,obt.BillingFrequencyMaster
+    ,obt.ConsumptionModelMaster
+    ,obt.VendorCode
+    ,obt.VendorNameInternal
+    ,obt.VendorNameMaster
+    ,obt.VendorGeography
+    ,obt.VendorStartDate
+    ,obt.ResellerCode
+    ,obt.ResellerNameInternal
+    ,obt.ResellerGeographyInternal
+    ,obt.ResellerStartDate
+    ,obt.ResellerGroupCode
+    ,obt.ResellerGroupName
+    ,obt.ResellerGroupStartDate
+    ,obt.CurrencyCode 
+    ,0.00 AS RevenueAmount 
+    ,0.00 AS CostAmount
+    ,0.00 AS GP1
+    ,0.00 AS CostAmount_ValueEntry
+    ,CASE WHEN COALESCE(obt_sum.RevenueAmount_Sum,0) = 0 THEN ca.CostAmount_Gap  / obt_sum.LineCount --If total revenue = 0, divide by number of rcords introduced by obt.
+        ELSE CAST(TRY_DIVIDE((obt.RevenueAmount), obt_sum.RevenueAmount_Sum) AS DECIMAL(10, 4)) --Works out what ratio of total revenue this is,
+              * ca.CostAmount_Gap                                                               --and then multiplys by the cost gap to split cost.
+        END  AS Cost_ProRata_Adj
+  FROM gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
+  INNER JOIN cost_adjustment ca ON CASE WHEN obt.EntityCode = 'AT1' THEN 'DE1'
+                                      WHEN obt.EntityCode = 'BE1' THEN 'NL1'
+                                      ELSE obt.EntityCode
+                                      END = ca.EntityCode
+                              AND obt.DocumentNo = ca.DocumentNo
+                              AND obt.Sys_DatabaseName= ca.Sys_DatabaseName
+  LEFT JOIN obt_sum ON obt.EntityCode = obt_sum.EntityCode
+                    AND obt.DocumentNo = obt_sum.DocumentNo
+                    AND obt.Sys_DatabaseName = obt_sum.Sys_DatabaseName
+
+)
 
   SELECT fc.GroupEntityCode
         ,fc.EntityCode
@@ -292,67 +396,15 @@ LEFT JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
         ,SUM(fc.GP1) AS GP1
         ,SUM(fc.CostAmount_ValueEntry) AS CostAmount_ValueEntry
         ,SUM(fc.Cost_ProRata_Adj) AS Cost_ProRata_Adj
-        ,fc.GL_Doc_PostingDate
   FROM (
     SELECT *
-    FROM combined_obt_ve
+    FROM gt
     UNION ALL
-    SELECT 
-    obt.GroupEntityCode
-    ,obt.EntityCode
-    ,obt.Sys_DatabaseName
-    ,obt.DocumentNo
-    ,obt.LineNo
-    ,obt.Gen_Bus_PostingGroup
-    ,obt.MSPUsageHeaderBizTalkGuid
-    ,obt.Type
-    ,obt.SalesInvoiceDescription
-    ,obt.TransactionDate
-    ,obt.SalesOrderDate
-    ,obt.SalesOrderID
-    ,obt.SalesOrderItemID
-    ,obt.SKUInternal
-    ,obt.Gen_Prod_PostingGroup
-    ,obt.SKUMaster
-    ,obt.Description
-    ,obt.ProductTypeInternal
-    ,obt.ProductTypeMaster
-    ,obt.CommitmentDuration1Master
-    ,obt.CommitmentDuration2Master
-    ,obt.BillingFrequencyMaster
-    ,obt.ConsumptionModelMaster
-    ,obt.VendorCode
-    ,obt.VendorNameInternal
-    ,obt.VendorNameMaster
-    ,obt.VendorGeography
-    ,obt.VendorStartDate
-    ,obt.ResellerCode
-    ,obt.ResellerNameInternal
-    ,obt.ResellerGeographyInternal
-    ,obt.ResellerStartDate
-    ,obt.ResellerGroupCode
-    ,obt.ResellerGroupName
-    ,obt.ResellerGroupStartDate
-    ,obt.CurrencyCode 
-    ,0.00 AS RevenueAmount --Pass through values as 0 as they've already been added in top selection of union.
-    ,0.00 AS CostAmount
-    ,0.00 AS GP1
-    ,0.00 AS CostAmount_ValueEntry
-    ,CASE WHEN COALESCE(obt_sum.RevenueAmount_Sum,0) = 0 THEN ca.CostAmount_Gap  / obt_sum.LineCount --If total revenue = 0, divide by number of rcords introduced by obt.
-        ELSE CAST(TRY_DIVIDE((obt.RevenueAmount), obt_sum.RevenueAmount_Sum) AS DECIMAL(10, 4)) --Works out what ratio of total revenue this is,
-              * ca.CostAmount_Gap                                                               --and then multiplys by the cost gap to split cost.
-        END  AS Cost_ProRata_Adj
-    ,COALESCE(ca.GL_Doc_PostingDate,obt.TransactionDate) AS GL_Doc_PostingDate
-  FROM gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
-  INNER JOIN cost_adjustment ca ON CASE WHEN obt.EntityCode = 'AT1' THEN 'DE1'
-                                      WHEN obt.EntityCode = 'BE1' THEN 'NL1'
-                                      ELSE obt.EntityCode
-                                      END = ca.EntityCode
-                              AND obt.DocumentNo = ca.DocumentNo
-                              AND obt.Sys_DatabaseName= ca.Sys_DatabaseName
-  LEFT JOIN obt_sum ON obt.EntityCode = obt_sum.EntityCode
-                    AND obt.DocumentNo = obt_sum.DocumentNo
-                    AND obt.Sys_DatabaseName = obt_sum.Sys_DatabaseName
+    SELECT *
+    FROM ve
+    UNION ALL
+    SELECT *
+    FROM ca
 ) fc
 GROUP BY ALL
 
