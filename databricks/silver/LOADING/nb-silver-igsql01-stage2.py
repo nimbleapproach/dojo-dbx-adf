@@ -204,10 +204,18 @@ grouped_resellers = (grouped_resellers_raw
 # select source ids for linking groups
 current_groups = get_current_silver_rows(spark.table(RESELLER_GROUP_SOURCE_TABLE))
 groups = current_groups.select(col("inf_keyaccountId").alias("group_id"),
+                               col("Sys_DatabaseName"),
                                col("inf_name"))
 
 # link the two and leave source business key of the account for tracking
-link = grouped_resellers.join(groups, "group_id").drop("group_id")
+link = (
+    grouped_resellers.join(groups,
+                           (grouped_resellers.group_id == groups.group_id)
+                           & (grouped_resellers.Sys_DatabaseName == groups.Sys_DatabaseName)
+                           )
+                     .drop("group_id")
+                     .drop(groups.Sys_DatabaseName)
+)
 
 # link to stage 2 tables using primary keys and get PKs to link
 target_resellers = spark.table(RESELLER_TABLE)
@@ -243,9 +251,3 @@ reseller_group_link_source = sil.add_sys_silver_columns(reseller_group_link_sour
 
 dt_reseller_group_link = DeltaTable.forName(spark, tableOrViewName=f"{CATALOG}.{SCHEMA}.tbl_reseller_group_link")
 sil.merge_into_stage2_table(dt_reseller_group_link, reseller_group_link_source, reseller_group_link_business_keys)
-
-# COMMAND ----------
-
-# MAGIC %environment
-# MAGIC "client": "1"
-# MAGIC "base_environment": ""
