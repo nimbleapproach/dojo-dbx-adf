@@ -117,6 +117,16 @@ with msp_usage as (
         END = fx2.Currency
     and year(msp_h.DocumentDate) = fx2.Calendar_Year
     and month(msp_h.DocumentDate) = fx2.Month
+    WHERE msp_h.VENDORDimensionValue  NOT IN (
+-- [yz]#21165  03.09.2024 accrued vendor exclusion
+'RFT'
+,'HOS'
+,'SOW_OP'
+,'LIG'
+,'KAS'
+,'DAT'
+,'BUS'
+,'ITG')
 ),
 cte as (
   --- sales invoice
