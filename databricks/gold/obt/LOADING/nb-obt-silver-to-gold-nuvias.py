@@ -35,7 +35,8 @@ with cte as (
     COALESCE(it.Description, 'NaN') AS SKUInternal,
     COALESCE(datanowarr.SKU, 'NaN') AS SKUMaster,
     COALESCE(itdesc.Description, 'NaN') AS Description,
-    COALESCE(invitgroup.Name, 'NaN') AS ProductTypeInternal,
+    -- COALESCE(invitgroup.Name, 'NaN') AS ProductTypeInternal,  Removed due to causing row duplication. Details in BUG 21246
+    'NaN' AS ProductTypeInternal,
     COALESCE(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
     coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
     coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
@@ -85,12 +86,14 @@ with cte as (
     and it.Sys_Silver_IsCurrent = 1
     left join silver_{ENVIRONMENT}.nuvias_operations.ecoresproducttranslation AS itdesc ON it.Description = itdesc.Name
     AND itdesc.Sys_Silver_IsCurrent = 1
+    /* Removed due to causing row duplication Details in BUG 21246
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.inventitemgroupitem AS invit ON trans.DataAreaId = invit.ItemDataAreaId
     and invit.ItemId = trans.ItemId
     AND invit.Sys_Silver_IsCurrent = 1
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.inventitemgroup AS invitgroup ON invit.ItemGroupId = invitgroup.ItemGroupId
     AND invit.ItemGroupDataAreaId = invitgroup.DataAreaId
     and invitgroup.Sys_Silver_IsCurrent = 1
+    */
     LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.ecoresproduct AS prod ON trans.ItemId = prod.DisplayProductNumber
     AND prod.Sys_Silver_IsCurrent = 1
     /*
