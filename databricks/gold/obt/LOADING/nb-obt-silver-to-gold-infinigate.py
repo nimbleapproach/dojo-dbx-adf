@@ -124,9 +124,11 @@ with msp_usage as (
 ,'SOW_OP'
 ,'LIG'
 ,'KAS'
+,'KAS_MSP'
 ,'DAT'
 ,'BUS'
-,'ITG')
+,'ITG'
+,'TEF')
 ),
 cte as (
   --- sales invoice
