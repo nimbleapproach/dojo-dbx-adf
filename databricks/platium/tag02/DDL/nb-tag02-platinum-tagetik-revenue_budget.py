@@ -88,19 +88,19 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        y.account_code AS account_code,
 # MAGIC        y.special_deal_code AS special_deal_code,
 # MAGIC        y.region_code AS region_code,
-# MAGIC        y.vendor_code AS vendor_code,
+# MAGIC        coalesce(atyp.account_vendor_override, y.vendor_code),
 # MAGIC        y.cost_centre_code AS cost_centre_code,
 # MAGIC        y.scenario_code AS scenario_code,
 # MAGIC        y.entity_code AS entity_code,
 # MAGIC        y.category AS category,
 # MAGIC        y.revenue - coalesce(y.prev_revenue,0) AS monthly_revenue_in_lcy,
 # MAGIC        ROUND(CAST(((y.revenue - coalesce(y.prev_revenue,0)) * 1 / y.exchange_rate) AS DECIMAL(20,2)),3) AS monthly_revenue_in_euros,
-# MAGIC       (CASE WHEN account_code in (310288, 310388, 310188, 310688, 309988, 320988) THEN monthly_revenue_in_lcy ELSE 0 END) AS total_revenue_in_lcy,
-# MAGIC       (CASE WHEN account_code in (310288, 310388, 310188, 310688, 309988, 320988) THEN monthly_revenue_in_euros ELSE 0 END) AS total_revenue_in_euros,
-# MAGIC       (CASE WHEN account_code in (310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_lcy ELSE 0 END) AS total_cogs_in_lcy,
-# MAGIC       (CASE WHEN account_code in (310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_euros ELSE 0 END) AS total_cogs_in_euros,
-# MAGIC       (CASE WHEN account_code in (309988,320988,310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_lcy ELSE 0 END) AS total_gp1_in_lcy,
-# MAGIC       (CASE WHEN account_code in (309988,320988,310288,470088,470288,440188,310688,421988,401988) THEN monthly_revenue_in_euros ELSE 0 END) AS total_gp1_in_euros
+# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_revenue_in_lcy,
+# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_revenue_in_euros,
+# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_cogs_in_lcy,
+# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_cogs_in_euros,
+# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_gp1_in_lcy,
+# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_gp1_in_euros
 # MAGIC FROM
 # MAGIC (
 # MAGIC SELECT x.date_id,
@@ -119,4 +119,6 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        x.exchange_rate
 # MAGIC FROM staging_tagetik_revenue_budget x
 # MAGIC ) y
+# MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.lup_account_type atyp
+# MAGIC     ON y.account_code = atyp.account_code
 # MAGIC LEFT OUTER JOIN platinum_${tableObject.environment}.tag02.date dd ON y.date_id = dd.date_id

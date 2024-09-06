@@ -31,7 +31,7 @@ SELECT
   y.account_code AS account_code,
   y.special_deal_code AS special_deal_code,
   y.region_code AS region_code,
-  y.vendor_code AS vendor_code,
+  coalesce(atyp.account_vendor_override, y.vendor_code),
   y.cost_centre_code AS cost_centre_code,
   y.scenario_code AS scenario_code,
   y.entity_code AS entity_code,
@@ -45,62 +45,12 @@ SELECT
     ),
     3
   ) AS monthly_revenue_in_euros,
-  (
-    CASE
-      WHEN y.account_code IN (310288, 310388, 310188, 310688, 309988, 320988) THEN monthly_revenue_in_lcy
-      ELSE 0
-    END
-  ) AS total_revenue_in_lcy,
-  (
-    CASE
-      WHEN y.account_code IN (310288, 310388, 310188, 310688, 309988, 320988) THEN monthly_revenue_in_euros
-      ELSE 0
-    END
-  ) AS total_revenue_in_euros,
-  (
-    CASE
-      WHEN account_code in (310288, 470088, 470288, 440188, 310688, 421988, 401988) THEN monthly_revenue_in_lcy
-      ELSE 0
-    END
-  ) AS total_cogs_in_lcy,
-  (
-    CASE
-      WHEN account_code in (310288, 470088, 470288, 440188, 310688, 421988, 401988) THEN monthly_revenue_in_euros
-      ELSE 0
-    END
-  ) AS total_cogs_in_euros,
-  (
-    CASE
-      WHEN account_code in (
-        309988,
-        320988,
-        310288,
-        470088,
-        470288,
-        440188,
-        310688,
-        421988,
-        401988
-      ) THEN monthly_revenue_in_lcy
-      ELSE 0
-    END
-  ) AS total_gp1_in_lcy,
-  (
-    CASE
-      WHEN account_code in (
-        309988,
-        320988,
-        310288,
-        470088,
-        470288,
-        440188,
-        310688,
-        421988,
-        401988
-      ) THEN monthly_revenue_in_euros
-      ELSE 0
-    END
-  ) AS total_gp1_in_euros
+  (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_revenue_in_lcy,
+  (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_revenue_in_euros,
+  (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_cogs_in_lcy,
+  (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_cogs_in_euros,
+  (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_gp1_in_lcy,
+  (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_gp1_in_euros
 FROM
   (
     SELECT
@@ -135,4 +85,6 @@ FROM
       platinum_dev.tag02.staging_tagetik_revenue x
   ) y
   LEFT OUTER JOIN platinum_dev.tag02.date dd ON y.date_id = dd.date_id
+  LEFT OUTER JOIN gold_${tableObject.environment}.tag02.lup_account_type atyp
+    ON y.account_code = atyp.account_code
   WHERE scenario_code like "%FC%"
