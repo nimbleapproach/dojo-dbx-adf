@@ -88,7 +88,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        y.account_code AS account_code,
 # MAGIC        y.special_deal_code AS special_deal_code,
 # MAGIC        y.region_code AS region_code,
-# MAGIC        coalesce(atyp.account_vendor_override, y.vendor_code),
+# MAGIC        coalesce(atyp.account_vendor_override, y.vendor_code) AS vendor_code,
 # MAGIC        y.cost_centre_code AS cost_centre_code,
 # MAGIC        y.scenario_code AS scenario_code,
 # MAGIC        y.entity_code AS entity_code,
