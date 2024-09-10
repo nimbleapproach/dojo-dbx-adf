@@ -84,9 +84,9 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC       ) AS prev_revenue,
 # MAGIC       x.exchange_rate
 # MAGIC     FROM
-# MAGIC       platinum_dev.tag02.staging_tagetik_revenue x
+# MAGIC       platinum_${tableObject.environment}.tag02.staging_tagetik_revenue x
 # MAGIC   ) y
-# MAGIC   LEFT OUTER JOIN platinum_dev.tag02.date dd ON y.date_id = dd.date_id
+# MAGIC   LEFT OUTER JOIN platinum_${tableObject.environment}.tag02.date dd ON y.date_id = dd.date_id
 # MAGIC   LEFT OUTER JOIN gold_${tableObject.environment}.tag02.lup_account_type atyp
 # MAGIC     ON y.account_code = atyp.account_code
 # MAGIC   WHERE scenario_code like "%FC%"

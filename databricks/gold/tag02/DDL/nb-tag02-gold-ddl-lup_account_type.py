@@ -64,7 +64,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       ('322988', 1, NULL, 1, NULL),
 # MAGIC       ('350988', NULL, NULL, 1, NULL),
 # MAGIC       ('351988', NULL, NULL, 1, NULL),
-# MAGIC       ('370988', 1, NULL, 1, NULL),
+# MAGIC       ('370988', 1, NULL, 1, "AVO_OOR"), -- Other Operating Revenues
 # MAGIC       ('371988', NULL, NULL, 1, NULL),
 # MAGIC       ('391988', NULL, NULL, 1, NULL),
 # MAGIC       ('400988', NULL, 1, 1, NULL),
