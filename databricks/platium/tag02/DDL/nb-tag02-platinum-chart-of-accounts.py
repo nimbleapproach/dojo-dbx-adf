@@ -33,4 +33,4 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        (CASE WHEN LEFT(account_id, 1) IN ('3','4') 
 # MAGIC                   AND level08_desc in ('Gross profit') 
 # MAGIC              THEN 1 ELSE 0 END) AS margin
-# MAGIC from gold_${tableObject.environment}.obt.chart_of_accounts  
+# MAGIC from gold_${tableObject.environment}.tag02.chart_of_accounts  
