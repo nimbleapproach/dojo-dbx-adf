@@ -180,7 +180,7 @@ FROM (
       WHERE ve.Adjustment = 1
       AND ve.Sys_Silver_IsCurrent =1
       AND ve.DocumentType in (2,4)
-      AND NOT(ve.DocumentNo_= 22506211 AND ve.PostingDate = '2024-07-01T00:00:00.000') --Manual exclusion of ≈50 million record added in error to CH1
+      --AND NOT(ve.DocumentNo_= 22506211 AND ve.PostingDate = '2024-07-01T00:00:00.000') --Manual exclusion of ≈50 million record added in error to CH1
       GROUP BY ALL)
 ve
 ),
