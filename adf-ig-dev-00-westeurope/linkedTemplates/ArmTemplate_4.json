@@ -1,0 +1,2381 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-ig-dev-00-westeurope"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_30_NUAZ-SQLSERVER-01_Load_Table_UNUSED')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Full Load Nuivas FO Table",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "GetSelectionString",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									},
+									{
+										"name": "Sys_DatabaseName",
+										"value": {
+											"value": "@pipeline().parameters.pm_DatabaseName",
+											"type": "Expression"
+										}
+									}
+								],
+								"sqlReaderQuery": {
+									"value": "@activity('GetSelectionString').output.firstRow.SelectionString",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings",
+									"maxRowsPerFile": 1000000,
+									"fileNamePrefix": {
+										"value": "bronze-nuaz-sqlserver-01-@{pipeline().parameters.pm_DatabaseName}-@{pipeline().parameters.pm_TableName}-@{pipeline().parameters.pm_DatabaseName}-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Info",
+									"enableReliableLogging": true
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "LS_ADLS",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									},
+									"path": "logging/adf"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_DatabaseType": {
+										"value": "@split(pipeline().parameters.pm_DatabaseName,'_')[1]",
+										"type": "Expression"
+									},
+									"pm_SchemaName": {
+										"value": "@pipeline().parameters.pm_SchemaName",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "@pipeline().parameters.pm_TableName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": "bronze",
+									"pm_Directory": {
+										"value": "nuaz-sqlserver-01/@{pipeline().parameters.pm_DatabaseName}/@{pipeline().parameters.pm_TableName}/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "GetSelectionString",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "DECLARE @@s VARCHAR(MAX) \n\nDECLARE @@tablename VARCHAR(500) ='@{pipeline().parameters.pm_TableName}' \nDECLARE @@schemaname VARCHAR(500) ='@{pipeline().parameters.pm_SchemaName}' \n\n \n\nSELECT @@s = ISNULL(@@s+', ','') + '[' + c.name + ']' + ' as ['+replace(replace(replace(c.name,' ',''),'(',''),')','') +'] ' \n\nFROM sys.all_columns c, sys.tables t, sys.schemas s\n\nwhere c.object_id = t.object_id \nand t.schema_id  = s.schema_id\n\n \n\nSELECT 'select ' + @@s + ' from ' + @@tablename as SelectionString",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_DatabaseType": "@split(pipeline().parameters.pm_DatabaseName,'_')[1]",
+									"pm_SchemaName": {
+										"value": "@pipeline().parameters.pm_SchemaName",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "@pipeline().parameters.pm_TableName",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseName": {
+						"type": "string"
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"pm_SchemaName": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"v_Watermark": {
+						"type": "String"
+					},
+					"v_NewWatermark": {
+						"type": "String"
+					},
+					"v_SelectionString": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_30_TAG02_Recreate_View')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Recreate View",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Drop View If Exist",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_SQLDB_TAGETIK",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+							}
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "create view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_TableName}]\nas\n\nSELECT \n@{concat(join(variables('ColumnString'),',' ) )} \nFROM dbo.[@{pipeline().parameters.pm_TableName}]",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					},
+					{
+						"name": "Get Columns Control Table",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM [adf].[CT_TAG02_COLUMNS]\nWHERE [TABLE_NAME] = '@{pipeline().parameters.pm_TableName}'\nAND [ACTIVE] =1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_TAG02_COLUMNS",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "For Each Column",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Columns Control Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Columns Control Table').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Append Variable",
+									"type": "AppendVariable",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "ColumnString",
+										"value": {
+											"value": "[[@{item().COLUMN_NAME}] as [@{replace(replace(replace(replace(replace(replace(replace(item().COLUMN_NAME,' ',''),'(',''),')',''),',',''),';',''),'{',''),'}','')}]",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Drop View If Exist",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "For Each Column",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "LS_SQLDB_TAGETIK",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+							}
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "if object_id('[edw_@{pipeline().globalParameters.gpm_Environment}].@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}', 'V') \nis not null drop view [edw_@{pipeline().globalParameters.gpm_Environment}].[@{replace(replace(replace(replace(join(split(pipeline().parameters.pm_TableName,' '),''),'_',''),'-',''),'(',''),')','')}]\n",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_TableName": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"ColumnString": {
+						"type": "Array"
+					}
+				},
+				"folder": {
+					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_99_IGSQL03_CREATE_EDW_LAYER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get DatabasesControl Table",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_IGSQL03_DATABASES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "For Each Database",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get DatabasesControl Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get DatabasesControl Table').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Create EDW Schema",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_SQLDB_NAV_DYNAMIC",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"pm_DatabaseName": {
+												"value": "@item().DATABASE_NAME",
+												"type": "Expression"
+											},
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "CREATE SCHEMA [edw_@{pipeline().globalParameters.gpm_Environment}]",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_99_NUAZ-SQLSERVER-01')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Database",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get DatabasesControl Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get DatabasesControl Table').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Copy Task Information Schema",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"additionalColumns": [
+												{
+													"name": "InsertedDateTime",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"sqlReaderQuery": "SELECT * FROM INFORMATION_SCHEMA.COLUMNS",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_DatabaseType": {
+													"value": "@split(item().DATABASE_NAME,'_')[1]",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_SchemaName": "adf",
+												"pm_TableName": "CT_NUAZ-SQLSERVER-01_SCHEMA",
+												"pm_Environment": "DEV"
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get DatabasesControl Table",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT *\n  FROM [adf].[CT_NUAZ-SQLSERVER-01_DATABASES]\n  where Active = 1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_NUAZ-SQLSERVER-01_DATABASES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_CLOUD_DISTRIBUTION_EXEL_LOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CLOUD_DISTRIBUTION"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_EXCEL_CLOUD_DISTRIBUTION",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns"
+						},
+						{
+							"name": "RenameColumns"
+						},
+						{
+							"name": "Partition"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Entity as string,",
+						"          {Invoice Date} as date,",
+						"          {Sales Order} as integer,",
+						"          {Invoice Number} as string,",
+						"          {Item ID} as integer,",
+						"          SKU as string,",
+						"          {Customer Name} as string,",
+						"          Qty as short,",
+						"          {Revenue Local} as double,",
+						"          {Cost Local} as double,",
+						"          {Adjustment Local} as boolean,",
+						"          Currency as string,",
+						"          {Margin Local} as double,",
+						"          {Exchange Rate} as double,",
+						"          {Revenue GBP} as double,",
+						"          {Cost GBP} as double,",
+						"          {Margin GBP} as double,",
+						"          {Vendor ID} as string,",
+						"          {Vendor Name} as string,",
+						"          {Account Manager} as string,",
+						"          {Order Type} as string,",
+						"          {Quote ID} as integer,",
+						"          {Customer Account} as string,",
+						"          {SKU Description} as string,",
+						"          {Customer Reference} as string,",
+						"          {Item Type} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"Partition select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"GetExcelFile window(over({Invoice Number}),",
+						"     asc({Item ID}, true),",
+						"     asc(SKU, true),",
+						"     LineNo = rowNumber()) ~> Partition",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Entity as string,",
+						"          InvoiceDate as string,",
+						"          SalesOrder as string,",
+						"          InvoiceNumber as string,",
+						"          ItemID as string,",
+						"          SKU as string,",
+						"          CustomerName as string,",
+						"          Qty as string,",
+						"          RevenueLocal as string,",
+						"          CostLocal as string,",
+						"          AdjustmentLocal as string,",
+						"          Currency as string,",
+						"          MarginLocal as string,",
+						"          ExchangeRate as string,",
+						"          RevenueGBP as string,",
+						"          CostGBP as string,",
+						"          MarginGBP as string,",
+						"          VendorID as string,",
+						"          VendorName as string,",
+						"          AccountManager as string,",
+						"          OrderType as string,",
+						"          QuoteID as string,",
+						"          CustomerAccount as string,",
+						"          SKUDescription as string,",
+						"          CustomerReference as string,",
+						"          ItemType as string,",
+						"          Sys_FileName as string,",
+						"          Sys_ID as string,",
+						"          Sys_Bronze_InsertDateTime_UTC as timestamp",
+						"     ),",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: 'cloud_distribution/invoicedata',",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_CUSTOMER')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "D2B"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_EXCEL_D2B_CUSTOMERS",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns"
+						},
+						{
+							"name": "RenameColumns"
+						},
+						{
+							"name": "AddIdColumn"
+						},
+						{
+							"name": "IsNotNull"
+						},
+						{
+							"name": "AddIdColumnIsNotNull"
+						},
+						{
+							"name": "Union"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPTETCTNUM as string,",
+						"          COMPTETcbmarq as short,",
+						"          BANQUECBMARQ as short,",
+						"          REGLEMENTcbmarq as short,",
+						"          CODEREVENDEUR as short,",
+						"          NAME_ as string,",
+						"          GROUPEDETAIL as string,",
+						"          BILLACCOUNT as boolean,",
+						"          EntryNo as short,",
+						"          enduserLegacyNo as integer,",
+						"          Name as string,",
+						"          Name2 as string,",
+						"          Address as string,",
+						"          Address2 as string,",
+						"          PhoneNo as string,",
+						"          TerritoryCode as string,",
+						"          Currency as string,",
+						"          LanguageCode as string,",
+						"          PaymentTerms as string,",
+						"          Salesperson as string,",
+						"          CountryRegionCode as string,",
+						"          PaymentMethodCode as string,",
+						"          VATRegistration as string,",
+						"          GenBusPostingGroup as string,",
+						"          PostCode as string,",
+						"          EMail as string,",
+						"          CompanyName as string,",
+						"          PrintManufacturerItemNo as boolean,",
+						"          TaxNo as string,",
+						"          ShiptoContactCompanyNo as string,",
+						"          BilltoCustomerNo as string,",
+						"          Status as string,",
+						"          LegacyNo as string,",
+						"          CUSTOMERCustomerNo as string,",
+						"          CUSTOMERBusinessRelationInfo as string,",
+						"          CUSTOMERNo as string,",
+						"          CUSTOMERType as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['d2b/customers/pending','d2b/customers/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"Union select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"IsNotNull@IsNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CODEREVENDEUR']))))) ~> AddIdColumn",
+						"GetExcelFile split(isNull(toString(byName('CUSTOMERCustomerNo'))),",
+						"     disjoint: false) ~> IsNotNull@(IsNull, IsNotNull)",
+						"IsNotNull@IsNotNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CUSTOMERCustomerNo']))))) ~> AddIdColumnIsNotNull",
+						"AddIdColumn, AddIdColumnIsNotNull union(byName: true)~> Union",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('d2b/customers'),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_SALES')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "D2B"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_EXCEL_D2B_SALES",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns"
+						},
+						{
+							"name": "RenameColumns"
+						},
+						{
+							"name": "AddIdColumn"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CUSTOMER_ID as string,",
+						"          CUSTOMER as string,",
+						"          INVOICE as string,",
+						"          INVOICE_DATE as date,",
+						"          CUSTOMER_PO as string,",
+						"          SKU as string,",
+						"          DESCRIPTION as string,",
+						"          QTY as short,",
+						"          SALES_PRICE as double,",
+						"          PURCHASE_PRICE as double,",
+						"          USD_RATE as double,",
+						"          VENDOR as string,",
+						"          PURCHASE_CURRENCY as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['d2b/sales/pending','d2b/sales/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"AddIdColumn select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"GetExcelFile derive(Sys_ID = nextSequence()) ~> AddIdColumn",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('d2b/sales'),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_DCB_EXCEL_LOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DCB"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_ADLS_DV_DCB_EXCEL",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Partition"
+						},
+						{
+							"name": "AddSystemColumns",
+							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Invoice as string,",
+						"          {Vlgnr.} as string,",
+						"          {Invoice date} as string,",
+						"          {Invoice month} as string,",
+						"          {Invoice year} as string,",
+						"          SO as string,",
+						"          {SO date} as string,",
+						"          {Reseller ID} as string,",
+						"          {Reseller name} as string,",
+						"          {VAT number} as string,",
+						"          SKU as string,",
+						"          Description as string,",
+						"          Remark as string,",
+						"          Qty as string,",
+						"          {Price/unit} as string,",
+						"          {% line discount} as string,",
+						"          {Amount line discount} as string,",
+						"          {Net price} as string,",
+						"          {Total invoice} as string,",
+						"          Entity as string,",
+						"          {Article group} as string,",
+						"          {Product Type} as string,",
+						"          {Vendor number} as string,",
+						"          {Vendor ID} as string,",
+						"          Vendor as string,",
+						"          {Cred.order} as string,",
+						"          Margin as string,",
+						"          {margin in %} as string,",
+						"          Invoice_linenumber as string,",
+						"          line_verkoopfactuurregels as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['dcb/pending','dcb/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"GetExcelFile window(over(Invoice),",
+						"     asc(SKU, true),",
+						"     LineNo = rowNumber()) ~> Partition",
+						"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: 'dcb/invoicedata',",
+						"     compressionCodec: 'snappy',",
+						"     partitionFileNames:[(concat('bronze-dcb-',toString(currentUTC()),'.snappy.parquet')\r",
+						")],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          Invoice,",
+						"          Vlgnr = {Vlgnr.},",
+						"          Invoice_Date = {Invoice date},",
+						"          Invoice_Month = {Invoice month},",
+						"          Invoice_Year = {Invoice year},",
+						"          SO,",
+						"          SO_Date = {SO date},",
+						"          Reseller_ID = {Reseller ID},",
+						"          Reseller_Name = {Reseller name},",
+						"          VAT_Number = {VAT number},",
+						"          SKU,",
+						"          Description,",
+						"          Remark,",
+						"          Qty,",
+						"          Unit_Price = {Price/unit},",
+						"          Line_Discount_Percentage = {% line discount},",
+						"          Line_Discount_Amount = {Amount line discount},",
+						"          Net_Price = {Net price},",
+						"          Total_Invoice = {Total invoice},",
+						"          Entity,",
+						"          Article_Group = {Article group},",
+						"          Product_Type = {Product Type},",
+						"          Vendor_Number = {Vendor number},",
+						"          Vendor_ID = {Vendor ID},",
+						"          Vendor,",
+						"          Cred_Order = {Cred.order},",
+						"          Margin,",
+						"          Margin_Percentage = {margin in %},",
+						"          Invoice_linenumber,",
+						"          line_verkoopfactuurregels,",
+						"          Sys_FileName,",
+						"          LineNo,",
+						"          Sys_Bronze_InsertDateTime_UTC",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_DELTALINK_EXCEL_LOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DELTALINK"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_ADLS_DV_DELTALINK_EXCEL",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Partition"
+						},
+						{
+							"name": "AddSystemColumns",
+							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_FileName as string",
+						"}",
+						"source(output(",
+						"          {Invoice Date} as string,",
+						"          {Order Type} as string,",
+						"          {Order Number} as integer,",
+						"          {Invoice Number} as integer,",
+						"          {Client Number} as integer,",
+						"          Company as string,",
+						"          Artcode as string,",
+						"          Supplier_ID as string,",
+						"          Supplier as string,",
+						"          {Art Sup Code} as string,",
+						"          Description as string,",
+						"          Quantity as short,",
+						"          {Article Product Type} as string,",
+						"          Currency as string,",
+						"          {Revenue Transaction} as double,",
+						"          {Cost Transaction} as double,",
+						"          {Margin Transaction} as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['deltalink/pending','deltalink/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"GetExcelFile window(over({Invoice Number}),",
+						"     asc(Artcode, true),",
+						"     LineNo = rowNumber()) ~> Partition",
+						"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: 'deltalink/invoicedata',",
+						"     compressionCodec: 'snappy',",
+						"     partitionFileNames:[(concat('bronze-deltalink-',toString($pm_FileName),'-',toString(currentUTC()),'.snappy.parquet'))],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          InvoiceDate = {Invoice Date},",
+						"          OrderType = {Order Type},",
+						"          OrderNumber = {Order Number},",
+						"          InvoiceNumber = {Invoice Number},",
+						"          ClientNumber = {Client Number},",
+						"          Company,",
+						"          Artcode,",
+						"          SupplierID = Supplier_ID,",
+						"          Supplier,",
+						"          ArtSupCode = {Art Sup Code},",
+						"          Description,",
+						"          Quantity,",
+						"          ArticleProductType = {Article Product Type},",
+						"          Currency,",
+						"          RevenueTransaction = {Revenue Transaction},",
+						"          CostTransaction = {Cost Transaction},",
+						"          MarginTransaction = {Margin Transaction},",
+						"          Sys_FileName,",
+						"          LineNo,",
+						"          Sys_Bronze_InsertDateTime_UTC",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_NETSAFE_EXCEL_LOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "NETSAFE"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_ADLS_DV_NETSAFE_EXCEL",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns",
+							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          {Invoice Date} as string,",
+						"          {Sales Order Number} as string,",
+						"          {Invoice Number} as string,",
+						"          {Item ID} as string,",
+						"          SKU as string,",
+						"          {Item Type} as string,",
+						"          {Customer Name} as string,",
+						"          Qty as float,",
+						"          {Transaction Currency} as string,",
+						"          {Revenue Transaction Currency} as double,",
+						"          {Cost Transaction Currency} as double,",
+						"          {Margin Transaction Currency} as double,",
+						"          {Exchange Rate} as string,",
+						"          {Revenue GBP} as string,",
+						"          {Cost GBP} as string,",
+						"          {Margin GBP} as string,",
+						"          {Vendor ID} as string,",
+						"          {Vendor Name} as string,",
+						"          {Account Manager} as string,",
+						"          {Order Type} as string,",
+						"          {Quote ID} as string,",
+						"          {Customer Account} as string,",
+						"          {SKU Description} as string,",
+						"          Country as string,",
+						"          {Invoice Line Nb} as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: [('netsafe/pending/'),('netsafe/archived/')],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC(),",
+						"          Sys_Country = regexExtract(Sys_FileName,'(Romania|Croatia|Slovenia|Bulgaria)')) ~> AddSystemColumns",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: 'netsafe/invoicedata',",
+						"     compressionCodec: 'snappy',",
+						"     partitionFileNames:[(concat('bronze-netsafe-',toString(currentUTC()),'.snappy.parquet')\r",
+						")],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          Invoice_Date = {Invoice Date},",
+						"          Sales_Order_Number = {Sales Order Number},",
+						"          Invoice_Number = {Invoice Number},",
+						"          Item_ID = {Item ID},",
+						"          SKU,",
+						"          Item_Type = {Item Type},",
+						"          Customer_Name = {Customer Name},",
+						"          Qty,",
+						"          Transaction_Currency = {Transaction Currency},",
+						"          Revenue_Transaction_Currency = {Revenue Transaction Currency},",
+						"          Cost_Transaction_Currency = {Cost Transaction Currency},",
+						"          Margin_Transaction_Currency = {Margin Transaction Currency},",
+						"          Exchange_Rate = {Exchange Rate},",
+						"          Revenue_GBP = {Revenue GBP},",
+						"          Cost_GBP = {Cost GBP},",
+						"          Margin_GBP = {Margin GBP},",
+						"          Vendor_ID = {Vendor ID},",
+						"          Vendor_Name = {Vendor Name},",
+						"          Account_Manager = {Account Manager},",
+						"          Order_Type = {Order Type},",
+						"          Quote_ID = {Quote ID},",
+						"          Customer_Account = {Customer Account},",
+						"          SKU_Description = {SKU Description},",
+						"          Country,",
+						"          Invoice_Line_Nb = {Invoice Line Nb},",
+						"          Sys_Country,",
+						"          Sys_FileName,",
+						"          Sys_Bronze_InsertDateTime_UTC",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Starlink/NETSUITE"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
+								"type": "DatasetReference"
+							},
+							"name": "GetFile"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetBronzeData"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetKeysControlTable"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaTable"
+						},
+						{
+							"name": "Cache"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteKeys"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddBronzeLoadDate"
+						},
+						{
+							"name": "GetMaxWatermark"
+						},
+						{
+							"name": "Increment"
+						},
+						{
+							"name": "AddCurrentWatermark"
+						},
+						{
+							"name": "DropCurrentWatermark"
+						},
+						{
+							"name": "CastTimestamps"
+						},
+						{
+							"name": "SelectKeys"
+						},
+						{
+							"name": "Deduplicate"
+						},
+						{
+							"name": "AddHashKey"
+						},
+						{
+							"name": "DropSysHashKey"
+						},
+						{
+							"name": "AddLoadTime"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_FileName as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: true,",
+						"     multiLineRow: true,",
+						"     dateFormats: ['dd/MM/yyyy'],",
+						"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
+						"     manifestType: 'manifest',",
+						"     mode: 'read') ~> GetFile",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('netsuite/'+ $pm_FileName)) ~> GetBronzeData",
+						"source(output(",
+						"          Business_Keys as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'query',",
+						"     store: 'sqlserver',",
+						"     query: (\"Select Business_Keys from [adf].[CT_NETSUITE_KEYS] where TABLE_NAME = '\" +$pm_FileName + \"'\"),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> GetKeysControlTable",
+						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('Last_Modified')))) ~> GetMaxWatermark",
+						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('Last_Modified')) > CurrentWatermark)) ~> Increment",
+						"CastTimestamps, GetMaxWatermark join(true(),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> AddCurrentWatermark",
+						"Increment select(mapColumn(",
+						"          each(match(name!='CurrentWatermark'))",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
+						"GetFile derive(Last_Modified = toTimestamp(byName('Last_Modified'),'dd/MM/yyyy h:mm a'),",
+						"          Date_Created = toTimestamp(byName('Date_Created'),'dd/MM/yyyy h:mm a')) ~> CastTimestamps",
+						"GetFile select(mapColumn(",
+						"          each(match(contains(split(Cache#output().Business_Keys,','),#item==name)))",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectKeys",
+						"AddHashKey aggregate(groupBy(Sys_HashKey),",
+						"     each(match(name!='Sys_HashKey'), $$ = first($$))) ~> Deduplicate",
+						"SelectKeys derive(Sys_HashKey = sha2(256, concatWS('~',toString(columns())))) ~> AddHashKey",
+						"Deduplicate select(mapColumn(",
+						"          each(match(name!='Sys_HashKey'))",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropSysHashKey",
+						"DropSysHashKey derive(Sys_DataFactory_LoadDateTime_UTC = currentUTC()) ~> AddLoadTime",
+						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('netsuite/'+ $pm_FileName),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable",
+						"GetKeysControlTable sink(validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> Cache",
+						"AddLoadTime sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'keys',",
+						"     folderPath: ('netsuite/'+ $pm_FileName),",
+						"     overwrite: true,",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteKeys"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_NETSUITE_CDM_TO_BRONZE_FULLLOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Starlink/NETSUITE"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
+								"type": "DatasetReference"
+							},
+							"name": "GetFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaTable"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddBronzeLoadDate"
+						},
+						{
+							"name": "CastTimestamps"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_FileName as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     ignoreNoFilesFound: true,",
+						"     multiLineRow: true,",
+						"     dateFormats: ['dd/MM/yyyy'],",
+						"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
+						"     manifestType: 'manifest',",
+						"     mode: 'read') ~> GetFile",
+						"CastTimestamps derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+						"GetFile derive(Last_Modified = toTimestamp(byName('Last_Modified'),'dd/MM/yyyy h:mm a'),",
+						"          Date_Created = toTimestamp(byName('Date_Created'),'dd/MM/yyyy h:mm a')) ~> CastTimestamps",
+						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('netsuite/'+ $pm_FileName),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "NUVIAS/NUAZ_SQLSERVER-01 [FO]"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC",
+								"type": "DatasetReference"
+							},
+							"name": "GetSQLTable"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteToBronzeADLS"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ApplyParquetName"
+						},
+						{
+							"name": "AddCurrentUTC"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_TableSchema as string,",
+						"     pm_TableName as string,",
+						"     pm_DatabaseName as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> GetSQLTable",
+						"GetSQLTable select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ApplyParquetName",
+						"ApplyParquetName derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddCurrentUTC",
+						"AddCurrentUTC sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: ('bronze'),",
+						"     folderPath: ('nuaz-sqlserver-01/'+$pm_DatabaseName+'/'+$pm_TableSchema+'/'+$pm_TableName),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteToBronzeADLS"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_VUZION_CRM_TO_BRONZE_DELTALOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "VUZION"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_VUZION_CRM_DYNAMICS",
+								"type": "DatasetReference"
+							},
+							"name": "GetEntity"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GetBronzeData"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaTable"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddBronzeLoadDate"
+						},
+						{
+							"name": "GetMaxWatermark"
+						},
+						{
+							"name": "Increment"
+						},
+						{
+							"name": "AddCurrentWatermark"
+						},
+						{
+							"name": "DropCurrentWatermark"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_TableName as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
+						"     manifestType: 'manifest',",
+						"     mode: 'read') ~> GetEntity",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('vuzion_crm/'+ $pm_TableName)) ~> GetBronzeData",
+						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('modifiedon')))) ~> GetMaxWatermark",
+						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('modifiedon')) > CurrentWatermark)) ~> Increment",
+						"GetEntity, GetMaxWatermark join(true(),",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> AddCurrentWatermark",
+						"Increment select(mapColumn(",
+						"          each(match(name!='CurrentWatermark'))",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
+						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('vuzion_crm/'+ $pm_TableName),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_VUZION_CRM_TO_BRONZE_FULLLOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "VUZION"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_VUZION_CRM_DYNAMICS",
+								"type": "DatasetReference"
+							},
+							"name": "GetEntity"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaTable"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddBronzeLoadDate"
+						},
+						{
+							"name": "ApplyParquetName"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     pm_TableName as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     dateFormats: ['dd/MM/yyyy'],",
+						"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
+						"     manifestType: 'manifest',",
+						"     mode: 'read') ~> GetEntity",
+						"ApplyParquetName derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
+						"GetEntity select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ApplyParquetName",
+						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('vuzion_crm/'+ $pm_TableName),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_20_DATANOW_ARR_LATEST_Load_Sheet",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_DATANOW_ARR_LATEST_Load_Sheet",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/DATANOW/LATEST"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_RESELLERGROUPS_Load_Sheet_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_RESELLERGROUPS_Load_Sheet",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_RESELLERGROUPS_Load_Sheet",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/RESELLERGROUPS"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_CLOUDBLUE_OSS_Load_Table_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get EDW Tables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT DISTINCT [TABLE_NAME]\nFROM [adf].[CT_CLOUDBLUE_OSS_TABLES]",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_CLOUDBLUE_OSS_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_20_CLOUDBLUE_Copy_Data",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_CLOUDBLUE_OSS_Copy_Data",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_full_load": {
+												"value": "@pipeline().parameters.pm_full_load",
+												"type": "Expression"
+											},
+											"pm_TableName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"variables": {
+					"v_tabelnames": {
+						"type": "String"
+					},
+					"Watermark_int_delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/CLOUDBLUE/OSS"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_CLOUDBLUE_PBA_Load_Table_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get EDW Tables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT DISTINCT [TABLE_NAME] ,[COLUMN_NAME] , [WATERMARK] \n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_CLOUDBLUE_PBA_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "PL_20_CLOUDBLUE_Copy_Data",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_CLOUDBLUE_PBA_Copy_Data",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_full_load": {
+												"value": "@pipeline().parameters.pm_full_load",
+												"type": "Expression"
+											},
+											"pm_TableName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_WaterMark": {
+												"value": "@item().WATERMARK",
+												"type": "Expression"
+											},
+											"pm_ColumnName": {
+												"value": "@item().COLUMN_NAME",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "string",
+						"defaultValue": "false"
+					}
+				},
+				"variables": {
+					"v_tabelnames": {
+						"type": "String"
+					},
+					"Watermark_int_delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/CLOUDBLUE/PBA"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_DATANOW_ARR_Load_Sheet_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetSheetNames",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "\nSELECT [SheetName]\n  FROM [adf].[CT_DATANOW_ARR_SHEETS]\n  where ShouldBeLoaded = 1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_DATANOW_ARR_SHEETS",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachSheet",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetSheetNames",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetSheetNames').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "PL_20_DATANOW_ARR_Load_Sheet",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_DATANOW_ARR_Load_Sheet",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_SheetName": {
+												"value": "@item().SheetName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/DATANOW"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		}
+	]
+}

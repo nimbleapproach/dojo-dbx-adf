@@ -1,0 +1,364 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-ig-dev-00-westeurope"
+		},
+		"LS_Oracle_CX_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
+		},
+		"LS_SQLDB_METADATA_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
+		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
+		},
+		"LS_ADLS_DV_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dv0ig0@{linkedService().pm_environment}0westeurope.dfs.core.windows.net/"
+		},
+		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
+		"LS_KV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"metadata": "Secure string for 'baseUrl' of 'LS_KV'"
+		},
+		"LS_Oracle_CX_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "https://nuviastest1.bigmachines.com/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "CRM.Admin"
+		},
+		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
+		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "IG\\inf_svc_azsql_sync01"
+		},
+		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-igsql03-@{toLower(linkedService().pm_DatabaseName)}-connectionstring"
+		},
+		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "IG\\inf_svc_azsql_sync01"
+		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
+		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-tagetikdbserver01-connectionstring"
+		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_Service_Uri}"
+		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
+		},
+		"TR_SCHEDULE_DAILY_properties_runtimeState": {
+			"type": "string",
+			"defaultValue": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"TR_SCHEDULE_DAILY_startTime": {
+			"type": "string",
+			"defaultValue": "2023-07-26T00:00:00"
+		},
+		"TR_SCHEDULE_DAILY_hrs": {
+			"type": "int",
+			"defaultValue": 2
+		},
+		"TR_SCHEDULE_DAILY_weekDays": {
+			"type": "array",
+			"defaultValue": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
+		},
+		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
+		},
+		"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-jumpbi01-shared"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_Oracle_CX_password": {
+						"value": "[parameters('LS_Oracle_CX_password')]"
+					},
+					"LS_SQLDB_METADATA_connectionString": {
+						"value": "[parameters('LS_SQLDB_METADATA_connectionString')]"
+					},
+					"LS_KV_properties_typeProperties_baseUrl": {
+						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+					},
+					"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
+						"value": "[parameters('shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId')]"
+					},
+					"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
+						"value": "[parameters('shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId')]"
+					},
+					"LS_ADLS_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_properties_typeProperties_url')]"
+					},
+					"LS_ADLS_DV_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_DV_properties_typeProperties_url')]"
+					},
+					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
+					},
+					"LS_Oracle_CX_properties_typeProperties_host": {
+						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]"
+					},
+					"LS_Oracle_CX_properties_typeProperties_username": {
+						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]"
+					},
+					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
+						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName')]"
+					},
+					"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
+						"value": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName')]"
+					},
+					"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
+						"value": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri')]"
+					},
+					"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-00-westeurope_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-00-westeurope_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-00-westeurope_ArmTemplate_2')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_4",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_4.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-00-westeurope_ArmTemplate_3')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_5",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_5.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-00-westeurope_ArmTemplate_4')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_6",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_6.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-00-westeurope_ArmTemplate_5')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-00-westeurope_ArmTemplate_7",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_7.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"TR_SCHEDULE_DAILY_properties_runtimeState": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_properties_runtimeState')]"
+					},
+					"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+					},
+					"TR_SCHEDULE_DAILY_startTime": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_startTime')]"
+					},
+					"TR_SCHEDULE_DAILY_hrs": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_hrs')]"
+					},
+					"TR_SCHEDULE_DAILY_weekDays": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_weekDays')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-00-westeurope_ArmTemplate_6')]"
+			]
+		}
+	]
+}

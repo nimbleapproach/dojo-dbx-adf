@@ -1,0 +1,90 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-ig-dev-00-westeurope"
+		},
+		"LS_Oracle_CX_password": {
+			"value": ""
+		},
+		"LS_SQLDB_METADATA_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
+		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"value": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
+		},
+		"LS_ADLS_DV_properties_typeProperties_url": {
+			"value": "https://dv0ig0@{linkedService().pm_environment}0westeurope.dfs.core.windows.net/"
+		},
+		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+			"value": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
+		"LS_KV_properties_typeProperties_baseUrl": {
+			"value": ""
+		},
+		"LS_Oracle_CX_properties_typeProperties_host": {
+			"value": "https://nuviastest1.bigmachines.com/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_username": {
+			"value": "CRM.Admin"
+		},
+		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-cloudblue-commerce-oss-connectionsstring"
+		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-cloudblue-commerce-pba-connectionsstring"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
+			"value": "IG\\inf_svc_azsql_sync01"
+		},
+		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-igsql03-@{toLower(linkedService().pm_DatabaseName)}-connectionstring"
+		},
+		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
+			"value": "IG\\inf_svc_azsql_sync01"
+		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
+		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+			"value": "secret-tagetikdbserver01-connectionstring"
+		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
+			"value": "@{linkedService().pm_Service_Uri}"
+		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+			"value": "@{linkedService().pm_Service_Principal_Id}"
+		},
+		"TR_SCHEDULE_DAILY_properties_runtimeState": {
+			"value": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+			"value": false
+		},
+		"TR_SCHEDULE_DAILY_startTime": {
+			"value": "2023-07-26T00:00:00"
+		},
+		"TR_SCHEDULE_DAILY_hrs": {
+			"value": 2
+		},
+		"TR_SCHEDULE_DAILY_weekDays": {
+			"value": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
+		},
+		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
+		},
+		"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-jumpbi01-shared"
+		}
+	}
+}

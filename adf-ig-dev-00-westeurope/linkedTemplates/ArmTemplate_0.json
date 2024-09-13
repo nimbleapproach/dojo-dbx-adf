@@ -1,0 +1,926 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-ig-dev-00-westeurope"
+		},
+		"LS_Oracle_CX_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
+		},
+		"LS_SQLDB_METADATA_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
+		},
+		"LS_KV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"metadata": "Secure string for 'baseUrl' of 'LS_KV'"
+		},
+		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
+		},
+		"shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-jumpbi01-shared"
+		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
+		},
+		"LS_ADLS_DV_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dv0ig0@{linkedService().pm_environment}0westeurope.dfs.core.windows.net/"
+		},
+		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
+		},
+		"LS_Oracle_CX_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "https://nuviastest1.bigmachines.com/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "CRM.Admin"
+		},
+		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
+		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
+		},
+		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "IG\\inf_svc_azsql_sync01"
+		},
+		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-igsql03-@{toLower(linkedService().pm_DatabaseName)}-connectionstring"
+		},
+		"LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "IG\\inf_svc_azsql_sync01"
+		},
+		"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-nuaz-sqlserver-01-NUAV-@{linkedService().pm_DatabaseType}-SQLBYOD-connectionstring"
+		},
+		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-tagetikdbserver01-connectionstring"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/globalparameters",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"gpm_Environment": {
+					"type": "string",
+					"value": "dev"
+				},
+				"gpm_Databrick_Workspace_URL": {
+					"type": "string",
+					"value": "https://adb-2715169315282147.7.azuredatabricks.net"
+				},
+				"gpm_Databricks_Workspace_Resource_ID": {
+					"type": "string",
+					"value": "/subscriptions/5c771a6b-7686-4067-a58d-95551c37bf46/resourceGroups/rg-ig-lakehouse-dev-westeurope/providers/Microsoft.Databricks/workspaces/abd-ig-lakehouse-dev-westeurope"
+				},
+				"gpm_lightweight_jobs_Databricks_ClusterID": {
+					"type": "string",
+					"value": "0915-095651-good16-pool-r70v24z6"
+				},
+				"gpm_Databricks_JobID_Bronze_to_Silver": {
+					"type": "string",
+					"value": "199200608148764"
+				},
+				"gpm_Databricks_JobID_Silver_to_Gold_obt": {
+					"type": "string",
+					"value": "584896541836875"
+				},
+				"gpm_Vuzion_CRM_Uri": {
+					"type": "string",
+					"value": "https://infinigate-cloud-dev.crm4.dynamics.com/"
+				},
+				"gpm_Vuzion_CRM_Service_Principal_Id": {
+					"type": "string",
+					"value": "923bb5ac-b49e-4846-8186-274d5c5ce237"
+				},
+				"gpm_Databricks_JobID_Silver_to_Gold_tag02": {
+					"type": "string",
+					"value": "13137093789100"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_REMOVE_ME')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "v_DECLARE",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "v_REMOVE_ME",
+							"value": "1"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"v_REMOVE_ME": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "00 Setup"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_KV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ir-ig-managed-dev-westeurope')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "West Europe",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 5,
+							"cleanup": true
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/shir-igapphost02-shared')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {
+					"linkedInfo": {
+						"resourceId": "[parameters('shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId')]",
+						"authorizationType": "Rbac"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/shir-jumpbi01-shared')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {
+					"linkedInfo": {
+						"resourceId": "[parameters('shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId')]",
+						"authorizationType": "Rbac"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/General')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "UDFLibrary",
+				"typeProperties": {
+					"sources": [],
+					"sinks": [],
+					"transformations": [],
+					"scriptLines": [
+						"applyParquetNaming(string) as string = replace(replace(replace(replace(replace(replace(replace(replace(i1,' ',''),'(',''),')',''),']',''),'[',''),';',''),'{',''),'}','')"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_99_TRIGGER_JOB')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Jobs API",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": {
+								"value": "@{pipeline().globalParameters.gpm_Databrick_Workspace_URL}/api/2.0/jobs/run-now",
+								"type": "Expression"
+							},
+							"connectVia": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"body": {
+								"value": "{\n  \"job_id\": @{pipeline().parameters.pm_JobID}\n}",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+							}
+						}
+					},
+					{
+						"name": "Wait Until Job is done",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Execute Jobs API",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(equals(variables('v_JobStatus'),'Running'))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Check Job Run API",
+									"type": "WebActivity",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"method": "GET",
+										"headers": {},
+										"url": {
+											"value": "@{pipeline().globalParameters.gpm_Databrick_Workspace_URL}/api/2.0/jobs/runs/get?run_id=@{activity('Execute Jobs API').output.run_id}",
+											"type": "Expression"
+										},
+										"connectVia": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"authentication": {
+											"type": "MSI",
+											"resource": "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+										}
+									}
+								},
+								{
+									"name": "Set Job Status",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Check Job Run API",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_JobStatus",
+										"value": {
+											"value": "@if(\nor(\nequals(activity('Check Job Run API').output.state.life_cycle_state, 'PENDING'), equals(activity('Check Job Run API').output.state.life_cycle_state, 'RUNNING')\n),\n'Running',\nactivity('Check Job Run API').output.state.result_state\n)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Wait to Recheck API",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "Set Job Status",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": {
+											"value": "@pipeline().parameters.pm_WaitSeconds",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "CheckStatus",
+						"type": "Switch",
+						"dependsOn": [
+							{
+								"activity": "Wait Until Job is done",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@variables('v_JobStatus')",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "SUCCESS_WITH_FAILURES",
+									"activities": [
+										{
+											"name": "SUCCESS_WITH_FAILURES",
+											"type": "Fail",
+											"dependsOn": [],
+											"userProperties": [],
+											"typeProperties": {
+												"message": "SUCCESS_WITH_FAILURES",
+												"errorCode": "600"
+											}
+										}
+									]
+								},
+								{
+									"value": "FAILED",
+									"activities": [
+										{
+											"name": "FAILED",
+											"type": "Fail",
+											"dependsOn": [],
+											"userProperties": [],
+											"typeProperties": {
+												"message": "FAILED",
+												"errorCode": "700"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_JobID": {
+						"type": "string"
+					},
+					"pm_WaitSeconds": {
+						"type": "int",
+						"defaultValue": 60
+					}
+				},
+				"variables": {
+					"v_JobStatus": {
+						"type": "String",
+						"defaultValue": "Running"
+					}
+				},
+				"folder": {
+					"name": "00 Setup/Databricks"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Databrick_Workspace_URL": {
+						"type": "string"
+					},
+					"pm_Databricks_Workspace_Resource_ID": {
+						"type": "string"
+					},
+					"pm_Databricks_Cluster_ID": {
+						"type": "string"
+					},
+					"pm_NumberOfWorkers": {
+						"type": "string",
+						"defaultValue": "1"
+					}
+				},
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "@linkedService().pm_Databrick_Workspace_URL",
+					"authentication": "MSI",
+					"workspaceResourceId": "@linkedService().pm_Databricks_Workspace_Resource_ID",
+					"instancePoolId": "@linkedService().pm_Databricks_Cluster_ID",
+					"newClusterNumOfWorker": "@linkedService().pm_NumberOfWorkers",
+					"newClusterSparkEnvVars": {
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+					},
+					"newClusterVersion": "13.3.x-scala2.12",
+					"newClusterInitScripts": [],
+					"clusterOption": "Fixed"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADLS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string",
+						"defaultValue": "dev"
+					}
+				},
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADLS_DV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_environment": {
+						"type": "string",
+						"defaultValue": "dev"
+					}
+				},
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_DV_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADLS_NUVIAS_DYNAMICS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "secret-adls-nuvias-dynamics-key"
+					}
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Oracle_CX')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "OracleServiceCloud",
+				"typeProperties": {
+					"host": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]",
+					"username": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_Oracle_CX_password')]"
+					},
+					"useEncryptedEndpoints": true,
+					"useHostVerification": true,
+					"usePeerVerification": true
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_OSS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "PostgreSql",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-jumpbi01-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_PBA')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "PostgreSql",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-jumpbi01-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_CRM_DYNAMIC')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_DatabaseName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": {
+							"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]",
+							"type": "Expression"
+						}
+					},
+					"userName": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "secret-igsql03-sql-password"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-igapphost02-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/shir-igapphost02-shared')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_METADATA')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_SQLDB_METADATA_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_NAV_DYNAMIC')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_DatabaseName": {
+						"type": "string"
+					},
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": {
+							"value": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName')]",
+							"type": "Expression"
+						}
+					},
+					"userName": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "secret-igsql03-sql-password"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-igapphost02-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/shir-igapphost02-shared')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_NUVIAS_FO')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": {
+							"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]",
+							"type": "Expression"
+						}
+					}
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_TAGETIK')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": {
+									"value": "@linkedService().pm_Environment",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		}
+	]
+}
