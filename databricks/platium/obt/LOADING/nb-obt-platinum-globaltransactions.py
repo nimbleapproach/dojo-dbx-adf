@@ -228,8 +228,14 @@ UNION ALL
 UNION ALL
 
 SELECT 
-  GroupEntityCode,
-  EntityCode,
+  CASE WHEN Sys_DatabaseName ='ReportsBE' AND TransactionDate >='2024-07-01'
+              THEN 'NU' 
+              ELSE GroupEntityCode 
+              END AS GroupEntityCode,
+  CASE WHEN Sys_DatabaseName ='ReportsBE' AND TransactionDate >='2024-07-01'
+              THEN 'BE4' 
+              ELSE EntityCode 
+              END AS EntityCode,
   DocumentNo,
   TransactionDate, 
   SalesOrderDate,
@@ -270,6 +276,7 @@ SELECT
 SELECT
   g.GroupEntityCode,
   g.EntityCode,
+  g.Sys_DatabaseName,
   g.DocumentNo,
   g.TransactionDate,
   g.SalesOrderDate,
@@ -315,12 +322,12 @@ LEFT JOIN gold_{ENVIRONMENT}.obt.exchange_rate e ON e.Calendar_Year = cast(year(
 
 WHERE g.GroupEntityCode ='IG'
 and right(cast(g.TransactionDate as varchar(108)),8) <>'23:59:59'
-
 UNION ALL
 --Add IG top cost adjustments
 SELECT
   'IG',
   tc.EntityCode,
+  tc.Sys_DatabaseName,
   tc.DocumentNo_,
   tc.PostingDate,
   NULL AS SalesOrderDate,
@@ -361,7 +368,6 @@ SELECT
  1 as TopCostFlag
 FROM gold_{ENVIRONMENT}.obt.infinigate_top_cost_adjustments tc
 where  right(cast( tc.PostingDate as varchar(108)),8) <>'23:59:59'
-
 GROUP BY ALL
   
   ) combined

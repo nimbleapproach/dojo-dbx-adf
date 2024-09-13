@@ -39,8 +39,14 @@ CREATE OR REPLACE TABLE globaltransactions_ig as
 
 
 SELECT 
-  GroupEntityCode,
-  EntityCode,
+  CASE WHEN Sys_DatabaseName ='ReportsBE' AND TransactionDate >='2024-07-01'
+              THEN 'NU' 
+              ELSE GroupEntityCode 
+              END AS GroupEntityCode,
+  CASE WHEN Sys_DatabaseName ='ReportsBE' AND TransactionDate >='2024-07-01'
+              THEN 'BE4' 
+              ELSE EntityCode 
+              END AS EntityCode,
   DocumentNo,
   TransactionDate, 
   SalesOrderDate,
@@ -81,6 +87,7 @@ SELECT
 SELECT
   g.GroupEntityCode,
   g.EntityCode,
+  g.Sys_DatabaseName,
   g.DocumentNo,
   g.TransactionDate,
   g.SalesOrderDate,
@@ -131,6 +138,7 @@ UNION ALL
 SELECT
   'IG',
   tc.EntityCode,
+  tc.Sys_DatabaseName,
   tc.DocumentNo_,
   tc.PostingDate,
   NULL AS SalesOrderDate,
