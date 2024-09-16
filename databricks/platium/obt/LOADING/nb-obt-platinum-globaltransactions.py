@@ -123,7 +123,105 @@ LEFT JOIN
   max_fx_rates mx 
 ON
   g.CurrencyCode = cast(mx.Currency as string)
-WHERE g.GroupEntityCode <>'IG'
+WHERE g.GroupEntityCode NOT IN('IG' , 'SL')
+
+---STARLINK 
+UNION ALL
+
+ SELECT
+   g.GroupEntityCode,
+   g.EntityCode,
+   'NaN' AS DocumentNo,
+   g.TransactionDate,
+   g.SalesOrderDate,
+   g.SalesOrderID,
+   g.SalesOrderItemID,
+   g.SKUInternal,
+   g.SKUMaster,
+   g.Description,
+   g.ProductTypeInternal,
+   g.ProductTypeMaster,
+   g.CommitmentDuration1Master,
+   g.CommitmentDuration2Master,
+   g.BillingFrequencyMaster,
+   g.ConsumptionModelMaster,
+   g.VendorCode,
+   g.VendorNameInternal,
+   g.VendorNameMaster,
+   g.VendorGeography,
+   g.VendorStartDate,
+   g.ResellerCode,
+   g.ResellerNameInternal,
+   g.ResellerGeographyInternal,
+   g.ResellerStartDate,
+   g.ResellerGroupCode,
+   g.ResellerGroupName,  
+   g.ResellerGroupStartDate,
+   g.CurrencyCode,
+   g.RevenueAmount,
+   CASE 
+   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+   THEN ifnull(e1.Period_FX_rate, mx.Period_FX_Rate)
+   ELSE ifnull(e.Period_FX_rate, mx.Period_FX_Rate)
+   END AS Period_FX_rate,
+   CASE 
+   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+   THEN cast(g.RevenueAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+   ELSE cast(g.RevenueAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+   END AS RevenueAmount_Euro,
+   g.GP1,
+  -- CASE 
+  -- WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+  -- THEN cast(g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+  -- ELSE cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+  -- END AS GP1_Euro,
+  coalesce(GP1_Trueup, CASE 
+   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+   THEN cast(g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+   ELSE cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+   END ) GP1_Euro,
+   --Added Cost Amount
+   g.CostAmount AS COGS,
+   CASE 
+   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
+   THEN cast(g.CostAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+   ELSE cast(g.CostAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+   END AS COGS_Euro,
+   case when g.VendorNameInternal in('Mouse & Bear Solutions Ltd','Blackthorne International Transport Ltd','Transport','Nuvias Internal Logistics') then 'Logistics'
+         when g.SKUInternal in('TRADEFAIR_A','TRAVELEXP') then 'Marketing'
+         when g.SKUInternal ='BEBAT' THEN 'Others'
+         when g.ProductTypeInternal ='Shipping & Delivery Income' then 'Logistics'
+         when g.ProductTypeInternal in('Quarterly Rebate','Instant Rebate') then 'Rebate'
+   else 'Revenue'end as GL_Group
+   ,0 as TopCostFlag
+  --  ,IFG_Mapping
+ FROM gold_{ENVIRONMENT}.obt.globaltransactions_sl_gp1 g
+
+ LEFT JOIN
+   gold_dev.obt.exchange_rate e
+ ON
+   e.Calendar_Year = cast(year(g.TransactionDate) as string)
+ AND
+   e.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
+ AND
+ /*[YZ] 15.03.2024 : Add Replace BE1 with NL1 since it is not a valid entity in tagetik for fx*/
+   CASE WHEN g.EntityCode = 'BE1' THEN 'NL1' ELSE  g.EntityCode  END   = e.COD_AZIENDA
+ AND
+   e.ScenarioGroup = 'Actual'
+ --Only for VU and entitycode 'NOTINTAGETIK'
+ LEFT JOIN
+   (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_dev.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
+ ON
+   e1.Calendar_Year = cast(year(g.TransactionDate) as string)
+ AND
+   e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
+ AND
+   g.CurrencyCode = cast(e1.Currency as string)
+ LEFT JOIN 
+   max_fx_rates mx 
+ ON
+   g.CurrencyCode = cast(mx.Currency as string)
+ WHERE g.GroupEntityCode <>'IG'
 
 --[yz] 19.04.2024: split out IG from other entities due to cost adjustments need to be added
 
@@ -216,6 +314,7 @@ LEFT JOIN gold_{ENVIRONMENT}.obt.exchange_rate e ON e.Calendar_Year = cast(year(
                                          AND  e.ScenarioGroup = 'Actual'
 
 WHERE g.GroupEntityCode ='IG'
+and right(cast(g.TransactionDate as varchar(108)),8) <>'23:59:59'
 
 UNION ALL
 --Add IG top cost adjustments
@@ -261,6 +360,7 @@ SELECT
  GL_Group,
  1 as TopCostFlag
 FROM gold_{ENVIRONMENT}.obt.infinigate_top_cost_adjustments tc
+where  right(cast( tc.PostingDate as varchar(108)),8) <>'23:59:59'
 
 GROUP BY ALL
   

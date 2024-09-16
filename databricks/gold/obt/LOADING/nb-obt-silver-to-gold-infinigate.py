@@ -117,16 +117,21 @@ with msp_usage as (
         END = fx2.Currency
     and year(msp_h.DocumentDate) = fx2.Calendar_Year
     and month(msp_h.DocumentDate) = fx2.Month
-    WHERE msp_h.VENDORDimensionValue  NOT IN (
--- [yz]#21165  03.09.2024 accrued vendor exclusion
-'RFT'
-,'HOS'
-,'SOW_OP'
-,'LIG'
-,'KAS'
-,'DAT'
-,'BUS'
-,'ITG')
+      WHERE case when right(msp_h.Sys_DatabaseName, 2) IN('DE','FR') AND msp_h.VENDORDimensionValue IN (
+  -- [yz]#21165  03.09.2024 accrued vendor exclusion
+  'RFT'
+  ,'HOS'
+  ,'SOW'
+  ,'LIG'
+  ,'KAS'
+  ,'KAS_MSP'
+  ,'DAT'
+  ,'BUS'
+  ,'ITG'
+  ,'AR'
+  ,'HP') THEN 1
+  ELSE  0
+  END =0
 ),
 cte as (
   --- sales invoice
@@ -550,7 +555,7 @@ select
     --- [yz]22.03.2024 Add country split here after the msp usage join
  case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
           --- [yz]03.05.2024 Vendor specific region split
-      WHEN CTE.Sys_DatabaseName = 'ReportsAT' AND cte.VendorCode ='ZZ_INF' and cte.Gen_Bus_PostingGroup not like'%-IC'THEN 'DE1' 
+      WHEN CTE.Sys_DatabaseName in('ReportsAT','ReportsDE')  AND cte.VendorCode ='ZZ_INF' THEN 'DE1' 
      when cte.Reseller_Country_RegionCode = 'AT' AND cte.VendorCode NOT LIKE '%SOW%'
                                                 AND cte.VendorCode NOT IN (/*'DAT',*/'ITG', 'RFT') AND cte.EntityCode = 'DE1' THEN 'AT1' 
 

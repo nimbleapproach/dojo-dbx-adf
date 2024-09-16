@@ -144,30 +144,122 @@ from
 
 # COMMAND ----------
 
-df_obt = spark.read.table("globaltransactions")
+spark.sql(
+    f"""
 
-df_sl = spark.read.table(f"gold_{ENVIRONMENT}.obt.starlink_globaltransactions")
+CREATE OR REPLACE TABLE globaltransactions_sl_gp1
+   
+with sl_sum as(
+  select
+    year(TransactionDate) as PostingYear,
+    month(TransactionDate) as PostingMonth,
+    ven.IFG_Mapping,
+    TAG.VendorName AS TagetikVendorName,
+    sum(RevenueAmount) RevenueAmount,
+    sum(gp1) AS GP1_VendorSum,
+    TAG.GP1_EUR AS GP1_TAG
+  from
+    gold_dev.obt.starlink_globaltransactions sl
+    left join silver_dev.netsuite.masterdatavendor ven on ven.Vendor_ID = sl.VendorCode
+    and ven.Sys_Silver_IsCurrent = 1
+    LEFT JOIN (
+      select
+        *
+      from
+        platinum_dev.obt.globaltransactions_tagetik_reconciliation_ytd -- where upper(VendorName) like '%ACRON%'
+      where
+        GroupEntityCode = 'SL'
+    ) TAG ON year(TransactionDate) = TAG.Year
+    and month(TransactionDate) = TAG.Month -- AND ven.IFG_Mapping = UPPER(TAG.VendorName)
+    and CHARINDEX(
+      case
+        when ven.IFG_Mapping = 'JUNIPER & MIST' then 'JUNIPER'
+        WHEN ven.IFG_Mapping = 'NETSCOUT ARBOR' THEN 'ARBOR NETWORKS'
+        WHEN ven.IFG_Mapping = 'RIVERBED & ATERNITY' THEN 'RIVERBED'
+        when ven.IFG_Mapping='H2O' THEN 'DISCONTINUED BUSINESS'
+        when ven.IFG_Mapping ='KEYSIGHT' THEN 'IXIA' 
+        else ven.IFG_Mapping
+      end,
+      UPPER(TAG.VendorName)
+    ) > 0 
+  GROUP BY
+    ALL
+)
+
+
+ SELECT
+   SL_OBT.GroupEntityCode,
+   SL_OBT.EntityCode,
+   SL_OBT.TransactionDate,
+   SL_OBT.SalesOrderDate,
+   SL_OBT.SalesOrderID,
+   SL_OBT.SalesOrderItemID,
+   SL_OBT.SKUInternal,
+   SL_OBT.SKUMaster,
+   SL_OBT.Description,
+   SL_OBT.ProductTypeInternal,
+   SL_OBT.ProductTypeMaster,
+   SL_OBT.CommitmentDuration1Master,
+   SL_OBT.CommitmentDuration2Master,
+   SL_OBT.BillingFrequencyMaster,
+   SL_OBT.ConsumptionModelMaster,
+   SL_OBT.VendorCode,
+   SL_OBT.VendorNameInternal,
+   SL_OBT.VendorNameMaster,
+   SL_OBT.VendorGeography,
+   SL_OBT.VendorStartDate,
+   SL_OBT.ResellerCode,
+   SL_OBT.ResellerNameInternal,
+   SL_OBT.ResellerGeographyInternal,
+   SL_OBT.ResellerStartDate,
+   SL_OBT.ResellerGroupCode,
+   SL_OBT.ResellerGroupName,
+   SL_OBT.ResellerGroupStartDate,
+   SL_OBT.CurrencyCode,
+   SL_OBT.RevenueAmount,
+   SL_OBT.CostAmount,
+   SL_OBT.GP1 as GP1,
+   ven.IFG_Mapping, 
+   TagetikVendorName,
+   ((SL_OBT.GP1/GP1_VendorSum)* GP1_TAG) AS GP1_Trueup
+ from
+   gold_{ENVIRONMENT}.obt.starlink_globaltransactions AS SL_OBT
+   left join silver_{ENVIRONMENT}.netsuite.masterdatavendor ven on ven.Vendor_ID = SL_OBT.VendorCode
+    and ven.Sys_Silver_IsCurrent = 1
+  left join sl_sum on 
+  ven.IFG_Mapping = sl_sum.IFG_Mapping
+   AND year(SL_OBT.TransactionDate) = sl_sum.PostingYear
+   AND MONTH(SL_OBT.TransactionDate) = sl_sum.PostingMonth
+"""
+)
 
 # COMMAND ----------
 
-from pyspark.sql.functions import col
+# df_obt = spark.read.table("globaltransactions")
 
+# df_sl = spark.read.table(f"gold_{ENVIRONMENT}.obt.starlink_globaltransactions")
 
-target_columns = df_obt.columns
-
-source_columns = df_sl.columns
-
-intersection_columns = [column for column in target_columns if column in source_columns]
-
-selection_columns = [
-    col(column) for column in intersection_columns if column not in ["SID"]
-]
 
 # COMMAND ----------
 
-df_selection = df_sl.select(selection_columns)
-df_selection = df_selection.fillna(value= 'NaN').replace('', 'NaN')
+# from pyspark.sql.functions import col
+
+
+# target_columns = df_obt.columns
+
+# source_columns = df_sl.columns
+
+# intersection_columns = [column for column in target_columns if column in source_columns]
+
+# selection_columns = [
+#     col(column) for column in intersection_columns if column not in ["SID"]
+# ]
 
 # COMMAND ----------
 
-df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'SL'").saveAsTable("globaltransactions")
+# df_selection = df_sl.select(selection_columns)
+# df_selection = df_selection.fillna(value= 'NaN').replace('', 'NaN')
+
+# COMMAND ----------
+
+# df_selection.write.mode("overwrite").option("replaceWhere", "GroupEntityCode = 'SL'").saveAsTable("globaltransactions")
