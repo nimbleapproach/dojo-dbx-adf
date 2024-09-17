@@ -2,7 +2,7 @@
 	"name": "TR_SCHEDULE_DAILY",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
