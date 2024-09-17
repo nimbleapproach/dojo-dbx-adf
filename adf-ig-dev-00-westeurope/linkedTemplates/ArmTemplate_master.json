@@ -225,9 +225,6 @@
 					},
 					"LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]"
-					},
-					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
 					}
 				}
 			},
@@ -246,6 +243,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
 					},
 					"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
 						"value": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri')]"
