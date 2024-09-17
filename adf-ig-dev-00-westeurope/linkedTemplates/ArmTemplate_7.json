@@ -1379,7 +1379,7 @@
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTE",
+								"activity": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
 								"dependencyConditions": [
 									"Completed"
 								]
@@ -1404,7 +1404,7 @@
 						}
 					},
 					{
-						"name": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTE",
+						"name": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
 						"policy": {

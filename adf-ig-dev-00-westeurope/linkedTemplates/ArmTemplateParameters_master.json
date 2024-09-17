@@ -80,6 +80,24 @@
 				"Friday"
 			]
 		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
+			"value": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime": {
+			"value": "2024-06-17T15:01:00"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs": {
+			"value": 3
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays": {
+			"value": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
+		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
 		},

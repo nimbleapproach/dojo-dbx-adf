@@ -106,6 +106,28 @@
 				"Friday"
 			]
 		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
+			"type": "string",
+			"defaultValue": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime": {
+			"type": "string",
+			"defaultValue": "2024-06-17T15:01:00"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs": {
+			"type": "int",
+			"defaultValue": 3
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays": {
+			"type": "array",
+			"defaultValue": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
+		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"type": "string",
 			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
@@ -149,6 +171,18 @@
 					},
 					"LS_KV_properties_typeProperties_baseUrl": {
 						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+					},
+					"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState')]"
+					},
+					"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime')]"
+					},
+					"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs')]"
+					},
+					"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays": {
+						"value": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays')]"
 					},
 					"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 						"value": "[parameters('shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId')]"

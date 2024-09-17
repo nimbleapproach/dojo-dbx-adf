@@ -106,6 +106,28 @@
 				"Friday"
 			]
 		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
+			"type": "string",
+			"defaultValue": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime": {
+			"type": "string",
+			"defaultValue": "2024-06-17T15:01:00"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs": {
+			"type": "int",
+			"defaultValue": 3
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays": {
+			"type": "array",
+			"defaultValue": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
+		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"type": "string",
 			"defaultValue": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
@@ -1217,7 +1239,7 @@
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTE",
+								"activity": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
 								"dependencyConditions": [
 									"Completed"
 								]
@@ -1242,7 +1264,7 @@
 						}
 					},
 					{
-						"name": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTE",
+						"name": "PL_00_CLOUDBLUE_PBA_Load_Table_MASTER",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
 						"policy": {
@@ -1711,42 +1733,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_NUVIAS_OPERATIONS_ITERATOR')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_REMOVE_ME')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "v_DECLARE",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "v_REMOVE_ME",
-							"value": "1"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"v_REMOVE_ME": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "00 Setup"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_RESELLERGROUPS_Load_Sheet_MASTER')]",
@@ -15988,6 +15974,32 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState')]",
+				"pipelines": [],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 15,
+						"startTime": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime')]",
+						"timeZone": "GMT Standard Time",
+						"schedule": {
+							"hours": [
+								"[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs')]"
+							],
+							"weekDays": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays')]"
+						}
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ir-ig-managed-dev-westeurope')]",
