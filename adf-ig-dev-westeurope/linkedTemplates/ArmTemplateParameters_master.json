@@ -5,11 +5,53 @@
 		"factoryName": {
 			"value": "adf-ig-dev-westeurope"
 		},
+		"Afas_password": {
+			"value": ""
+		},
+		"Afas_test_password": {
+			"value": ""
+		},
+		"CLOUDBLUE_PBA_connectionString": {
+			"value": ""
+		},
+		"D365 CRM Vuzion_servicePrincipalCredential": {
+			"value": ""
+		},
+		"DS_VUZION_CRM_DYNAMICS_servicePrincipalCredential": {
+			"value": ""
+		},
 		"LS_Oracle_CX_password": {
 			"value": ""
 		},
 		"LS_SQLDB_METADATA_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
+		},
+		"LS_SQL_TEST_connectionString": {
+			"value": ""
+		},
+		"Afas_properties_typeProperties_url": {
+			"value": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
+		},
+		"Afas_properties_typeProperties_userName": {
+			"value": "60201.Alroy"
+		},
+		"Afas_test_properties_typeProperties_url": {
+			"value": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
+		},
+		"Afas_test_properties_typeProperties_userName": {
+			"value": "60201.Alroy"
+		},
+		"D365 CRM Vuzion_properties_typeProperties_serviceUri": {
+			"value": "https://infinigate-cloud-dev.crm4.dynamics.com"
+		},
+		"D365 CRM Vuzion_properties_typeProperties_servicePrincipalId": {
+			"value": "923bb5ac-b49e-4846-8186-274d5c5ce237"
+		},
+		"DS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
+			"value": "https://infinigate-cloud-dev.crm4.dynamics.com"
+		},
+		"DS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+			"value": "923bb5ac-b49e-4846-8186-274d5c5ce237"
 		},
 		"LS_ADLS_properties_typeProperties_url": {
 			"value": "https://adls0ig0@{linkedService().pm_Environment}0westeurope.dfs.core.windows.net/"
@@ -21,7 +63,7 @@
 			"value": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
 		"LS_KV_properties_typeProperties_baseUrl": {
-			"value": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
+			"value": ""
 		},
 		"LS_Oracle_CX_properties_typeProperties_host": {
 			"value": "https://nuviastest1.bigmachines.com/"
@@ -53,17 +95,50 @@
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-tagetikdbserver01-connectionstring"
 		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
+			"value": "@{linkedService().pm_Service_Uri}"
+		},
 		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
 			"value": "@{linkedService().pm_Service_Principal_Id}"
 		},
-		"TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+		"TR_SCHEDULE_DAILY_properties_runtimeState": {
+			"value": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"value": false
 		},
-		"TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad": {
-			"value": false
+		"TR_SCHEDULE_DAILY_startTime": {
+			"value": "2023-07-26T00:00:00"
 		},
-		"TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad": {
-			"value": false
+		"TR_SCHEDULE_DAILY_hrs": {
+			"value": 2
+		},
+		"TR_SCHEDULE_DAILY_weekDays": {
+			"value": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
+			"value": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime": {
+			"value": "2024-06-17T15:01:00"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs": {
+			"value": 3
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays": {
+			"value": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
 		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"

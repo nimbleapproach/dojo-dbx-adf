@@ -13,6 +13,359 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_RESELLERGROUPS_EXCEL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/RESELLERGROUPS"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "resellergroups",
+						"fileSystem": "external"
+					},
+					"sheetIndex": 0,
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_VUZION_ARR_EXCEL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_SheetIndex": {
+						"type": "int"
+					}
+				},
+				"folder": {
+					"name": "Sources/VUZION"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "vuzion/arr",
+						"fileSystem": "external"
+					},
+					"sheetIndex": {
+						"value": "@dataset().pm_SheetIndex",
+						"type": "Expression"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_VUZION_BUDGET_EXCEL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_SheetName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/VUZION/BUDGET"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": {
+						"value": "@dataset().pm_SheetName",
+						"type": "Expression"
+					},
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "vuzion/budget/pending",
+						"fileSystem": "external"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_ManifestPath": {
+						"type": "string"
+					},
+					"pm_ManifestName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/NUVIAS/FO"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{dataset().pm_ManifestName}.manifest.cdm.json",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "nuvias.operations.dynamics.com/@{dataset().pm_ManifestPath}",
+							"type": "Expression"
+						},
+						"fileSystem": "dynamics365-financeandoperations"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_PARQUET')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_FileSystem": {
+						"type": "string"
+					},
+					"pm_Directory": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ADLS"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().pm_Directory",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().pm_FileSystem",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_PARQUET_STATIC')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_FileSystem": {
+						"type": "string"
+					},
+					"pm_Directory": {
+						"type": "string"
+					},
+					"pm_FileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ADLS"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{dataset().pm_FileName}.snappy.parquet",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().pm_Directory",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().pm_FileSystem",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_BINARY_DCB')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/DCB"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "dcb/pending",
+						"fileSystem": "external"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_BINARY_DELTALINK')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_DV",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/DELTALINK"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "deltalink/pending",
+							"type": "Expression"
+						},
+						"fileSystem": "external"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_BINARY_DELTALINK_FILE')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -441,10 +794,10 @@
 					"pm_TableName": {
 						"type": "string"
 					},
-					"pm_DatabaseName": {
+					"pm_SchemaName": {
 						"type": "string"
 					},
-					"pm_SchemaName": {
+					"pm_DatabaseName": {
 						"type": "string"
 					}
 				},
@@ -508,494 +861,6 @@
 						"value": "@dataset().pm_TableName",
 						"type": "Expression"
 					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_NAV_DYNAMIC')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_SQLDB_NAV_DYNAMIC",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_DatabaseName": {
-							"value": "@dataset().pm_DatabaseName",
-							"type": "Expression"
-						},
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_SchemaName": {
-						"type": "string"
-					},
-					"pm_DatabaseName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/IGSQL03 [Navision]"
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().pm_SchemaName",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_NUVIAS_FO_DYNAMIC')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_SQLDB_NUVIAS_FO",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						},
-						"pm_DatabaseType": {
-							"value": "@dataset().pm_DatabaseType",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					},
-					"pm_DatabaseType": {
-						"type": "string"
-					},
-					"pm_SchemaName": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/NUVIAS/FO"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().pm_SchemaName",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_SQLDB_NUVIAS_FO",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						},
-						"pm_DatabaseType": {
-							"value": "@dataset().pm_DatabaseType",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					},
-					"pm_DatabaseType": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/NUVIAS/FO"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_TAGETIK_DYNAMIC')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_SQLDB_TAGETIK",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_SchemaName": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/TAG02 [Tagetik]"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().pm_SchemaName",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_VUZION_CRM_DYNAMICS')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_VUZION_CRM_DYNAMICS",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Service_Uri": {
-							"value": "@dataset().pm_Service_Uri",
-							"type": "Expression"
-						},
-						"pm_Service_Principal_Id": {
-							"value": "@dataset().pm_Service_Principal_Id",
-							"type": "Expression"
-						},
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_Service_Uri": {
-						"type": "string"
-					},
-					"pm_Service_Principal_Id": {
-						"type": "string"
-					},
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/VUZION [CRM]"
-				},
-				"annotations": [],
-				"type": "DynamicsCrmEntity",
-				"schema": [],
-				"typeProperties": {
-					"entityName": {
-						"value": "@dataset().pm_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_VUZION_CRM_DYNAMICS_SCRIPT')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_VUZION_CRM_DYNAMICS",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Service_Uri": {
-							"value": "@dataset().pm_Service_Uri",
-							"type": "Expression"
-						},
-						"pm_Service_Principal_Id": {
-							"value": "@dataset().pm_Service_Principal_Id",
-							"type": "Expression"
-						},
-						"pm_Environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_Service_Uri": {
-						"type": "string"
-					},
-					"pm_Service_Principal_Id": {
-						"type": "string"
-					},
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/VUZION [CRM]"
-				},
-				"annotations": [],
-				"type": "DynamicsCrmEntity",
-				"schema": [],
-				"typeProperties": {
-					"entityName": "vz1_coreproducts"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "NUVIAS/Dynamics"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetCDMEnity"
-						},
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetBronzeData"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaTable"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddBronzeLoadDate"
-						},
-						{
-							"name": "GetMaxWatermark"
-						},
-						{
-							"name": "Increment"
-						},
-						{
-							"name": "AddCurrentWatermark"
-						},
-						{
-							"name": "DropCurrentWatermark"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_Entity as string,",
-						"     pm_ManifestPath as string,",
-						"     pm_ManifestFile as string,",
-						"     pm_FullLoad as boolean (false())",
-						"}",
-						"source(useSchema: false,",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: true,",
-						"     entity: ($pm_Entity),",
-						"     format: 'cdm',",
-						"     manifestType: 'manifest',",
-						"     manifestName: ($pm_ManifestFile),",
-						"     entityPath: ($pm_ManifestPath),",
-						"     local: true,",
-						"     folderPath: 'nuvias.operations.dynamics.com',",
-						"     fileSystem: 'dynamics365-financeandoperations',",
-						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
-						"     mode: 'read') ~> GetCDMEnity",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity)) ~> GetBronzeData",
-						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('DataLakeModified_DateTime')))) ~> GetMaxWatermark",
-						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('DataLakeModified_DateTime')) > CurrentWatermark)) ~> Increment",
-						"GetCDMEnity, GetMaxWatermark join(true(),",
-						"     joinType:'cross',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'right')~> AddCurrentWatermark",
-						"Increment select(mapColumn(",
-						"          each(match(name!='CurrentWatermark'))",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
-						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "NUVIAS/Dynamics"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS_NUVIAS_DYNAMICS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetCDMEnity"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaTable"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddBronzeLoadDate"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_Entity as string,",
-						"     pm_ManifestPath as string,",
-						"     pm_ManifestFile as string,",
-						"     pm_FullLoad as boolean (false())",
-						"}",
-						"source(useSchema: false,",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: true,",
-						"     entity: ($pm_Entity),",
-						"     format: 'cdm',",
-						"     manifestType: 'manifest',",
-						"     manifestName: ($pm_ManifestFile),",
-						"     entityPath: ($pm_ManifestPath),",
-						"     local: true,",
-						"     folderPath: 'nuvias.operations.dynamics.com',",
-						"     fileSystem: 'dynamics365-financeandoperations',",
-						"     timestampFormats: ['yyyy-MM-dd\\'T\\'HH:mm:ss.SSSSSSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'','yyyy-MM-dd\\'T\\'HH:mm:ss','MM-dd-yyyy hh:mm:ss a','MM-dd-yyyy HH:mm:ss'],",
-						"     mode: 'read') ~> GetCDMEnity",
-						"GetCDMEnity derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('nuvias.operations.dynamics.com/'+ $pm_Entity),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable"
-					]
 				}
 			},
 			"dependsOn": []

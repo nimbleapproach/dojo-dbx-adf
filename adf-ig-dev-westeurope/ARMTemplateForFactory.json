@@ -7,6 +7,26 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
 		},
+		"Afas_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'Afas'"
+		},
+		"Afas_test_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'Afas_test'"
+		},
+		"CLOUDBLUE_PBA_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'CLOUDBLUE_PBA'"
+		},
+		"D365 CRM Vuzion_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'D365 CRM Vuzion'"
+		},
+		"DS_VUZION_CRM_DYNAMICS_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'DS_VUZION_CRM_DYNAMICS'"
+		},
 		"LS_Oracle_CX_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
@@ -15,6 +35,42 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sql-ig-metadata-@{linkedService().pm_Environment}-westeurope.database.windows.net;Initial Catalog=sqldb-ig-metadata-@{linkedService().pm_Environment}-westeurope"
+		},
+		"LS_SQL_TEST_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_SQL_TEST'"
+		},
+		"Afas_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
+		},
+		"Afas_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "60201.Alroy"
+		},
+		"Afas_test_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
+		},
+		"Afas_test_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "60201.Alroy"
+		},
+		"D365 CRM Vuzion_properties_typeProperties_serviceUri": {
+			"type": "string",
+			"defaultValue": "https://infinigate-cloud-dev.crm4.dynamics.com"
+		},
+		"D365 CRM Vuzion_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "923bb5ac-b49e-4846-8186-274d5c5ce237"
+		},
+		"DS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
+			"type": "string",
+			"defaultValue": "https://infinigate-cloud-dev.crm4.dynamics.com"
+		},
+		"DS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "923bb5ac-b49e-4846-8186-274d5c5ce237"
 		},
 		"LS_ADLS_properties_typeProperties_url": {
 			"type": "string",
@@ -30,7 +86,7 @@
 		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
-			"defaultValue": "https://kv-ig-@{linkedService().pm_Environment}-westeurope.vault.azure.net/"
+			"metadata": "Secure string for 'baseUrl' of 'LS_KV'"
 		},
 		"LS_Oracle_CX_properties_typeProperties_host": {
 			"type": "string",
@@ -72,21 +128,61 @@
 			"type": "string",
 			"defaultValue": "secret-tagetikdbserver01-connectionstring"
 		},
+		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_Service_Uri}"
+		},
 		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId": {
 			"type": "string",
 			"defaultValue": "@{linkedService().pm_Service_Principal_Id}"
 		},
-		"TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad": {
+		"TR_SCHEDULE_DAILY_properties_runtimeState": {
+			"type": "string",
+			"defaultValue": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",
 			"defaultValue": false
 		},
-		"TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad": {
-			"type": "bool",
-			"defaultValue": false
+		"TR_SCHEDULE_DAILY_startTime": {
+			"type": "string",
+			"defaultValue": "2023-07-26T00:00:00"
 		},
-		"TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad": {
-			"type": "bool",
-			"defaultValue": false
+		"TR_SCHEDULE_DAILY_hrs": {
+			"type": "int",
+			"defaultValue": 2
+		},
+		"TR_SCHEDULE_DAILY_weekDays": {
+			"type": "array",
+			"defaultValue": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
+			"type": "string",
+			"defaultValue": "Stopped"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime": {
+			"type": "string",
+			"defaultValue": "2024-06-17T15:01:00"
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs": {
+			"type": "int",
+			"defaultValue": 3
+		},
+		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays": {
+			"type": "array",
+			"defaultValue": [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday"
+			]
 		},
 		"shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
 			"type": "string",
@@ -627,7 +723,8 @@
 				"folder": {
 					"name": "10 Bronze"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-24T10:20:14Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_ADB')]"
@@ -663,7 +760,8 @@
 				"folder": {
 					"name": "20 Silver"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-28T12:02:33Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_BRONZE_TO_SILVER_TRIGGER')]"
@@ -715,7 +813,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUDBLUE/OSS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_CLOUDBLUE_OSS_Load_Table_ITERATOR')]"
@@ -767,7 +866,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUDBLUE/PBA"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_CLOUDBLUE_PBA_Load_Table_ITERATOR')]"
@@ -803,7 +903,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUD_DISTRIBUTION"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-23T12:04:02Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_20_CLOUD_DISTRIBUTION_Load_File')]"
@@ -844,7 +945,8 @@
 				"folder": {
 					"name": "10 Bronze/D2B"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-12-06T10:30:12Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_20_D2B_Load_sheet')]"
@@ -880,7 +982,8 @@
 				"folder": {
 					"name": "10 Bronze/DATANOW/LATEST"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-13T10:55:13Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_20_DATANOW_ARR_LATEST_Load_Sheet')]"
@@ -916,7 +1019,8 @@
 				"folder": {
 					"name": "10 Bronze/DATANOW"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-05T12:26:41Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_DATANOW_ARR_Load_Sheet_ITERATOR')]"
@@ -952,7 +1056,8 @@
 				"folder": {
 					"name": "10 Bronze/DCB"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-25T10:29:29Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_20_DCB_Load_File')]"
@@ -988,7 +1093,8 @@
 				"folder": {
 					"name": "10 Bronze/DELTALINK"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-23T10:00:35Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_DELTALINK_Load_File_ITERATOR')]"
@@ -1047,7 +1153,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL01 [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-18T11:07:17Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL01_Load_Table_ITERATOR')]"
@@ -1094,7 +1201,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL03 [Navision]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL03_Load_View_ITERATOR')]"
@@ -1497,7 +1605,8 @@
 				"folder": {
 					"name": "00 Setup"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-18T11:07:17Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_00_TAG02_Load_View_MASTER')]",
@@ -1547,7 +1656,8 @@
 				"folder": {
 					"name": "10 Bronze/NETSAFE"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-02-22T15:19:47Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_20_NETSAFE_Load_File')]"
@@ -1594,7 +1704,8 @@
 				"folder": {
 					"name": "10 Bronze/NETSUITE"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_NETSUITE_Load_File_ITERATOR')]"
@@ -1641,7 +1752,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_NUAZ-SQLSERVER-01_Load_Table_ITERATOR')]"
@@ -1688,7 +1800,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:29Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_NUVIAS_OPERATIONS_ITERATOR')]"
@@ -1724,7 +1837,8 @@
 				"folder": {
 					"name": "10 Bronze/RESELLERGROUPS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-10T09:38:21Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_RESELLERGROUPS_Load_Sheet')]"
@@ -1760,7 +1874,8 @@
 				"folder": {
 					"name": "30 Gold"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-15T05:52:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_SILVER_TO_GOLD_OBT_TRIGGER')]"
@@ -1807,7 +1922,8 @@
 				"folder": {
 					"name": "10 Bronze/TAG02 [TAGETIK]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_TAG02_Load_View_ITERATOR')]"
@@ -1843,7 +1959,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-01T13:53:32Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_VUZION_ARR_Load_Sheet_ITERATOR')]"
@@ -1879,7 +1996,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION/BUDGET"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-13T08:46:32Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_VUZION_BUDGET_Load_File_ITERATOR')]"
@@ -1934,7 +2052,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-01-16T14:41:54Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_10_VUZION_CRM_ITERATOR')]"
@@ -1975,7 +2094,8 @@
 				"folder": {
 					"name": "20 Silver"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-28T12:02:33Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
@@ -2094,7 +2214,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUDBLUE/OSS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -2221,7 +2342,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUDBLUE/PBA"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-27T15:44:28Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -2322,7 +2444,8 @@
 				"folder": {
 					"name": "10 Bronze/DATANOW"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-05T12:26:41Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -2422,7 +2545,8 @@
 				"folder": {
 					"name": "10 Bronze/DELTALINK"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-23T10:00:34Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_BINARY_DELTALINK')]",
@@ -2547,7 +2671,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL01 [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-10T06:23:50Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -2658,7 +2783,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL03 [Navision]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-08-16T10:41:06Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -2759,7 +2885,8 @@
 				"folder": {
 					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -2864,7 +2991,8 @@
 				"folder": {
 					"name": "10 Bronze/NETSUITE"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_BINARY_NETSUITE')]",
@@ -2975,7 +3103,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -3098,7 +3227,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:29Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -3296,7 +3426,8 @@
 				"folder": {
 					"name": "10 Bronze/RESELLERGROUPS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-10T09:38:21Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_RESELLERGROUPS_EXCEL')]",
@@ -3338,7 +3469,8 @@
 				"folder": {
 					"name": "30 Gold"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-09T06:52:06Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
@@ -3483,7 +3615,8 @@
 				"folder": {
 					"name": "10 Bronze/TAG02 [TAGETIK]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-06T11:16:28Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_TAGETIK_DYNAMIC')]",
@@ -3585,7 +3718,8 @@
 				"folder": {
 					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -3642,7 +3776,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-01T13:53:32Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_20_VUZION_ARR_Load_Sheet')]"
@@ -3809,7 +3944,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION/BUDGET"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-13T08:46:32Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_BINARY_VUZION_BUDGET')]",
@@ -3920,7 +4056,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION/BUDGET"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-13T08:46:32Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -4035,7 +4172,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-01-16T14:41:53Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -4220,7 +4358,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:28Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -4406,7 +4545,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:27Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -4592,7 +4732,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:26Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -4778,7 +4919,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:26Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -4964,7 +5106,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -5150,7 +5293,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -5316,7 +5460,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_JSON_NUVIAS_FO_MANIFEST')]",
@@ -5588,7 +5733,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUDBLUE/OSS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-01-03T08:42:46Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC')]",
@@ -6185,7 +6331,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUDBLUE/PBA"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-01-03T08:42:46Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC')]",
@@ -6253,7 +6400,8 @@
 				"folder": {
 					"name": "10 Bronze/CLOUD_DISTRIBUTION"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-23T12:04:02Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_CLOUD_DISTRIBUTION_EXEL_LOAD')]",
@@ -6370,7 +6518,8 @@
 				"folder": {
 					"name": "10 Bronze/D2B"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-01-29T09:14:53Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_D2B_EXEL_LOAD_CUSTOMER')]",
@@ -6665,7 +6814,8 @@
 				"folder": {
 					"name": "10 Bronze/DATANOW/LATEST"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-17T14:59:44Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_DATANOW_ARR_LATEST_EXCEL')]",
@@ -6884,7 +7034,8 @@
 				"folder": {
 					"name": "10 Bronze/DATANOW"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-19T07:01:56Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_DATANOW_ARR_EXCEL')]",
@@ -6949,7 +7100,8 @@
 				"folder": {
 					"name": "10 Bronze/DCB"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-25T10:29:29Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_DCB_EXCEL_LOAD')]",
@@ -7024,7 +7176,8 @@
 				"folder": {
 					"name": "10 Bronze/DELTALINK"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-12-11T10:51:13Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_DELTALINK_EXCEL_LOAD')]",
@@ -7167,7 +7320,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL01 [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-10T06:23:49Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -7293,7 +7447,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL03 [Navision]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-08-16T10:41:06Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
@@ -7402,7 +7557,8 @@
 				"folder": {
 					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -7467,7 +7623,8 @@
 				"folder": {
 					"name": "10 Bronze/NETSAFE"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-02-22T15:19:47Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_NETSAFE_EXCEL_LOAD')]",
@@ -7640,7 +7797,8 @@
 				"folder": {
 					"name": "10 Bronze/NETSUITE"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-06T11:16:29Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD')]",
@@ -7764,7 +7922,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -7957,7 +8116,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/OPERATIONS"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
@@ -7995,7 +8155,8 @@
 				"folder": {
 					"name": "30 Gold"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-15T05:52:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_30_SILVER_TO_GOLD_TAG02_TRIGGER')]"
@@ -8573,7 +8734,8 @@
 				"folder": {
 					"name": "10 Bronze/TAG02 [TAGETIK]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-10-27T07:55:09Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_TAGETIK_DYNAMIC')]",
@@ -8760,7 +8922,8 @@
 				"folder": {
 					"name": "10 Bronze/TAG02 [TAGETIK]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-14T13:20:30Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -8969,7 +9132,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-11-01T13:55:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_VUZION_ARR_EXCEL')]",
@@ -9225,7 +9389,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION/BUDGET"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-03-13T08:46:31Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_VUZION_BUDGET_EXCEL')]",
@@ -9410,7 +9575,8 @@
 				"folder": {
 					"name": "10 Bronze/VUZION [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-01-16T14:41:53Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_VUZION_CRM_TO_BRONZE_DELTALOAD')]",
@@ -10269,7 +10435,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL01 [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-18T11:07:17Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -11105,7 +11272,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL01 [CRM]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-18T11:07:17Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -12053,7 +12221,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL03 [Navision]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-08-19T10:31:26Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
@@ -12253,7 +12422,8 @@
 				"folder": {
 					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_NAV_DYNAMIC')]",
@@ -12393,7 +12563,8 @@
 				"folder": {
 					"name": "10 Bronze/IGSQL03 [Navision]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-26T13:28:05Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
@@ -12509,7 +12680,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-24T10:20:14Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE')]",
@@ -12731,7 +12903,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NUVIAS_FO_DYNAMIC')]",
@@ -12774,7 +12947,8 @@
 				"folder": {
 					"name": "30 Gold"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-15T05:52:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
@@ -12953,7 +13127,8 @@
 				"folder": {
 					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_TAGETIK')]",
@@ -13070,7 +13245,8 @@
 				"folder": {
 					"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -13227,7 +13403,8 @@
 				"folder": {
 					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-07-24T10:20:15Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
@@ -13282,7 +13459,8 @@
 				"folder": {
 					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:23Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_TAGETIK')]"
@@ -13494,7 +13672,8 @@
 				"folder": {
 					"name": "00 Setup/Databricks"
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2024-01-30T08:29:53Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
@@ -14996,10 +15175,10 @@
 					"pm_TableName": {
 						"type": "string"
 					},
-					"pm_DatabaseName": {
+					"pm_SchemaName": {
 						"type": "string"
 					},
-					"pm_SchemaName": {
+					"pm_DatabaseName": {
 						"type": "string"
 					}
 				},
@@ -15368,6 +15547,119 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_VUZION_CRM_DYNAMICS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Afas')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('Afas_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Basic",
+					"userName": "[parameters('Afas_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('Afas_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Afas_test')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('Afas_test_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Basic",
+					"userName": "[parameters('Afas_test_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('Afas_test_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CLOUDBLUE_PBA')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "PostgreSql",
+				"typeProperties": {
+					"connectionString": "[parameters('CLOUDBLUE_PBA_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "shir-jumpbi01-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/D365 CRM Vuzion')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "DynamicsCrm",
+				"typeProperties": {
+					"deploymentType": "Online",
+					"serviceUri": "[parameters('D365 CRM Vuzion_properties_typeProperties_serviceUri')]",
+					"authenticationType": "AADServicePrincipal",
+					"servicePrincipalId": "[parameters('D365 CRM Vuzion_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalCredential": {
+						"type": "SecureString",
+						"value": "[parameters('D365 CRM Vuzion_servicePrincipalCredential')]"
+					},
+					"servicePrincipalCredentialType": "ServicePrincipalKey"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_VUZION_CRM_DYNAMICS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "DynamicsCrm",
+				"typeProperties": {
+					"deploymentType": "Online",
+					"serviceUri": "[parameters('DS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri')]",
+					"authenticationType": "AADServicePrincipal",
+					"servicePrincipalId": "[parameters('DS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalCredential": {
+						"type": "SecureString",
+						"value": "[parameters('DS_VUZION_CRM_DYNAMICS_servicePrincipalCredential')]"
+					},
+					"servicePrincipalCredentialType": "ServicePrincipalKey"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
 			]
 		},
 		{
@@ -15849,6 +16141,25 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_SQL_TEST')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_SQL_TEST_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_VUZION_CRM_DYNAMICS')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -15868,7 +16179,7 @@
 				"type": "DynamicsCrm",
 				"typeProperties": {
 					"deploymentType": "Online",
-					"serviceUri": "@{linkedService().pm_Service_Uri}",
+					"serviceUri": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri')]",
 					"authenticationType": "AADServicePrincipal",
 					"servicePrincipalId": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_servicePrincipalId')]",
 					"servicePrincipalCredential": {
@@ -15898,12 +16209,12 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_DEV')]",
+			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "[parameters('TR_SCHEDULE_DAILY_properties_runtimeState')]",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -15911,7 +16222,7 @@
 							"type": "PipelineReference"
 						},
 						"parameters": {
-							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_DEV_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
+							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
 						}
 					}
 				],
@@ -15920,19 +16231,13 @@
 					"recurrence": {
 						"frequency": "Week",
 						"interval": 1,
-						"startTime": "2023-07-26T00:00:00",
+						"startTime": "[parameters('TR_SCHEDULE_DAILY_startTime')]",
 						"timeZone": "W. Europe Standard Time",
 						"schedule": {
 							"hours": [
-								2
+								"[parameters('TR_SCHEDULE_DAILY_hrs')]"
 							],
-							"weekDays": [
-								"Monday",
-								"Tuesday",
-								"Wednesday",
-								"Thursday",
-								"Friday"
-							]
+							"weekDays": "[parameters('TR_SCHEDULE_DAILY_weekDays')]"
 						}
 					}
 				}
@@ -15942,92 +16247,30 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_PROD')]",
+			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "PL_00_MASTER",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_PROD_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
-						}
-					}
-				],
+				"runtimeState": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState')]",
+				"pipelines": [],
 				"type": "ScheduleTrigger",
 				"typeProperties": {
 					"recurrence": {
 						"frequency": "Week",
-						"interval": 1,
-						"startTime": "2024-01-25T10:33:00",
-						"timeZone": "W. Europe Standard Time",
+						"interval": 15,
+						"startTime": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_startTime')]",
+						"timeZone": "GMT Standard Time",
 						"schedule": {
 							"hours": [
-								0
+								"[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_hrs')]"
 							],
-							"weekDays": [
-								"Monday",
-								"Tuesday",
-								"Wednesday",
-								"Thursday",
-								"Friday"
-							]
+							"weekDays": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_weekDays')]"
 						}
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY_UAT')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "PL_00_MASTER",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_UAT_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Week",
-						"interval": 1,
-						"startTime": "2024-01-25T10:32:00",
-						"timeZone": "W. Europe Standard Time",
-						"schedule": {
-							"hours": [
-								1
-							],
-							"weekDays": [
-								"Monday",
-								"Tuesday",
-								"Wednesday",
-								"Thursday",
-								"Friday"
-							]
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ir-ig-managed-dev-westeurope')]",
@@ -16041,7 +16284,7 @@
 						"dataFlowProperties": {
 							"computeType": "General",
 							"coreCount": 8,
-							"timeToLive": 10,
+							"timeToLive": 5,
 							"cleanup": true
 						}
 					}
@@ -17632,6 +17875,50 @@
 					"scriptLines": [
 						"applyParquetNaming(string) as string = replace(replace(replace(replace(replace(replace(replace(replace(i1,' ',''),'(',''),')',''),']',''),'[',''),';',''),'{',''),'}','')"
 					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/globalparameters",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"gpm_Environment": {
+					"type": "string",
+					"value": "dev"
+				},
+				"gpm_Databrick_Workspace_URL": {
+					"type": "string",
+					"value": "https://adb-2715169315282147.7.azuredatabricks.net"
+				},
+				"gpm_Databricks_Workspace_Resource_ID": {
+					"type": "string",
+					"value": "/subscriptions/5c771a6b-7686-4067-a58d-95551c37bf46/resourceGroups/rg-ig-lakehouse-dev-westeurope/providers/Microsoft.Databricks/workspaces/abd-ig-lakehouse-dev-westeurope"
+				},
+				"gpm_lightweight_jobs_Databricks_ClusterID": {
+					"type": "string",
+					"value": "0915-095651-good16-pool-r70v24z6"
+				},
+				"gpm_Databricks_JobID_Bronze_to_Silver": {
+					"type": "string",
+					"value": "199200608148764"
+				},
+				"gpm_Databricks_JobID_Silver_to_Gold_obt": {
+					"type": "string",
+					"value": "584896541836875"
+				},
+				"gpm_Vuzion_CRM_Uri": {
+					"type": "string",
+					"value": "https://infinigate-cloud-dev.crm4.dynamics.com/"
+				},
+				"gpm_Vuzion_CRM_Service_Principal_Id": {
+					"type": "string",
+					"value": "923bb5ac-b49e-4846-8186-274d5c5ce237"
+				},
+				"gpm_Databricks_JobID_Silver_to_Gold_tag02": {
+					"type": "string",
+					"value": "13137093789100"
 				}
 			},
 			"dependsOn": []
