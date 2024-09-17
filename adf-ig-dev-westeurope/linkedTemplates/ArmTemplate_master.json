@@ -138,7 +138,7 @@
 		},
 		"TR_SCHEDULE_DAILY_properties_runtimeState": {
 			"type": "string",
-			"defaultValue": "Stopped"
+			"defaultValue": "Started"
 		},
 		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"type": "bool",

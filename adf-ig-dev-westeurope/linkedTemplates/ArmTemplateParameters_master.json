@@ -102,7 +102,7 @@
 			"value": "@{linkedService().pm_Service_Principal_Id}"
 		},
 		"TR_SCHEDULE_DAILY_properties_runtimeState": {
-			"value": "Stopped"
+			"value": "Started"
 		},
 		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
 			"value": false
