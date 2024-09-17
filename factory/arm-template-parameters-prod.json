@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "factoryName": {
-      "value": "adf-ig-prod-00-westeurope"
+      "value": "adf-ig-prod-westeurope"
     },
     
     "TR_DI_Agent_properties_runtimeState": {

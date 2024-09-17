@@ -30,7 +30,7 @@ devs will continue added to the Linked Service COnnectors so you can expect this
 There are some prerequisites & build consider before running this project
 
 1. As mentioned, the ADF repo features handles management of the source code
-2. At the time of writing the Development ADF solution is sitting within [Dev ADF](https://adf.azure.com/en/home?factory=%2Fsubscriptions%2F5c771a6b-7686-4067-a58d-95551c37bf46%2FresourceGroups%2Frg-ig-lakehouse-dev-westeurope%2Fproviders%2FMicrosoft.DataFactory%2Ffactories%2Fadf-ig-dev-00-westeurope)
+2. At the time of writing the Development ADF solution is sitting within [Dev ADF](https://adf.azure.com/en/home?factory=%2Fsubscriptions%2F5c771a6b-7686-4067-a58d-95551c37bf46%2FresourceGroups%2Frg-ig-lakehouse-dev-westeurope%2Fproviders%2FMicrosoft.DataFactory%2Ffactories%2Fadf-ig-dev-westeurope)
 3. Developers are advised to branch off the main code ![Connect to a Repo](./images/ADFBranch.PNG)
 
    opens to

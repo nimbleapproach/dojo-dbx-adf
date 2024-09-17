@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "factoryName": {
-            "value": "adf-ig-dev-00-westeurope"
+            "value": "adf-ig-dev-westeurope"
         },
         "LS_Oracle_CX_password": {
             "value": ""

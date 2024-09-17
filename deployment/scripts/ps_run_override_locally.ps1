@@ -9,7 +9,7 @@ foreach ($env in $loopparams)
 }
 
 #run against global tamplate parameters
-$templatejson = '../../factory/example/adf-ig-dev-00-westeurope_GlobalParameters.json'
+$templatejson = '../../factory/example/adf-ig-dev-westeurope_GlobalParameters.json'
 $loopparams = 'uat' #'devtest','test','preprod','uat' , 'prod'
 foreach ($env in $loopparams)
 {

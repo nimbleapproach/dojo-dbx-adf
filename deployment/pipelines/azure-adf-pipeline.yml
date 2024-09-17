@@ -35,7 +35,7 @@ variables:
   - name: resourceGroupNameDev
     value: "rg-ig-lakehouse-dev-westeurope"
   - name: dataFactoryNameDev
-    value: "adf-ig-dev-00-westeurope"
+    value: "adf-ig-dev-westeurope"
   - name: DataFactoryResourceId
     value: /subscriptions/$(subscriptionIdDev)/resourceGroups/$(resourceGroupNameDev)/providers/Microsoft.DataFactory/factories/$(dataFactoryNameDev)
   - name: projectName
@@ -57,11 +57,11 @@ stages:
           dataFactoryName: $(dataFactoryNameDev)
           location: $(location)
   - stage: UAT
-    # condition: or(contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-full'), contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-upto-uat'))
+    condition: or(contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-full'), contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-upto-uat'))
     displayName: UAT
     dependsOn: build
     variables:
-      dataFactoryName: "adf-ig-uat-00-westeurope"
+      dataFactoryName: "adf-ig-uat-westeurope"
     jobs:
       - template: azure-adf-deploy.yml
         parameters:
