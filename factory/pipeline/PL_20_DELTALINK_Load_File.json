@@ -59,6 +59,8 @@
 		"folder": {
 			"name": "10 Bronze/DELTALINK"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-12-11T10:51:13Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

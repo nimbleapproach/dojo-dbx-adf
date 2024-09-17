@@ -820,6 +820,8 @@
 		"folder": {
 			"name": "10 Bronze/IGSQL01 [CRM]"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-07-18T11:07:17Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

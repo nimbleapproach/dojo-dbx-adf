@@ -25,6 +25,9 @@
 							"name": "PL_20_NETSUITE_Load_File",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
@@ -62,13 +65,7 @@
 				"typeProperties": {
 					"dataset": {
 						"referenceName": "DS_BINARY_NETSUITE",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_Environment": {
-								"value": "@pipeline().globalParameters.gpm_Environment",
-								"type": "Expression"
-							}
-						}
+						"type": "DatasetReference"
 					},
 					"fieldList": [
 						"childItems"
@@ -93,6 +90,8 @@
 		"folder": {
 			"name": "10 Bronze/NETSUITE"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-25T15:09:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

@@ -519,6 +519,8 @@
 		"folder": {
 			"name": "10 Bronze"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-07-24T10:20:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

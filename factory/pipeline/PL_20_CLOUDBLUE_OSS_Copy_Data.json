@@ -258,6 +258,8 @@
 		"folder": {
 			"name": "10 Bronze/CLOUDBLUE/OSS"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-01-03T08:42:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

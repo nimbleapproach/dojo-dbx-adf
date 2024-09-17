@@ -42,5 +42,6 @@
 		"typeProperties": {
 			"entityName": "vz1_coreproducts"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
 }

@@ -6,6 +6,9 @@
 				"name": "PL_10_CLOUDBLUE_PBA_Load_Table_Iterator",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -36,6 +39,8 @@
 		"folder": {
 			"name": "10 Bronze/CLOUDBLUE/PBA"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-25T15:09:25Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

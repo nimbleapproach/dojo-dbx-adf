@@ -59,7 +59,7 @@ stages:
   - stage: UAT
     condition: or(contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-full'), contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-upto-uat'))
     displayName: UAT
-    dependsOn: build
+    dependsOn: Build
     variables:
       dataFactoryName: "adf-ig-uat-westeurope"
     jobs:

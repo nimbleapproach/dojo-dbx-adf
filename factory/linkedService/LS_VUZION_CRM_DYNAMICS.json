@@ -1,5 +1,6 @@
 {
 	"name": "LS_VUZION_CRM_DYNAMICS",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"pm_Service_Uri": {

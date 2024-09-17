@@ -1,5 +1,6 @@
 {
 	"name": "LS_PGSQL_CLOUDBLUE_OSS",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"pm_Environment": {
@@ -28,6 +29,5 @@
 			"referenceName": "shir-jumpbi01-shared",
 			"type": "IntegrationRuntimeReference"
 		}
-	},
-	"type": "Microsoft.DataFactory/factories/linkedservices"
+	}
 }

@@ -48,6 +48,8 @@
 		"folder": {
 			"name": "10 Bronze/DCB"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-03-25T10:29:29Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

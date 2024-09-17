@@ -1,0 +1,16 @@
+{
+	"name": "CLOUDBLUE_PBA",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "PostgreSql",
+		"typeProperties": {
+			"connectionString": "host=172.17.39.81;port=5432;database=pba;uid=group_pipelineuser_pba;encryptionmethod=0",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIwNDE2ODI3Yi1jMTc5LTQ5MGEtYmRmZC02Y2VhZDlkYzMyMjQiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "shir-jumpbi01-shared",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

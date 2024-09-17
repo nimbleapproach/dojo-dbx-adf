@@ -6,6 +6,9 @@
 				"name": "PL_20_DATANOW_ARR_LATEST_Load_Sheet",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -19,6 +22,8 @@
 		"folder": {
 			"name": "10 Bronze/DATANOW/LATEST"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-10-13T10:55:13Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

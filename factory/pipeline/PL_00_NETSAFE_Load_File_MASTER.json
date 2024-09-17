@@ -22,6 +22,8 @@
 		"folder": {
 			"name": "10 Bronze/NETSAFE"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-02-22T15:19:47Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

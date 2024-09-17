@@ -194,6 +194,8 @@
 		"folder": {
 			"name": "10 Bronze/VUZION"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-11-01T13:55:23Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }
