@@ -95,9 +95,9 @@ All changes outside of our repo, like Azure Key Vault, Metadata SQL, Databricks 
 In this section we will point out more precise information on how we are using data factory.
 We are using one Factory per environment and one which is environment agnostic:
 
--  [adf-ig-dev-westeurope](https://portal.azure.com/#@Infinigate.onmicrosoft.com/resource/subscriptions/5c771a6b-7686-4067-a58d-95551c37bf46/resourceGroups/rg-ig-lakehouse-dev-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-dev-westeurope)
--  [adf-ig-uat-westeurope](https://portal.azure.com/#@Infinigate.onmicrosoft.com/resource/subscriptions/bf75b24f-2b10-4ada-a25a-b5bec3311486/resourceGroups/rg-ig-lakehouse-uat-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-uat-westeurope)
--  [adf-ig-prod-westeurope](https://portal.azure.com/#@Infinigate.onmicrosoft.com/resource/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourceGroups/rg-ig-lakehouse-prod-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-prod-westeurope)
+-  [adf-ig-dev-00-westeurope](https://portal.azure.com/#@Infinigate.onmicrosoft.com/resource/subscriptions/5c771a6b-7686-4067-a58d-95551c37bf46/resourceGroups/rg-ig-lakehouse-dev-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-dev-00-westeurope)
+-  [adf-ig-uat-00-westeurope](https://portal.azure.com/#@Infinigate.onmicrosoft.com/resource/subscriptions/bf75b24f-2b10-4ada-a25a-b5bec3311486/resourceGroups/rg-ig-lakehouse-uat-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-uat-00-westeurope)
+-  [adf-ig-prod-westeurope](https://portal.azure.com/#@Infinigate.onmicrosoft.com/resource/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourceGroups/rg-ig-lakehouse-dev-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-prod-westeurope)
 -  [adf-ig-shared-westeurope](https://portal.azure.com/#@Infinigate.onmicrosoft.com/resource/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourceGroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope) (This is only used to register *self-hosted integration runtimes*)
 
 Azure Data Factory is our development platform for integrating data and it has an underlying development workflow (CI/CD) in Azure DevOps Repos and an underlying deployment process in Azure Pipelines. It is important to understand, that everything the you are building needs to be "deployable".

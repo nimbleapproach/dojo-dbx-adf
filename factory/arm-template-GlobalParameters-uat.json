@@ -1,0 +1,38 @@
+{
+	"gpm_Environment": {
+		"type": "string",
+		"value": "uat"
+	},
+	"gpm_Databrick_Workspace_URL": {
+		"type": "string",
+		"value": "https://adb-7878361988304649.9.azuredatabricks.net"
+	},
+	"gpm_Databricks_Workspace_Resource_ID": {
+		"type": "string",
+		"value": "/subscriptions/bf75b24f-2b10-4ada-a25a-b5bec3311486/resourceGroups/rg-ig-lakehouse-uat-westeurope/providers/Microsoft.Databricks/workspaces/abd-ig-lakehouse-uat-westeurope"
+	},
+	"gpm_lightweight_jobs_Databricks_ClusterID": {
+		"type": "string",
+		"value": "1214-142137-snug249-pool-r507dx9u"
+	},
+	"gpm_Databricks_JobID_Bronze_to_Silver": {
+		"type": "string",
+		"value": "932874801851962"
+	},
+	"gpm_Databricks_JobID_Silver_to_Gold_obt": {
+		"type": "string",
+		"value": "819681510418405"
+	},
+	"gpm_Vuzion_CRM_Uri": {
+		"type": "string",
+		"value": "https://infinigate-cloud-dev.crm4.dynamics.com/"
+	},
+	"gpm_Vuzion_CRM_Service_Principal_Id": {
+		"type": "string",
+		"value": "923bb5ac-b49e-4846-8186-274d5c5ce237"
+	},
+	"gpm_Databricks_JobID_Silver_to_Gold_tag02": {
+		"type": "string",
+		"value": "573700106342910"
+	}
+}

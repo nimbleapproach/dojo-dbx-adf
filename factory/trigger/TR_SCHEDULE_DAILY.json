@@ -1,5 +1,5 @@
 {
-	"name": "TR_SCHEDULE_DAILY_UAT",
+	"name": "TR_SCHEDULE_DAILY",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Stopped",
@@ -19,11 +19,11 @@
 			"recurrence": {
 				"frequency": "Week",
 				"interval": 1,
-				"startTime": "2024-01-25T10:32:00",
+				"startTime": "2023-07-26T00:00:00",
 				"timeZone": "W. Europe Standard Time",
 				"schedule": {
 					"hours": [
-						1
+						2
 					],
 					"weekDays": [
 						"Monday",
