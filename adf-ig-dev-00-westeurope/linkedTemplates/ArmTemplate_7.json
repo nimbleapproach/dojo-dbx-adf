@@ -1727,11 +1727,6 @@
 						"defaultValue": false
 					}
 				},
-				"variables": {
-					"v_Test": {
-						"type": "Integer"
-					}
-				},
 				"folder": {
 					"name": "00 Setup"
 				},

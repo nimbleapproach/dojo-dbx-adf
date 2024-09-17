@@ -164,7 +164,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"variableName": "v_Test",
-							"value": 1
+							"value": "1"
 						}
 					}
 				],
@@ -173,7 +173,8 @@
 				},
 				"variables": {
 					"v_Test": {
-						"type": "Integer"
+						"type": "String",
+						"defaultValue": "test"
 					}
 				},
 				"folder": {
