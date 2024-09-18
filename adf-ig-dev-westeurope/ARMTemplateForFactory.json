@@ -15775,12 +15775,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "secret-adls-nuvias-dynamics-key"
 					}
@@ -15800,11 +15795,6 @@
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
 				"annotations": [],
 				"type": "AzureKeyVault",
 				"typeProperties": {
@@ -15858,12 +15848,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
 					}
@@ -15896,12 +15881,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					}
@@ -15937,12 +15917,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": {
 							"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]",
@@ -15955,12 +15930,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "secret-igsql03-sql-password"
 					}
@@ -16020,12 +15990,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": {
 							"value": "[parameters('LS_SQLDB_NAV_DYNAMIC_properties_typeProperties_connectionString_secretName')]",
@@ -16038,12 +16003,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "secret-igsql03-sql-password"
 					}
@@ -16079,12 +16039,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": {
 							"value": "[parameters('LS_SQLDB_NUVIAS_FO_properties_typeProperties_connectionString_secretName')]",
@@ -16120,12 +16075,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
 					}
@@ -16187,12 +16137,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "secret-vuzion-crm-service-principal-secret-value"
 					},

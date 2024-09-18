@@ -219,11 +219,6 @@
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
 				"annotations": [],
 				"type": "AzureKeyVault",
 				"typeProperties": {
@@ -724,12 +719,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "secret-adls-nuvias-dynamics-key"
 					}
@@ -789,12 +779,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
 					}
@@ -827,12 +812,7 @@
 						"store": {
 							"referenceName": "LS_KV",
 							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Environment": {
-									"value": "@linkedService().pm_Environment",
-									"type": "Expression"
-								}
-							}
+							"parameters": {}
 						},
 						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					}
