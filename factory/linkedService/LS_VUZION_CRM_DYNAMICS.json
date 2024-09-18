@@ -1,6 +1,5 @@
 {
 	"name": "LS_VUZION_CRM_DYNAMICS",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"pm_Service_Uri": {
@@ -24,15 +23,9 @@
 				"type": "AzureKeyVaultSecret",
 				"store": {
 					"referenceName": "LS_KV",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_Environment": {
-							"value": "@linkedService().pm_Environment",
-							"type": "Expression"
-						}
-					}
+					"type": "LinkedServiceReference"
 				},
-				"secretName": "secret-vuzion-crm-service-principal-secret-value"
+				"secretName": "secret-vuzion-crm-prod-service-principal-secret-value"
 			},
 			"servicePrincipalCredentialType": "ServicePrincipalKey"
 		},
@@ -40,5 +33,6 @@
 			"referenceName": "ir-ig-managed-dev-westeurope",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }
