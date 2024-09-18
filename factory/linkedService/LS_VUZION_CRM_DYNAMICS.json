@@ -3,13 +3,16 @@
 	"properties": {
 		"parameters": {
 			"pm_Service_Uri": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "https://infinigate-cloud-dev.crm4.dynamics.com/"
 			},
 			"pm_Service_Principal_Id": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "923bb5ac-b49e-4846-8186-274d5c5ce237"
 			},
 			"pm_Environment": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "dev"
 			}
 		},
 		"annotations": [],
