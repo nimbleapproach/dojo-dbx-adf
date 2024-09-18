@@ -34,7 +34,7 @@
 						}
 					}
 				},
-				"secretName": "secret-vuzion-crm-service-principal-secret-value"
+				"secretName": "secret-vuzion-crm-prod-service-principal-secret-value"
 			},
 			"servicePrincipalCredentialType": "ServicePrincipalKey"
 		},
