@@ -21,6 +21,9 @@
     },
     "shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
         "value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-jumpbi01-shared"
+    },
+    "LS_KV_properties_typeProperties_baseUrl": {
+        "value": "https://kv-ig-prod-westeurope.vault.azure.net/"
     }
   }
 }
