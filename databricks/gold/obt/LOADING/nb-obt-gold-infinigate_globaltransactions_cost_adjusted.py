@@ -150,320 +150,15 @@ having max(GL_Group) = 1
 
 # COMMAND ----------
 
-spark.sql(f"""
-
-CREATE OR REPLACE VIEW gold_{ENVIRONMENT}.obt.infinigate_general_ledger AS
-WITH sales_doc AS (
-    SELECT DISTINCT concat(Sys_DatabaseName,No_) No_ 
-                                                  from silver_{ENVIRONMENT}.igsql03.sales_invoice_header
-                                                  where Sys_Silver_IsCurrent=1
-                                                union all
-                                                  SELECT DISTINCT concat(Sys_DatabaseName,No_) No_
-                                                  from silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header
-                                                  where Sys_Silver_IsCurrent=1
-),
-doc_cost AS (
-
-with doc_in_cost as(
-SELECT DISTINCT
-  gle.DocumentNo_,
-  CONCAT(RIGHT(gle.Sys_DatabaseName,2 ),'1') as EntityCode,
-  gle.Sys_DatabaseName,
-  CASE WHEN ga.Consol_CreditAcc_ IN ( '350988',
-                                      '351988',
-                                      '371988',
-                                      '391988',
-                                      '451988',
-                                      '452788',
-                                      '469988',
-                                      '499988') THEN 3
-      WHEN ga.Consol_CreditAcc_ IN ( '309988',
-                                     '310188',
-                                     '310288',
-                                     '310388',
-                                     '310488',
-                                     '310588',
-                                     '310688',
-                                     '310788',
-                                     '310888',
-                                     '310988',
-                                     '311088',
-                                     '312088',
-                                     '313088',
-                                     '314088',
-                                     '320988',
-                                     '322988',
-                                     '370988') THEN 2  
-    WHEN ga.Consol_CreditAcc_ IN (  '400988',
-                                    '401988',
-                                    '402988',
-                                    '420988',
-                                    '421988',
-                                    '422988',
-                                    '440188',
-                                    '440288',
-                                    '440388',
-                                    '440588',
-                                    '440688',
-                                    '440788',
-                                    '440888',
-                                    '449988',
-                                    '450888',
-                                    '450988',
-                                    '452888',
-                                    '452988',
-                                    '468988') THEN 1
-
-END as GL_Group,
-CASE WHEN ga.Consol_CreditAcc_ IN (
---- Revenue level adj.
-'309988'
-,'310188'
-,'310288'
-,'310388'
-,'310488'
-,'310588'
-,'310688'
-,'310788'
-,'310888'
-,'310988'
-,'311088'
-,'312088'
-,'313088'
-,'314088'
-,'320988'
-,'322988'
-,'370988'
-
---- GP1 level adj.
-,'350988'
-,'351988'
-,'391988'
-,'371988'
-,'400988'
-,'401988'
-,'402988'
-,'420988'
-,'421988'
-,'422988'
-,'440188'
-,'440288'
-,'440388'
-,'440588'
-,'440688'
-,'440788'
-,'440888'
-,'449988'
-,'450888'
-,'450988'
-,'451988'
-,'452788'
-,'452888'
-,'452988'
-,'468988'
-,'469988'
-,'499988') THEN 1 ELSE 0 
-
-END AS ProRata
-FROM silver_{ENVIRONMENT}.igsql03.g_l_entry gle
-INNER JOIN silver_{ENVIRONMENT}.igsql03.g_l_account ga ON gle.G_LAccountNo_ = ga.No_
-                                                      AND gle.Sys_DatabaseName = ga.Sys_DatabaseName
-                                                      AND ga.Sys_Silver_IsCurrent=1
-                                                      AND gle.Sys_Silver_IsCurrent=1
-
-LEFT JOIN sales_doc ON concat(gle.Sys_DatabaseName,gle.DocumentNo_) = sales_doc.No_
-
-WHERE gle.Sys_Silver_IsCurrent=1
-AND sales_doc.No_ IS NOT NULL  
-GROUP BY ALL)
-
-select distinct 
-concat(Sys_DatabaseName,DocumentNo_)DocumentNo_
- from doc_in_cost
-group by all
-having max(GL_Group) = 1
-) 
-SELECT
-  gle.DocumentNo_,
-  GLE.PostingDate,
-  CONCAT(RIGHT(gle.Sys_DatabaseName,2 ),'1') as EntityCode,
-  gle.Sys_DatabaseName,
- --ga.Consol_CreditAcc_,
-  coalesce(ven.DimensionValueCode, 'NaN')  as VendorCode,
-  SUM(gle.Amount) as CostAmount,
-  CASE WHEN ga.Consol_CreditAcc_ IN ( '350988',
-                                      '351988',
-                                      '371988',
-                                      '391988',
-                                      '451988',
-                                      '452788',
-                                      '469988',
-                                      '499988') THEN 'IC'
-      WHEN ga.Consol_CreditAcc_ IN ( '309988',
-                                     '310188',
-                                     '310288',
-                                     '310388',
-                                     '310488',
-                                     '310588',
-                                     '310688',
-                                     '310788',
-                                     '310888',
-                                     '310988',
-                                     '311088',
-                                     '312088',
-                                     '313088',
-                                     '314088',
-                                     '320988',
-                                     '322988',
-                                     '370988') THEN 'Revenue'  
-        WHEN doc_cost.DocumentNo_ IS NOT NULL 
-              AND  ga.Consol_CreditAcc_ IN(
-                                      '400988',
-                                      '401988',
-                                      '402988',
-                                      '420988',
-                                      '421988',
-                                      '422988',
-                                      '440188',
-                                      '440288',
-                                      '440388',
-                                      '440588',
-                                      '440688',
-                                      '440788',
-                                      '440888',
-                                      '449988',
-                                      '450888',
-                                      '450988',
-                                      '452888',
-                                      '452988',
-                                      '468988')  THEN 'Cost'
-END as GL_Group,
-CASE WHEN ga.Consol_CreditAcc_ IN (
---- Revenue level adj.
-'309988'
-,'310188'
-,'310288'
-,'310388'
-,'310488'
-,'310588'
-,'310688'
-,'310788'
-,'310888'
-,'310988'
-,'311088'
-,'312088'
-,'313088'
-,'314088'
-,'320988'
-,'322988'
-,'370988'
-
---- GP1 level adj.
-,'350988'
-,'351988'
-,'391988'
-,'371988'
-,'400988'
-,'401988'
-,'402988'
-,'420988'
-,'421988'
-,'422988'
-,'440188'
-,'440288'
-,'440388'
-,'440588'
-,'440688'
-,'440788'
-,'440888'
-,'449988'
-,'450888'
-,'450988'
-,'451988'
-,'452788'
-,'452888'
-,'452988'
-,'468988'
-,'469988'
-,'499988') THEN 1 ELSE 0 
-
-END AS ProRata,
-
-CASE WHEN sales_doc.No_ IS NULL
-AND ga.Consol_CreditAcc_ in (
---- Revenue level adj.
-'309988'
-,'310188'
-,'310288'
-,'310388'
-,'310488'
-,'310588'
-,'310688'
-,'310788'
-,'310888'
-,'310988'
-,'311088'
-,'312088'
-,'313088'
-,'314088'
-,'320988'
-,'322988'
-,'370988'
-
---- GP1 level adj.
-,'350988'
-,'351988'
-,'391988'
-,'371988'
-,'400988'
-,'401988'
-,'402988'
-,'420988'
-,'421988'
-,'422988'
-,'440188'
-,'440288'
-,'440388'
-,'440588'
-,'440688'
-,'440788'
-,'440888'
-,'449988'
-,'450888'
-,'450988'
-,'451988'
-,'452788'
-,'452888'
-,'452988'
-,'468988'
-,'469988'
-,'499988') THEN 1 ELSE 0 END AS TopCost
-
-FROM silver_{ENVIRONMENT}.igsql03.g_l_entry gle
-INNER JOIN silver_{ENVIRONMENT}.igsql03.g_l_account ga ON gle.G_LAccountNo_ = ga.No_
-                                                      AND gle.Sys_DatabaseName = ga.Sys_DatabaseName
-                                                      AND ga.Sys_Silver_IsCurrent=1
-                                                      AND gle.Sys_Silver_IsCurrent=1
-LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry ven ON gle.Sys_DatabaseName = ven.Sys_DatabaseName
-                                                               AND gle.DimensionSetID = ven.DimensionSetID
-                                                               AND ven.DimensionCode = 'VENDOR'
-                                                               AND ven.Sys_Silver_IsCurrent = 1
-LEFT JOIN sales_doc ON concat(gle.Sys_DatabaseName,gle.DocumentNo_) = sales_doc.No_
-LEFT JOIN doc_cost ON concat(gle.Sys_DatabaseName,gle.DocumentNo_)= doc_cost.DocumentNo_
-
-WHERE gle.Sys_Silver_IsCurrent=1
-GROUP BY ALL""")
+# MAGIC %run ./nd-obt-infinigate_general_ledger
 
 # COMMAND ----------
 
 spark.sql(f"""
+
 WITH obt_ve AS (
   SELECT
-    CASE
-      WHEN g.EntityCode = 'AT1' THEN 'DE1'
-      WHEN g.EntityCode = 'BE1' THEN 'NL1'
-      ELSE g.EntityCode
-    END AS EntityCode,
+    g.EntityCode,
     Sys_DatabaseName,
     g.VendorCode,
     g.DocumentNo,
@@ -478,7 +173,9 @@ WITH obt_ve AS (
     ALL
   UNION all
   SELECT
-    EntityCode,
+    CASE WHEN RegionCode = 'AT1'then 'AT1' 
+          WHEN RegionCode = 'BE1'then 'BE1' 
+          ELSE EntityCode END AS EntityCode,
     Sys_DatabaseName,
     VendorCode,
     DocumentNo_ as DocumentNo,
@@ -636,12 +333,22 @@ cost_adjustment AS (
    
    
   ),
-
-
---Aggregates value_entry adjustments to be combined in final costs.
+  obt_sum AS (
+   SELECT
+      obt.EntityCode,
+      obt.DocumentNo,
+      obt.Sys_DatabaseName,
+      obt.VendorCode,
+      SUM(obt.RevenueAmount) RevenueAmount_Sum,
+      COUNT(obt.LineNo) LineCount
+    FROM  gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
+    GROUP BY ALL
+),
 value_entry_adjustments AS (
       SELECT 
-        CONCAT( RIGHT (ve.Sys_DatabaseName,2),'1')  AS EntityCode,
+        case when ve.Sys_DatabaseName in( 'ReportsDE','ReportsAT') AND region.DimensionValueCode = 'AT' THEN 'AT1'
+             when ve.Sys_DatabaseName = 'ReportsNL' AND region.DimensionValueCode = 'BE' THEN 'BE1'
+    ELSE CONCAT( RIGHT (ve.Sys_DatabaseName,2),'1') END EntityCode,
         ve.Sys_DatabaseName,
         ve.DocumentLineNo_,
         ve.DocumentNo_,
@@ -659,22 +366,6 @@ value_entry_adjustments AS (
       --AND NOT(ve.DocumentNo_= 22506211 AND ve.PostingDate = '2024-07-01T00:00:00.000') --Manual exclusion of ≈50 million record added in error to CH1
       GROUP BY ALL)
 ,
-
-
-obt_sum AS (
-   SELECT
-      obt.EntityCode,
-      obt.DocumentNo,
-      obt.Sys_DatabaseName,
-      obt.VendorCode,
-      SUM(obt.RevenueAmount) RevenueAmount_Sum,
-      COUNT(obt.LineNo) LineCount
-    FROM  gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
-    GROUP BY ALL
-)
-,
-
-
 gt AS (
 SELECT 
    obt.GroupEntityCode
@@ -768,12 +459,9 @@ FROM gold_{ENVIRONMENT}.OBT.infinigate_globaltransactions obt
 INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
                                      AND obt.LineNo = ve.DocumentLineNo_
                                      AND obt.Sys_DatabaseName = ve.Sys_DatabaseName
-                                     AND CASE WHEN obt.EntityCode = 'AT1' THEN 'DE1'
-                                              WHEN obt.EntityCode = 'BE1' THEN 'NL1'
-                                              ELSE obt.EntityCode END = VE.EntityCode 
+                                     AND obt.EntityCode  = VE.EntityCode 
 ),
-
- ca AS (
+  ca AS (
   SELECT
     obt.GroupEntityCode,
     obt.EntityCode,
@@ -815,7 +503,7 @@ INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
     0.00 AS CostAmount,
     0.00 AS GP1,
     0.00 AS CostAmount_ValueEntry 
-,CASE
+    ,CASE
       WHEN COALESCE(obt_sum.RevenueAmount_Sum, 0) = 0 THEN ca.CostAmount_Gap / obt_sum.LineCount --If total revenue = 0, divide by number of rcords introduced by obt.
       ELSE CAST(
         TRY_DIVIDE((obt.RevenueAmount), obt_sum.RevenueAmount_Sum) AS DECIMAL(10, 4)
@@ -835,11 +523,7 @@ INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
       FROM
         cost_adjustment
       GROUP BY ALL
-    ) ca ON CASE
-      WHEN obt.EntityCode = 'AT1' THEN 'DE1'
-      WHEN obt.EntityCode = 'BE1' THEN 'NL1'
-      ELSE obt.EntityCode
-    END = ca.EntityCode
+    ) ca ON obt.EntityCode  = ca.EntityCode
     AND obt.DocumentNo = ca.DocumentNo
     AND obt.Sys_DatabaseName = ca.Sys_DatabaseName
     AND obt.VendorCode = ca.VendorCode
@@ -894,8 +578,8 @@ INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
     sum(ca.CostAmount_Gap) AS Cost_ProRata_Adj
   FROM
     cost_adjustment AS ca
-WHERE CONCAT(ca.Sys_DatabaseName,ca.DocumentNo,ca.VendorCode) NOT IN
- (SELECT DISTINCT CONCAT(Sys_DatabaseName,DocumentNo,VendorCode) FROM gold_{ENVIRONMENT}.obt.infinigate_globaltransactions)
+WHERE CONCAT(ca.Sys_DatabaseName,ca.EntityCode,ca.DocumentNo,ca.VendorCode) NOT IN
+ (SELECT DISTINCT CONCAT(Sys_DatabaseName,EntityCode,DocumentNo,VendorCode) FROM gold_{ENVIRONMENT}.obt.infinigate_globaltransactions)
 
   GROUP BY
     ALL
@@ -943,16 +627,19 @@ WHERE CONCAT(ca.Sys_DatabaseName,ca.DocumentNo,ca.VendorCode) NOT IN
         ,SUM(fc.CostAmount_ValueEntry) AS CostAmount_ValueEntry
         ,SUM(fc.Cost_ProRata_Adj) AS Cost_ProRata_Adj
   FROM (
-    SELECT *
-    FROM gt
-    UNION ALL
-    SELECT *
-    FROM ve
-    UNION ALL
+
     SELECT *
     FROM ca
+    union all
+    select * 
+    from ve
+    UNION ALL 
+    select * 
+    FROM gt
 ) fc
 GROUP BY ALL
+
+
 
 """).createOrReplaceTempView('temp')
 
@@ -980,4 +667,5 @@ gl_doc_category_sum.GL_Group
 left join gl_doc_category_sum on
 temp.Sys_DatabaseName = gl_doc_category_sum.Sys_DatabaseName
     AND temp.DocumentNo = gl_doc_category_sum.DocumentNo_
+    AND temp.EntityCode = gl_doc_category_sum.EntityCode
 """)
