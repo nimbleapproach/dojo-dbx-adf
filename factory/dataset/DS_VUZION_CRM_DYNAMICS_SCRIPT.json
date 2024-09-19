@@ -40,7 +40,7 @@
 		"type": "DynamicsCrmEntity",
 		"schema": [],
 		"typeProperties": {
-			"entityName": "vz1_coreproducts"
+			"entityName": "account"
 		}
 	},
 	"type": "Microsoft.DataFactory/factories/datasets"
