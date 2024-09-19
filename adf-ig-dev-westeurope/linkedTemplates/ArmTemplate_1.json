@@ -16,6 +16,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQL_TEST'"
 		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
+		},
 		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-igsql01-@{toLower(linkedService().pm_DatabaseName)}-mscrm-connectionstring"
@@ -53,6 +57,36 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_PBA')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "PostgreSql",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {}
+						},
+						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-jumpbi01-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_CRM_DYNAMIC')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -1517,142 +1551,6 @@
 					},
 					{
 						"name": "Margin Transaction",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_NETSAFE_EXCEL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_ADLS_DV",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string",
-						"defaultValue": "dev"
-					}
-				},
-				"folder": {
-					"name": "Sources/NETSAFE"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "netsafe/pending",
-						"fileSystem": "external"
-					},
-					"sheetIndex": 0,
-					"firstRowAsHeader": true
-				},
-				"schema": [
-					{
-						"name": "Invoice Date",
-						"type": "String"
-					},
-					{
-						"name": "Sales Order Number",
-						"type": "String"
-					},
-					{
-						"name": "Invoice Number",
-						"type": "String"
-					},
-					{
-						"name": "Item ID",
-						"type": "String"
-					},
-					{
-						"name": "SKU",
-						"type": "String"
-					},
-					{
-						"name": "Item Type",
-						"type": "String"
-					},
-					{
-						"name": "Customer Name",
-						"type": "String"
-					},
-					{
-						"name": "Qty",
-						"type": "String"
-					},
-					{
-						"name": "Transaction Currency",
-						"type": "String"
-					},
-					{
-						"name": "Revenue Transaction Currency",
-						"type": "String"
-					},
-					{
-						"name": "Cost Transaction Currency",
-						"type": "String"
-					},
-					{
-						"name": "Margin Transaction Currency",
-						"type": "String"
-					},
-					{
-						"name": "Exchange Rate",
-						"type": "String"
-					},
-					{
-						"name": "Revenue GBP",
-						"type": "String"
-					},
-					{
-						"name": "Cost GBP",
-						"type": "String"
-					},
-					{
-						"name": "Margin GBP",
-						"type": "String"
-					},
-					{
-						"name": "Vendor ID",
-						"type": "String"
-					},
-					{
-						"name": "Vendor Name",
-						"type": "String"
-					},
-					{
-						"name": "Account Manager",
-						"type": "String"
-					},
-					{
-						"name": "Order Type",
-						"type": "String"
-					},
-					{
-						"name": "Quote ID",
-						"type": "String"
-					},
-					{
-						"name": "Customer Account",
-						"type": "String"
-					},
-					{
-						"name": "SKU Description",
-						"type": "String"
-					},
-					{
-						"name": "Country",
 						"type": "String"
 					}
 				]
