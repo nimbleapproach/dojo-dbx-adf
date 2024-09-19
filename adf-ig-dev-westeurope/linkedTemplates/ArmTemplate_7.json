@@ -6,38 +6,474 @@
 			"type": "string",
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
-		},
-		"TR_SCHEDULE_DAILY_properties_runtimeState": {
-			"type": "string",
-			"defaultValue": "Started"
-		},
-		"TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad": {
-			"type": "bool",
-			"defaultValue": false
-		},
-		"TR_SCHEDULE_DAILY_startTime": {
-			"type": "string",
-			"defaultValue": "2023-07-26T00:00:00"
-		},
-		"TR_SCHEDULE_DAILY_hrs": {
-			"type": "int",
-			"defaultValue": 2
-		},
-		"TR_SCHEDULE_DAILY_weekDays": {
-			"type": "array",
-			"defaultValue": [
-				"Monday",
-				"Tuesday",
-				"Wednesday",
-				"Thursday",
-				"Friday"
-			]
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_BUDGET_Load_File_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetFileNames",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetFileNames').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "PL_10_VUZION_BUDGET_Load_File",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_10_VUZION_BUDGET_Load_Sheet_ITERATOR",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_FileName": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "GetFileNames",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_BINARY_VUZION_BUDGET",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Archived File",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ForEachView",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"deleteFilesAfterCompletion": true
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_DV_BINARY",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_Container": "external",
+									"pm_FilePath": "vuzion/budget/pending"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_DV_BINARY",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_Container": "external",
+									"pm_FilePath": "vuzion/budget/archived"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/VUZION/BUDGET"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-13T08:46:32Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_CRM_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get EDW Tables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_VUZION_D365_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_20_VUZION_CRM_ITERATOR",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_VUZION_CRM_Load_Entity",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_TableName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_full_load": {
+												"value": "@pipeline().parameters.pm_full_load",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "bool"
+					}
+				},
+				"variables": {
+					"Watermark_New": {
+						"type": "String"
+					},
+					"Watermark_Delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/VUZION [CRM]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-16T14:41:53Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__6')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetManifest",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_ManifestPath": {
+										"value": "@pipeline().parameters.pm_ManifestPath",
+										"type": "Expression"
+									},
+									"pm_ManifestName": {
+										"value": "@pipeline().parameters.pm_ManifestFile",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "ForEachSubmanifest",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetManifest",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__7",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_15_NUVIAS_OPERATIONS_ITERATOR__7",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											},
+											"pm_ManifestPath": {
+												"value": "@{pipeline().parameters.pm_ManifestPath}/@{item().manifestName}",
+												"type": "Expression"
+											},
+											"pm_ManifestFile": {
+												"value": "@{item().manifestName}",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ForEachEntities",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetManifest",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,skip(array(''),1))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_Entity": {
+												"value": "@item().entityName",
+												"type": "Expression"
+											},
+											"pm_ManifestPath": {
+												"value": "@pipeline().parameters.pm_ManifestPath",
+												"type": "Expression"
+											},
+											"pm_ManifestFile": {
+												"value": "@pipeline().parameters.pm_ManifestFile",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"pm_ManifestPath": {
+						"type": "string"
+					},
+					"pm_ManifestFile": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/OPERATIONS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_NUAZ-SQLSERVER-01_Load_Table_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -377,7 +813,9 @@
 				"annotations": [],
 				"lastPublishTime": "2024-03-13T08:46:32Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_10_VUZION_BUDGET_Load_File_ITERATOR')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_VUZION_CRM_MASTER')]",
@@ -431,7 +869,9 @@
 				"annotations": [],
 				"lastPublishTime": "2024-01-16T14:41:54Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_10_VUZION_CRM_ITERATOR')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_10_NUAZ-SQLSERVER-01_Load_Table_ITERATOR')]",
@@ -725,7 +1165,9 @@
 				"annotations": [],
 				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_15_NUVIAS_OPERATIONS_ITERATOR__6')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER')]",
@@ -2092,44 +2534,6 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NUVIAS_OPERATIONS_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL01_Load_Table_MASTER')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TR_SCHEDULE_DAILY')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "[parameters('TR_SCHEDULE_DAILY_properties_runtimeState')]",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "PL_00_MASTER",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Week",
-						"interval": 1,
-						"startTime": "[parameters('TR_SCHEDULE_DAILY_startTime')]",
-						"timeZone": "W. Europe Standard Time",
-						"schedule": {
-							"hours": [
-								"[parameters('TR_SCHEDULE_DAILY_hrs')]"
-							],
-							"weekDays": "[parameters('TR_SCHEDULE_DAILY_weekDays')]"
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
 			]
 		}
 	]

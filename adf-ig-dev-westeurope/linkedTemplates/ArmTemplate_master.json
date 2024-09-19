@@ -470,6 +470,26 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-westeurope_ArmTemplate_6')]"
+			]
+		},
+		{
+			"name": "adf-ig-dev-westeurope_ArmTemplate_8",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_8.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"TR_SCHEDULE_DAILY_properties_runtimeState": {
 						"value": "[parameters('TR_SCHEDULE_DAILY_properties_runtimeState')]"
@@ -489,7 +509,7 @@
 				}
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-westeurope_ArmTemplate_6')]"
+				"[resourceId('Microsoft.Resources/deployments', 'adf-ig-dev-westeurope_ArmTemplate_7')]"
 			]
 		}
 	]
