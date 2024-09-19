@@ -1,14 +1,5 @@
 trigger:
-  batch: true
-  branches:
-    include:
-      - main
-  paths:
-    include:
-      - databricks/**
-    exclude:
-      - README.md
-
+  - main
 
 variables:
   - name: docker_image_name

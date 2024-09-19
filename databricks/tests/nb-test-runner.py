@@ -21,3 +21,4 @@ assert retcode == 0, "The pytest invocation failed. See the log for details."
 # MAGIC %environment
 # MAGIC "client": "1"
 # MAGIC "base_environment": ""
+
