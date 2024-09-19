@@ -5,7 +5,7 @@ trigger:
       - main
   paths:
     include:
-      - databricks
+      - databricks/**
     exclude:
       - README.md
 
