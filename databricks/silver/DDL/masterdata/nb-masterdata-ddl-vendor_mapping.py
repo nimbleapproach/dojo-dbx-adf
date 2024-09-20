@@ -16,23 +16,17 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE resellergroups
+# MAGIC CREATE OR REPLACE TABLE vendor_mapping
 # MAGIC   ( 
 # MAGIC     SID bigint
 # MAGIC         GENERATED ALWAYS AS IDENTITY
 # MAGIC         COMMENT 'Surrogate Key'
-# MAGIC     ,InfinigateCompany STRING NOT NULL
-# MAGIC       COMMENT 'The name of the group entity.'
-# MAGIC     ,ResellerID STRING NOT NULL
-# MAGIC       COMMENT 'The id of the reseller.'
-# MAGIC     ,ResellerName STRING NOT NULL
-# MAGIC       COMMENT 'The name of the reseller.'
-# MAGIC     ,ResellerGroupCode STRING NOT NULL
-# MAGIC       COMMENT 'The group code of the reseller.'
-# MAGIC     ,ResellerGroupName STRING NOT NULL
-# MAGIC       COMMENT 'The group name of the reseller.'
-# MAGIC     ,Entity STRING
-# MAGIC       COMMENT 'The entity of the reseller.'
+# MAGIC     ,VendorCode STRING NOT NULL
+# MAGIC       COMMENT 'The code of the vendor'
+# MAGIC     ,VendorNameInternal STRING NOT NULL
+# MAGIC       COMMENT 'The name of the vendor.'
+# MAGIC     ,VendorGroup STRING NOT NULL
+# MAGIC       COMMENT 'The name of the vendor group.'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
@@ -45,16 +39,16 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the current version.'
-# MAGIC ,CONSTRAINT ResellerID_pk PRIMARY KEY(ResellerID,Entity,Sys_Bronze_InsertDateTime_UTC)
+# MAGIC ,CONSTRAINT vendor_mapping_pk PRIMARY KEY(VendorCode,VendorNameInternal,VendorGroup,Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for account. \n' 
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
-# MAGIC CLUSTER BY (ResellerID,Entity)
+# MAGIC CLUSTER BY (VendorNameInternal,VendorGroup)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE resellergroups ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE resellergroups ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE resellergroups ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE vendor_mapping ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE vendor_mapping ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE vendor_mapping ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
