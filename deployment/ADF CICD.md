@@ -90,6 +90,30 @@ the main branch holds the latest code of the data ware house solution
 - incremental deployment only adds or ammends pipelines but doesnt remove residual pipeline
 - complete on the other hand adds, updates and deletes pipeline so that the target deployment is an exact copy of the solution within the DevOps repository.
 
+# Rebase the release branch
+there might be times where the release branches arent removing files. in this case you must reset the branch, you can follow these steps:
+
+Switch to the branch you want to replace:
+```bash
+git checkout release/adf-release-upto-uat
+```
+
+Reset the branch to match the main branch:
+
+```bash
+git reset --hard origin/main
+```
+
+This command will reset your current branch to the state of the main branch, discarding any changes that were unique to your branch.
+Force push the changes to the remote repository:
+
+```bash
+git push origin release/adf-release-upto-uat --force
+```
+This step updates the remote branch to match the local branch, effectively replacing it with the main branch.
+
+
+
 
 \*\*NOTE
 
