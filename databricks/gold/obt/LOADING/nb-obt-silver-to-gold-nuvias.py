@@ -181,7 +181,6 @@ with cte as (
                               ,'6550886'
                               ,'6550895'
                               ,'6550896')
-    AND NOT (UPPER(trans.DataAreaId) = "NNL1" AND to_date(trans.InvoiceDate) >= date("2024-04-01"))
 ),
 /*[yz] 09.02.2024 custinvoicetrans is on line level whereas inventtrans for cost is on item level so needs to group first the revenue to item level before brining in the cost*/ 
 invoice as(
