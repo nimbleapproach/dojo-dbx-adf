@@ -135,10 +135,10 @@ VALUES
       ("581688", "Other Cost", "Other", "Total Opex", "Net Other Expenses", "Other Cost", NULL, NULL),
       ("581988", "Other Cost", "Other", "Total Opex", "Net Other Expenses", "Other Cost", NULL, NULL),
       ("582888", "Other Cost", "Other", "Total Opex", "Net Other Expenses", "Other Cost", NULL, NULL),
-      ("585188", "Net Strategic Projects", "Other OPEX", "Total Opex", "Net Strategic Projects", "Net Strategic Projects", "Net Strategic Projects", NULL),
-      ("505188", "Services Received", "Other OPEX", "Total Opex", "Services Received", "Services Received", "Services Received", NULL),
-      ("505997", "Services Received", "Other OPEX", "Total Opex", "Services Received", "Services Received", "Services Received", NULL),
-      ("505998", "Services Received", "Other OPEX", "Total Opex", "Services Received", "Services Received", "Services Received", NULL)
+      ("585188", "Net Strategic Projects", "Net Strategic Projects", "Total Opex", "Other OPEX", "Net Strategic Projects", "Net Strategic Projects", NULL),
+      ("505188", "Services Received", "Services Received", "Total Opex", "Other OPEX", "Services Received", "Services Received", NULL),
+      ("505997", "Services Received", "Services Received", "Total Opex", "Other OPEX", "Services Received", "Services Received", NULL),
+      ("505998", "Services Received", "Services Received", "Total Opex", "Other OPEX", "Services Received", "Services Received", NULL)
 """)
 
 # COMMAND ----------
