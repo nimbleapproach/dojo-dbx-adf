@@ -151,6 +151,8 @@
 		"folder": {
 			"name": "10 Bronze/NETSUITE"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-03-06T11:16:29Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

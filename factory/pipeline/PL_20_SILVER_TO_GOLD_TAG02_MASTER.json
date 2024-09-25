@@ -22,6 +22,8 @@
 		"folder": {
 			"name": "30 Gold"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-07-15T05:52:23Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

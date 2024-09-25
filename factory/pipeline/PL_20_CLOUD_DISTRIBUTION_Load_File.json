@@ -48,6 +48,8 @@
 		"folder": {
 			"name": "10 Bronze/CLOUD_DISTRIBUTION"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-11-23T12:04:02Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

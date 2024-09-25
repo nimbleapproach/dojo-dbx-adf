@@ -70,6 +70,9 @@
 							"name": "PL_15_NUVIAS_OPERATIONS_SUBITERATOR__1",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
@@ -106,6 +109,8 @@
 		"folder": {
 			"name": "10 Bronze/NUVIAS/OPERATIONS"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-25T15:09:29Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

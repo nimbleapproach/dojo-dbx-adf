@@ -24,6 +24,9 @@
 							"name": "PL_30_IGSQL03_Recreate_View",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
@@ -92,6 +95,8 @@
 		"folder": {
 			"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-25T15:09:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

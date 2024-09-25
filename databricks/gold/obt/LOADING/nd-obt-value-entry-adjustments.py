@@ -20,9 +20,9 @@ create or replace view gold_{ENVIRONMENT}.obt.value_entry_adjustments as
 
 select 
 CONCAT( RIGHT (ve.Sys_DatabaseName,2),'1')  AS EntityCode,
---case when ve.Sys_DatabaseName = 'ReportsDE' AND region.DimensionValueCode = 'AT' THEN 'AT1'
---    when ve.Sys_DatabaseName = 'ReportsNL' AND region.DimensionValueCode = 'BE' THEN 'BE1'
---    ELSE CONCAT( RIGHT (ve.Sys_DatabaseName,2),'1') END AS EntityCode,
+case when ve.Sys_DatabaseName in( 'ReportsDE','ReportsAT') AND region.DimensionValueCode = 'AT' THEN 'AT1'
+    WHEN ve.Sys_DatabaseName = 'ReportsNL' AND region.DimensionValueCode = 'BE' THEN 'BE1'
+    ELSE CONCAT( RIGHT (ve.Sys_DatabaseName,2),'1') END AS RegionCode,
 ve.Sys_DatabaseName,
 ItemNo_,
 ven.DimensionValueCode as VendorCode,
@@ -56,6 +56,14 @@ left join(
 )ven_name 
 on ven.DimensionValueCode = ven_name.Code
 and ven.Sys_DatabaseName = ven_name.Sys_DatabaseName
+
+LEFT JOIN (
+    select  * from silver_{ENVIRONMENT}.igsql03.dimension_set_entry
+  where DimensionCode = 'RPTREGION'
+  and Sys_Silver_IsCurrent =1
+)region
+on region.Sys_DatabaseName = ve.Sys_DatabaseName
+and ve.DimensionSetID=region.DimensionSetID
 
 LEFT JOIN
   gold_{ENVIRONMENT}.obt.exchange_rate e

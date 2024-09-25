@@ -22,5 +22,6 @@
 				"fileSystem": "netsuite"
 			}
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
 }

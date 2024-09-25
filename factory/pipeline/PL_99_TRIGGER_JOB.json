@@ -197,6 +197,8 @@
 		"folder": {
 			"name": "00 Setup/Databricks"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-01-30T08:29:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

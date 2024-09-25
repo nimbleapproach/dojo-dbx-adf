@@ -25,6 +25,9 @@
 							"name": "PL_30_TAG02_Recreate_View",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
@@ -84,6 +87,8 @@
 		"folder": {
 			"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-25T15:09:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

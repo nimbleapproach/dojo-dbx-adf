@@ -143,6 +143,8 @@
 		"folder": {
 			"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-07-24T10:20:15Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

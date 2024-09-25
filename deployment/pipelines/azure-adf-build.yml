@@ -1,0 +1,105 @@
+parameters:
+  - name: Stage
+  - name: subscriptionIdDev
+  - name: azureSubscriptionSPN
+  - name: environment
+  - name: workingDir
+  - name: dataFactoryName
+  - name: location
+  - name: DataFactoryResourceId
+jobs:
+  - job: deploy_${{ parameters.Stage }}
+    displayName: deploy ${{ parameters.Stage }}
+    pool:
+      vmImage: "windows-latest"
+    steps:
+      # configuring node
+      - task: NodeTool@0
+        inputs:
+          versionSpec: "18.x"
+        displayName: "Install Node.js"
+      - task: Npm@1
+        inputs:
+          command: "install"
+          verbose: true
+          workingDir: "${{parameters.workingDir}}"
+        displayName: "Install npm package"
+      # validating artifacts
+      - task: Npm@1
+        inputs:
+          command: "custom"
+          customCommand: "run build validate ${{parameters.workingDir}} ${{parameters.DataFactoryResourceId}}"
+          workingDir: "${{parameters.workingDir}}"
+        displayName: "Validate"
+      # generating ARM Templates from source code
+      - task: Npm@1
+        inputs:
+          command: "custom"
+          customCommand: "run build export ${{parameters.workingDir}} ${{parameters.DataFactoryResourceId}} artifacts"
+          workingDir: "${{parameters.workingDir}}"
+        displayName: "Generate ARM template"
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: "$(Build.SourcesDirectory)/deployment/scripts"
+          Contents: "PrePostDeploymentScript.Ver2.ps1"
+          TargetFolder: "$(build.artifactstagingdirectory)/application"
+        displayName: "Copying the New Version PrePostDeploymentScript"
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: "${{parameters.workingDir}}/artifacts"
+          Contents: "**"
+          TargetFolder: "$(build.artifactstagingdirectory)/application"
+        displayName: "Copying application artifact"
+
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: "${{parameters.workingDir}}"
+          Contents: |
+            arm-template-parameters*[prod|test|uat|preprod].json
+            arm-template-GlobalParameters*[prod|test|uat|preprod].json
+          TargetFolder: "$(build.artifactstagingdirectory)/application"
+        displayName: "Copying Environment Parameters"
+      - task: CopyFiles@2
+        displayName: "Copy config File to: $(build.artifactstagingdirectory)"
+        inputs:
+          SourceFolder: "$(Build.Repository.LocalPath)"
+          TargetFolder: "$(build.artifactstagingdirectory)"
+          Contents: "config.json"
+      # Override ARM ADF Parameters
+      - task: AzurePowerShell@5
+        displayName: "Override ARM ADF Parameters"
+        inputs:
+          azureSubscription: ${{parameters.azureSubscriptionSPN}}
+          scriptType: "InlineScript"
+          inline: |
+            $templatejson = '$(build.artifactstagingdirectory)/application/ARMTemplateParametersForFactory.json'
+            $loopparams = 'devtest','test','preprod','uat' , 'prod'
+            foreach ($env in $loopparams)
+            {
+              $inputjson = '$(build.artifactstagingdirectory)/application/arm-template-parameters-{env}.json'
+              $outputjson = '$(build.artifactstagingdirectory)/application/arm-parameters-{env}.json'
+              $(Build.SourcesDirectory)/deployment/scripts/ps_override_parameters.ps1 -env $env -templatejson $templatejson -inputjson $inputjson -outputjson $outputjson
+            }
+          azurePowerShellVersion: latestVersion
+          
+      # Override ARM ADF Global Parameters
+      - task: AzurePowerShell@5
+        displayName: "Override ARM ADF Global Parameters"
+        inputs:
+          azureSubscription: ${{parameters.azureSubscriptionSPN}}
+          scriptType: "InlineScript"
+          inline: |
+            $templatejson = '$(build.artifactstagingdirectory)/application/${{parameters.dataFactoryName}}_GlobalParameters.json'
+            $loopparams = 'devtest','test','preprod','uat' , 'prod'
+            foreach ($env in $loopparams)
+            {
+              $inputjson = '$(build.artifactstagingdirectory)/application/arm-template-GlobalParameters-{env}.json'
+              $outputjson = '$(build.artifactstagingdirectory)/application/arm-GlobalParameters-{env}.json'
+              $(Build.SourcesDirectory)/deployment/scripts/ps_override_parameters.ps1 -env $env -templatejson $templatejson -inputjson $inputjson -outputjson $outputjson
+            }
+          azurePowerShellVersion: latestVersion
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: "$(build.artifactstagingdirectory)"
+          artifact: "datafactory"
+          publishLocation: "pipeline"

@@ -1,0 +1,112 @@
+parameters:
+  - name: Stage
+  - name: Environment
+  - name: azureSubscriptionSPN
+  - name: azureSubscriptionId
+  - name: location
+  - name: resourceGroupName
+  - name: dataFactoryName
+  - name: projectName
+  - name: repositoryName
+  - name: keyVaultName
+  - name: deploymentMode
+  - name: isEnvTrigger
+jobs:
+  - deployment: "deploy_${{ parameters.Stage }}"
+    displayName: "deploy ${{ parameters.Stage }}"
+    environment: ${{parameters.Environment}}
+    pool:
+      vmImage: "windows-latest"
+    strategy:
+      runOnce:
+        preDeploy:
+          steps:
+            - task: DownloadPipelineArtifact@2 #downloading artifacts created in build stage
+              inputs:
+                source: "current"
+                path: "$(Pipeline.Workspace)"
+        deploy:
+          steps:
+            # Get KeyVault params
+            - task: AzureKeyVault@2
+              inputs:
+                azureSubscription: ${{ parameters.AzureSubscriptionSPN }}
+                keyVaultName: ${{ parameters.keyVaultName }}
+                secretsFilter: "*"
+              ###################################
+              # Show environment and treeview
+              ###################################
+            - powershell: |
+                Write-Output "This is the ${{ parameters.Environment }} environment"
+                tree "$(Pipeline.Workspace)" /F
+              displayName: "2 Show environment and treeview Pipeline_Workspace"
+            ###################################
+            # Stop triggers
+            ###################################
+            - task: AzurePowerShell@5
+              displayName: "Stop triggers"
+              inputs:
+                azureSubscription: "${{parameters.azureSubscriptionSPN}}"
+                pwsh: true
+                azurePowerShellVersion: LatestVersion
+                scriptType: filePath
+                scriptPath: "$(Pipeline.Workspace)/datafactory/application/PrePostDeploymentScript.ps1"
+                scriptArguments: >
+                  -armTemplate $(Pipeline.Workspace)/datafactory/application/ARMTemplateForFactory.json
+                  -ResourceGroupName ${{parameters.resourceGroupName}}
+                  -DataFactoryName ${{parameters.dataFactoryName}}
+                  -predeployment $true
+                  -deleteDeployment $false
+            ###################################
+            # Deploy ADF Artifact
+            ###################################
+            - task: AzureResourceManagerTemplateDeployment@3
+              displayName: "Deploying ADF Artifacts"
+              inputs:
+                deploymentScope: "Resource Group"
+                azureResourceManagerConnection: "${{parameters.azureSubscriptionSPN}}"
+                subscriptionId: "${{parameters.azureSubscriptionId}}"
+                action: "Create Or Update Resource Group"
+                resourceGroupName: ${{parameters.resourceGroupName}}
+                location: $(location)
+                templateLocation: "Linked artifact"
+                csmFile: "$(Pipeline.Workspace)/datafactory/application/ARMTemplateForFactory.json"
+                csmParametersFile: "$(Pipeline.Workspace)/datafactory/application/arm-parameters-${{lower(parameters.Stage)}}.json"
+                overrideParameters: '
+                  -factoryName ${{parameters.dataFactoryName}}
+                  '
+                deploymentMode: ${{parameters.deploymentMode}}
+            ###################################
+            # Override Global Parameters
+            ###################################
+            - task: AzurePowerShell@5
+              displayName: "Override Global Parameters"
+              inputs:
+                azureSubscription: "${{parameters.azureSubscriptionSPN}}"
+                pwsh: true
+                azurePowerShellVersion: LatestVersion
+                scriptType: filePath
+                scriptPath: "$(Pipeline.Workspace)/datafactory/application/GlobalParametersUpdateScript.ps1"
+                scriptArguments:
+                  -globalParametersFilePath $(Pipeline.Workspace)/datafactory/application/arm-GlobalParameters-${{lower(parameters.Stage)}}.json
+                  -ResourceGroupName ${{parameters.resourceGroupName}}
+                  -DataFactoryName ${{parameters.dataFactoryName}}
+            ###################################
+            # Start triggers and cleanup
+            ###################################
+            - task: AzurePowerShell@5
+              displayName: "Start triggers and cleanup"
+              condition: eq( '${{parameters.isEnvTrigger}}', 'true')
+              inputs:
+                azureSubscription: "${{parameters.azureSubscriptionSPN}}"
+                pwsh: true
+                azurePowerShellVersion: LatestVersion
+                scriptType: filePath
+                scriptPath: "$(Pipeline.Workspace)/datafactory/application/PrePostDeploymentScript.Ver2.ps1"
+                scriptArguments:
+                  -armTemplate $(Pipeline.Workspace)/datafactory/application/ARMTemplateForFactory.json
+                  -ArmTemplateParameters $(Pipeline.Workspace)/datafactory/application/arm-parameters-${{lower(parameters.Stage)}}.json
+                  -ResourceGroupName ${{parameters.resourceGroupName}}
+                  -DataFactoryName ${{parameters.dataFactoryName}}
+                  -predeployment $false
+                  -deleteDeployment $true

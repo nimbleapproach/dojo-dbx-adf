@@ -6,6 +6,9 @@
 				"name": "PL_10_NETSUITE_Load_File_ITERATOR",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -31,6 +34,8 @@
 		"folder": {
 			"name": "10 Bronze/NETSUITE"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-25T15:09:25Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

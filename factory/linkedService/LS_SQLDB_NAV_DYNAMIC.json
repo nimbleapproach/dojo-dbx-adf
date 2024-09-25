@@ -1,5 +1,6 @@
 {
 	"name": "LS_SQLDB_NAV_DYNAMIC",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"pm_DatabaseName": {

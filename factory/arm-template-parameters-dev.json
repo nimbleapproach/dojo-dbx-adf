@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "factoryName": {
+      "value": "adf-ig-dev-westeurope"
+    },
+    
+    "TR_DI_Agent_properties_runtimeState": {
+      "value": "Stopped"
+    },
+    
+    "TR_SCHEDULE_DAILY_startTime": {
+      "value": "2024-01-25T00:00:00"
+    },
+    "TR_SCHEDULE_DAILY_hrs": {
+        "value": 2
+    },
+    "shir-igapphost02-shared_properties_typeProperties_linkedInfo_resourceId": {
+        "value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-igapphost02-shared"
+    },
+    "shir-jumpbi01-shared_properties_typeProperties_linkedInfo_resourceId": {
+        "value": "/subscriptions/4b6b9329-18aa-4bf0-83f2-090c052e7fd3/resourcegroups/rg-ig-shared-westeurope/providers/Microsoft.DataFactory/factories/adf-ig-shared-westeurope/integrationruntimes/shir-jumpbi01-shared"
+    }
+  }
+}

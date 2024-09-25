@@ -1,5 +1,6 @@
 {
 	"name": "LS_SQLDB_TAGETIK",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"pm_Environment": {
@@ -28,6 +29,5 @@
 			"referenceName": "ir-ig-managed-dev-westeurope",
 			"type": "IntegrationRuntimeReference"
 		}
-	},
-	"type": "Microsoft.DataFactory/factories/linkedservices"
+	}
 }

@@ -6,6 +6,9 @@
 				"name": "PL_99_TRIGGER_JOB",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -25,6 +28,8 @@
 		"folder": {
 			"name": "20 Silver"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-28T12:02:33Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

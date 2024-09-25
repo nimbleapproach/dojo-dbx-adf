@@ -932,6 +932,8 @@
 		"folder": {
 			"name": "10 Bronze/IGSQL03 [Navision]"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-08-19T10:31:26Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

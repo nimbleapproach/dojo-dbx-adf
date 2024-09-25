@@ -1,0 +1,100 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - release/*
+  paths:
+    include:
+      - factory
+      - deployment
+    exclude:
+      - README.md
+
+parameters:
+  - name: deploymentMode
+    displayName: Deploy Changes (incremental) or All, including Deletions (complete)
+    type: string
+    values:
+      - incremental
+      - complete
+    default: incremental
+  - name: isEnvTrigger
+    displayName: Apply ADF Triggers
+    type: boolean
+    default: true
+
+pool:
+  vmImage: "windows-latest"
+
+variables:
+  - group: vg-inf-edw-deployment
+  - name: location
+    value: "westeurope"
+  - name: subscriptionIdDev
+    value: "5c771a6b-7686-4067-a58d-95551c37bf46"
+  - name: resourceGroupNameDev
+    value: "rg-ig-lakehouse-dev-westeurope"
+  - name: dataFactoryNameDev
+    value: "adf-ig-dev-westeurope"
+  - name: DataFactoryResourceId
+    value: /subscriptions/$(subscriptionIdDev)/resourceGroups/$(resourceGroupNameDev)/providers/Microsoft.DataFactory/factories/$(dataFactoryNameDev)
+  - name: projectName
+    value: "Group IT Program"
+  - name: repositoryName
+    value: inf-edw
+
+stages:
+  - stage: Build
+    jobs:
+      - template: azure-adf-build.yml
+        parameters:
+          Stage: build
+          subscriptionIdDev: $(subscriptionIdDev)
+          azureSubscriptionSPN: $(v-dev-azure-subscription-spn)
+          environment: dev
+          workingDir: $(Build.Repository.LocalPath)/factory
+          DataFactoryResourceId: $(DataFactoryResourceId)
+          dataFactoryName: $(dataFactoryNameDev)
+          location: $(location)
+  - stage: UAT
+    condition: or(contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-full'), contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-upto-uat'))
+    displayName: UAT
+    dependsOn: Build
+    variables:
+      dataFactoryName: "adf-ig-uat-westeurope"
+    jobs:
+      - template: azure-adf-deploy.yml
+        parameters:
+          Stage: UAT
+          Environment: uat
+          azureSubscriptionSPN: $(v-uat-azure-subscription-spn)
+          azureSubscriptionId: $(v-uat-subscription-Id)
+          location: $(location)
+          resourceGroupName: $(v-uat-dl-rg-name)
+          dataFactoryName: $(dataFactoryName)
+          projectName: $(projectName)
+          repositoryName: $(repositoryName)
+          keyVaultName: 'kv-ig-uat-westeurope'
+          deploymentMode: $(deploymentMode)
+          isEnvTrigger: ${{parameters.isEnvTrigger}}
+  - stage: Prod
+    condition: contains(variables['Build.SourceBranch'], 'refs/heads/release/adf-release-full')
+    displayName: Prod
+    dependsOn: UAT
+    variables:
+      dataFactoryName: "adf-ig-prod-westeurope"
+    jobs:
+      - template: azure-adf-deploy.yml
+        parameters:
+          Stage: Prod
+          Environment: Prod
+          azureSubscriptionSPN: $(v-prod-azure-subscription-spn)
+          azureSubscriptionId: $(v-prod-subscription-Id)
+          location: $(location)
+          resourceGroupName: $(v-prod-dl-rg-name)
+          dataFactoryName: $(dataFactoryName)
+          projectName: $(projectName)
+          repositoryName: $(repositoryName)
+          keyVaultName: 'kv-ig-prod-westeurope'
+          deploymentMode: $(deploymentMode)
+          isEnvTrigger: ${{parameters.isEnvTrigger}}

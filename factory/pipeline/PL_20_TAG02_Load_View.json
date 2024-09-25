@@ -565,6 +565,8 @@
 		"folder": {
 			"name": "10 Bronze/TAG02 [TAGETIK]"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-10-27T07:55:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }
