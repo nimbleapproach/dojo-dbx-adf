@@ -1,0 +1,134 @@
+# Azure DevOps Pipeline Configuration for Databricks Deployment.
+# This pipeline is designed to automate the deployment of notebooks and jobs to Databricks using the Databricks CLI.
+# Steps include setting up the environment, validating the build, and deploying the assets to Databricks.
+trigger:
+  branches:
+    include:
+      - dev
+      - uat
+      - prod
+
+# This pipeline is also triggered for pull requests made against the specified branches
+pr:
+  branches:
+    include:
+      - dev
+      - uat
+      - prod
+
+# Defines the agent pool where the jobs will run
+pool:
+  name: Azure Pipelines
+
+# on PullRequest only validating, on Merge validating an deployinh
+variables:
+  - group: vg-inf-edw-deployment
+  - name: displayNameValue
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: "Validating"
+    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+      value: "Validating and Deploying into $(Build.SourceBranchName)"
+  - targetDeploy: |
+    ${{ if eq(variables['Build.SourceBranchName'], 'dev') }}:
+      dev
+    ${{ if eq(variables['Build.SourceBranchName'], 'uat') }}:
+      uat
+    ${{ if eq(variables['Build.SourceBranchName'], 'prod') }}:
+     prod
+    ${{ else }}:
+      dev
+  - keyVaultName: ${{ format('kv-ig-{0}-westeurope', variables['targetDeploy']) }}      
+  - azureSubscription: ${{ format('v-{0}-azure-subscription-spn', variables['targetDeploy']) }}
+
+jobs:
+  - job: deploy_databricks_workflow
+    steps:
+      # Fetch the secret from Azure Key Vault for the DEV/UAT or PROD branch
+      - task: AzureKeyVault@1
+        inputs:
+          azureSubscription: $(azureSubscription)
+          keyVaultName: $(keyVaultName)
+          secretsFilter: "scrt-arm-client" 
+
+      # Download the Databricks CLI package from Azure DevOps Artifacts repo 'databricks-pipelines' / https://dev.azure.com/InfinigateHolding/Group%20IT%20Program/_artifacts/feed/az-databricks-pipelines
+      - task: UniversalPackages@0
+        inputs:
+          command: "download"
+          downloadDirectory: "$(System.DefaultWorkingDirectory)/databricksBinary"
+          vstsFeed: "Nimble - Learning and Development/databricks-pipelines"
+          vstsFeedPackage: "databricks_cli_linux"
+          vstsPackageVersion: "*"
+          displayName: "Downloading databricks CLI"
+
+      # Main script to validate and deploy to Databricks based on branch or pull request
+      - script: |
+          set -e # Ensure the script exits immediately if any command fails.
+          set -x # Debugging
+          set -o pipefail
+
+          # Function to set up environment variables and make the Databricks binary executable
+          setup_environment() {
+            chmod +x $(System.DefaultWorkingDirectory)/databricksBinary/databricks
+            export PATH=$PATH:$(System.DefaultWorkingDirectory)/databricksBinary
+            export ARM_CLIENT_SECRET=$(scrt-arm-client)
+
+            if [ "$(Build.Reason)" == "PullRequest" ]; then
+              # Extract target branch name for pull requests
+              BRANCH_NAME=$(System.PullRequest.TargetBranch)
+            else
+              # Use source branch name for direct commits/merges
+              BRANCH_NAME=$(Build.SourceBranchName)
+            fi
+            SUFFIX=-$BRANCH_NAME
+            export BUNDLE_VAR_suffix=$SUFFIX
+          }
+
+          # Print the value of the variable BRANCH_NAME
+          echo $BRANCH_NAME
+
+          # Function to validate the Databricks bundle
+          databricks_validate() {
+            databricks bundle validate --target $BRANCH_NAME --log-level info || exit 1
+          }
+
+          # Function to deploy the Databricks bundle
+          databricks_deploy() {
+            databricks bundle deploy --target $BRANCH_NAME --log-level info || exit 1
+          }
+
+          # Function to deploy the Databricks DDLs (create, alter statments)
+          databricks_deploy_ddl() {
+            databricks bundle run inf_edw_model_job_ddl --target $BRANCH_NAME --log-level info || exit 1
+          }
+
+          # Function to  run unit tests
+          run_unit_tests() {
+            databricks bundle run dojo_unit_tests --target $BRANCH_NAME --log-level info || exit 1
+          }
+
+          setup_environment
+          databricks_validate
+
+          if [ "$(Build.Reason)" != "PullRequest" ]; then
+            # Only deploy if the pipeline was triggered by a merge (accept pull request), not opening a pull request
+            databricks_deploy
+            databricks_deploy_ddl
+            # temp disabled
+            # run_unit_tests
+          else
+            # Only trigger if the pipeline was triggered by pull request
+            echo "Validation only when you open pull request."
+            exit 0
+          fi
+
+        displayName: $(displayNameValue)
+
+  - ${{ if eq(variables['Build.SourceBranchName'], 'prod') }}:
+      - deployment: DeployToProd
+        environment: prod
+        condition: succeeded()
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo "Deploying to Production environment. Approval required."
