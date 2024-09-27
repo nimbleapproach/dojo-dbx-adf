@@ -332,6 +332,10 @@
 							"pm_SheetName": {
 								"value": "@pipeline().parameters.pm_SheetName",
 								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "@pipeline().parameters.pm_FileName",
+								"type": "Expression"
 							}
 						}
 					}
