@@ -42,10 +42,10 @@ except:
 # COMMAND ----------
 
 try:
-    DELTA_LOAD = bool(dbutils.widgets.get("wg_DeltaLoadTable") == 'true' )
+    DELTA_LOAD = bool(dbutils.widgets.get("wg_DeltaLoadTable") == 'false' )
 except:
-    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'false', choices =  ['false','true'])
-    DELTA_LOAD = bool(dbutils.widgets.get("wg_DeltaLoadTable")== 'true')
+    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'true', choices =  ['false','true'])
+    DELTA_LOAD = bool(dbutils.widgets.get("wg_DeltaLoadTable")== 'false')
 
 # COMMAND ----------
 
@@ -190,18 +190,6 @@ hash_columns = [col(column) for column in target_columns if not column in ['SID'
 if DELTA_LOAD:
   source_df = (
               spark.sql(f"""
-                      Select *, true as Sys_Silver_IsCurrent
-                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
-            """)
-              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
-              .select(selection_column)
-              )
-
-else:
-  source_df = (
-              spark.sql(f"""
                       Select *,
                       max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
                       {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
@@ -214,6 +202,19 @@ else:
               .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
               .dropDuplicates(SILVER_PRIMARY_KEYS)
               .dropDuplicates(['Sys_Silver_HashKey'])
+              )
+
+else:
+
+  source_df = (
+              spark.sql(f"""
+                      Select *, true as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
+            """)
+              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
+              .select(selection_column)
               )
 
 # COMMAND ----------
