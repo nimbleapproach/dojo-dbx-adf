@@ -42,10 +42,10 @@ except:
 # COMMAND ----------
 
 try:
-    DELTA_LOAD = bool(dbutils.widgets.get("wg_DeltaLoadTable") == 'false' )
+    DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
 except:
-    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'true', choices =  ['false','true'])
-    DELTA_LOAD = bool(dbutils.widgets.get("wg_DeltaLoadTable")== 'false')
+    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full'])
+    DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
 
 # COMMAND ----------
 
@@ -187,7 +187,7 @@ hash_columns = [col(column) for column in target_columns if not column in ['SID'
 
 # COMMAND ----------
 
-if DELTA_LOAD:
+if DELTA_LOAD == 'delta':
   source_df = (
               spark.sql(f"""
                       Select *,
@@ -203,6 +203,7 @@ if DELTA_LOAD:
               .dropDuplicates(SILVER_PRIMARY_KEYS)
               .dropDuplicates(['Sys_Silver_HashKey'])
               )
+  print('Delta Loading')
 
 else:
 
@@ -216,6 +217,7 @@ else:
               .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
               .select(selection_column)
               )
+  print('Full Loading')
 
 # COMMAND ----------
 
