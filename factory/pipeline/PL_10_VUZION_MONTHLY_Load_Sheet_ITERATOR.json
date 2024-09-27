@@ -1,0 +1,109 @@
+{
+	"name": "PL_10_VUZION_MONTHLY_Load_Sheet_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachSheet",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetSheetNames",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetSheetNames').output.runOutput\n\n",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 8,
+					"activities": [
+						{
+							"name": "PL_20_VUZION_MONTHLY_Load_Sheet",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_VUZION_MONTHLY_Load_Sheet",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": false,
+								"parameters": {
+									"pm_SheetName": {
+										"value": "@item()",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "@pipeline().parameters.pm_FileName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "GetSheetNames",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Workspace/Users/ying-zhen.chen@infinigate.com/Reconciliation/nb-get-sheet-name",
+					"baseParameters": {
+						"file_name": {
+							"value": "@pipeline().parameters.pm_FileName",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ADB",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Databrick_Workspace_URL": {
+							"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+							"type": "Expression"
+						},
+						"pm_Databricks_Workspace_Resource_ID": {
+							"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+							"type": "Expression"
+						},
+						"pm_Databricks_Cluster_ID": {
+							"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+							"type": "Expression"
+						},
+						"pm_NumberOfWorkers": "1"
+					}
+				}
+			}
+		],
+		"concurrency": 4,
+		"parameters": {
+			"pm_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION/MONTHLY"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-03-13T08:46:32Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
