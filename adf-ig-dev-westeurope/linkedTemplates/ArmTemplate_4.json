@@ -13,6 +13,232 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IfFullLoad",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Load CDM Entity to Bronze Delta",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD",
+											"type": "DataFlowReference",
+											"parameters": {
+												"pm_Entity": {
+													"value": "'@{pipeline().parameters.pm_Entity}'",
+													"type": "Expression"
+												},
+												"pm_ManifestPath": {
+													"value": "'@{pipeline().parameters.pm_ManifestPath}'",
+													"type": "Expression"
+												},
+												"pm_ManifestFile": {
+													"value": "'@{pipeline().parameters.pm_ManifestFile}'",
+													"type": "Expression"
+												},
+												"pm_FullLoad": {
+													"value": "@pipeline().parameters.pm_FullLoad",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"GetCDMEnity": {},
+												"GetBronzeData": {},
+												"WriteDeltaTable": {}
+											},
+											"linkedServiceParameters": {
+												"GetCDMEnity": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"GetBronzeData": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"WriteDeltaTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										},
+										"staging": {},
+										"integrationRuntime": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"traceLevel": "Fine",
+										"continuationSettings": {
+											"customizedCheckpointKey": "9a19c2d3-7dbd-478f-b20d-20b33fa02f01"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Load CDM Entity to Bronze Full",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD",
+											"type": "DataFlowReference",
+											"parameters": {
+												"pm_Entity": {
+													"value": "'@{pipeline().parameters.pm_Entity}'",
+													"type": "Expression"
+												},
+												"pm_ManifestPath": {
+													"value": "'@{pipeline().parameters.pm_ManifestPath}'",
+													"type": "Expression"
+												},
+												"pm_ManifestFile": {
+													"value": "'@{pipeline().parameters.pm_ManifestFile}'",
+													"type": "Expression"
+												},
+												"pm_FullLoad": "false()"
+											},
+											"datasetParameters": {
+												"GetCDMEnity": {},
+												"WriteDeltaTable": {}
+											},
+											"linkedServiceParameters": {
+												"GetCDMEnity": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												},
+												"WriteDeltaTable": {
+													"linkedService": {
+														"pm_Environment": {
+															"value": "@pipeline().globalParameters.gpm_Environment",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										},
+										"staging": {},
+										"integrationRuntime": {
+											"referenceName": "ir-ig-managed-dev-westeurope",
+											"type": "IntegrationRuntimeReference"
+										},
+										"traceLevel": "Fine",
+										"continuationSettings": {
+											"customizedCheckpointKey": "4e72946d-00da-4e11-955c-06d57b8fe563"
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_Entity": {
+						"type": "string"
+					},
+					"pm_ManifestPath": {
+						"type": "string"
+					},
+					"pm_ManifestFile": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/OPERATIONS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:23Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_SILVER_TO_GOLD_TAG02_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-07-15T05:52:23Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_TAG02_Load_View')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1225,6 +1451,896 @@
 				},
 				"folder": {
 					"name": "10 Bronze/VUZION/BUDGET"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-13T08:46:31Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_VUZION_MONTHLY_ADJ_Load_Sheet')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load Sheet",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": "vuzion/monthly_revenue_adjustment/pending/",
+									"wildcardFileName": "*.xlsx",
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "Entity",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Entity",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Reporting Entity Name",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ReportingEntityName",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Invoice Date",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "InvoiceDate",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Sales Order",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SalesOrder",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Invoice Number",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "InvoiceNumber",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Item ID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ItemID",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "SKU",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SKU",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "SearchName",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SearchName",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Item Group",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ItemGroup",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Practice",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Practice",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Practice Short",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "PracticeShort",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "PracticeDescr",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "PracticeDescr",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Customer Name",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CustomerName",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Vendor Practice",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "VendorPractice",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Qty",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Qty",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Vendor ID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "VendorID",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Vendor Name",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "VendorName",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Order Type",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "OrderType",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Customer Account",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CustomerAccount",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Currency",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Currency",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Short Entity Name",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ShortEntityName",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Revenue Local",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Revenue_Local",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Cost Local",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Cost_Local",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Adjustment Local",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Adjustment_Local",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Margin Local",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Margin_Local",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "FX Index",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "FXIndex",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "SKU Description",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "SKUDescription",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "LFL FX",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "LFL_FX",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Revenue LFL FX GBP",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Revenue_LFL_FX_GBP",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Margin LFL FX GBP",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Margin_LFL_FX_GBP",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "EntCust",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "EntCust",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Customer Account Grouped",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CustomerAccountGrouped",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Customer Name Grouped",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CustomerNameGrouped",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "FX Index2",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "FXIndex2",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "GP Filter",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "GPFilter",
+											"physicalType": "UTF8"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_DV_VUZION_MONTHLY_ADJ_EXCEL",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "dev",
+										"type": "Expression"
+									},
+									"pm_SheetIndex": {
+										"value": "@pipeline().parameters.pm_SheetIndex",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET_STATIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": {
+										"value": "bronze",
+										"type": "Expression"
+									},
+									"pm_Directory": {
+										"value": "vuzion_monthly/vuzion_monthly_adjustment",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "bronze-vuzion-monthly-adjustment-@{pipeline().parameters.pm_SheetIndex}-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_SheetIndex": {
+						"type": "int"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/VUZION/MONTHLY_ADJ"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-11-01T13:55:23Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_VUZION_MONTHLY_Load_Sheet')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load Sheet",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									},
+									{
+										"name": "Sys_SheetName",
+										"value": {
+											"value": "@pipeline().parameters.pm_SheetName",
+											"type": "Expression"
+										}
+									},
+									{
+										"name": "Sys_FileName",
+										"value": {
+											"value": "@pipeline().parameters.pm_FileName",
+											"type": "Expression"
+										}
+									}
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"wildcardFolderPath": {
+										"value": "vuzion/monthly_export/pending",
+										"type": "Expression"
+									},
+									"wildcardFileName": {
+										"value": "@pipeline().parameters.pm_FileName",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"maxConcurrentConnections": 4,
+									"copyBehavior": "MergeFiles"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "Vendor ID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "VendorID",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Territory",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Territory",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "ID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ID",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Customer",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Customer",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Product",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Product",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Product Category",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ProductCategory",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Revenue Type",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "RevenueType",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Revenue",
+											"type": "Double",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Revenue",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Cost",
+											"type": "Double",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Cost",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Margin",
+											"type": "Double",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Margin",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Owner",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Owner",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Revenue Category",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "RevenueCategory",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Vendor",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Vendor",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Month",
+											"type": "Date",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Month",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Platform",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Platform",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Revenue Source",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "RevenueSource",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Customer ID count",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CustomerIDcount",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Quantity",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Quantity",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"type": "String"
+										},
+										"sink": {
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Sys_SheetName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "Sys_SheetName",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									},
+									{
+										"source": {
+											"name": "Sys_FileName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "Sys_FileName",
+											"type": "String",
+											"physicalType": "UTF8"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_DV_VUZION_MONTHLY_EXCEL",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "dev",
+										"type": "Expression"
+									},
+									"pm_SheetName": {
+										"value": "@pipeline().parameters.pm_SheetName",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "@pipeline().parameters.pm_FileName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET_STATIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": {
+										"value": "bronze",
+										"type": "Expression"
+									},
+									"pm_Directory": {
+										"value": "vuzion_monthly/vuzion_monthly_revenue",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "bronze-vuzion-monthly-@{pipeline().parameters.pm_SheetName}-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_SheetName": {
+						"type": "string"
+					},
+					"pm_FileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/VUZION/MONTHLY"
 				},
 				"annotations": [],
 				"lastPublishTime": "2024-03-13T08:46:31Z"
@@ -5240,565 +6356,6 @@
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_DCB_EXCEL_LOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "DCB"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_ADLS_DV_DCB_EXCEL",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "Partition"
-						},
-						{
-							"name": "AddSystemColumns",
-							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          Invoice as string,",
-						"          {Vlgnr.} as string,",
-						"          {Invoice date} as string,",
-						"          {Invoice month} as string,",
-						"          {Invoice year} as string,",
-						"          SO as string,",
-						"          {SO date} as string,",
-						"          {Reseller ID} as string,",
-						"          {Reseller name} as string,",
-						"          {VAT number} as string,",
-						"          SKU as string,",
-						"          Description as string,",
-						"          Remark as string,",
-						"          Qty as string,",
-						"          {Price/unit} as string,",
-						"          {% line discount} as string,",
-						"          {Amount line discount} as string,",
-						"          {Net price} as string,",
-						"          {Total invoice} as string,",
-						"          Entity as string,",
-						"          {Article group} as string,",
-						"          {Product Type} as string,",
-						"          {Vendor number} as string,",
-						"          {Vendor ID} as string,",
-						"          Vendor as string,",
-						"          {Cred.order} as string,",
-						"          Margin as string,",
-						"          {margin in %} as string,",
-						"          Invoice_linenumber as string,",
-						"          line_verkoopfactuurregels as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['dcb/pending','dcb/archived'],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"GetExcelFile window(over(Invoice),",
-						"     asc(SKU, true),",
-						"     LineNo = rowNumber()) ~> Partition",
-						"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: 'dcb/invoicedata',",
-						"     compressionCodec: 'snappy',",
-						"     partitionFileNames:[(concat('bronze-dcb-',toString(currentUTC()),'.snappy.parquet')\r",
-						")],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     mapColumn(",
-						"          Invoice,",
-						"          Vlgnr = {Vlgnr.},",
-						"          Invoice_Date = {Invoice date},",
-						"          Invoice_Month = {Invoice month},",
-						"          Invoice_Year = {Invoice year},",
-						"          SO,",
-						"          SO_Date = {SO date},",
-						"          Reseller_ID = {Reseller ID},",
-						"          Reseller_Name = {Reseller name},",
-						"          VAT_Number = {VAT number},",
-						"          SKU,",
-						"          Description,",
-						"          Remark,",
-						"          Qty,",
-						"          Unit_Price = {Price/unit},",
-						"          Line_Discount_Percentage = {% line discount},",
-						"          Line_Discount_Amount = {Amount line discount},",
-						"          Net_Price = {Net price},",
-						"          Total_Invoice = {Total invoice},",
-						"          Entity,",
-						"          Article_Group = {Article group},",
-						"          Product_Type = {Product Type},",
-						"          Vendor_Number = {Vendor number},",
-						"          Vendor_ID = {Vendor ID},",
-						"          Vendor,",
-						"          Cred_Order = {Cred.order},",
-						"          Margin,",
-						"          Margin_Percentage = {margin in %},",
-						"          Invoice_linenumber,",
-						"          line_verkoopfactuurregels,",
-						"          Sys_FileName,",
-						"          LineNo,",
-						"          Sys_Bronze_InsertDateTime_UTC",
-						"     ),",
-						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_DELTALINK_EXCEL_LOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "DELTALINK"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_ADLS_DV_DELTALINK_EXCEL",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "Partition"
-						},
-						{
-							"name": "AddSystemColumns",
-							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_FileName as string",
-						"}",
-						"source(output(",
-						"          {Invoice Date} as string,",
-						"          {Order Type} as string,",
-						"          {Order Number} as integer,",
-						"          {Invoice Number} as integer,",
-						"          {Client Number} as integer,",
-						"          Company as string,",
-						"          Artcode as string,",
-						"          Supplier_ID as string,",
-						"          Supplier as string,",
-						"          {Art Sup Code} as string,",
-						"          Description as string,",
-						"          Quantity as short,",
-						"          {Article Product Type} as string,",
-						"          Currency as string,",
-						"          {Revenue Transaction} as double,",
-						"          {Cost Transaction} as double,",
-						"          {Margin Transaction} as double",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['deltalink/pending','deltalink/archived'],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"GetExcelFile window(over({Invoice Number}),",
-						"     asc(Artcode, true),",
-						"     LineNo = rowNumber()) ~> Partition",
-						"Partition derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: 'deltalink/invoicedata',",
-						"     compressionCodec: 'snappy',",
-						"     partitionFileNames:[(concat('bronze-deltalink-',toString($pm_FileName),'-',toString(currentUTC()),'.snappy.parquet'))],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     mapColumn(",
-						"          InvoiceDate = {Invoice Date},",
-						"          OrderType = {Order Type},",
-						"          OrderNumber = {Order Number},",
-						"          InvoiceNumber = {Invoice Number},",
-						"          ClientNumber = {Client Number},",
-						"          Company,",
-						"          Artcode,",
-						"          SupplierID = Supplier_ID,",
-						"          Supplier,",
-						"          ArtSupCode = {Art Sup Code},",
-						"          Description,",
-						"          Quantity,",
-						"          ArticleProductType = {Article Product Type},",
-						"          Currency,",
-						"          RevenueTransaction = {Revenue Transaction},",
-						"          CostTransaction = {Cost Transaction},",
-						"          MarginTransaction = {Margin Transaction},",
-						"          Sys_FileName,",
-						"          LineNo,",
-						"          Sys_Bronze_InsertDateTime_UTC",
-						"     ),",
-						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NETSAFE_EXCEL_LOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "NETSAFE"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_ADLS_DV_NETSAFE_EXCEL",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddSystemColumns",
-							"description": "Creating/updating the columns 'Sys_Bronze_InsertDateTime_UTC'"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          {Invoice Date} as string,",
-						"          {Sales Order Number} as string,",
-						"          {Invoice Number} as string,",
-						"          {Item ID} as string,",
-						"          SKU as string,",
-						"          {Item Type} as string,",
-						"          {Customer Name} as string,",
-						"          Qty as float,",
-						"          {Transaction Currency} as string,",
-						"          {Revenue Transaction Currency} as double,",
-						"          {Cost Transaction Currency} as double,",
-						"          {Margin Transaction Currency} as double,",
-						"          {Exchange Rate} as string,",
-						"          {Revenue GBP} as string,",
-						"          {Cost GBP} as string,",
-						"          {Margin GBP} as string,",
-						"          {Vendor ID} as string,",
-						"          {Vendor Name} as string,",
-						"          {Account Manager} as string,",
-						"          {Order Type} as string,",
-						"          {Quote ID} as string,",
-						"          {Customer Account} as string,",
-						"          {SKU Description} as string,",
-						"          Country as string,",
-						"          {Invoice Line Nb} as integer",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: [('netsafe/pending/'),('netsafe/archived/')],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"GetExcelFile derive(Sys_Bronze_InsertDateTime_UTC = currentUTC(),",
-						"          Sys_Country = regexExtract(Sys_FileName,'(Romania|Croatia|Slovenia|Bulgaria)')) ~> AddSystemColumns",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: 'netsafe/invoicedata',",
-						"     compressionCodec: 'snappy',",
-						"     partitionFileNames:[(concat('bronze-netsafe-',toString(currentUTC()),'.snappy.parquet')\r",
-						")],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     mapColumn(",
-						"          Invoice_Date = {Invoice Date},",
-						"          Sales_Order_Number = {Sales Order Number},",
-						"          Invoice_Number = {Invoice Number},",
-						"          Item_ID = {Item ID},",
-						"          SKU,",
-						"          Item_Type = {Item Type},",
-						"          Customer_Name = {Customer Name},",
-						"          Qty,",
-						"          Transaction_Currency = {Transaction Currency},",
-						"          Revenue_Transaction_Currency = {Revenue Transaction Currency},",
-						"          Cost_Transaction_Currency = {Cost Transaction Currency},",
-						"          Margin_Transaction_Currency = {Margin Transaction Currency},",
-						"          Exchange_Rate = {Exchange Rate},",
-						"          Revenue_GBP = {Revenue GBP},",
-						"          Cost_GBP = {Cost GBP},",
-						"          Margin_GBP = {Margin GBP},",
-						"          Vendor_ID = {Vendor ID},",
-						"          Vendor_Name = {Vendor Name},",
-						"          Account_Manager = {Account Manager},",
-						"          Order_Type = {Order Type},",
-						"          Quote_ID = {Quote ID},",
-						"          Customer_Account = {Customer Account},",
-						"          SKU_Description = {SKU Description},",
-						"          Country,",
-						"          Invoice_Line_Nb = {Invoice Line Nb},",
-						"          Sys_Country,",
-						"          Sys_FileName,",
-						"          Sys_Bronze_InsertDateTime_UTC",
-						"     ),",
-						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_NETSUITE_CDM_TO_BRONZE_DELTALOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "Starlink/NETSUITE"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_CSV_NETSUITE_DYNAMIC",
-								"type": "DatasetReference"
-							},
-							"name": "GetFile"
-						},
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetBronzeData"
-						},
-						{
-							"linkedService": {
-								"referenceName": "LS_SQLDB_METADATA",
-								"type": "LinkedServiceReference"
-							},
-							"name": "GetKeysControlTable"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaTable"
-						},
-						{
-							"name": "Cache"
-						},
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteKeys"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddBronzeLoadDate"
-						},
-						{
-							"name": "GetMaxWatermark"
-						},
-						{
-							"name": "Increment"
-						},
-						{
-							"name": "AddCurrentWatermark"
-						},
-						{
-							"name": "DropCurrentWatermark"
-						},
-						{
-							"name": "CastTimestamps"
-						},
-						{
-							"name": "SelectKeys"
-						},
-						{
-							"name": "Deduplicate"
-						},
-						{
-							"name": "AddHashKey"
-						},
-						{
-							"name": "DropSysHashKey"
-						},
-						{
-							"name": "AddLoadTime"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     pm_FileName as string",
-						"}",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     inferDriftedColumnTypes: true,",
-						"     ignoreNoFilesFound: true,",
-						"     multiLineRow: true,",
-						"     dateFormats: ['dd/MM/yyyy'],",
-						"     timestampFormats: ['dd/MM/yyyy h:mm a'],",
-						"     manifestType: 'manifest',",
-						"     mode: 'read') ~> GetFile",
-						"source(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('netsuite/'+ $pm_FileName)) ~> GetBronzeData",
-						"source(output(",
-						"          Business_Keys as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'query',",
-						"     store: 'sqlserver',",
-						"     query: (\"Select Business_Keys from [adf].[CT_NETSUITE_KEYS] where TABLE_NAME = '\" +$pm_FileName + \"'\"),",
-						"     isolationLevel: 'READ_UNCOMMITTED') ~> GetKeysControlTable",
-						"DropCurrentWatermark derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddBronzeLoadDate",
-						"GetBronzeData aggregate(CurrentWatermark = max(toTimestamp(byName('Last_Modified')))) ~> GetMaxWatermark",
-						"AddCurrentWatermark filter(iif(isNull(CurrentWatermark),true(),toTimestamp(byName('Last_Modified')) > CurrentWatermark)) ~> Increment",
-						"CastTimestamps, GetMaxWatermark join(true(),",
-						"     joinType:'cross',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'right')~> AddCurrentWatermark",
-						"Increment select(mapColumn(",
-						"          each(match(name!='CurrentWatermark'))",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> DropCurrentWatermark",
-						"GetFile derive(Last_Modified = toTimestamp(byName('Last_Modified'),'dd/MM/yyyy h:mm a'),",
-						"          Date_Created = toTimestamp(byName('Date_Created'),'dd/MM/yyyy h:mm a')) ~> CastTimestamps",
-						"GetFile select(mapColumn(",
-						"          each(match(contains(split(Cache#output().Business_Keys,','),#item==name)))",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> SelectKeys",
-						"AddHashKey aggregate(groupBy(Sys_HashKey),",
-						"     each(match(name!='Sys_HashKey'), $$ = first($$))) ~> Deduplicate",
-						"SelectKeys derive(Sys_HashKey = sha2(256, concatWS('~',toString(columns())))) ~> AddHashKey",
-						"Deduplicate select(mapColumn(",
-						"          each(match(name!='Sys_HashKey'))",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> DropSysHashKey",
-						"DropSysHashKey derive(Sys_DataFactory_LoadDateTime_UTC = currentUTC()) ~> AddLoadTime",
-						"AddBronzeLoadDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: ('netsuite/'+ $pm_FileName),",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaTable",
-						"GetKeysControlTable sink(validateSchema: false,",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     store: 'cache',",
-						"     format: 'inline',",
-						"     output: false,",
-						"     saveOrder: 1) ~> Cache",
-						"AddLoadTime sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'keys',",
-						"     folderPath: ('netsuite/'+ $pm_FileName),",
-						"     overwrite: true,",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteKeys"
 					]
 				}
 			},

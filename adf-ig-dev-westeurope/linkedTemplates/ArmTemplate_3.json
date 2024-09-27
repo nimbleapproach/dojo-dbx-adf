@@ -13,6 +13,96 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_PGSQL_CLOUDBLUE_OSS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_TableSchema": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/CLOUDBLUE/OSS"
+				},
+				"annotations": [],
+				"type": "PostgreSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().pm_TableSchema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().pm_TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_PGSQL_CLOUDBLUE_PBA",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": {
+							"value": "@dataset().pm_Environment",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					},
+					"pm_TableName": {
+						"type": "string"
+					},
+					"pm_TableSchema": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/CLOUDBLUE/PBA"
+				},
+				"annotations": [],
+				"type": "PostgreSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().pm_TableSchema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().pm_TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_SQLDB_CRM_DYNAMIC')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1291,7 +1381,9 @@
 				"annotations": [],
 				"lastPublishTime": "2024-01-03T08:42:46Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_PSSQL_CLOUDBLUE_OSS_DYNAMIC')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_CLOUDBLUE_PBA_Copy_Data')]",
@@ -1886,6 +1978,7 @@
 				"lastPublishTime": "2024-01-03T08:42:46Z"
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_PSSQL_CLOUDBLUE_PBA_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]"
 			]
 		},
@@ -2395,235 +2488,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-10-19T07:01:56Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "IfFullLoad",
-						"type": "IfCondition",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@pipeline().parameters.pm_FullLoad",
-								"type": "Expression"
-							},
-							"ifFalseActivities": [
-								{
-									"name": "Load CDM Entity to Bronze Delta",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD",
-											"type": "DataFlowReference",
-											"parameters": {
-												"pm_Entity": {
-													"value": "'@{pipeline().parameters.pm_Entity}'",
-													"type": "Expression"
-												},
-												"pm_ManifestPath": {
-													"value": "'@{pipeline().parameters.pm_ManifestPath}'",
-													"type": "Expression"
-												},
-												"pm_ManifestFile": {
-													"value": "'@{pipeline().parameters.pm_ManifestFile}'",
-													"type": "Expression"
-												},
-												"pm_FullLoad": {
-													"value": "@pipeline().parameters.pm_FullLoad",
-													"type": "Expression"
-												}
-											},
-											"datasetParameters": {
-												"GetCDMEnity": {},
-												"GetBronzeData": {},
-												"WriteDeltaTable": {}
-											},
-											"linkedServiceParameters": {
-												"GetCDMEnity": {
-													"linkedService": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												},
-												"GetBronzeData": {
-													"linkedService": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												},
-												"WriteDeltaTable": {
-													"linkedService": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												}
-											}
-										},
-										"staging": {},
-										"integrationRuntime": {
-											"referenceName": "ir-ig-managed-dev-westeurope",
-											"type": "IntegrationRuntimeReference"
-										},
-										"traceLevel": "Fine",
-										"continuationSettings": {
-											"customizedCheckpointKey": "9a19c2d3-7dbd-478f-b20d-20b33fa02f01"
-										}
-									}
-								}
-							],
-							"ifTrueActivities": [
-								{
-									"name": "Load CDM Entity to Bronze Full",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD",
-											"type": "DataFlowReference",
-											"parameters": {
-												"pm_Entity": {
-													"value": "'@{pipeline().parameters.pm_Entity}'",
-													"type": "Expression"
-												},
-												"pm_ManifestPath": {
-													"value": "'@{pipeline().parameters.pm_ManifestPath}'",
-													"type": "Expression"
-												},
-												"pm_ManifestFile": {
-													"value": "'@{pipeline().parameters.pm_ManifestFile}'",
-													"type": "Expression"
-												},
-												"pm_FullLoad": "false()"
-											},
-											"datasetParameters": {
-												"GetCDMEnity": {},
-												"WriteDeltaTable": {}
-											},
-											"linkedServiceParameters": {
-												"GetCDMEnity": {
-													"linkedService": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												},
-												"WriteDeltaTable": {
-													"linkedService": {
-														"pm_Environment": {
-															"value": "@pipeline().globalParameters.gpm_Environment",
-															"type": "Expression"
-														}
-													}
-												}
-											}
-										},
-										"staging": {},
-										"integrationRuntime": {
-											"referenceName": "ir-ig-managed-dev-westeurope",
-											"type": "IntegrationRuntimeReference"
-										},
-										"traceLevel": "Fine",
-										"continuationSettings": {
-											"customizedCheckpointKey": "4e72946d-00da-4e11-955c-06d57b8fe563"
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_Entity": {
-						"type": "string"
-					},
-					"pm_ManifestPath": {
-						"type": "string"
-					},
-					"pm_ManifestFile": {
-						"type": "string"
-					},
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/OPERATIONS"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-09-25T15:09:23Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_DELTALOAD')]",
-				"[concat(variables('factoryId'), '/dataflows/DF_NUVIAS_FO_CDM_TO_BRONZE_FULLLOAD')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_SILVER_TO_GOLD_TAG02_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_30_SILVER_TO_GOLD_TAG02_TRIGGER",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "30 Gold"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-07-15T05:52:23Z"
 			},
 			"dependsOn": []
 		}
