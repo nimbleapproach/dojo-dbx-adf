@@ -6,6 +6,9 @@
 				"name": "PL_20_CLOUD_DISTRIBUTION_Load_File",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -19,6 +22,8 @@
 		"folder": {
 			"name": "10 Bronze/CLOUD_DISTRIBUTION"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-11-23T12:04:02Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

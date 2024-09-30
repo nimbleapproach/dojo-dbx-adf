@@ -280,6 +280,8 @@
 		"folder": {
 			"name": "10 Bronze/DATANOW/LATEST"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-10-17T14:59:44Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

@@ -1,0 +1,183 @@
+{
+	"name": "DS_ADLS_DV_VUZION_MONTHLY_ADJ_EXCEL",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_SheetIndex": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/VUZION"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "vuzion/monthly_revenue_adjustment/pending",
+				"fileSystem": "external"
+			},
+			"sheetIndex": {
+				"value": "@dataset().pm_SheetIndex",
+				"type": "Expression"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "Entity",
+				"type": "String"
+			},
+			{
+				"name": "Reporting Entity Name",
+				"type": "String"
+			},
+			{
+				"name": "Invoice Date",
+				"type": "String"
+			},
+			{
+				"name": "Sales Order",
+				"type": "String"
+			},
+			{
+				"name": "Invoice Number",
+				"type": "String"
+			},
+			{
+				"name": "Item ID",
+				"type": "String"
+			},
+			{
+				"name": "SKU",
+				"type": "String"
+			},
+			{
+				"name": "SearchName",
+				"type": "String"
+			},
+			{
+				"name": "Item Group",
+				"type": "String"
+			},
+			{
+				"name": "Practice",
+				"type": "String"
+			},
+			{
+				"name": "Practice Short",
+				"type": "String"
+			},
+			{
+				"name": "PracticeDescr",
+				"type": "String"
+			},
+			{
+				"name": "Customer Name",
+				"type": "String"
+			},
+			{
+				"name": "Vendor Practice",
+				"type": "String"
+			},
+			{
+				"name": "Qty",
+				"type": "String"
+			},
+			{
+				"name": "Vendor ID",
+				"type": "String"
+			},
+			{
+				"name": "Vendor Name",
+				"type": "String"
+			},
+			{
+				"name": "Order Type",
+				"type": "String"
+			},
+			{
+				"name": "Customer Account",
+				"type": "String"
+			},
+			{
+				"name": "Currency",
+				"type": "String"
+			},
+			{
+				"name": "Short Entity Name",
+				"type": "String"
+			},
+			{
+				"name": "Revenue Local",
+				"type": "String"
+			},
+			{
+				"name": "Cost Local",
+				"type": "String"
+			},
+			{
+				"name": "Adjustment Local",
+				"type": "String"
+			},
+			{
+				"name": "Margin Local",
+				"type": "String"
+			},
+			{
+				"name": "FX Index",
+				"type": "String"
+			},
+			{
+				"name": "SKU Description",
+				"type": "String"
+			},
+			{
+				"name": "LFL FX",
+				"type": "String"
+			},
+			{
+				"name": "Revenue LFL FX GBP",
+				"type": "String"
+			},
+			{
+				"name": "Margin LFL FX GBP",
+				"type": "String"
+			},
+			{
+				"name": "EntCust",
+				"type": "String"
+			},
+			{
+				"name": "Customer Account Grouped",
+				"type": "String"
+			},
+			{
+				"name": "Customer Name Grouped",
+				"type": "String"
+			},
+			{
+				"name": "FX Index2",
+				"type": "String"
+			},
+			{
+				"name": "GP Filter",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -22,6 +22,8 @@
 		"folder": {
 			"name": "10 Bronze/VUZION/BUDGET"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-03-13T08:46:32Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

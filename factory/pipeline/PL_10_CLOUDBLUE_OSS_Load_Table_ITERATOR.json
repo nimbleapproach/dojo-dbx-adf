@@ -63,6 +63,9 @@
 							"name": "PL_20_CLOUDBLUE_Copy_Data",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
@@ -103,6 +106,8 @@
 		"folder": {
 			"name": "10 Bronze/CLOUDBLUE/OSS"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-09-25T15:09:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

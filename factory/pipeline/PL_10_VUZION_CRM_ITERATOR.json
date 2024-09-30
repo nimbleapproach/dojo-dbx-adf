@@ -59,6 +59,9 @@
 							"name": "PL_20_VUZION_CRM_ITERATOR",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
@@ -98,6 +101,8 @@
 		"folder": {
 			"name": "10 Bronze/VUZION [CRM]"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-01-16T14:41:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

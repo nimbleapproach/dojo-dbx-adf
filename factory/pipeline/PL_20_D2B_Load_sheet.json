@@ -97,6 +97,8 @@
 		"folder": {
 			"name": "10 Bronze/D2B"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2024-01-29T09:14:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

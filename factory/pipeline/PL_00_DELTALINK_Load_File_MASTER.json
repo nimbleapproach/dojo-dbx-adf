@@ -6,6 +6,9 @@
 				"name": "PL_10_DELTALINK_Load_File_ITERATOR",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -19,6 +22,8 @@
 		"folder": {
 			"name": "10 Bronze/DELTALINK"
 		},
-		"annotations": []
-	}
+		"annotations": [],
+		"lastPublishTime": "2023-11-23T10:00:35Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

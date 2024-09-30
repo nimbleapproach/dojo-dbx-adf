@@ -22,10 +22,10 @@
 			"pm_TableName": {
 				"type": "string"
 			},
-			"pm_DatabaseName": {
+			"pm_SchemaName": {
 				"type": "string"
 			},
-			"pm_SchemaName": {
+			"pm_DatabaseName": {
 				"type": "string"
 			}
 		},
@@ -45,5 +45,6 @@
 				"type": "Expression"
 			}
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
 }

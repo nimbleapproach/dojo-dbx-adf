@@ -134,8 +134,8 @@ select
 gl.DocumentNo_
 ,gl.PostingDate
 ,gl.Sys_DatabaseName
-,case when gl.EntityCode in ('DE1','AT1') and gl.VendorCode  ='ZZ_INF' THEN 'DE1' 
-      when gl.EntityCode ='DE1' AND gl.RegionID = 'AT' and gl.VendorCode not in (/*'ZZ_INF',*/'SOW',/*'DAT',*/'ITG', 'RFT') THEN 'AT1'
+,case when gl.EntityCode in ('DE1','AT1') and gl.RegionID <>'AT' and gl.VendorCode  ='ZZ_INF' THEN 'DE1' 
+      when gl.EntityCode ='DE1' AND gl.RegionID = 'AT' /*and gl.VendorCode not in (/*'ZZ_INF','SOW','DAT',*/'ITG', 'RFT')*/ THEN 'AT1'
       when gl.EntityCode ='NL1' AND gl.RegionID = 'BE' THEN 'BE1'
       
       ELSE gl.EntityCode END AS EntityCode

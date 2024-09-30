@@ -1,0 +1,29 @@
+{
+	"name": "PL_00_VUZION_MONTHLY_ADJ_Load_Sheet_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_VUZION_MONTHLY_ADJ_Load_Sheet_ITERATOR",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_VUZION_MONTHLY_ADJ_Load_Sheet_ITERATOR",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/VUZION/MONTHLY_ADJ"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-11-01T13:53:32Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

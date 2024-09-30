@@ -1,0 +1,39 @@
+{
+	"name": "TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_00_SUPPLEMENTARY_MASTER",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"pm_FullLoad": false
+				}
+			}
+		],
+        "type": "ScheduleTrigger",
+        "typeProperties": {
+            "recurrence": {
+                "frequency": "Week",
+                "interval": 15,
+                "startTime": "2024-06-17T15:01:00",
+                "timeZone": "GMT Standard Time",
+                "schedule": {
+                    "hours": [
+                        3
+                    ],
+                    "weekDays": [
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday"
+                    ]
+                }
+            }
+        }
+    }
+}

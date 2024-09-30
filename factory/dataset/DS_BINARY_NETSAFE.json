@@ -28,5 +28,6 @@
 				"fileSystem": "external"
 			}
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
 }

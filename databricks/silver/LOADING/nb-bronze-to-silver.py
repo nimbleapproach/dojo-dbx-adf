@@ -42,6 +42,14 @@ except:
 # COMMAND ----------
 
 try:
+    DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
+except:
+    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full'])
+    DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
+
+# COMMAND ----------
+
+try:
     FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true' )
 except:
     dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
@@ -179,21 +187,37 @@ hash_columns = [col(column) for column in target_columns if not column in ['SID'
 
 # COMMAND ----------
 
-source_df = (
-            spark.sql(f"""
-                    Select *,
-                    max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
-                    {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
-                    from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
-          """)
-            .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
-            .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-            .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
-            .select(selection_column)
-            .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
-            .dropDuplicates(SILVER_PRIMARY_KEYS)
-            .dropDuplicates(['Sys_Silver_HashKey'])
-            )
+if DELTA_LOAD == 'delta':
+  source_df = (
+              spark.sql(f"""
+                      Select *,
+                      max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
+                      {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
+            """)
+              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
+              .select(selection_column)
+              .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
+              .dropDuplicates(SILVER_PRIMARY_KEYS)
+              .dropDuplicates(['Sys_Silver_HashKey'])
+              )
+  print('Delta Loading')
+
+else:
+
+  source_df = (
+              spark.sql(f"""
+                      Select *, true as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
+            """)
+              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
+              .select(selection_column)
+              )
+  print('Full Loading')
 
 # COMMAND ----------
 

@@ -1,5 +1,6 @@
 {
 	"name": "LS_PGSQL_CLOUDBLUE_PBA",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"parameters": {
 			"pm_Environment": {
