@@ -90,9 +90,19 @@ select
   'NaN' AS ResellerGroupName,  
   NULL as ResellerGroupStartDate,
    CASE WHEN UPPER(Territory) = 'VGB'THEN 'GBP' ELSE 'EUR' END AS CurrencyCode,
-  cast(Revenue as decimal(10,2)) AS RevenueAmount,
-  cast(Cost as decimal(10,2)) AS CostAmount,
-  cast(Margin as decimal(10,2)) as GP1
+---- Apply fix FX rate for Irland----  
+  CASE WHEN UPPER(Territory) = 'VGB' 
+       THEN cast(Revenue as decimal(10,2)) 
+       ELSE cast(Revenue *(1.15) as decimal(10,2)) 
+       END AS RevenueAmount,  
+  CASE WHEN UPPER(Territory) = 'VGB' 
+       THEN cast(Cost as decimal(10,2)) 
+       ELSE cast(Cost *(1.15) as decimal(10,2)) 
+       END as CostAmount,
+  CASE WHEN UPPER(Territory) = 'VGB' 
+       THEN cast(Margin as decimal(10,2)) 
+       ELSE cast(Margin *(1.15) as decimal(10,2)) 
+       END as GP1
 
 from silver_{ENVIRONMENT}.vuzion_monthly.vuzion_monthly_revenue
 where Sys_Silver_IsCurrent=1 
@@ -306,7 +316,7 @@ spark.sql(
             THEN vu_obt.RevenueAmount ELSE  vu_obt.GP1 END / vu_sum.GP1_VendorSum) * coalesce(vu_sum.GP1_EUR, 0 )
     ) AS GP1_Trueup
   FROM
-    gold_{ENVRIONMENT}.obt.vuzion_globaltransactions_monthly_file vu_obt
+    gold_{ENVIRONMENT}.obt.vuzion_globaltransactions_monthly_file vu_obt
     LEFT JOIN  ven ON  lower(ven.VendorNameInternal) = lower(vu_obt.VendorNameInternal)
     LEFT JOIN  vu_sum ON lower(ven.VendorGroup) = lower(vu_sum.VendorGroup)
     AND year(vu_obt.TransactionDate) = vu_sum.PostingYear
