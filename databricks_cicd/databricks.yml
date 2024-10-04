@@ -49,9 +49,6 @@ targets:
     mode: development
     workspace:
       host: https://adb-2715169315282147.7.azuredatabricks.net
-    variables:
-      suffix: _${workspace.current_user.short_name}
-      prefix: _${workspace.current_user.short_name}_
         
   dev:
     workspace:
