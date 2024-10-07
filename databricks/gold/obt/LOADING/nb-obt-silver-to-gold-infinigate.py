@@ -554,6 +554,8 @@ select
   cte.GroupEntityCode,
     --- [yz]22.03.2024 Add country split here after the msp usage join
  case when cte.Reseller_Country_RegionCode = 'BE' AND cte.EntityCode = 'NL1' THEN 'BE1'
+      --- [dm]01.10.2024 Adding in special case of NL appearing in BE reports which need remapping
+       when cte.EntityCode = 'NL1' AND cte.Sys_DatabaseName = 'ReportsBE' THEN 'BE1'
           --- [yz]03.05.2024 Vendor specific region split
       WHEN CTE.Sys_DatabaseName in('ReportsAT','ReportsDE')  AND cte.VendorCode ='ZZ_INF' THEN 'DE1' 
      when cte.Reseller_Country_RegionCode = 'AT' /*AND cte.VendorCode NOT LIKE '%SOW%'*/
