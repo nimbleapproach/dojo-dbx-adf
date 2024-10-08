@@ -4,7 +4,7 @@ import os
 
 # Initialize Spark session
 spark = SparkSession.builder \
-    .appName("Read from silver_dev.ref.calendar") \
+    .appName("Test Orion DDL table structure in the Silver Layer. Ensure system fields have been added to the tables") \
     .getOrCreate()
 
 # COMMAND ----------
