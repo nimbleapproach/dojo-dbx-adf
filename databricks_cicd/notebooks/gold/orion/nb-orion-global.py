@@ -133,6 +133,32 @@ common_dimension_columns = [
 
 # COMMAND ----------
 
+
+# this should be an orion global function to return the dimension name and the orion table name as a dict
+# and the fact tables and names
+facts_dict = {
+    "source_system" : {
+        "processing_notebook" : f"{processing_notebook}",
+        "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.source_system", 
+        "destination_key_columns" : ["source_system"], 
+        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.source_system_staging" , 
+        "source_key_columns" : ["source_system"]
+                },
+    
+# comment out because it takes too long to process when testing - but works
+    "product" : {
+        "processing_notebook" : f"{processing_notebook}",
+        "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.fact_transaction", 
+        "destination_key_columns" : ["product_code", "source_system_id"],
+        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.product_staging" , 
+        "source_key_columns" : ["product_code", "source_system_id"]
+                 },
+
+
+}
+
+# COMMAND ----------
+
 def match_dimensions(df_data_to_match, df_shared_dimension_data):
     # stub function to run this process locally in the notebooks to simulate the matching process until it is written
     # each dataframe should have an "id" column and a "name" column - strict rules
