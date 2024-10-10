@@ -40,6 +40,54 @@ print(key_column)
 
 # COMMAND ----------
 
+from pyspark.sql.functions import row_number
+from pyspark.sql.window import Window
+
+
+data = [
+    ("550e8400-e29b-41d4-a716-446655440000", "a", 1000),
+    ("550e8400-e29b-41d4-a716-446655440000", "b", 2000),
+    ("550e8400-e29b-41d4-a716-446655440001", "a", 3000),
+    ("550e8400-e29b-41d4-a716-446655440001", "b", 4000),
+    ("550e8400-e29b-41d4-a716-446655440002", "a", 5000)
+]
+columns = ["guid", "category", "value"]
+df = spark.createDataFrame(data, columns)
+
+windowSpec = Window.partitionBy("guid").orderBy("value")
+df = df.withColumn("row_number", row_number().over(windowSpec))
+display(df)
+
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC DESCRIBE FORMATTED silver_dev.igsql03.g_l_account;
+# MAGIC
+
+# COMMAND ----------
+
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("RowCount").getOrCreate()
+
+# Get list of tables in the database
+database_name = "your_database_name"
+tables = spark.sql(f"SHOW TABLES IN {database_name}").select("tableName").collect()
+
+# Function to get row count from table statistics
+def get_row_count(table_name):
+    result = spark.sql(f"DESCRIBE DETAIL {database_name}.{table_name}").select("numRows").collect()
+    return result[0]["numRows"] if result else 0
+
+# Get row counts for all tables
+row_counts = {table.tableName: get_row_count(table.tableName) for table in tables}
+print(row_counts)
+
+
+# COMMAND ----------
+
 common_dimension_columns = [
     "start_datetime", 
     "end_datetime", 

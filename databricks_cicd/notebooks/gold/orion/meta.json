@@ -7,7 +7,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.source_system", 
         "destination_key_columns" : ["source_system"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.source_system_staging" , 
-        "source_key_columns" : ["source_system"]
+        "source_key_columns" : ["source_system"],
+        "active": 1
                 },
     "product" : {
         "type": "dim",
@@ -17,7 +18,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.product", 
         "destination_key_columns" : ["product_code", "source_system_id"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.product_staging" , 
-        "source_key_columns" : ["product_code", "source_system_id"]
+        "source_key_columns" : ["product_code", "source_system_id"],
+        "active": 1
                  },
 
     "currency" : {
@@ -28,7 +30,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.currency",  
         "destination_key_columns" : ["currency_code"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.currency_staging" ,  
-        "source_key_columns" : ["currency_code"]
+        "source_key_columns" : ["currency_code"],
+        "active": 1
                  },
     
     "entity" : {
@@ -39,7 +42,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.entity",  
         "destination_key_columns" : ["entity_code"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.entity_staging" ,  
-        "source_key_columns" : ["entity_code"]
+        "source_key_columns" : ["entity_code"],
+        "active": 1
                  },
     
     "entity_group" : {
@@ -50,7 +54,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.entity_group",  
         "destination_key_columns" : ["entity_group_code"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.entity_group_staging" ,  
-        "source_key_columns" : ["entity_group_code"]
+        "source_key_columns" : ["entity_group_code"],
+        "active": 1
                  },
     
     "sales_document" : {
@@ -61,7 +66,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.sales_document",  
         "destination_key_columns" : ["document_id", "source_system_id"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.sales_document_staging" ,  
-        "source_key_columns" : ["document_id", "source_system_id"]
+        "source_key_columns" : ["document_id", "source_system_id"],
+        "active": 1
                  },
     
     "region" : {
@@ -72,7 +78,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.region",  
         "destination_key_columns" : ["region_code"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.region_staging" ,  
-        "source_key_columns" : ["region_code"]
+        "source_key_columns" : ["region_code"],
+        "active": 1
                  },
     
     "entity_to_entity_group_link" : {
@@ -83,7 +90,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.entity_to_entity_group_link",  
         "destination_key_columns" : ["entity_group_pk","entity_pk"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.entity_to_entity_group_link_staging" ,  
-        "source_key_columns" : ["entity_group_pk","entity_pk"]
+        "source_key_columns" : ["entity_group_pk","entity_pk"],
+        "active": 1
                  },
     
     "vendor" : {
@@ -94,7 +102,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vendor", 
         "destination_key_columns" : ["vendor_code", "source_system_id"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vendor_staging" , 
-        "source_key_columns" : ["vendor_code", "source_system_id"]
+        "source_key_columns" : ["vendor_code", "source_system_id"],
+        "active": 1
                 },
 
     "reseller" : {
@@ -105,7 +114,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.reseller", 
         "destination_key_columns" : ["reseller_code", "source_system_id"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.reseller_staging" , 
-        "source_key_columns" : ["reseller_code", "source_system_id"]
+        "source_key_columns" : ["reseller_code", "source_system_id"],
+        "active": 1
                 },
     
     "reseller_group" : {
@@ -116,7 +126,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.reseller_group", 
         "destination_key_columns" : ["reseller_group_code"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.reseller_group_staging" , 
-        "source_key_columns" : ["reseller_group_code"]
+        "source_key_columns" : ["reseller_group_code"],
+        "active": 1
                 },
     
     "master_reseller_group" : {
@@ -127,7 +138,8 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.master_reseller_group", 
         "destination_key_columns" : ["master_reseller_group_code"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.master_reseller_group_staging" , 
-        "source_key_columns" : ["master_reseller_group_code"]
+        "source_key_columns" : ["master_reseller_group_code"],
+        "active": 1
                 },
     "fact_sales_transaction_ig" : {
         "type": "fact",
@@ -136,8 +148,9 @@
         "processing_notebook" : "nb-process-fact-ig",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction", 
         "destination_key_columns" : ["reseller_group_code"], 
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction_ig_staging" , 
-        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"]
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_trannsaction_ig_staging" , 
+        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
+        "active": 1
                 },
     
     "fact_sales_transaction_nuv" : {
@@ -147,8 +160,9 @@
         "processing_notebook" : "nb-process-fact-nuv",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction", 
         "destination_key_columns" : ["reseller_group_code"], 
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction_nuv_staging" , 
-        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"]
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_trannsaction_nuv_staging" , 
+        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
+        "active": 0
                 },
     
     "fact_sales_transaction_nav" : {
@@ -158,8 +172,9 @@
         "processing_notebook" : "nb-process-fact-nav",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction", 
         "destination_key_columns" : ["reseller_group_code"], 
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction_nav_staging" , 
-        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"]
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_trannsaction_nav_staging" , 
+        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
+        "active": 0
                 }
 
     }
