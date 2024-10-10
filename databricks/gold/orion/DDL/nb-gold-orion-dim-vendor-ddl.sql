@@ -59,3 +59,18 @@ TBLPROPERTIES (
 
 ALTER TABLE dim_vendor ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Gold_InsertDateTime_UTC >= '1900-01-01');
 ALTER TABLE dim_vendor ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Gold_ModifedDateTime_UTC >= '1900-01-01');
+
+-- MAGIC # dim_vendor default member
+-- MAGIC sqldf= spark.sql("""
+-- MAGIC SELECT CAST(-1 AS BIGINT) AS vendor_pk,
+-- MAGIC        CAST('N/A' AS STRING) AS vendor_code,
+-- MAGIC        CAST(NULL AS STRING) AS vendor_name_internal,
+-- MAGIC        CAST(NULL AS STRING) AS country_code,
+-- MAGIC        CAST(NULL AS STRING) AS local_vendor_id,
+-- MAGIC        CAST(-1 AS BIGINT) AS source_system_id,
+-- MAGIC        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
+-- MAGIC        CAST(NULL AS TIMESTAMP) AS end_datetime,
+-- MAGIC        CAST(1 AS INTEGER) AS is_current,
+-- MAGIC        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+-- MAGIC        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+-- MAGIC """).write.mode("append").option("mergeSchema", "true").saveAsTable("dim_vendor")

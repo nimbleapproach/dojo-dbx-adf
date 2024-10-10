@@ -55,3 +55,16 @@ TBLPROPERTIES (
 
 ALTER TABLE dim_source_system ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Gold_InsertDateTime_UTC >= '1900-01-01');
 ALTER TABLE dim_source_system ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Gold_ModifedDateTime_UTC >= '1900-01-01');
+
+-- Databricks notebook source
+-- MAGIC %py
+-- MAGIC # dim_source_system default memeber
+-- MAGIC sqldf= spark.sql("""
+-- MAGIC SELECT CAST(-1 AS BIGINT) AS source_system_pk,
+-- MAGIC        CAST('N/A' AS STRING) AS source_system,
+-- MAGIC        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
+-- MAGIC        CAST(NULL AS TIMESTAMP) AS end_datetime,
+-- MAGIC        CAST(1 AS INTEGER) AS is_current,
+-- MAGIC        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+-- MAGIC        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+-- MAGIC """).write.mode("append").option("mergeSchema", "true").saveAsTable("dim_source_system")
