@@ -378,8 +378,7 @@ SELECT
 
 # VU
 
-spark.sql(
-f"""SELECT
+spark.sql(f"""SELECT
   g.GroupEntityCode,
   g.EntityCode,
   'NaN' AS DocumentNo,
@@ -404,56 +403,93 @@ f"""SELECT
   g.ResellerCode,
   g.ResellerNameInternal,
   g.ResellerGeographyInternal,
-  to_date('1900-01-01')  AS ResellerStartDate,
+  to_date('1900-01-01') AS ResellerStartDate,
   g.ResellerGroupCode,
-  g.ResellerGroupName,  
-  to_date('1900-01-01')  AS ResellerGroupStartDate,
+  g.ResellerGroupName,
+  to_date('1900-01-01') AS ResellerGroupStartDate,
   g.CurrencyCode,
   g.RevenueAmount,
-  CASE 
-  WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-  THEN ifnull(e1.Period_FX_rate, mx.Period_FX_Rate)
+  CASE
+    WHEN (
+      g.GroupEntityCode = 'VU'
+      AND g.CurrencyCode = 'EUR'
+    ) THEN 1
+    ELSE ifnull(e1.Period_FX_rate, mx.Period_FX_Rate)
   END AS Period_FX_rate,
-  CASE 
-  WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-  THEN cast(g.RevenueAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-  
+  CASE
+    WHEN (
+      g.GroupEntityCode = 'VU'
+      AND g.CurrencyCode = 'EUR'
+    ) THEN cast(g.RevenueAmount AS DECIMAL(10, 2))
+    ELSE cast(
+      g.RevenueAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
+    )
   END AS RevenueAmount_Euro,
-  g.GP1,
-  coalesce(GP1_Trueup, CASE 
-   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-   THEN cast(g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-   END ) GP1_Euro,
+  CASE
+    WHEN (
+      g.GroupEntityCode = 'VU'
+      AND g.CurrencyCode = 'EUR'
+    ) THEN cast(g.GP1 AS DECIMAL(10, 2))
+    ELSE cast(
+      g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
+    )
+  END AS GP1,
+  coalesce(
+    GP1_Trueup,
+    CASE
+      WHEN (
+        g.GroupEntityCode = 'VU'
+        AND g.CurrencyCode = 'EUR'
+      ) THEN cast(g.GP1 AS DECIMAL(10, 2))
+      ELSE cast(
+        g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
+      )
+    END
+  ) AS GP1_Euro,
   --Added Cost Amount
   g.CostAmount AS COGS,
-  CASE 
-  WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-  THEN cast(g.CostAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-
+  CASE
+    WHEN (
+      g.GroupEntityCode = 'VU'
+      AND g.CurrencyCode = 'EUR'
+    ) THEN cast(g.CostAmount AS DECIMAL(10, 2))
+    ELSE cast(
+      g.CostAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
+    )
   END AS COGS_Euro,
-  case when g.VendorNameInternal in('Mouse & Bear Solutions Ltd','Blackthorne International Transport Ltd','Transport','Nuvias Internal Logistics') then 'Logistics'
-        when g.SKUInternal in('TRADEFAIR_A','TRAVELEXP') then 'Marketing'
-        when g.SKUInternal ='BEBAT' THEN 'Others'
-        when g.ProductTypeInternal ='Shipping & Delivery Income' then 'Logistics'
-        when g.ProductTypeInternal in('Quarterly Rebate','Instant Rebate') then 'Rebate'
-  else 'Revenue'end as GL_Group
-  ,0 as TopCostFlag
-FROM 
-  gold_{ENVIRONMENT}.obt.globaltransactions_vu_gp1 g
-
---Only for VU and entitycode 'NOTINTAGETIK'
-LEFT JOIN
-  (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_{ENVIRONMENT}.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
-ON
-  e1.Calendar_Year = cast(year(g.TransactionDate) as string)
-AND
-  e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
-AND
-  g.CurrencyCode = cast(e1.Currency as string)
-LEFT JOIN 
-  max_fx_rates mx 
-ON
-  g.CurrencyCode = cast(mx.Currency as string)"""
+  case
+    when g.VendorNameInternal in(
+      'Mouse & Bear Solutions Ltd',
+      'Blackthorne International Transport Ltd',
+      'Transport',
+      'Nuvias Internal Logistics'
+    ) then 'Logistics'
+    when g.SKUInternal in('TRADEFAIR_A', 'TRAVELEXP') then 'Marketing'
+    when g.SKUInternal = 'BEBAT' THEN 'Others'
+    when g.ProductTypeInternal = 'Shipping & Delivery Income' then 'Logistics'
+    when g.ProductTypeInternal in('Quarterly Rebate', 'Instant Rebate') then 'Rebate'
+    else 'Revenue'
+  end as GL_Group,
+  0 as TopCostFlag
+FROM
+  gold_{ ENVIRONMENT }.obt.globaltransactions_vu_gp1 g --Only for VU and entitycode 'NOTINTAGETIK'
+  LEFT JOIN (
+    SELECT
+      DISTINCT Calendar_Year,
+      Month,
+      Currency,
+      Period_FX_rate
+    FROM
+      gold_{ ENVIRONMENT }.obt.exchange_rate
+    WHERE
+      ScenarioGroup = 'Actual'
+  ) e1 ON e1.Calendar_Year = cast(year(g.TransactionDate) as string)
+  AND e1.Month = right(
+    concat('0', cast(month(g.TransactionDate) as string)),
+    2
+  )
+  AND g.CurrencyCode = cast(e1.Currency as string)
+  LEFT JOIN max_fx_rates mx ON g.CurrencyCode = cast(mx.Currency as string)"""
 ).createOrReplaceTempView('VU')
 
 # COMMAND ----------

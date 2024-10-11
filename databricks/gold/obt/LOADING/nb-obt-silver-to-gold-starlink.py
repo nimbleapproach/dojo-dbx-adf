@@ -147,7 +147,9 @@ FROM
 
 spark.sql(
     f"""
-
+SELECT TRIM(VendorNameInternal)VendorNameInternal,
+MAX(VendorGroup)VendorGroup
+ FROM (
 -- CLEAN DUPLICATES SELECT THE ONE THAT HAS NUMRIC VENDOR CODE FROM SL
 SELECT DISTINCT 
   lower(VendorNameInternal) AS VendorNameInternal,
@@ -188,7 +190,8 @@ where
   Sys_Silver_IsCurrent = 1
   GROUP BY ALL  
   HAVING count (DISTINCT lower(VendorGroup)) >1)
-AND Sys_Silver_IsCurrent = 1
+AND Sys_Silver_IsCurrent = 1)
+GROUP BY ALL
 """
 ).createOrReplaceTempView("ven")
 
@@ -207,7 +210,7 @@ SELECT
   sum(GP1_EUR) AS GP1_EUR
 FROM
   platinum_{ENVIRONMENT}.obt.globaltransactions_tagetik_reconciliation_ytd tag
-  LEFT JOIN ven ON lower(tag.VendorName) = ven.VendorNameInternal
+  LEFT JOIN ven ON TRIM(lower(tag.VendorName)) = ven.VendorNameInternal
 WHERE
   EntityCode = 'AE1'
   AND source ='TAG'
