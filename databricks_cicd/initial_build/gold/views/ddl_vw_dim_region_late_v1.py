@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.vw_dim_region_late (
   is_current,
   Sys_Gold_InsertedDateTime_UTC,
   Sys_Gold_ModifiedDateTime_UTC)
-WITH SCHEMA BINDING
 AS select distinct
     drg.DimensionSetID AS region_code,
     coalesce(drg.DimensionValueCode,'NaN') AS region_name,
@@ -47,3 +46,4 @@ WHERE rg.Sys_Silver_IsCurrent = true
  and dim.DimensionCode = 'RPTREGION'
     AND sih.Sys_DatabaseName = dim.Sys_DatabaseName
     AND dim.Sys_Silver_IsCurrent = true
+""")

@@ -45,7 +45,7 @@ code AS Vendor_Code,
 Name AS Vendor_Name_Internal,
 SID as local_vendor_ID,
 replace(Sys_DatabaseName,'Reports','') as Country_Code,
-(select source_system_pk from {catalog}.{schema}.source_system where source_system = 'Infinigate ERP') as source_system_id,
+(select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP') as source_system_id,
 -- SHA2(CONCAT_WS(' ', COALESCE(TRIM(code), ''), COALESCE(TRIM(
 --     concat(regexp_replace(Name, 'NaN', ''))
 --     ), '')), 256) AS vendor_hash_key,

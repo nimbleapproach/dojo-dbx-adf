@@ -4,7 +4,7 @@
         "run_group": 0,
         "run_order": 1,
         "processing_notebook" : "{processing_notebook}",
-        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.source_system", 
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_source_system", 
         "destination_key_columns" : ["source_system"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_source_system_staging" , 
         "source_key_columns" : ["source_system"],

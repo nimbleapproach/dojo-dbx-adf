@@ -36,7 +36,7 @@ trim(
 ) AS product_description,
 coalesce(it.sid,'NaN') as local_product_id ,
 coalesce(it.ProductType,'NaN') as product_type,
-(select source_system_pk from {catalog}.{schema}.source_system where source_system = 'Infinigate ERP') as source_system_id,
+(select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP') as source_system_id,
 --  SHA2(CONCAT_WS(' ', COALESCE(TRIM(it.no_), ''), CONCAT_WS(' ', COALESCE(TRIM(it.producttype), '')),
 --  COALESCE(TRIM(
 --     concat(
@@ -72,7 +72,7 @@ trim(
 ) AS product_description,
 coalesce(it.sid,'NaN') as local_product_id ,
 coalesce(it.ProductType,'NaN') as product_type,
-(select source_system_pk from {catalog}.{schema}.source_system where source_system = 'Infinigate ERP') as source_system_id,
+(select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP') as source_system_id,
 --  SHA2(CONCAT_WS(' ', COALESCE(TRIM(it.no_), ''), CONCAT_WS(' ', COALESCE(TRIM(it.producttype), '')),
 --  COALESCE(TRIM(
 --     concat(

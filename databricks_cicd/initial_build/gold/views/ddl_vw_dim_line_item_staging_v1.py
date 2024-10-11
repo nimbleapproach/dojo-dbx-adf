@@ -45,7 +45,7 @@ trim(
   )
 ) AS line_item_description,
 sil.no_ as local_line_item_id ,
-(select source_system_pk from {catalog}.{schema}.source_system where source_system = 'Infinigate ERP') as source_system_id,
+(select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP') as source_system_id,
  SHA2(CONCAT_WS(' ', COALESCE(TRIM(sil.no_), ''), COALESCE(TRIM(
     concat(
       regexp_replace(it.Description, 'NaN', ''),
@@ -97,7 +97,7 @@ trim(
   )
 ) AS line_item_description,
 sil.no_ as local_line_item_id ,
-(select source_system_pk from {catalog}.{schema}.source_system where source_system = 'Infinigate ERP') as source_system_id,
+(select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP') as source_system_id,
 SHA2(CONCAT_WS(' ', COALESCE(TRIM(it.no_), ''), COALESCE(TRIM(
     concat(
       regexp_replace(it.Description, 'NaN', ''),

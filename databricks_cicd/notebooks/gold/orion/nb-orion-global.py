@@ -24,9 +24,9 @@ processing_notebook = "nb-orion-process-dimension"
 dimensions_dict = {
     "source_system" : {
         "processing_notebook" : f"{processing_notebook}",
-        "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.source_system", 
+        "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_source_system", 
         "destination_key_columns" : ["source_system"], 
-        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.source_system_staging" , 
+        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_source_system_staging" , 
         "source_key_columns" : ["source_system"]
                 },
     
@@ -139,9 +139,9 @@ common_dimension_columns = [
 facts_dict = {
     "source_system" : {
         "processing_notebook" : f"{processing_notebook}",
-        "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.source_system", 
+        "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_source_system", 
         "destination_key_columns" : ["source_system"], 
-        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.source_system_staging" , 
+        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_source_system_staging" , 
         "source_key_columns" : ["source_system"]
                 },
     
