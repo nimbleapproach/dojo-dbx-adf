@@ -1,24 +1,27 @@
 # Databricks notebook source
-
 # Importing Libraries
 import os
+
 # COMMAND ----------
+
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
+
 # COMMAND ----------
 
 
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 
-# COMMAND ---------- 
+# COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
+
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.entity_group_staging (
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_entity_group_staging (
   entity_group_code COMMENT 'The high level entity grouping',
   start_datetime,
   end_datetime,

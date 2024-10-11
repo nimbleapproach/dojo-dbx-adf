@@ -1,24 +1,27 @@
 # Databricks notebook source
-
 # Importing Libraries
 import os
+
 # COMMAND ----------
+
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
+
 # COMMAND ----------
 
 
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 
-# COMMAND ---------- 
+# COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
+
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.region_staging (
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_region_staging (
   region_code COMMENT 'Region Code',
   region_name COMMENT 'The description name of the region',
   country_code COMMENT 'The country code to which the region relates',

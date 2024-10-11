@@ -1,17 +1,20 @@
 # Databricks notebook source
-
 # Importing Libraries
 import os
 from pyspark.sql import SparkSession
 
 # COMMAND ----------
+
 # Create a Spark session
 spark = SparkSession.builder \
     .appName("Databricks Notebook") \
     .getOrCreate()
+
 # COMMAND ----------
+
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
+
 # COMMAND ----------
 
 
@@ -22,10 +25,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
+
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vendor_staging (
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_vendor_staging (
   Vendor_Code COMMENT 'Business Key',
   Vendor_Name_Internal COMMENT 'TODO',
   local_vendor_ID COMMENT 'Surrogate Key',

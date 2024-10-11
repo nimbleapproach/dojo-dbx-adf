@@ -1,24 +1,27 @@
 # Databricks notebook source
-
 # Importing Libraries
 import os
+
 # COMMAND ----------
+
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
+
 # COMMAND ----------
 
 
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 
-# COMMAND ---------- 
+# COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
+
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.product_staging as
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_staging as
 select distinct
 coalesce(it.No_, sil.No_,'NaN') as product_code,
 trim(

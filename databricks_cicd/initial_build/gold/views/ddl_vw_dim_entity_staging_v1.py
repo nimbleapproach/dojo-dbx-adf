@@ -1,24 +1,27 @@
 # Databricks notebook source
-
 # Importing Libraries
 import os
+
 # COMMAND ----------
+
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
+
 # COMMAND ----------
 
 
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 
-# COMMAND ---------- 
+# COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
+
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.entity_staging (
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_entity_staging (
   entity_code COMMENT 'Entity Code',
   entity_code_legacy COMMENT 'Legacy reference to the Infinigate entity Id',
   entity_description COMMENT 'The descriptive name of the associated entity',

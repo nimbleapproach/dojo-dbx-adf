@@ -20,18 +20,37 @@ schema = 'orion'
 
 # COMMAND ----------
 
+# spark.sql(f"""
+# DROP VIEW {catalog}.{schema}.vw_fact_sales_trannsaction_ig_staging
+# """)
 
-spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_trannsaction_ig_staging as (
+# COMMAND ----------
+
+spark.sql(
+    f"""
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_staging as (
   
   --- sales invoice
   SELECT
     -- local_code
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) sales_order_date,
     to_date(sih.PostingDate) AS posting_date,
+    sih.MSPUsageHeaderBizTalkGuid as biztalk_guid,
+    --START add these to table
+    coalesce(sih.OrderNo_, so.SalesOrderID, 'NaN') AS sales_order_Id,
+    coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS sales_order_item_Id,
+    coalesce(it.No_, sil.No_, 'NaN') AS SKU_internal_Id,
+   coalesce(it.ProductType, 'NaN') AS SKU_type_internal,
+    coalesce(ven1.Code, ven.Code, ven2.Code, 'NaN') AS vendor_code,
+    coalesce(ven1.Name, ven.Name, ven2.Name, 'NaN') AS vendor_name_internal,
+    coalesce(sih.`Sell-toCustomerNo_`, 'NaN') AS reseller_code_internal_Id,
+    case
+      when cu.Name2 = 'NaN' THEN cu.Name
+      ELSE concat_ws(' ', cu.Name, cu.Name2)
+    END AS reseller_name_internal,    
+    dim.DimensionValueCode as reseller_country_region_code,
+    --END add these to table
     
-    coalesce(sih.OrderNo_, so.SalesOrderID, 'NaN')
-    sih.MSPUsageHeaderBizTalkGuid as biztalkguid,
     '' as cogs_account_no,
     trim(
       (
@@ -44,25 +63,36 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_trannsaction_ig_stagi
       )
     ) AS description,
     sil.DocumentNo_ AS doc_no,
-    sla.Doc_No_Occurrence as doc_no_occurrence,
+    -- so.Doc_No_Occurrence as doc_no_occurrence,
     sil.Gen_Bus_PostingGroup as gen_bus_postinggroup,
     sil.LineNo_ AS line_no,
     '' as order_line_no,
     '' as sales_credit_memo_line_no           ,
     '' as sales_invoice_line_no               ,
     '' as sales_account_no              ,
-    '' as shortcut_dimension1_code            ,
-    '' as shortcut_dimension2_code            ,
+    it.GlobalDimension1Code as item_global_dimension1_code            ,
+    res.GlobalDimension1Code as resource_global_dimension1_code            ,
+    sil.ShortcutDimension1Code as item_dimension1_code            ,
     sil.SID as sid                                 ,
     sih.Sys_DatabaseName as sys_databasename              ,
     '' as sys_rownumber         ,
     sil.Type as type                                ,
-    '' as vatprod_postinggroup          ,
-    '' as amount_local_currency               ,
+    SIL.Gen_Bus_PostingGroup as vatprod_postinggroup          ,
+    CAST(
+      case
+        when sih.CurrencyFactor > 0 then Amount / sih.CurrencyFactor
+        else Amount
+      end AS DECIMAL(10, 2)
+    ) as amount_local_currency               ,
     '' as amount_EUR               ,
     '' as amount_including_vat_local_currency ,
     '' as amount_including_vat_EUR            ,
-    '' as cost_amount_local_currency          ,
+    CAST(
+      case
+        when sil.Quantity > 0 then sil.UnitCostLCY * sil.Quantity *(-1)
+        else 0
+      end AS DECIMAL(10, 2)
+    ) as cost_amount_local_currency          ,
     '' as cost_amount_EUR              ,
     '' as quantity             ,
     '' as total_cost_purchase_currency        ,
@@ -73,6 +103,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_trannsaction_ig_stagi
     '' as unit_price                         
   FROM
   silver_dev.igsql03.sales_invoice_header sih
+  --igsql03.sales_invoice_line should repoint to orion.line_item
   LEFT JOIN silver_dev.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
   AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
   AND sih.Sys_Silver_IsCurrent = true
@@ -180,79 +211,77 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_trannsaction_ig_stagi
   UNION all
     --- SALES CR MEMO
   SELECT
-    sil.SID AS SID,
-    'IG' AS GroupEntityCode,
-   entity.TagetikEntityCode  AS EntityCode,
-     sil.Sys_DatabaseName,
-    dim.DimensionValueCode as Reseller_Country_RegionCode,
-    sil.DocumentNo_ AS DocumentNo,
-    SIL.Gen_Bus_PostingGroup,
-    sil.LineNo_ AS LineNo,
-    sih.MSPUsageHeaderBizTalkGuid,
-    sil.Type AS Type,
-    sil.Description AS SalesInvoiceDescription,
-    to_date(sih.PostingDate) AS TransactionDate,
-    to_date(coalesce(so.SalesOrderDate, '1900-01-01')) as SalesOrderDate,
-    coalesce(so.SalesOrderID, 'NaN') AS SalesOrderID,
-    --coalesce(so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
-    coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS SalesOrderItemID,
-    coalesce(it.No_, sil.No_, 'NaN') AS SKUInternal,
-       sil.Gen_Prod_PostingGroup,
-    -- coalesce(datanowarr.SKU, 'NaN')  AS SKUMaster,
-    trim(
-      concat(
-        regexp_replace(it.Description, 'NaN', ''),
-        regexp_replace(it.Description2, 'NaN', ''),
-        regexp_replace(it.Description3, 'NaN', ''),
-        regexp_replace(it.Description4, 'NaN', '')
-      )
-    ) AS Description,
-    coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
-    coalesce(ven1.Code, ven.Code, ven2.Code, 'NaN') AS VendorCode,
-    coalesce(ven1.Name, ven.Name, ven2.Name, 'NaN') AS VendorNameInternal,
-    -- coalesce(datanowarr.Vendor_Name, 'NaN') AS VendorNameMaster,
-    '' AS VendorGeography,
-    to_date('1900-01-01', 'yyyy-MM-dd') AS VendorStartDate,
-    coalesce(cu.No_, 'NaN') AS ResellerCode,
+  
+    -- local_code
+    to_date(coalesce(so.SalesOrderDate, '1900-01-01')) sales_order_date,
+    to_date(sih.PostingDate) AS posting_date,
+    sih.MSPUsageHeaderBizTalkGuid as biztalk_guid,
+    --START add these to table
+    coalesce(sil.OrderNo_, so.SalesOrderID, 'NaN') AS SalesOrderID,
+    coalesce(sil.No_, so.SalesOrderItemID, 'NaN') AS sales_order_item_Id,
+    coalesce(it.No_, sil.No_, 'NaN') AS SKU_internal_Id,
+   coalesce(it.ProductType, 'NaN') AS SKU_type_internal,
+    coalesce(ven1.Code, ven.Code, ven2.Code, 'NaN') AS vendor_code,
+    coalesce(ven1.Name, ven.Name, ven2.Name, 'NaN') AS vendor_name_internal,
+    coalesce(sih.`Sell-toCustomerNo_`, 'NaN') AS reseller_code_internal_Id,
     case
       when cu.Name2 = 'NaN' THEN cu.Name
       ELSE concat_ws(' ', cu.Name, cu.Name2)
-    END AS ResellerNameInternal,
-    cu.Country_RegionCode AS ResellerGeographyInternal,
-    to_date(cu.Createdon) AS ResellerStartDate,
-    coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
-    coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
-    to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
-    Case
-      WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
-      WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
-      WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
-      WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
-      WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
-      WHEN sih.CurrencyCode = 'NaN'
-      AND left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
-      ELSE sih.CurrencyCode
-    END AS CurrencyCode,
-    sih.CurrencyFactor,
-    CAST(
+    END AS reseller_name_internal,
+    dim.DimensionValueCode as reseller_country_region_code,
+    --END add these to table
+    
+    '' as cogs_account_no,
+    trim(
       (
-        case
-          when sih.CurrencyFactor > 0 then Amount / sih.CurrencyFactor
-          else Amount
-        end
-      ) *(-1) AS DECIMAL(10, 2)
-    ) AS RevenueAmount,
+        concat(
+          regexp_replace(it.Description, 'NaN', ''),
+          regexp_replace(it.Description2, 'NaN', ''),
+          regexp_replace(it.Description3, 'NaN', ''),
+          regexp_replace(it.Description4, 'NaN', '')
+        )
+      )
+    ) AS description,
+    sil.DocumentNo_ AS doc_no,
+    -- so.Doc_No_Occurrence as doc_no_occurrence,
+    sil.Gen_Bus_PostingGroup as gen_bus_postinggroup,
+    sil.LineNo_ AS line_no,
+    '' as order_line_no,
+    '' as sales_credit_memo_line_no           ,
+    '' as sales_invoice_line_no               ,
+    '' as sales_account_no              ,
+    it.GlobalDimension1Code as item_global_dimension1_code            ,
+    res.GlobalDimension1Code as resource_global_dimension1_code            ,
+    sil.ShortcutDimension1Code as item_dimension1_code            ,
+    sil.SID as sid                                 ,
+    sih.Sys_DatabaseName as sys_databasename              ,
+    '' as sys_rownumber         ,
+    sil.Type as type                                ,
+    
+    SIL.Gen_Bus_PostingGroup as vatprod_postinggroup          ,
     CAST(
       case
-        when sil.Quantity > 0 then sil.UnitCostLCY * sil.Quantity
+        when sih.CurrencyFactor > 0 then Amount / sih.CurrencyFactor
+        else Amount
+      end AS DECIMAL(10, 2)
+    ) as amount_local_currency        ,
+    '' as amount_EUR               ,
+    '' as amount_including_vat_local_currency ,
+    '' as amount_including_vat_EUR            ,
+    CAST(
+      case
+        when sil.Quantity > 0 then sil.UnitCostLCY * sil.Quantity *(-1)
         else 0
       end AS DECIMAL(10, 2)
-    ) as CostAmount
+    ) as cost_amount_local_currency          ,
+    '' as cost_amount_EUR              ,
+    '' as quantity             ,
+    '' as total_cost_purchase_currency        ,
+    '' as total_cost_EUR               ,
+    '' as unit_cost_local_currency            ,
+    '' as unit_cost_purchase_currency         ,
+    '' as unit_cost_EUR                ,
+    '' as unit_price                      
   FROM
     silver_dev.igsql03.sales_cr_memo_header sih
     INNER JOIN silver_dev.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
@@ -363,5 +392,6 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_trannsaction_ig_stagi
       AND UPPER(sil.No_) NOT LIKE '%MARKETING%'
     )
     and sil.Type <> 0 
-
-""")
+)
+"""
+)

@@ -22,7 +22,7 @@ schema = 'orion'
 
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.v_dim_transaction_ig_enrich01_v1 as 
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_transaction_ig_enrich01_v1 as 
 SELECT
     concat(right(msp_h.Sys_DatabaseName, 2), '1') as EntityCode,
     msp_h.BizTalkGuid,
