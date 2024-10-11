@@ -28,7 +28,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC SELECT (CASE WHEN ( SELECT COALESCE(b.date,a.date) AS date
 # MAGIC                     FROM ( SELECT date
 # MAGIC                           FROM ( SELECT *, ROW_NUMBER() OVER(ORDER BY date) AS working_day
-# MAGIC                                   FROM gold_dev.tag02.dim_date
+# MAGIC                                   FROM gold_${tableObject.environment}.tag02.dim_date
 # MAGIC                                   WHERE YEAR(NOW()) = year
 # MAGIC                                     AND MONTH(NOW()) = month
 # MAGIC                                     AND day_of_week NOT IN (1,7) )
