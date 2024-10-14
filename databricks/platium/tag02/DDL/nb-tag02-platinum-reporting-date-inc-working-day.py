@@ -21,7 +21,7 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW reporting_date_selection AS
 # MAGIC
-# MAGIC SELECT DISTINCT last_day_of_month
+# MAGIC SELECT DISTINCT last_day_of_month, CONCAT(MONTHNAME(last_day_of_month),' - ',YEAR(last_day_of_month)) AS reporting_month_description
 # MAGIC FROM gold_${tableObject.environment}.tag02.dim_date
 # MAGIC WHERE last_day_of_month <= 
 # MAGIC (
@@ -38,13 +38,3 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC                       AND YEAR(a.date) = YEAR(b.date)) <= NOW() THEN last_day(DATE_ADD(MONTH,-1,NOW())) ELSE last_day(DATE_ADD(MONTH,-2,NOW())) END)
 # MAGIC )
 # MAGIC ORDER BY last_day_of_month DESC
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
-# MAGIC
