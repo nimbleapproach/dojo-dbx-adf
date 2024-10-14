@@ -28,23 +28,23 @@ def check_orion_dataframe_fields(df: DataFrame) -> bool:
 
 
 def test_main():
-    currencydf = spark.read.table(f"{catalog}.{schema}.currency")
+    currencydf = spark.read.table(f"{catalog}.{schema}.dim_currency")
     result = check_orion_dataframe_fields(currencydf)
     assert (f"DataFrame has required fields: {result}")
     
-    entity_groupdf = spark.read.table(f"{catalog}.{schema}.entity_group")
+    entity_groupdf = spark.read.table(f"{catalog}.{schema}.dim_entity_group")
     result = check_orion_dataframe_fields(entity_groupdf)
     assert (f"DataFrame has required fields: {result}")
     
-    entity_to_entity_group_linkdf = spark.read.table(f"{catalog}.{schema}.entity_to_entity_group_link")
+    entity_to_entity_group_linkdf = spark.read.table(f"{catalog}.{schema}.link_entity_to_entity_group")
     result = check_orion_dataframe_fields(entity_to_entity_group_linkdf)
     assert (f"DataFrame has required fields: {result}")
 
-    entitydf = spark.read.table(f"{catalog}.{schema}.entity")
+    entitydf = spark.read.table(f"{catalog}.{schema}.dim_entity")
     result = check_orion_dataframe_fields(entitydf)
     assert (f"DataFrame has required fields: {result}")
     
-    productdf = spark.read.table(f"{catalog}.{schema}.product")
+    productdf = spark.read.table(f"{catalog}.{schema}.dim_product")
     result = check_orion_dataframe_fields(productdf)
     assert (f"DataFrame has required fields: {result}")
 
