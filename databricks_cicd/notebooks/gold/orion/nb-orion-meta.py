@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from multiprocessing.pool import ThreadPool
 from pyspark.sql import Window
 from delta.tables import DeltaTable
+from collections import defaultdict
 
 # set up some constants
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
@@ -62,7 +63,7 @@ replacements = {
     "orion_schema": orion_schema
 }
 data = read_and_replace_json(file_path, replacements)
-print(data)
+#print(data)
 
 
 
@@ -109,16 +110,6 @@ def check_type_run_group_consistency(data):
 
 # COMMAND ----------
 
-data = read_and_replace_json(file_path, replacements)
-
-# Example consistency check
-is_consistent = check_type_run_group_consistency(data)
-print(f"\nData consistency: {'Consistent' if is_consistent else 'Inconsistent'}")
-
-
-
-# COMMAND ----------
-
 def filter_and_sort_json(data, *filters):
     # Parse filters
     filter_dict = {}
@@ -159,21 +150,6 @@ def filter_and_sort_json(data, *filters):
 # COMMAND ----------
 
 
-# Filter and sort by type "dim" and run_group 1
-
-# Example where run_group is invalid
-
-filtered_sorted_data = filter_and_sort_json(data, "type:dim", "run_group:40")
-
-if isinstance(filtered_sorted_data, tuple):  # If the result is a tuple, it's min and max
-    print(f"Invalid run_group. Min run_group: {filtered_sorted_data[0]}, Max run_group: {filtered_sorted_data[1]}")
-else:
-    print(filtered_sorted_data)  # Output the filtered and sorted entries
-
-# COMMAND ----------
-
-from collections import defaultdict
-
 def count_run_groups_by_type(data):
     type_run_groups = defaultdict(set)
     
@@ -207,22 +183,6 @@ def count_objects_by_type(data):
 
 # COMMAND ----------
 
-data = read_and_replace_json(file_path, replacements)
-
-# Example usage
-run_group_counts = count_run_groups_by_type(data)
-print("Number of run groups for each type:")
-for entity_type, count in run_group_counts.items():
-    print(f"{entity_type}: {count}")
-
-
-type_summary = count_objects_by_type(data)
-print("Number of objects for each type:")
-for entity_type, count in type_summary.items():
-    print(f"{entity_type}: {count}")
-
-# COMMAND ----------
-
 from collections import defaultdict
 
 def count_objects_by_type_run_group_and_priority(data):
@@ -243,33 +203,7 @@ def count_objects_by_type_run_group_and_priority(data):
 # COMMAND ----------
 
 
-data = read_and_replace_json(file_path, replacements)
-
-# Example usage
-counts = count_objects_by_type_run_group_and_priority(data)
-
-print("Number of objects for each type, run_group, and priority:")
-for entity_type, group_counts in counts.items():
-    for run_group, priority_counts in group_counts.items():
-        print(f"\n{entity_type} (run_group {run_group}):")
-        for priority, count in sorted(priority_counts.items()):
-            print(f"  Priority {priority}: {count}")
-
-# Optional: Calculate and print totals
-type_totals = {t: sum(sum(p.values()) for p in g.values()) for t, g in counts.items()}
-total_objects = sum(type_totals.values())
-
-print("\nTotals by type:")
-for entity_type, total in type_totals.items():
-    print(f"{entity_type}: {total}")
-
-print(f"\nTotal number of objects: {total_objects}")
-
-# COMMAND ----------
-
-from collections import defaultdict
-
-def summarize_execution_order_with_layers(data):
+def summarise_execution_order_with_layers(data):
     # Collect the relevant information from the input data
     execution_order = defaultdict(lambda: defaultdict(list))
     
@@ -293,7 +227,7 @@ def summarize_execution_order_with_layers(data):
     }
 
     # Output the sorted execution order in the desired format
-    print("Summarized Execution Order:")
+    print("summarised Execution Order:")
     
     # Sort the layers to ensure the correct output order (core, dim & link, fact)
     for layer in ["core", "dim & link", "fact"]:
@@ -305,15 +239,6 @@ def summarize_execution_order_with_layers(data):
                 print(f"Run Group: {run_group}, Run Order: {run_order} [{entity_list}]")
 
     return execution_order
-
-
-# COMMAND ----------
-
-
-data = read_and_replace_json(file_path, replacements)
-
-# Example usage
-summarized_execution_order = summarize_execution_order_with_layers(data)
 
 
 # COMMAND ----------

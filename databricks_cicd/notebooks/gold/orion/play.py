@@ -1,5 +1,17 @@
 # Databricks notebook source
-# MAGIC %run ./99_orion_global
+# MAGIC %run ../../../notebooks/deploy_ddl
+
+# COMMAND ----------
+
+get_ddl_deployment_df().count()
+
+# COMMAND ----------
+
+ddl_deployment_df = get_ddl_deployment_df()
+
+if ddl_deployment_df.empty:
+    print('sdsf')
+
 
 # COMMAND ----------
 
