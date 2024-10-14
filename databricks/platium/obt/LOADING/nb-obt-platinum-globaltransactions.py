@@ -75,7 +75,23 @@ spark.sql(f"""SELECT
   SUM(GP1_Euro) AS GP1_Euro,
   SUM(COGS) AS COGS,
   SUM(COGS_Euro) AS COGS_Euro,
-  GL_Group,
+  CASE /**TeamFON has only service SKU but is posted in MSP Product revenue**/
+        WHEN GL_Group='Revenue' AND lower(Type) like '%service%' and VendorCode <> 'TEF' THEN 'Service' 
+        WHEN GL_Group='Revenue' AND lower(SKUInternal) like 'inf-ps-%' THEN 'Service' 
+        WHEN GL_Group='Revenue' AND lower(SKUInternal) like 'inf-ts-%' THEN 'Service' 
+        WHEN GL_Group='Revenue' AND lower(SKUInternal) like 'inf-eps-%' THEN 'Service'
+        WHEN GL_Group='Revenue' AND lower(SKUInternal) like '%prof-service%' THEN 'Service'
+        WHEN GL_Group='Revenue' AND ( lower(SKUInternal) like '%tr-so-%' OR lower(SKUInternal) like '%tr-sw-%') THEN 'Service'
+        WHEN GL_Group='Revenue' AND lower(SKUInternal) like '%trn-day%' THEN 'Service'
+        WHEN GL_Group='Revenue' AND ( lower(SKUInternal) like 'trdx%') THEN 'Service'  
+        WHEN GL_Group='Revenue' AND SKUInternal  IN ('INF-DL-SEC-SPESEN','INF-TR-MSP','INF-DS-HID-1Y','TC8ZTCCEN') THEN 'Service'          
+        WHEN GL_Group='Revenue' AND VendorCode ='SO_CL' AND lower(SKUInternal) like 'trrx%' THEN   'Service' --TRRXFW00ZZPCAA Sophos ATC Training Pack
+        WHEN GL_Group='Revenue' AND VendorCode ='SO_CL' AND lower(SKUInternal) like 'atca%' THEN   'Service' --ATCARE00ZZPCAA Sophos ATC Training Pack
+        WHEN GL_Group='Revenue' AND SKUInternal IN ('370988') THEN 'Others'
+        WHEN GL_Group='Revenue' AND SKUInternal IN ('310188','310288','310388','310488','310588','310688','310788','310888','310988','311088','312088','313088','314088')
+        THEN 'Service'
+    ELSE  GL_Group 
+        END AS GL_Group,
   TopCostFlag
   FROM (
 SELECT
@@ -87,7 +103,12 @@ SELECT
   g.SalesOrderDate,
   g.SalesOrderID,
   g.SalesOrderItemID,
-  g.SKUInternal,
+  CASE WHEN ga.Consol_CreditAcc_ IS NULL THEN g.SKUInternal
+        ELSE ga.Consol_CreditAcc_  END AS SKUInternal,
+   CASE WHEN (lower(R.Name ) like '%invoice%'  OR  r.No ='Z-SC-S' OR  r.No ='RESCHEMTAX1' ) THEN 'Revenue'
+        WHEN r.No LIKE 'VAT%' THEN 'Revenue'
+        WHEN r.No = '099-000002-001' THEN 'Revenue'
+    else r.Type end as Type,
   g.SKUMaster,
   g.Description,
   g.ProductTypeInternal,
@@ -124,6 +145,18 @@ LEFT JOIN gold_{ENVIRONMENT}.obt.exchange_rate e ON e.Calendar_Year = cast(year(
                                          AND e.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
                                          AND  CASE WHEN g.EntityCode = 'BE1' THEN 'NL1' ELSE  g.EntityCode  END   = e.COD_AZIENDA --[YZ] 15.03.2024 : Add Replace BE1 with NL1 since it is not a valid entity in tagetik for fx
                                          AND  e.ScenarioGroup = 'Actual'
+LEFT JOIN (
+          select 
+        No,
+        max(Name)Name,
+        max(Type)Type
+        from gold_{ENVIRONMENT}.obt.resource_sku 
+        group by all)  r ON g.SKUInternal = r.No
+
+LEFT JOIN silver_dev.igsql03.g_l_account ga 
+ON ga.Sys_Silver_IsCurrent =1
+AND g.SKUInternal = ga.No_
+and g.Sys_DatabaseName = ga.Sys_DatabaseName
 
 WHERE g.GroupEntityCode ='IG'
 and right(cast(g.TransactionDate as varchar(108)),8) <>'23:59:59'
@@ -139,6 +172,7 @@ SELECT
   NULL AS SalesOrderID,
   NULL AS SalesOrderItemID,
   NULL AS SKUInternal,
+  'Revenue' as Type,
   NULL AS SKUMaster,
   NULL AS Description,
   NULL AS ProductTypeInternal,
@@ -160,10 +194,10 @@ SELECT
   NULL AS ResellerGroupName,  
   NULL AS ResellerGroupStartDate,
   NULL AS CurrencyCode,
-  CAST(SUM(CASE WHEN GL_Group = 'Revenue' THEN ((-1) * tc.CostAmount)
+  CAST(SUM(CASE WHEN GL_Group like  '%Revenue%' THEN ((-1) * tc.CostAmount)
       ELSE 0.00 END )AS DECIMAL(20,2)) AS RevenueAmount,
   tc.CostAmount / tc.CostAmount_EUR AS Period_FX_rate ,
-  CAST(SUM(CASE WHEN GL_Group = 'Revenue' THEN ((-1) * tc.CostAmount_EUR)
+  CAST(SUM(CASE WHEN GL_Group like  '%Revenue%' THEN ((-1) * tc.CostAmount_EUR)
       ELSE 0.00 END )AS DECIMAL(20,2)) AS RevenueAmount_Euro,
  (-1) * SUM(tc.CostAmount) AS GP1,
  (-1) * SUM(tc.CostAmount_EUR)  AS GP1_Euro,
@@ -271,7 +305,7 @@ LEFT JOIN
   max_fx_rates mx 
 ON
   g.CurrencyCode = cast(mx.Currency as string)
-WHERE g.GroupEntityCode NOT IN('IG' , 'SL','VU')""").createOrReplaceTempView('NU')
+WHERE g.GroupEntityCode NOT IN('IG','SL','VU')""").createOrReplaceTempView('NU')
 
 # COMMAND ----------
 
@@ -342,6 +376,7 @@ SELECT
          when g.SKUInternal ='BEBAT' THEN 'Others'
          when g.ProductTypeInternal ='Shipping & Delivery Income' then 'Logistics'
          when g.ProductTypeInternal in('Quarterly Rebate','Instant Rebate') then 'Rebate'
+         when lower(g.VendorNameInternal) like '%- starlink%' then 'Service' 
    else 'Revenue'end as GL_Group
    ,0 as TopCostFlag
   --  ,IFG_Mapping
@@ -500,7 +535,7 @@ CREATE OR REPLACE TABLE platinum_{ENVIRONMENT}.obt.globaltransactions as
 SELECT * FROM IG
 UNION ALL 
 SELECT * FROM NU
-UNION ALL 
+UNION ALL  
 SELECT * FROM SL
 UNION ALL
 SELECT * FROM VU

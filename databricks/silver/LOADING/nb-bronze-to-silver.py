@@ -226,6 +226,7 @@ else:
 # COMMAND ----------
 
 deduped_df = fillnas(source_df)
+deduped_df = deduped_df.na.drop(subset= BUSINESS_KEYS)
 
 # COMMAND ----------
 
