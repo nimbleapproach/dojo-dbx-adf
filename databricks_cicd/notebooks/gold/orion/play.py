@@ -85,8 +85,7 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC
-# MAGIC DESCRIBE FORMATTED silver_dev.igsql03.g_l_account;
+# MAGIC select * from gold_dev.orion.dim_entity_group_staging
 # MAGIC
 
 # COMMAND ----------

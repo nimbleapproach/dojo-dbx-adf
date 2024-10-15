@@ -60,7 +60,7 @@ dimensions_dict = {
         "processing_notebook" : f"{processing_notebook}",
         "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_entity_group",  
         "destination_key_columns" : ["entity_group_code"],
-        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_entity_group_staging" ,  
+        "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.vw_dim_entity_group_staging" ,  
         "source_key_columns" : ["entity_group_code"]
                  },
     
