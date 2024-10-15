@@ -3,6 +3,19 @@
 
 # COMMAND ----------
 
+ddl_deployment_df = spark.sql(
+    """
+    SELECT object,
+           deployment_content,
+           ROW_NUMBER() OVER(PARTITION BY object ORDER BY ID DESC) AS row_number                           
+    FROM bida_metadata_dev.meta.ddl_deployment
+    """
+)
+
+ddl_deployment_df.count()  
+
+# COMMAND ----------
+
 get_ddl_deployment_df().count()
 
 # COMMAND ----------
@@ -15,9 +28,7 @@ if ddl_deployment_df.empty:
 
 # COMMAND ----------
 
-# create some views of master data in the masterdata catalog - this can be pointing to a table or a cte etc..
-# create some 
-
+display(ddl_deployment_df)
 
 # COMMAND ----------
 
