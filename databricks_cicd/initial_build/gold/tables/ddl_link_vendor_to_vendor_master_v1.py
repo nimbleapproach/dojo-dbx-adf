@@ -23,7 +23,7 @@ schema = 'orion'
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
-              DROP TABLE IF {catalog}.{schema}.link_vendor_to_vendor_master
+              DROP TABLE IF EXISTS {catalog}.{schema}.link_vendor_to_vendor_master
               """)
 
 # COMMAND ----------
