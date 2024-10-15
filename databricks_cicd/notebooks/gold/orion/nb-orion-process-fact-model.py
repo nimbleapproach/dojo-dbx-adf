@@ -17,19 +17,13 @@ data = read_and_replace_json(file_path, replacements)
 
 # COMMAND ----------
 
-
-ddl_deployment_df = get_ddl_deployment_df()
-
-
-# COMMAND ----------
-
 # consistency check
 is_consistent = check_type_run_group_consistency(data)
 print(f"\nData consistency: {'Consistent' if is_consistent else 'Inconsistent'}")
 
 # COMMAND ----------
 
-filtered_sorted_data = filter_and_sort_json(data, "type:dim", "run_group:4")
+filtered_sorted_data = filter_and_sort_json(data, "type:fact", "run_group:100")
 
 if isinstance(filtered_sorted_data, str):  # If the result is a string, it's an error message
     print(filtered_sorted_data)
@@ -79,17 +73,18 @@ print(f"\nTotal number of objects: {total_objects}")
 
 
 # summarise usage
-summarised_execution_order = summarize_execution_order_with_layers(data)
+summarised_execution_order = summarise_execution_order_with_layers(data)
 
 # COMMAND ----------
 
 # now setup the run notebook function for the generic, where a dimension name is passed in as a paramters
-def process_generic_dimension(notebook_name,dim_name):
+def process_logic(notebook_name,dim_name):
     dbutils.notebook.run(path = f"./{notebook_name}",
                                         timeout_seconds = 600, 
                                         arguments = {"dimension_name":dim_name})
     
 # function for calling a specific notebook, having no parmaters as it is specific
+# not used
 def process_nongeneric_dimension(notebook_name):
     dbutils.notebook.run(path = f"./{notebook_name}",
                                         timeout_seconds = 600)
@@ -97,28 +92,65 @@ def process_nongeneric_dimension(notebook_name):
 
 # COMMAND ----------
 
-# always run source_system first
-filtered_sorted_data = filter_and_sort_json(data, "type:core", "run_group:0")
+from concurrent.futures import ThreadPoolExecutor, as_completed
+def process_object(object_name, object_details):
+    """
+    A function that processing the processing logic [process_generic_dimension].
+    """
+        
+    process_logic(notebook_name= object_details['processing_notebook'], dim_name=object_name)
 
-if isinstance(filtered_sorted_data, str):  # If the result is a string, it's an error message
-    raise ValueError(filtered_sorted_data)
-else:
-    print(filtered_sorted_data)  # Output the filtered and sorted entries
-
-
-if len(filtered_sorted_data) > 0:
-  for key, entry in filtered_sorted_data:
-    print(f"Key: {key}, Processing Notebook: {entry.get('processing_notebook', 'No notebook found')}, "
-          f"Target table: {entry.get('destination_table_name', 'No table found')}")
-    nb = {entry.get('processing_notebook')}
-    dt = {entry.get('destination_table_name')}
-    with ThreadPoolExecutor(parallel_max) as executor:
-      results = executor.map(process_generic_dimension, nb, dt)
-
-
+    return object_name
 
 # COMMAND ----------
 
-# Now populate the fact table
-# left joins to dims 
 
+def run_objects_by_group(data, object_type, max_workers=4):
+    """
+    Runs objects by their run_group in parallel batches.
+    Each run_group's objects are run in parallel, but run_groups are processed sequentially.
+
+    Parameters:
+    - object_type: filter json by type
+    - max_workers: Maximum number of threads to use in the ThreadPoolExecutor.
+    """
+    filter_type=filter_by_type(data, object_type)
+ 
+    # Step 1: Organize objects by their run_group
+    run_groups = {}
+    for key, value in filter_type.items():
+        run_group = value['run_group']
+        if run_group not in run_groups:
+            run_groups[run_group] = []
+        run_groups[run_group].append((key, value))
+
+    # Step 2: Sort run_groups by the run_group number (to ensure sequential processing)
+    sorted_run_groups = sorted(run_groups.items())
+
+    # Step 3: Process each run_group sequentially
+    for run_group, objects in sorted_run_groups:
+        print(f"Processing run_group {run_group}...")
+
+        # Step 4: Process all objects in this run_group in parallel
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(process_object, key, details): key for key, details in objects}
+
+            for future in as_completed(futures):
+                object_name = futures[future]
+                try:
+                    result = future.result()
+                    print(f"Completed processing for {result}")
+                except Exception as exc:
+                    print(f"{object_name} generated an exception: {exc}")
+
+# COMMAND ----------
+
+
+# Run the objects by group, in parallel for each group
+run_objects_by_group(data=data, object_type='core', max_workers=4)
+
+# COMMAND ----------
+
+
+# Run the objects by group, in parallel for each group
+run_objects_by_group(data=data, object_type='dim', max_workers=4)

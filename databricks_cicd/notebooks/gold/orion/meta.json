@@ -84,8 +84,8 @@
     
     "entity_to_entity_group_link" : {
         "type": "link",
-        "run_group": 1,
-        "run_order": 2,
+        "run_group": 2,
+        "run_order": 1,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_entity_to_entity_group",  
         "destination_key_columns" : ["entity_group_pk","entity_pk"],

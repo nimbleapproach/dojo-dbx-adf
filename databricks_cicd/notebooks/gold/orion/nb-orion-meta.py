@@ -19,7 +19,7 @@ catalog = f"gold_{ENVIRONMENT}"
 orion_schema = "orion"
 # this is number of notebooks to run in parallel
 parallel_max = 3
-processing_notebook = "nb-orion-process-dimension"
+processing_notebook = "nb-orion-process-dimension-v2"
 
 
 def read_and_replace_json(file_path, replacements):
@@ -111,6 +111,18 @@ def check_type_run_group_consistency(data):
 # COMMAND ----------
 
 def filter_and_sort_json(data, *filters):
+    """
+    Filters the JSON data based on the given filters and sorts the result by 'run_order'.
+    Filters also ensure that only 'active=1' objects are included.
+
+    Parameters:
+    - data: dictionary containing the JSON data.
+    - filters: multiple filters in the format 'attribute:value' (e.g., 'type:core').
+
+    Returns:
+    - A list of filtered and sorted objects, or a message if no matches are found.
+    """
+    
     # Parse filters
     filter_dict = {}
     for f in filters:
@@ -121,7 +133,7 @@ def filter_and_sort_json(data, *filters):
     # Filter the data
     filtered_data = {
         key: value for key, value in data.items() 
-        if all(str(value.get(attr)) == str(filter_dict[attr]) for attr in filter_dict)
+        if all(str(value.get(attr)) == str(filter_dict[attr]) for attr in filter_dict)  and value.get("active") == 1
     }
     
     # Check if we are filtering by type
@@ -146,6 +158,49 @@ def filter_and_sort_json(data, *filters):
     )
     
     return sorted_data
+
+# COMMAND ----------
+
+def filter_by_type(data, object_type):
+    """
+    Filters and returns all objects that match the specified type.
+
+    Parameters:
+    - data: dictionary containing the JSON data
+    - object_type: string representing the type to filter on (e.g., 'core', 'dim')
+
+    Returns:
+    - Dictionary of filtered objects that match the specified type or a message if no matches are found.
+    """
+    # Filter the data based on the type
+    filtered_objects = {key: value for key, value in data.items() if value.get("type") == object_type and value.get("active") == 1}
+    
+    if filtered_objects:
+        return filtered_objects
+    else:
+        return f"No objects found with type '{object_type}'."
+
+
+
+# COMMAND ----------
+
+
+# Function to get details of an object from the data
+def get_object_detail(data, attribute):
+    """
+    Returns the details of the given object (attribute) from the data.
+    
+    Parameters:
+    - data: dictionary containing the JSON data
+    - attribute: string representing the object name (e.g., 'source_system')
+    
+    Returns:
+    - Dictionary of details for the specified attribute or a message if the attribute does not exist.
+    """
+    if attribute in data:
+        return data[attribute]
+    else:
+        return f"Object '{attribute}' not found in the data."
 
 # COMMAND ----------
 

@@ -22,16 +22,16 @@ schema = 'orion'
 
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_link_entity_to_entity_group_staging (
-  entity_group_pk,
-  entity_pk,
+  entity_group_fk,
+  entity_fk,
   start_datetime,
   end_datetime,
   is_current,
   Sys_Gold_InsertedDateTime_UTC,
   Sys_Gold_ModifiedDateTime_UTC)
 AS select DISTINCT  
-  eg.entity_group_pk  ,
-  e.entity_pk , 
+  coalesce(eg.entity_group_pk,0)  entity_group_fk,
+  e.entity_pk entity_fk, 
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
