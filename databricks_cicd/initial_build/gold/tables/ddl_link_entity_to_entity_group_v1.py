@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.link_entity_to_entity_group (
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
   CONSTRAINT `link_entity_to_entity_group_primary_key` PRIMARY KEY (`link_entity_to_entity_group_pk`))
 USING delta
-CLUSTER BY (entity_group_fks)
+CLUSTER BY (entity_group_fk)
 TBLPROPERTIES (
   'delta.checkpointPolicy' = 'v2',
   'delta.constraints.datewithinrange_start_datetime' = 'start_datetime >= "1900-01-01"',
