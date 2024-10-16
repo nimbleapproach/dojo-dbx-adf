@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_master_reseller_group (
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',
   Sys_Gold_InsertedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was inserted into gold',
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
-  CONSTRAINT `reseller_group_primary_key` PRIMARY KEY (`reseller_group_pk`))
+  CONSTRAINT `master_reseller_group_primary_key` PRIMARY KEY (`master_reseller_group_pk`))
 USING delta
 CLUSTER BY (reseller_group_code)
 TBLPROPERTIES (

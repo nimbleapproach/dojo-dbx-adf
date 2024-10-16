@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.link_vendor_to_vendor_master (
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',
   Sys_Gold_InsertedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was inserted into gold',
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
-  CONSTRAINT `vendor_to_vendor_master_primary_key` PRIMARY KEY (`vendor_to_vendor_master_pk`))
+  CONSTRAINT `link_vendor_to_master_vendor_primary_key` PRIMARY KEY (`link_vendor_to_master_vendor_pk`))
 USING delta
 CLUSTER BY (vendor_master_pk)
 TBLPROPERTIES (
