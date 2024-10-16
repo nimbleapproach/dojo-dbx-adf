@@ -63,6 +63,7 @@ union
 select distinct
   'invoice' as invoice_type,
   replace(sih.Sys_DatabaseName,'Reports','') as Country_Code,
+  ss.source_system_pk as source_system_fk,
   sil.DocumentNo_ AS document_number,
   to_date(sih.PostingDate) AS document_date, --because we don;lt have all the sales order data
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
@@ -70,23 +71,10 @@ select distinct
   1 AS is_current,
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
--- Case
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT','BE')  THEN 'EUR'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
---       ELSE sih.CurrencyCode
---     END AS currency
 FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
+
 INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil 
 ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
@@ -97,6 +85,7 @@ union
 select distinct
   'credit memo' as invoice_type,
   replace(sih.Sys_DatabaseName,'Reports','') as Country_Code,
+  ss.source_system_pk as source_system_fk,
   sil.DocumentNo_ AS document_number,
   to_date(sih.PostingDate) AS document_date, --because we don;lt have all the sales order data
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
@@ -104,23 +93,10 @@ select distinct
   1 AS is_current,
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
--- Case
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) IN('DE', 'FR', 'NL', 'FI', 'AT','BE')  THEN 'EUR'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'UK' THEN 'GBP'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'SE' THEN 'SEK'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'NO' THEN 'NOK'
---       WHEN sih.CurrencyCode = 'NaN'
---       AND left(entity.TagetikEntityCode, 2) = 'DK' THEN 'DKK'
---       ELSE sih.CurrencyCode
---     END AS currency
 FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
+
 INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
     AND sih.Sys_Silver_IsCurrent = true
