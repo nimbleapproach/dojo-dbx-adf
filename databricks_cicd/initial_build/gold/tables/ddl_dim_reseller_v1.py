@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_reseller (
   country_code STRING COMMENT 'The country code to which the reseller relates',
   reseller_geography_internal STRING COMMENT 'The geographical country code to which the reseller relates',
   reseller_start_date TIMESTAMP COMMENT 'The start date of the reseller',
-  source_system_id BIGINT COMMENT 'The ID from the Source System Dimension',
+  source_system_fk BIGINT COMMENT 'The ID from the Source System Dimension',
   start_datetime TIMESTAMP NOT NULL COMMENT 'The dimensional start date of the record',
   end_datetime TIMESTAMP COMMENT 'The dimensional end date of the record, those with a NULL value is curent',
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',

@@ -20,6 +20,14 @@ schema = 'orion'
 
 # COMMAND ----------
 
+# REMOVE ONCE SOLUTION IS LIVE
+if ENVIRONMENT == 'dev':
+    spark.sql(f"""
+              DROP VIEW IF {catalog}.{schema}.vw_dim_region_late
+              """)
+
+# COMMAND ----------
+
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_region_late (
   region_code,

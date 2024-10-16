@@ -20,12 +20,20 @@ schema = 'orion'
 
 # COMMAND ----------
 
+# REMOVE ONCE SOLUTION IS LIVE
+if ENVIRONMENT == 'dev':
+    spark.sql(f"""
+              DROP VIEW IF {catalog}.{schema}.vw_dim_line_item_staging
+              """)
+
+# COMMAND ----------
+
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_line_item_staging (
   line_item_code COMMENT 'TODO',
   line_item_description,
   local_line_item_id COMMENT 'TODO',
-  source_system_id,
+  source_system_fk,
   line_item_hash_key,
   start_datetime,
   end_datetime,
@@ -45,7 +53,7 @@ trim(
   )
 ) AS line_item_description,
 sil.no_ as local_line_item_id ,
-(select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP') as source_system_id,
+ss.source_system_pk as source_system_fk,
  SHA2(CONCAT_WS(' ', COALESCE(TRIM(sil.no_), ''), COALESCE(TRIM(
     concat(
       regexp_replace(it.Description, 'NaN', ''),
@@ -61,6 +69,7 @@ sil.no_ as local_line_item_id ,
     NOW() AS Sys_Gold_ModifiedDateTime_UTC
 FROM
   silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
   INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
   AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
   AND sih.Sys_Silver_IsCurrent = true

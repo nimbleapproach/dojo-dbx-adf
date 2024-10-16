@@ -20,9 +20,11 @@ schema = 'orion'
 
 # COMMAND ----------
 
-# spark.sql(f"""
-# DROP VIEW {catalog}.{schema}.vw_fact_sales_trannsaction_ig_staging
-# """)
+# REMOVE ONCE SOLUTION IS LIVE
+if ENVIRONMENT == 'dev':
+    spark.sql(f"""
+              DROP VIEW IF {catalog}.{schema}.vw_fact_sales_transaction_ig_staging
+              """)
 
 # COMMAND ----------
 
@@ -32,6 +34,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
   
   --- sales invoice
   SELECT
+    ss.source_system_pk as source_system_fk,
     -- local_code
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) sales_order_date,
     to_date(sih.PostingDate) AS posting_date,
@@ -103,6 +106,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
     '' as unit_price                         
   FROM
   silver_dev.igsql03.sales_invoice_header sih
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
   --igsql03.sales_invoice_line should repoint to orion.line_item
   LEFT JOIN silver_dev.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
   AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
@@ -211,7 +215,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
   UNION all
     --- SALES CR MEMO
   SELECT
-  
+    ss.source_system_pk as source_system_fk,
     -- local_code
     to_date(coalesce(so.SalesOrderDate, '1900-01-01')) sales_order_date,
     to_date(sih.PostingDate) AS posting_date,
@@ -284,6 +288,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
     '' as unit_price                      
   FROM
     silver_dev.igsql03.sales_cr_memo_header sih
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
     INNER JOIN silver_dev.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
     AND sih.Sys_Silver_IsCurrent = true

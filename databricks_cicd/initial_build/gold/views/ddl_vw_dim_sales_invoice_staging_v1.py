@@ -20,10 +20,19 @@ schema = 'orion'
 
 # COMMAND ----------
 
+# REMOVE ONCE SOLUTION IS LIVE
+if ENVIRONMENT == 'dev':
+    spark.sql(f"""
+              DROP VIEW IF {catalog}.{schema}.vw_dim_sales_invoice_staging
+              """)
+
+# COMMAND ----------
+
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_sales_invoice_staging (
   invoice_type,
   country_code,
+  source_system_fk,
   document_id,
   document_date,
   start_datetime,
@@ -34,6 +43,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_sales_invoice_staging (
 AS select distinct
   'msp' as invoice_type,
   replace(msp_h.Sys_DatabaseName,'Reports','') as country_code,
+  ss.source_system_pk as source_system_fk,
   case
         when msp_h.CreditMemo = '1' THEN msp_h.SalesCreditMemoNo_
         else msp_h.SalesInvoiceNo_
@@ -43,15 +53,11 @@ AS select distinct
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
-  CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC  -- Case
-  --       WHEN  right(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
-  --       WHEN right(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT')  THEN 'EUR'
-  --       WHEN right(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
-  --       WHEN right(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
-  --       WHEN right(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
-  --       WHEN right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
-  -- END AS currency
+  CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+  
 from silver_{ENVIRONMENT}.igsql03.inf_msp_usage_header as msp_h
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(msp_h.Sys_DatabaseName, 2)
+
 where  msp_h.Sys_Silver_IsCurrent = true
 union
 select distinct

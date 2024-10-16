@@ -20,6 +20,14 @@ schema = 'orion'
 
 # COMMAND ----------
 
+# REMOVE ONCE SOLUTION IS LIVE
+if ENVIRONMENT == 'dev':
+    spark.sql(f"""
+              DROP VIEW IF {catalog}.{schema}.vw_link_entity_to_entity_group_staging
+              """)
+
+# COMMAND ----------
+
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_link_entity_to_entity_group_staging (
   entity_group_fk,

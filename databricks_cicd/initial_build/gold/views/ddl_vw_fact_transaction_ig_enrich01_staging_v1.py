@@ -20,11 +20,20 @@ schema = 'orion'
 
 # COMMAND ----------
 
+# REMOVE ONCE SOLUTION IS LIVE
+if ENVIRONMENT == 'dev':
+    spark.sql(f"""
+              DROP VIEW IF {catalog}.{schema}.vw_dim_transaction_ig_enrich01_v1
+              """)
+
+# COMMAND ----------
+
 
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_transaction_ig_enrich01_v1 as 
 SELECT
     concat(right(msp_h.Sys_DatabaseName, 2), '1') as EntityCode,
+    ss.source_system_pk as source_system_fk,
     msp_h.BizTalkGuid,
     cast(msp_h.DocumentDate as date) as DocumentDate,
     case
@@ -82,6 +91,7 @@ SELECT
     ) as TotalCostLCY
   FROM
     silver_dev.igsql03.inf_msp_usage_header as msp_h
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(msp_h.Sys_DatabaseName, 2)
     LEFT JOIN silver_dev.igsql03.inf_msp_usage_line AS msp_l on msp_h.BizTalkGuid = msp_l.BizTalkGuid
     and msp_h.Sys_DatabaseName = msp_l.Sys_DatabaseName
     and msp_h.Sys_Silver_IsCurrent = 1

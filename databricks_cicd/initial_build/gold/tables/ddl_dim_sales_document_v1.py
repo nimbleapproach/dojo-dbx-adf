@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_sales_document (
   document_date DATE COMMENT 'The date of the document',
   document_source STRING COMMENT 'The document source - credit memo, msp, quote, sales order, etc..',
   country_code STRING COMMENT 'The country code of the document',
-  source_system_id BIGINT COMMENT 'The ID from the Source System Dimension',
+  source_system_fk BIGINT COMMENT 'The ID from the Source System Dimension',
   bill_to_customer_no STRING COMMENT '',
   biztalkguid STRING COMMENT '',
   credit_memo STRING COMMENT '',

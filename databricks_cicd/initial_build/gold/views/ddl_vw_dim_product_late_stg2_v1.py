@@ -23,43 +23,48 @@ schema = 'orion'
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
-              DROP VIEW IF {catalog}.{schema}.vw_dim_product_late
+              DROP VIEW IF {catalog}.{schema}.vw_dim_product_late_stg2
               """)
 
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_late as
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_late_stg2 as
 with cte 
 as
 (
-  select distinct  sil.No_ from silver_dev.igsql03.sales_invoice_line sil
-LEFT JOIN silver_dev.igsql03.item it  ON sil.No_ = it.No_
-AND sil.Sys_DatabaseName = it.Sys_DatabaseName
-AND it.Sys_Silver_IsCurrent = true
-WHERE 
-  sil.Sys_Silver_IsCurrent = true
-  and it.No_ is null
-union all
-select distinct  sil.No_ from silver_dev.igsql03.sales_cr_memo_line sil
-LEFT JOIN silver_dev.igsql03.item it  ON sil.No_ = it.No_
-AND sil.Sys_DatabaseName = it.Sys_DatabaseName
-AND it.Sys_Silver_IsCurrent = true
-WHERE 
-  sil.Sys_Silver_IsCurrent = true
-  and it.No_ is null
+  select distinct  
+  coalesce(sil.ItemNo_, 'N/A') as product_code,
+  trim(
+    (
+      concat(
+        regexp_replace(sil.Description, 'NaN', ''),
+        regexp_replace(sil.Description2, 'NaN', ''),
+        regexp_replace(sil.Description3, 'NaN', ''),
+        regexp_replace(sil.Description4, 'NaN', '')
+      )
+    )
+  ) AS product_description,
+  concat(RIGHT(sil.Sys_DatabaseName,2) AS source_system_code,
+  "|",sil.ItemNo_,"|", product_description) as local_product_id
+  FROM
+    silver_dev.igsql03.inf_msp_usage_line sil 
+  WHERE
+    sil.Sys_Silver_IsCurrent = true
 ) 
 select distinct
 sil.No_ as product_code,
 'NaN' AS product_description,
+ss.source_system_pk as source_system_fk,
 sil.No_ as local_product_id ,
 'NaN' as product_type,
-  ss.source_system_pk as source_system_fk,
+(select source_system_pk from {catalog}.{schema}.dim_source_system a
+ where source_system = 'Infinigate ERP') as source_system_id,
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,
     NOW() AS Sys_Gold_InsertedDateTime_UTC,
     NOW() AS Sys_Gold_ModifiedDateTime_UTC
-FROM cte sil
+FROM cte sil 
   inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sil.Sys_DatabaseName, 2)
 """)

@@ -146,9 +146,9 @@
         "run_group": 100,
         "run_order": 1,
         "processing_notebook" : "nb-process-fact-ig",
-        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction", 
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction", 
         "destination_key_columns" : ["reseller_group_code"], 
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_trannsaction_ig_staging" , 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_ig_staging" , 
         "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
         "active": 1
                 },
@@ -158,9 +158,9 @@
         "run_group": 100,
         "run_order": 1,
         "processing_notebook" : "nb-process-fact-nuv",
-        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction", 
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction", 
         "destination_key_columns" : ["reseller_group_code"], 
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_trannsaction_nuv_staging" , 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_nuv_staging" , 
         "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
         "active": 0
                 },
