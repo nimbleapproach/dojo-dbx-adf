@@ -13,6 +13,241 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_CUSTOMER')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "D2B"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_EXCEL_D2B_CUSTOMERS",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns"
+						},
+						{
+							"name": "RenameColumns"
+						},
+						{
+							"name": "AddIdColumn"
+						},
+						{
+							"name": "IsNotNull"
+						},
+						{
+							"name": "AddIdColumnIsNotNull"
+						},
+						{
+							"name": "Union"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          COMPTETCTNUM as string,",
+						"          COMPTETcbmarq as short,",
+						"          BANQUECBMARQ as short,",
+						"          REGLEMENTcbmarq as short,",
+						"          CODEREVENDEUR as short,",
+						"          NAME_ as string,",
+						"          GROUPEDETAIL as string,",
+						"          BILLACCOUNT as boolean,",
+						"          EntryNo as short,",
+						"          enduserLegacyNo as integer,",
+						"          Name as string,",
+						"          Name2 as string,",
+						"          Address as string,",
+						"          Address2 as string,",
+						"          PhoneNo as string,",
+						"          TerritoryCode as string,",
+						"          Currency as string,",
+						"          LanguageCode as string,",
+						"          PaymentTerms as string,",
+						"          Salesperson as string,",
+						"          CountryRegionCode as string,",
+						"          PaymentMethodCode as string,",
+						"          VATRegistration as string,",
+						"          GenBusPostingGroup as string,",
+						"          PostCode as string,",
+						"          EMail as string,",
+						"          CompanyName as string,",
+						"          PrintManufacturerItemNo as boolean,",
+						"          TaxNo as string,",
+						"          ShiptoContactCompanyNo as string,",
+						"          BilltoCustomerNo as string,",
+						"          Status as string,",
+						"          LegacyNo as string,",
+						"          CUSTOMERCustomerNo as string,",
+						"          CUSTOMERBusinessRelationInfo as string,",
+						"          CUSTOMERNo as string,",
+						"          CUSTOMERType as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['d2b/customers/pending','d2b/customers/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"Union select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"IsNotNull@IsNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CODEREVENDEUR']))))) ~> AddIdColumn",
+						"GetExcelFile split(isNull(toString(byName('CUSTOMERCustomerNo'))),",
+						"     disjoint: false) ~> IsNotNull@(IsNull, IsNotNull)",
+						"IsNotNull@IsNotNull derive(Sys_ID = sha2(512,concatWS('~', toString(byNames(['EntryNo','CUSTOMERCustomerNo']))))) ~> AddIdColumnIsNotNull",
+						"AddIdColumn, AddIdColumnIsNotNull union(byName: true)~> Union",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('d2b/customers'),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_SALES')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "D2B"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_EXCEL_D2B_SALES",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns"
+						},
+						{
+							"name": "RenameColumns"
+						},
+						{
+							"name": "AddIdColumn"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CUSTOMER_ID as string,",
+						"          CUSTOMER as string,",
+						"          INVOICE as string,",
+						"          INVOICE_DATE as date,",
+						"          CUSTOMER_PO as string,",
+						"          SKU as string,",
+						"          DESCRIPTION as string,",
+						"          QTY as short,",
+						"          SALES_PRICE as double,",
+						"          PURCHASE_PRICE as double,",
+						"          USD_RATE as double,",
+						"          VENDOR as string,",
+						"          PURCHASE_CURRENCY as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['d2b/sales/pending','d2b/sales/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"AddIdColumn select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"GetExcelFile derive(Sys_ID = nextSequence()) ~> AddIdColumn",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: ('d2b/sales'),",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DF_DCB_EXCEL_LOAD')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -996,6 +1231,41 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_00_RESOURCE_Load_Sheet_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_10_RESOURCE_Load_Sheet",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_RESOURCE_Load_Sheet",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/RESOURCE"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-10-10T09:38:21Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_VENDOR_MAPPING_Load_Sheet_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1667,283 +1937,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-11-01T13:53:32Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_BUDGET_Load_Sheet_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetSheetNames",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT [SheetName]\n  FROM [adf].[CT_VUZION_BUDGET_SHEETS]\n  where ShouldBeLoaded = 1",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_VUZION_BUDGET_SHEETS",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEachSheet",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetSheetNames",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetSheetNames').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_VUZION_BUDGET_Load_Sheet",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_VUZION_BUDGET_Load_Sheet",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_SheetName": {
-												"value": "@item().SheetName",
-												"type": "Expression"
-											},
-											"pm_FileName": {
-												"value": "@pipeline().parameters.pm_FileName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/VUZION/BUDGET"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-03-13T08:46:32Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_MONTHLY_ADJ_Load_Sheet_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ForEachSheet",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@createArray(0)",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_VUZION_MONTHLY_ADJ_Load_Sheet",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_VUZION_MONTHLY_ADJ_Load_Sheet",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_SheetIndex": {
-												"value": "@item()",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/VUZION/MONTHLY_ADJ"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-01T13:53:32Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_MONTHLY_Load_Sheet_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ForEachSheet",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetSheetNames",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetSheetNames').output.runOutput\n\n",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 8,
-							"activities": [
-								{
-									"name": "PL_20_VUZION_MONTHLY_Load_Sheet",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_VUZION_MONTHLY_Load_Sheet",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": false,
-										"parameters": {
-											"pm_SheetName": {
-												"value": "@item()",
-												"type": "Expression"
-											},
-											"pm_FileName": {
-												"value": "@pipeline().parameters.pm_FileName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "GetSheetNames",
-						"type": "DatabricksNotebook",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": "/Workspace/Users/ying-zhen.chen@infinigate.com/Reconciliation/nb-get-sheet-name",
-							"baseParameters": {
-								"file_name": {
-									"value": "@pipeline().parameters.pm_FileName",
-									"type": "Expression"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ADB",
-							"type": "LinkedServiceReference",
-							"parameters": {
-								"pm_Databrick_Workspace_URL": {
-									"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
-									"type": "Expression"
-								},
-								"pm_Databricks_Workspace_Resource_ID": {
-									"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
-									"type": "Expression"
-								},
-								"pm_Databricks_Cluster_ID": {
-									"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
-									"type": "Expression"
-								},
-								"pm_NumberOfWorkers": "1"
-							}
-						}
-					}
-				],
-				"concurrency": 4,
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/VUZION/MONTHLY"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-03-13T08:46:32Z"
 			},
 			"dependsOn": []
 		}
