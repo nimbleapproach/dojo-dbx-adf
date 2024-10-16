@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.link_vendor_to_vendor_master (
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
   CONSTRAINT `link_vendor_to_master_vendor_primary_key` PRIMARY KEY (`link_vendor_to_master_vendor_pk`))
 USING delta
-CLUSTER BY (vendor_master_pk)
+CLUSTER BY (master_vendor_fk)
 TBLPROPERTIES (
   'delta.checkpointPolicy' = 'v2',
   'delta.constraints.datewithinrange_start_datetime' = 'start_datetime >= "1900-01-01"',
