@@ -35,9 +35,9 @@ dimensions_dict = {
         #"processing_notebook" : f"{processing_notebook}",
         "processing_notebook" : f"nb-orion-process-dimension-demo-product",
         "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
-        "destination_key_columns" : ["product_code", "source_system_id"],
+        "destination_key_columns" : ["product_code", "source_system_fk"],
         "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_staging" , 
-        "source_key_columns" : ["product_code", "source_system_id"]
+        "source_key_columns" : ["product_code", "source_system_fk"]
                  },
 
     "currency" : {
@@ -67,9 +67,9 @@ dimensions_dict = {
     "sales_document" : {
         "processing_notebook" : f"{processing_notebook}",
         "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_sales_document",  
-        "destination_key_columns" : ["document_id", "source_system_id"],
+        "destination_key_columns" : ["document_id", "source_system_fk"],
         "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.vw_dim_sales_document_staging" ,  
-        "source_key_columns" : ["document_id", "source_system_id"]
+        "source_key_columns" : ["document_id", "source_system_fk"]
                  },
     
     # "document_type" : {
@@ -99,17 +99,17 @@ dimensions_dict = {
     "vendor" : {
         "processing_notebook" : f"{processing_notebook}",
         "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_vendor", 
-        "destination_key_columns" : ["vendor_code", "source_system_id"], 
+        "destination_key_columns" : ["vendor_code", "source_system_fk"], 
         "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.vw_dim_vendor_staging" , 
-        "source_key_columns" : ["vendor_code", "source_system_id"]
+        "source_key_columns" : ["vendor_code", "source_system_fk"]
                 },
 
     "reseller" : {
         "processing_notebook" : f"{processing_notebook}",
         "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.dim_reseller", 
-        "destination_key_columns" : ["reseller_code", "source_system_id"], 
+        "destination_key_columns" : ["reseller_code", "source_system_fk"], 
         "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.vw_dim_reseller_staging" , 
-        "source_key_columns" : ["reseller_code", "source_system_id"]
+        "source_key_columns" : ["reseller_code", "source_system_fk"]
                 },
     
     "reseller_group" : {
@@ -149,9 +149,9 @@ facts_dict = {
     "product" : {
         "processing_notebook" : f"{processing_notebook}",
         "destination_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.fact_transaction", 
-        "destination_key_columns" : ["product_code", "source_system_id"],
+        "destination_key_columns" : ["product_code", "source_system_fk"],
         "source_table_name" : f"gold_{ENVIRONMENT}.{orion_schema}.product_staging" , 
-        "source_key_columns" : ["product_code", "source_system_id"]
+        "source_key_columns" : ["product_code", "source_system_fk"]
                  },
 
 

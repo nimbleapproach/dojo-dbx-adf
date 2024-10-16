@@ -58,8 +58,6 @@ sil.No_ as product_code,
 ss.source_system_pk as source_system_fk,
 sil.No_ as local_product_id ,
 'NaN' as product_type,
-(select source_system_pk from {catalog}.{schema}.dim_source_system a
- where source_system = 'Infinigate ERP') as source_system_id,
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,

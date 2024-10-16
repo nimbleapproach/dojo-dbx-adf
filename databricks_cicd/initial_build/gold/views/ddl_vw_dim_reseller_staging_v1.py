@@ -48,7 +48,7 @@ AS select distinct
   END AS Reseller_Name_Internal,
   replace(Sys_DatabaseName,'Reports','') as Country_Code,
   cu.Country_RegionCode AS Reseller_Geography_Internal,
-  source_system_pk as source_system_id,
+ss.source_system_pk as source_system_fk,
   -- SHA2(CONCAT_WS(' ', COALESCE(TRIM(cu.No_), ''), COALESCE(TRIM(
   --   concat(regexp_replace(case
   --       when cu.Name2 = 'NaN' THEN cu.Name

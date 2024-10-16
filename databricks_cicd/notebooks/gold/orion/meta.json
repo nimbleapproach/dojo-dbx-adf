@@ -16,9 +16,9 @@
         "run_order": 3,
         "processing_notebook" : "nb-orion-process-dimension-demo-product",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
-        "destination_key_columns" : ["product_code", "source_system_id"],
+        "destination_key_columns" : ["product_code", "source_system_fk"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_staging" , 
-        "source_key_columns" : ["product_code", "source_system_id"],
+        "source_key_columns" : ["product_code", "source_system_fk"],
         "active": 1
                  },
 
@@ -64,9 +64,9 @@
         "run_order": 3,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_sales_document",  
-        "destination_key_columns" : ["document_id", "source_system_id"],
+        "destination_key_columns" : ["document_id", "source_system_fk"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_sales_document_staging" ,  
-        "source_key_columns" : ["document_id", "source_system_id"],
+        "source_key_columns" : ["document_id", "source_system_fk"],
         "active": 1
                  },
     
@@ -100,9 +100,9 @@
         "run_order": 2,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_vendor", 
-        "destination_key_columns" : ["vendor_code", "source_system_id"], 
+        "destination_key_columns" : ["vendor_code", "source_system_fk"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_vendor_staging" , 
-        "source_key_columns" : ["vendor_code", "source_system_id"],
+        "source_key_columns" : ["vendor_code", "source_system_fk"],
         "active": 1
                 },
 
@@ -112,9 +112,9 @@
         "run_order": 2,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_reseller", 
-        "destination_key_columns" : ["reseller_code", "source_system_id"], 
+        "destination_key_columns" : ["reseller_code", "source_system_fk"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_reseller_staging" , 
-        "source_key_columns" : ["reseller_code", "source_system_id"],
+        "source_key_columns" : ["reseller_code", "source_system_fk"],
         "active": 1
                 },
     
@@ -149,7 +149,7 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction", 
         "destination_key_columns" : ["reseller_group_code"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_ig_staging" , 
-        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
+        "source_key_columns" : ["source_system_fk","entity_code"],
         "active": 1
                 },
     
@@ -161,7 +161,7 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction", 
         "destination_key_columns" : ["reseller_group_code"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_nuv_staging" , 
-        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
+        "source_key_columns" : ["source_system_fk","entity_code"],
         "active": 0
                 },
     
@@ -173,7 +173,7 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction", 
         "destination_key_columns" : ["reseller_group_code"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_trannsaction_nav_staging" , 
-        "source_key_columns" : ["source_system_id","entity_code", "source_system_id"],
+        "source_key_columns" : ["source_system_fk","entity_code"],
         "active": 0
                 }
 

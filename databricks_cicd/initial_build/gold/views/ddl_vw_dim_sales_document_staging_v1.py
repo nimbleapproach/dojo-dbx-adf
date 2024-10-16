@@ -45,7 +45,7 @@ AS select distinct
   case when sha.DocumentDate = 'NaN' then to_date('1990-12-31') else to_date(coalesce(sha.DocumentDate,'1990-12-31')) end AS document_date,
   'sales order' as document_source,
   replace(sla.Sys_DatabaseName,'Reports','') as country_code,
-  source_system_pk as source_system_id,
+ss.source_system_pk as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -82,7 +82,7 @@ select distinct
   cast(msp_h.DocumentDate as date) as document_date,
   'msp' as document_source,
   replace(msp_h.Sys_DatabaseName,'Reports','') as country_code,
-  (select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) as source_system_id,
+  ss.source_system_pk as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -96,6 +96,7 @@ select distinct
   --       WHEN right(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
   -- END AS currency
 from silver_{ENVIRONMENT}.igsql03.inf_msp_usage_header as msp_h
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(msp_h.Sys_DatabaseName, 2)
 where  msp_h.Sys_Silver_IsCurrent = true
 union
 select distinct
@@ -103,7 +104,7 @@ select distinct
   to_date(sih.PostingDate) AS document_date, --because we don;lt have all the sales order data
   'sales invoice' as document_source,
   replace(sih.Sys_DatabaseName,'Reports','') as Country_Code,
-  (select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) as source_system_id,
+ss.source_system_pk as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -111,6 +112,7 @@ select distinct
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
 INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil 
 ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
@@ -123,7 +125,7 @@ select distinct
   to_date(sih.PostingDate) AS document_date, --because we don;lt have all the sales order data
   'credit memo' as document_source,
   replace(sih.Sys_DatabaseName,'Reports','') as Country_Code,
-  (select source_system_pk from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) as source_system_id,
+ss.source_system_pk as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -131,6 +133,7 @@ select distinct
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
+  inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
 INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
     AND sih.Sys_Silver_IsCurrent = true
