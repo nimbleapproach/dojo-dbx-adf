@@ -29,10 +29,8 @@ if ENVIRONMENT == 'dev':
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_late_stg2 as
-with cte 
-as
-(
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_late_stg2 AS
+WITH cte AS (
   select distinct  
   coalesce(sil.ItemNo_, 'N/A') as product_code,
   trim(

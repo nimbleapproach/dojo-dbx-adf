@@ -29,10 +29,8 @@ if ENVIRONMENT == 'dev':
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_late as
-with cte 
-as
-(
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_late AS
+WITH cte AS (
   select distinct  sil.No_ from silver_dev.igsql03.sales_invoice_line sil
 LEFT JOIN silver_dev.igsql03.item it  ON sil.No_ = it.No_
 AND sil.Sys_DatabaseName = it.Sys_DatabaseName
