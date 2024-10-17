@@ -105,14 +105,14 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
     '' as unit_cost_EUR                ,
     '' as unit_price                         
   FROM
-  silver_dev.igsql03.sales_invoice_header sih
+  silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
   inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
   --igsql03.sales_invoice_line should repoint to orion.line_item
-  LEFT JOIN silver_dev.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
+  LEFT JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil ON sih.No_ = sil.DocumentNo_
   AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
   AND sih.Sys_Silver_IsCurrent = true
   AND sil.Sys_Silver_IsCurrent = true
-  LEFT JOIN silver_dev.igsql03.item it ON sil.No_ = it.No_
+  LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
     AND sil.Sys_DatabaseName = it.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
   LEFT JOIN (
@@ -121,23 +121,23 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         Name,
         Sys_DatabaseName
       FROM
-        silver_dev.igsql03.dimension_value
+        silver_{ENVIRONMENT}.igsql03.dimension_value
       WHERE
         DimensionCode = 'VENDOR'
         AND Sys_Silver_IsCurrent = true
     ) ven ON it.GlobalDimension1Code = ven.Code
     AND it.Sys_DatabaseName = ven.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
-    LEFT JOIN silver_dev.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
     and dim.DimensionCode = 'RPTREGION'
     AND sih.Sys_DatabaseName = dim.Sys_DatabaseName
     AND dim.Sys_Silver_IsCurrent = true
 
-    LEFT JOIN silver_dev.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
     LEFT JOIN gold_dev.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
-    LEFT JOIN silver_dev.masterdata.resellergroups AS rg
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg
     ON rg.ResellerID = cu.No_
     AND rg.Entity = UPPER(entity.TagetikEntityCode)
     AND rg.Sys_Silver_IsCurrent = true
@@ -149,7 +149,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         sla.LineNo_ AS SalesOrderLineNo,
         sla.No_ as SalesOrderItemID
       from
-        silver_dev.igsql03.sales_line_archive as sla
+        silver_{ENVIRONMENT}.igsql03.sales_line_archive as sla
         inner join (
           select
             No_,
@@ -157,7 +157,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
             max(DocumentDate) DocumentDate,
             max(VersionNo_) VersionNo_
           from
-            silver_dev.igsql03.sales_header_archive
+            silver_{ENVIRONMENT}.igsql03.sales_header_archive
           where
             Sys_Silver_IsCurrent = 1
           group by
@@ -178,13 +178,13 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         Name,
         Sys_DatabaseName
       FROM
-        silver_dev.igsql03.dimension_value
+        silver_{ENVIRONMENT}.igsql03.dimension_value
       WHERE
         DimensionCode = 'VENDOR'
         AND Sys_Silver_IsCurrent = true
     ) ven1 ON sil.ShortcutDimension1Code = ven1.Code
     AND sil.Sys_DatabaseName = ven1.Sys_DatabaseName
-    LEFT JOIN silver_dev.igsql03.resource res ON sil.No_ = res.No_
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.resource res ON sil.No_ = res.No_
     AND sil.Sys_DatabaseName = res.Sys_DatabaseName
     AND res.Sys_Silver_IsCurrent = true
     LEFT JOIN (
@@ -193,7 +193,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         Name,
         Sys_DatabaseName
       FROM
-        silver_dev.igsql03.dimension_value
+        silver_{ENVIRONMENT}.igsql03.dimension_value
       WHERE
         DimensionCode = 'VENDOR'
         AND Sys_Silver_IsCurrent = true
@@ -287,13 +287,13 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
     '' as unit_cost_EUR                ,
     '' as unit_price                      
   FROM
-    silver_dev.igsql03.sales_cr_memo_header sih
+    silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
   inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
-    INNER JOIN silver_dev.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
+    INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
     AND sih.Sys_Silver_IsCurrent = true
     AND sil.Sys_Silver_IsCurrent = true
-    LEFT JOIN silver_dev.igsql03.item it ON sil.No_ = it.No_
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
     AND sil.Sys_DatabaseName = it.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
     LEFT JOIN (
@@ -302,7 +302,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         Name,
         Sys_DatabaseName
       FROM
-        silver_dev.igsql03.dimension_value
+        silver_{ENVIRONMENT}.igsql03.dimension_value
       WHERE
         DimensionCode = 'VENDOR'
         AND Sys_Silver_IsCurrent = true
@@ -310,18 +310,18 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
     AND it.Sys_DatabaseName = ven.Sys_DatabaseName
     AND it.Sys_Silver_IsCurrent = true
     
-    LEFT JOIN silver_dev.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.dimension_set_entry dim ON sih.DimensionSetID = dim.DimensionSetID
     and dim.DimensionCode = 'RPTREGION'
     AND sih.Sys_DatabaseName = dim.Sys_DatabaseName
     AND dim.Sys_Silver_IsCurrent = true
 
-    LEFT JOIN silver_dev.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON sih.`Sell-toCustomerNo_` = cu.No_
     AND sih.Sys_DatabaseName = cu.Sys_DatabaseName
     AND cu.Sys_Silver_IsCurrent = true
     
     LEFT JOIN gold_dev.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
     --Comment by MS (30/01/2024) - Start
-    LEFT JOIN silver_dev.masterdata.resellergroups AS rg
+    LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg
     ON rg.ResellerID = cu.No_
     AND rg.Entity = UPPER(entity.TagetikEntityCode)
     AND rg.Sys_Silver_IsCurrent = true
@@ -334,7 +334,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         sla.LineNo_ AS SalesOrderLineNo,
         sla.No_ as SalesOrderItemID
       from
-        silver_dev.igsql03.sales_line_archive as sla
+        silver_{ENVIRONMENT}.igsql03.sales_line_archive as sla
         inner join (
           select
             No_,
@@ -342,7 +342,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
             max(DocumentDate) DocumentDate,
             max(VersionNo_) VersionNo_
           from
-            silver_dev.igsql03.sales_header_archive
+            silver_{ENVIRONMENT}.igsql03.sales_header_archive
           where
             Sys_Silver_IsCurrent = 1
           group by
@@ -363,13 +363,13 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         Name,
         Sys_DatabaseName
       FROM
-        silver_dev.igsql03.dimension_value
+        silver_{ENVIRONMENT}.igsql03.dimension_value
       WHERE
         DimensionCode = 'VENDOR'
         AND Sys_Silver_IsCurrent = true
     ) ven1 ON sil.ShortcutDimension1Code = ven1.Code
     AND sil.Sys_DatabaseName = ven1.Sys_DatabaseName
-    LEFT JOIN silver_dev.igsql03.resource res ON sil.No_ = res.No_
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.resource res ON sil.No_ = res.No_
     AND sil.Sys_DatabaseName = res.Sys_DatabaseName
     AND res.Sys_Silver_IsCurrent = true
     LEFT JOIN (
@@ -378,7 +378,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_transaction_ig_stagin
         Name,
         Sys_DatabaseName
       FROM
-        silver_dev.igsql03.dimension_value
+        silver_{ENVIRONMENT}.igsql03.dimension_value
       WHERE
         DimensionCode = 'VENDOR'
         AND Sys_Silver_IsCurrent = true

@@ -59,7 +59,7 @@ source_system_pk as source_system_fk,
     1 AS is_current,
     CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
     CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
-FROM silver_dev.igsql03.dimension_value a
+FROM silver_{ENVIRONMENT}.igsql03.dimension_value a
   inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(a.Sys_DatabaseName, 2)
 WHERE a.DimensionCode = 'VENDOR'
 AND a.Sys_Silver_IsCurrent = true

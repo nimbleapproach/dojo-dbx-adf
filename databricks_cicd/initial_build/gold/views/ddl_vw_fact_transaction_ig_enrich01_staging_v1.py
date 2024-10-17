@@ -90,9 +90,9 @@ SELECT
       end *(-1) as decimal(10, 2)
     ) as TotalCostLCY
   FROM
-    silver_dev.igsql03.inf_msp_usage_header as msp_h
+    silver_{ENVIRONMENT}.igsql03.inf_msp_usage_header as msp_h
   inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(msp_h.Sys_DatabaseName, 2)
-    LEFT JOIN silver_dev.igsql03.inf_msp_usage_line AS msp_l on msp_h.BizTalkGuid = msp_l.BizTalkGuid
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.inf_msp_usage_line AS msp_l on msp_h.BizTalkGuid = msp_l.BizTalkGuid
     and msp_h.Sys_DatabaseName = msp_l.Sys_DatabaseName
     and msp_h.Sys_Silver_IsCurrent = 1
     and msp_l.Sys_Silver_IsCurrent = 1

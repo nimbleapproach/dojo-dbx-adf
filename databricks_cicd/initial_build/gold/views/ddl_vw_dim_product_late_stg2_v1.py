@@ -46,7 +46,7 @@ WITH cte AS (
   sil.Sys_DatabaseName,
   concat(sil.ItemNo_,"|", product_description) as local_product_id
   FROM
-    silver_dev.igsql03.inf_msp_usage_line sil 
+    silver_{ENVIRONMENT}.igsql03.inf_msp_usage_line sil 
   WHERE
     sil.Sys_Silver_IsCurrent = true
 ) 
