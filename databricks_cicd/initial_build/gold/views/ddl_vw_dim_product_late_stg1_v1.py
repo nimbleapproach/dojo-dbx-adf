@@ -49,10 +49,10 @@ WHERE
 ) 
 select distinct
 sil.No_ as product_code,
-'NaN' AS product_description,
-sil.No_ as local_product_id ,
+sil.description AS product_description,
+concat(sil.No_,"|", sil.description) as local_product_id ,
 'NaN' as product_type,
-  ss.source_system_pk as source_system_fk,
+ss.source_system_pk as source_system_fk,
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,
