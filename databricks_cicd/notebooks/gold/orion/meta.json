@@ -82,18 +82,40 @@
         "active": 1
                  },
     
-    "entity_to_entity_group_link" : {
+    "link_entity_to_entity_group" : {
         "type": "link",
         "run_group": 2,
         "run_order": 1,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_entity_to_entity_group",  
-        "destination_key_columns" : ["entity_group_pk","entity_pk"],
+        "destination_key_columns" : ["entity_group_fk","entity_fk"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_entity_to_entity_group_staging" ,  
-        "source_key_columns" : ["entity_group_pk","entity_pk"],
+        "source_key_columns" : ["entity_group_fk","entity_fk"],
         "active": 1
                  },
     
+    "link_reseller_to_reseller_group" : {
+        "type": "link",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_reseller_to_reseller_group",  
+        "destination_key_columns" : ["reseller_group_fk","reseller_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_reseller_to_reseller_group_staging" ,
+        "source_key_columns" : ["reseller_group_fk","reseller_fk"],
+        "active": 0
+                 },
+    "link_vendor_to_vendor_master" : {
+        "type": "link",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_vendor_master",  
+        "destination_key_columns" : ["master_vendor_fk","vendor_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_vendor_to_vendor_master_staging" ,
+        "source_key_columns" : ["master_vendor_fk","vendor_fk"],
+        "active": 0
+                 },
     "vendor" : {
         "type": "dim",
         "run_group": 1,
