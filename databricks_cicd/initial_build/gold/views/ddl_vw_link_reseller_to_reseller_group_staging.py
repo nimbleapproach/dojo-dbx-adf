@@ -30,6 +30,8 @@ if ENVIRONMENT == 'dev':
 
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_link_reseller_to_reseller_group_staging (
+  reseller_fk,
+  reseller_group_fk,
   reseller_code,
   reseller_group_code,
   reseller_group_name,
@@ -51,13 +53,16 @@ AS select distinct
     1 AS is_current,
     CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
     CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
-FROM
-    silver_{ENVIRONMENT}.masterdata.resellergroups AS rg
-left join {catalog}.{schema}.dim_reseller AS dr on dr.reseller_code=dg.ResellerID
-and dr.country=  replace(rg.Sys_DatabaseName,'Reports','')
-and dr.is_current=1
-left join {catalog}.{schema}.dim_reseller_group AS drg on drg.ResellerGroupCode=dg.ResellerID
-    AND rg.Entity = UPPER(entity.TagetikEntityCode)
-and drg.is_current=1
-WHERE rg.Sys_Silver_IsCurrent = true
+FROM silver_{ENVIRONMENT}.masterdata.resellergroups AS rg
+left join {catalog}.{schema}.dim_entity AS e 
+    on e.entity_code_legacy = rg.Entity
+    and e.is_current = 1
+left join {catalog}.{schema}.dim_reseller AS dr 
+    on dr.reseller_code = rg.ResellerID
+    and dr.is_current = 1
+left join {catalog}.{schema}.dim_reseller_group AS drg 
+    on drg.reseller_group_code = rg.ResellerID
+    and drg.is_current = 1
+where rg.Sys_Silver_IsCurrent = true;
+
 """)

@@ -43,18 +43,18 @@ WITH cte AS (
       )
     )
   ) AS product_description,
-  concat(RIGHT(sil.Sys_DatabaseName,2) AS source_system_code,
-  "|",sil.ItemNo_,"|", product_description) as local_product_id
+  sil.Sys_DatabaseName,
+  concat(sil.ItemNo_,"|", product_description) as local_product_id
   FROM
     silver_dev.igsql03.inf_msp_usage_line sil 
   WHERE
     sil.Sys_Silver_IsCurrent = true
 ) 
-select distinct
-sil.No_ as product_code,
-'NaN' AS product_description,
+select
+sil.product_code as product_code,
+sil.product_description AS product_description,
 ss.source_system_pk as source_system_fk,
-sil.No_ as local_product_id ,
+sil.local_product_id as local_product_id ,
 'NaN' as product_type,
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
