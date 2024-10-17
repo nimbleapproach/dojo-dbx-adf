@@ -32,9 +32,13 @@ def merge_dimension(dimension_name):
     #grab the config from the dictionary
     dimension_config = get_object_detail(data, dimension_name)
     # destination config
+    destination_table_name_only = dimension_config['destination_table_name'].split('.')[-1] # string
     destination_key_columns = dimension_config['destination_key_columns'] # string
     destination_dimension_table_name = dimension_config['destination_table_name'] # string
     
+    # Get the last part of the string after the period, then split at the first underscore
+    table_pk = destination_table_name_only.split('.')[-1].split('_', 1)[1] + "_pk"
+
     # source of data config
     updates_dimension_table = dimension_config['source_table_name'] # string
     source_key_columns = dimension_config['source_key_columns'] # string
@@ -59,7 +63,7 @@ def merge_dimension(dimension_name):
     destination_columns_list = spark.table(f"{destination_dimension_table_name}").columns
     source_columns_list = spark.table(f"{updates_dimension_table}").columns
     destination_columns_lower = [destination_col.lower() for destination_col in destination_columns_list]
-    destination_columns_lower.remove(f"{dimension_name}_pk")
+    destination_columns_lower.remove(table_pk)
     source_columns_lower = [source_col.lower() for source_col in source_columns_list]
     # case sensitive
     for destination_column in destination_columns_lower:

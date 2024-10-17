@@ -14,11 +14,11 @@
         "type": "dim",
         "run_group": 1,
         "run_order": 3,
-        "processing_notebook" : "nb-orion-process-dimension-demo-product",
+        "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
-        "destination_key_columns" : ["product_code", "source_system_fk"],
+        "destination_key_columns" : ["product_code","product_type", "source_system_fk"],
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_staging" , 
-        "source_key_columns" : ["product_code", "source_system_fk"],
+        "source_key_columns" : ["product_code","product_type", "source_system_fk"],
         "active": 1
                  },
 
@@ -118,9 +118,32 @@
         "active": 1
                 },
     
-    "reseller_group" : {
+    "product_stg1" : {
         "type": "dim",
         "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
+        "destination_key_columns" : ["product_code","product_type",  "source_system_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_late_stg1" , 
+        "source_key_columns" : ["product_code", "product_type", "source_system_fk"],
+        "active": 1
+                },
+    "product_stg2" : {
+        "type": "dim",
+        "run_group": 3,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
+        "destination_key_columns" : ["product_code","product_type", "source_system_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_late_stg2" , 
+        "source_key_columns" : ["product_code", "product_type", "source_system_fk"],
+        "active": 1
+                },
+
+    "reseller_group" : {
+        "type": "dim",
+        "run_group": 10,
         "run_order": 1,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_reseller_group", 

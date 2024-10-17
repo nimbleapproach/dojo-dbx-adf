@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_product (
   start_datetime TIMESTAMP NOT NULL COMMENT 'The dimensional start date of the record',
   end_datetime TIMESTAMP COMMENT 'The dimensional end date of the record, those records with a NULL value are current',
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',
+  sys_item_source STRING COMMENT 'this categorises the entities the product derived from, especially useful for late arriving records',
   Sys_Gold_InsertedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was inserted into gold',
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
   CONSTRAINT `product_primary_key` PRIMARY KEY (`product_pk`))
