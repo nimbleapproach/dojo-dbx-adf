@@ -115,7 +115,7 @@ from
 
 # COMMAND ----------
 
-spark.sql("""
+spark.sql(f"""
 CREATE OR REPLACE TABLE gold_{ENVIRONMENT}.obt.nuvias_journal AS
 
 SELECT 
