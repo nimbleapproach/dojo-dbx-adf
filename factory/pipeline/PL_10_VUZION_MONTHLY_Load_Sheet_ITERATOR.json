@@ -64,7 +64,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Workspace/Users/ying-zhen.chen@infinigate.com/Reconciliation/nb-get-sheet-name",
+					"notebookPath": "/Repos/ADO/inf-edw/databricks/bronze/nb-get-sheet-name",
 					"baseParameters": {
 						"file_name": {
 							"value": "@pipeline().parameters.pm_FileName",
