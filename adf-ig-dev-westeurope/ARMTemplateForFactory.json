@@ -4975,7 +4975,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"notebookPath": "/Workspace/Users/ying-zhen.chen@infinigate.com/Reconciliation/nb-get-sheet-name",
+							"notebookPath": "/Repos/ADO/inf-edw/databricks/bronze/nb-get-sheet-name",
 							"baseParameters": {
 								"file_name": {
 									"value": "@pipeline().parameters.pm_FileName",
@@ -10437,7 +10437,14 @@
 					{
 						"name": "Load Sheet",
 						"type": "Copy",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Clean sink",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -10911,6 +10918,60 @@
 								}
 							}
 						]
+					},
+					{
+						"name": "Clean sink",
+						"type": "Delete",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_ADLS_PARQUET_STATIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": {
+										"value": "bronze",
+										"type": "Expression"
+									},
+									"pm_Directory": {
+										"value": "vuzion_monthly/vuzion_monthly_adjustment",
+										"type": "Expression"
+									},
+									"pm_FileName": {
+										"value": "bronze-vuzion-monthly-adjustment-@{pipeline().parameters.pm_SheetIndex}-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							},
+							"logStorageSettings": {
+								"linkedServiceName": {
+									"referenceName": "LS_ADLS",
+									"type": "LinkedServiceReference",
+									"parameters": {
+										"pm_Environment": "dev"
+									}
+								},
+								"path": "logging/adf/copyactivity-logs"
+							},
+							"enableLogging": true,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"wildcardFileName": "*.parquet",
+								"enablePartitionDiscovery": false
+							}
+						}
 					}
 				],
 				"policy": {
@@ -10918,7 +10979,8 @@
 				},
 				"parameters": {
 					"pm_SheetIndex": {
-						"type": "int"
+						"type": "int",
+						"defaultValue": 0
 					}
 				},
 				"folder": {
@@ -10929,7 +10991,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_VUZION_MONTHLY_ADJ_EXCEL')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]"
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
 			]
 		},
 		{
