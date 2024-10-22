@@ -522,6 +522,155 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Load_ReportsAll_View')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Full Load ReportsAll View",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									},
+									{
+										"name": "Sys_DatabaseName",
+										"value": {
+											"value": "ReportsAll",
+											"type": "Expression"
+										}
+									}
+								],
+								"sqlReaderQuery": {
+									"value": "SELECT @{pipeline().parameters.pm_SelectString} \nFROM [dbo].[@{pipeline().parameters.pm_ViewName} ]",
+									"type": "Expression"
+								},
+								"queryTimeout": "01:30:00",
+								"isolationLevel": "ReadCommitted",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings",
+									"maxRowsPerFile": 1000000,
+									"fileNamePrefix": {
+										"value": "bronze-igsql03-@{pipeline().parameters.pm_TargetTable}-ReportsAll",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Info",
+									"enableReliableLogging": true
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "LS_ADLS",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									},
+									"path": "logging/adf"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "@pipeline().parameters.pm_ViewName",
+										"type": "Expression"
+									},
+									"pm_SchemaName": "dbo",
+									"pm_DatabaseName": "ReportsAll"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": "bronze",
+									"pm_Directory": {
+										"value": "igsql03/@{pipeline().parameters.pm_TargetTable}/DatabaseName=ReportsAll",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_ViewName": {
+						"type": "string"
+					},
+					"pm_SelectString": {
+						"type": "string"
+					},
+					"pm_TargetTable": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL03 [Navision]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-19T10:31:26Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -6548,152 +6697,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2024-07-24T10:20:15Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_CLOUD_DISTRIBUTION_EXEL_LOAD')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "CLOUD_DISTRIBUTION"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "DS_EXCEL_CLOUD_DISTRIBUTION",
-								"type": "DatasetReference"
-							},
-							"name": "GetExcelFile"
-						}
-					],
-					"sinks": [
-						{
-							"linkedService": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference"
-							},
-							"name": "WriteDeltaFiles"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddSystemColumns"
-						},
-						{
-							"name": "RenameColumns"
-						},
-						{
-							"name": "Partition"
-						}
-					],
-					"udfLibraries": [
-						{
-							"referenceName": "General",
-							"type": "DataFlowReference"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          Entity as string,",
-						"          {Invoice Date} as date,",
-						"          {Sales Order} as integer,",
-						"          {Invoice Number} as string,",
-						"          {Item ID} as integer,",
-						"          SKU as string,",
-						"          {Customer Name} as string,",
-						"          Qty as short,",
-						"          {Revenue Local} as double,",
-						"          {Cost Local} as double,",
-						"          {Adjustment Local} as boolean,",
-						"          Currency as string,",
-						"          {Margin Local} as double,",
-						"          {Exchange Rate} as double,",
-						"          {Revenue GBP} as double,",
-						"          {Cost GBP} as double,",
-						"          {Margin GBP} as double,",
-						"          {Vendor ID} as string,",
-						"          {Vendor Name} as string,",
-						"          {Account Manager} as string,",
-						"          {Order Type} as string,",
-						"          {Quote ID} as integer,",
-						"          {Customer Account} as string,",
-						"          {SKU Description} as string,",
-						"          {Customer Reference} as string,",
-						"          {Item Type} as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
-						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
-						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
-						"Partition select(mapColumn(",
-						"          each(match(true()),",
-						"               applyParquetNaming($$) = $$)",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
-						"GetExcelFile window(over({Invoice Number}),",
-						"     asc({Item ID}, true),",
-						"     asc(SKU, true),",
-						"     LineNo = rowNumber()) ~> Partition",
-						"AddSystemColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          Entity as string,",
-						"          InvoiceDate as string,",
-						"          SalesOrder as string,",
-						"          InvoiceNumber as string,",
-						"          ItemID as string,",
-						"          SKU as string,",
-						"          CustomerName as string,",
-						"          Qty as string,",
-						"          RevenueLocal as string,",
-						"          CostLocal as string,",
-						"          AdjustmentLocal as string,",
-						"          Currency as string,",
-						"          MarginLocal as string,",
-						"          ExchangeRate as string,",
-						"          RevenueGBP as string,",
-						"          CostGBP as string,",
-						"          MarginGBP as string,",
-						"          VendorID as string,",
-						"          VendorName as string,",
-						"          AccountManager as string,",
-						"          OrderType as string,",
-						"          QuoteID as string,",
-						"          CustomerAccount as string,",
-						"          SKUDescription as string,",
-						"          CustomerReference as string,",
-						"          ItemType as string,",
-						"          Sys_FileName as string,",
-						"          Sys_ID as string,",
-						"          Sys_Bronze_InsertDateTime_UTC as timestamp",
-						"     ),",
-						"     format: 'delta',",
-						"     compressionType: 'snappy',",
-						"     compressionLevel: 'Fastest',",
-						"     fileSystem: 'bronze',",
-						"     folderPath: 'cloud_distribution/invoicedata',",
-						"     mergeSchema: true,",
-						"     autoCompact: true,",
-						"     optimizedWrite: true,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
-					]
-				}
 			},
 			"dependsOn": []
 		}

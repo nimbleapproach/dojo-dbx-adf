@@ -13,6 +13,152 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DF_CLOUD_DISTRIBUTION_EXEL_LOAD')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "CLOUD_DISTRIBUTION"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_EXCEL_CLOUD_DISTRIBUTION",
+								"type": "DatasetReference"
+							},
+							"name": "GetExcelFile"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "WriteDeltaFiles"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddSystemColumns"
+						},
+						{
+							"name": "RenameColumns"
+						},
+						{
+							"name": "Partition"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Entity as string,",
+						"          {Invoice Date} as date,",
+						"          {Sales Order} as integer,",
+						"          {Invoice Number} as string,",
+						"          {Item ID} as integer,",
+						"          SKU as string,",
+						"          {Customer Name} as string,",
+						"          Qty as short,",
+						"          {Revenue Local} as double,",
+						"          {Cost Local} as double,",
+						"          {Adjustment Local} as boolean,",
+						"          Currency as string,",
+						"          {Margin Local} as double,",
+						"          {Exchange Rate} as double,",
+						"          {Revenue GBP} as double,",
+						"          {Cost GBP} as double,",
+						"          {Margin GBP} as double,",
+						"          {Vendor ID} as string,",
+						"          {Vendor Name} as string,",
+						"          {Account Manager} as string,",
+						"          {Order Type} as string,",
+						"          {Quote ID} as integer,",
+						"          {Customer Account} as string,",
+						"          {SKU Description} as string,",
+						"          {Customer Reference} as string,",
+						"          {Item Type} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     moveFiles: ['cloud_distribution/pending','cloud_distribution/archived'],",
+						"     rowUrlColumn: 'Sys_FileName') ~> GetExcelFile",
+						"RenameColumns derive(Sys_Bronze_InsertDateTime_UTC = currentUTC()) ~> AddSystemColumns",
+						"Partition select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"GetExcelFile window(over({Invoice Number}),",
+						"     asc({Item ID}, true),",
+						"     asc(SKU, true),",
+						"     LineNo = rowNumber()) ~> Partition",
+						"AddSystemColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Entity as string,",
+						"          InvoiceDate as string,",
+						"          SalesOrder as string,",
+						"          InvoiceNumber as string,",
+						"          ItemID as string,",
+						"          SKU as string,",
+						"          CustomerName as string,",
+						"          Qty as string,",
+						"          RevenueLocal as string,",
+						"          CostLocal as string,",
+						"          AdjustmentLocal as string,",
+						"          Currency as string,",
+						"          MarginLocal as string,",
+						"          ExchangeRate as string,",
+						"          RevenueGBP as string,",
+						"          CostGBP as string,",
+						"          MarginGBP as string,",
+						"          VendorID as string,",
+						"          VendorName as string,",
+						"          AccountManager as string,",
+						"          OrderType as string,",
+						"          QuoteID as string,",
+						"          CustomerAccount as string,",
+						"          SKUDescription as string,",
+						"          CustomerReference as string,",
+						"          ItemType as string,",
+						"          Sys_FileName as string,",
+						"          Sys_ID as string,",
+						"          Sys_Bronze_InsertDateTime_UTC as timestamp",
+						"     ),",
+						"     format: 'delta',",
+						"     compressionType: 'snappy',",
+						"     compressionLevel: 'Fastest',",
+						"     fileSystem: 'bronze',",
+						"     folderPath: 'cloud_distribution/invoicedata',",
+						"     mergeSchema: true,",
+						"     autoCompact: true,",
+						"     optimizedWrite: true,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     upsertable: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DF_D2B_EXEL_LOAD_CUSTOMER')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1643,6 +1789,101 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL03_Load_ReportsAll_Views')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load End Custormer",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_ViewName": "igv_Azure_General_igt_DDS_EndCustomer",
+								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, No_, Entity, [Contact No_] AS Contact_No_, Name, [Name 2] AS Name_2, [Post Code] AS PostCode, City, [Country_Region Code] AS Country_Region_Code, [NACE 2 Code] AS NACE_2_Code, Description, [Max Quantity (Long-Term License)] AS Max_Quantity_Long_Term_License",
+								"pm_TargetTable": "end_customer"
+							}
+						}
+					},
+					{
+						"name": "Load Technology",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Load End Custormer",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_ViewName": "igv_Azure_General_igt_DDS_Technology",
+								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name,\n    [Technology Group Code] AS Technology_Group_Code,\n    [Sort Order] AS SortOrder",
+								"pm_TargetTable": "technology"
+							}
+						}
+					},
+					{
+						"name": "Load Technology Group",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Load Technology",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_ViewName": "igv_Azure_General_igt_DDS_Technology_Group",
+								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name, [Sort Order] AS SortOrder",
+								"pm_TargetTable": "technology_group"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL03 [Navision]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-19T10:31:26Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_10_TAG02_Load_View_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1783,160 +2024,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2024-03-06T11:16:28Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_TAG02_Recreate_View_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "For Each Database",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Columns Control Table",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Columns Control Table').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_30_TAG02_Recreate_View",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_30_TAG02_Recreate_View",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_TableName": {
-												"value": "@item().TABLE_NAME",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "Get Columns Control Table",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT DISTINCT TABLE_NAME FROM [adf].[CT_TAG02_COLUMNS]\nWHERE  [ACTIVE] =1",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_TAG02_COLUMNS",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "00 Setup/TAG02 [TAGETIK]/Recreate View"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-09-25T15:09:24Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_VUZION_ARR_Load_Sheet_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ForEachSheet",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@createArray(0,1)",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_VUZION_ARR_Load_Sheet",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_VUZION_ARR_Load_Sheet",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_SheetIndex": {
-												"value": "@item()",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/VUZION"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-01T13:53:32Z"
 			},
 			"dependsOn": []
 		}

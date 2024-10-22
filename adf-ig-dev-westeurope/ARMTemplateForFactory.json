@@ -1187,6 +1187,30 @@
 								}
 							}
 						}
+					},
+					{
+						"name": "PL_10_IGSQL03_Load_ReportsAll_Views",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "PL_10_IGSQL03_Load_View_ITERATOR",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_IGSQL03_Load_ReportsAll_Views",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -1205,7 +1229,8 @@
 				"lastPublishTime": "2023-09-25T15:09:25Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL03_Load_View_ITERATOR')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL03_Load_View_ITERATOR')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_10_IGSQL03_Load_ReportsAll_Views')]"
 			]
 		},
 		{
@@ -2825,6 +2850,103 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL01_Load_Table_ITERATOR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL03_Load_ReportsAll_Views')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load End Custormer",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_ViewName": "igv_Azure_General_igt_DDS_EndCustomer",
+								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, No_, Entity, [Contact No_] AS Contact_No_, Name, [Name 2] AS Name_2, [Post Code] AS PostCode, City, [Country_Region Code] AS Country_Region_Code, [NACE 2 Code] AS NACE_2_Code, Description, [Max Quantity (Long-Term License)] AS Max_Quantity_Long_Term_License",
+								"pm_TargetTable": "end_customer"
+							}
+						}
+					},
+					{
+						"name": "Load Technology",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Load End Custormer",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_ViewName": "igv_Azure_General_igt_DDS_Technology",
+								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name,\n    [Technology Group Code] AS Technology_Group_Code,\n    [Sort Order] AS SortOrder",
+								"pm_TargetTable": "technology"
+							}
+						}
+					},
+					{
+						"name": "Load Technology Group",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Load Technology",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_ViewName": "igv_Azure_General_igt_DDS_Technology_Group",
+								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name, [Sort Order] AS SortOrder",
+								"pm_TargetTable": "technology_group"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL03 [Navision]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-19T10:31:26Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_20_IGSQL03_Load_ReportsAll_View')]"
 			]
 		},
 		{
@@ -8170,6 +8292,159 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_30_IGSQL01_Load_View')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Load_ReportsAll_View')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Full Load ReportsAll View",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									},
+									{
+										"name": "Sys_DatabaseName",
+										"value": {
+											"value": "ReportsAll",
+											"type": "Expression"
+										}
+									}
+								],
+								"sqlReaderQuery": {
+									"value": "SELECT @{pipeline().parameters.pm_SelectString} \nFROM [dbo].[@{pipeline().parameters.pm_ViewName} ]",
+									"type": "Expression"
+								},
+								"queryTimeout": "01:30:00",
+								"isolationLevel": "ReadCommitted",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings",
+									"maxRowsPerFile": 1000000,
+									"fileNamePrefix": {
+										"value": "bronze-igsql03-@{pipeline().parameters.pm_TargetTable}-ReportsAll",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableStaging": false,
+							"validateDataConsistency": true,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Info",
+									"enableReliableLogging": true
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "LS_ADLS",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									},
+									"path": "logging/adf"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "@pipeline().parameters.pm_ViewName",
+										"type": "Expression"
+									},
+									"pm_SchemaName": "dbo",
+									"pm_DatabaseName": "ReportsAll"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_FileSystem": "bronze",
+									"pm_Directory": {
+										"value": "igsql03/@{pipeline().parameters.pm_TargetTable}/DatabaseName=ReportsAll",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_ViewName": {
+						"type": "string"
+					},
+					"pm_SelectString": {
+						"type": "string"
+					},
+					"pm_TargetTable": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL03 [Navision]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-19T10:31:26Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]",
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS')]"
 			]
 		},
 		{
