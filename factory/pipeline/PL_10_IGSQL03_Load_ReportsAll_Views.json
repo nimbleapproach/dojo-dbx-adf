@@ -1,0 +1,90 @@
+{
+	"name": "PL_10_IGSQL03_Load_ReportsAll_Views",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load End Custormer",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_ViewName": "igv_Azure_General_igt_DDS_EndCustomer",
+						"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, No_, Entity, [Contact No_] AS Contact_No_, Name, [Name 2] AS Name_2, [Post Code] AS PostCode, City, [Country_Region Code] AS Country_Region_Code, [NACE 2 Code] AS NACE_2_Code, Description, [Max Quantity (Long-Term License)] AS Max_Quantity_Long_Term_License",
+						"pm_TargetTable": "end_customer"
+					}
+				}
+			},
+			{
+				"name": "Load Technology",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Load End Custormer",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_ViewName": "igv_Azure_General_igt_DDS_Technology",
+						"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name,\n    [Technology Group Code] AS Technology_Group_Code,\n    [Sort Order] AS SortOrder",
+						"pm_TargetTable": "technology"
+					}
+				}
+			},
+			{
+				"name": "Load Technology Group",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Load Technology",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_ViewName": "igv_Azure_General_igt_DDS_Technology_Group",
+						"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name, [Sort Order] AS SortOrder",
+						"pm_TargetTable": "technology_group"
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/IGSQL03 [Navision]"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-19T10:31:26Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

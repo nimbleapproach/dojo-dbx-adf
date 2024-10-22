@@ -23,6 +23,29 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "PL_10_IGSQL03_Load_ReportsAll_Views",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_10_IGSQL03_Load_View_ITERATOR",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_IGSQL03_Load_ReportsAll_Views",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
 			}
 		],
 		"parameters": {
