@@ -133,7 +133,7 @@ select distinct
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM
-    silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
+    silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
 inner join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sih.Sys_DatabaseName, 2)
 INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName

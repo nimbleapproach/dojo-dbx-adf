@@ -85,7 +85,45 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from gold_dev.orion.dim_entity_group_staging
+# MAGIC
+# MAGIC create temp view quote_doc as
+# MAGIC select distinct DocumentNo_
+# MAGIC FROM 
+# MAGIC   silver_dev.igsql03.sales_line_archive as sla
+# MAGIC   inner join (select source_system_pk, source_entity from gold_dev.orion.dim_source_system where source_system = 'Infinigate ERP' and is_current = 1) ss on ss.source_entity=RIGHT(sla.Sys_DatabaseName, 2)
+# MAGIC   inner join (
+# MAGIC     select
+# MAGIC       No_,
+# MAGIC       Sys_DatabaseName,
+# MAGIC       max(DocumentDate) DocumentDate,
+# MAGIC       max(VersionNo_) VersionNo_
+# MAGIC     from
+# MAGIC       silver_dev.igsql03.sales_header_archive
+# MAGIC     where
+# MAGIC       Sys_Silver_IsCurrent = 1
+# MAGIC     group by
+# MAGIC       No_,
+# MAGIC       Sys_DatabaseName
+# MAGIC   ) as sha on sla.DocumentNo_ = sha.No_
+# MAGIC   and DocumentType= 0
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from quote_doc a
+# MAGIC inner join silver_dev.igsql03.sales_cr_memo_line  b on a.DocumentNo_ = b.DocumentNo_
+# MAGIC -- UNION all
+# MAGIC -- select * from quote_doc a
+# MAGIC -- inner join silver_dev.igsql03.sales_invoice_line  b on a.DocumentNo_ = b.DocumentNo_
+# MAGIC -- UNION all
+# MAGIC -- select * from quote_doc a
+# MAGIC -- inner join silver_dev.igsql03.inf_msp_usage_header b on 
+# MAGIC -- case
+# MAGIC --     when b.CreditMemo = '1' THEN b.SalesCreditMemoNo_
+# MAGIC --     else b.SalesInvoiceNo_
+# MAGIC --   end = DocumentNo_
 # MAGIC
 
 # COMMAND ----------
