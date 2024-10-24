@@ -333,7 +333,7 @@ SalesOrderID,
 'NaN' AS BillingFrequencyMaster,
 'NaN' AS ConsumptionModelMaster,
 nu.VendorCode,
-coalesce(ven.PrimaryVendorName , 'NaN')  AS  VendorNameInternal,
+coalesce(ven.PrimaryVendorName ,ven_mast.VendorNameInternal, 'NaN')  AS  VendorNameInternal,
 'NaN' AS VendorNameMaster,
 'NaN' AS VendorGeography,
 NULL AS VendorStartDate,
@@ -349,17 +349,25 @@ Sales AS RevenueAmount,
 Cost,
 Sales + Cost AS GP1
 from
-  gold_dev.obt.nuvias_journal nu
+  gold_{ENVIRONMENT}.obt.nuvias_journal nu
   left join (
     select
       distinct left(PrimaryVendorID,9) AS VendorCode,
       max(PrimaryVendorName)PrimaryVendorName
     from
-      silver_dev.nuav_prod_sqlbyod.dbo_v_distinctitems
+      silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_v_distinctitems
     where
       Sys_Silver_IsCurrent = 1
     group by all
   ) ven on nu.VendorCode = ven.VendorCode
+  LEFT JOIN (
+        select
+           distinct left(VendorCode,9) AS VendorCode,
+        max(VendorNameInternal)VendorNameInternal
+
+          from silver_{ENVIRONMENT}.masterdata.vendor_mapping
+          GROUP BY ALL 
+  )ven_mast ON nu.VendorCode = ven_mast.VendorCode
 )
 
 SELECT
@@ -406,7 +414,7 @@ SELECT
  FROM cte g
 
  LEFT JOIN
-   gold_dev.obt.exchange_rate e
+   gold_{ENVIRONMENT}.obt.exchange_rate e
  ON
    e.Calendar_Year = cast(year(g.TransactionDate) as string)
  AND

@@ -66,8 +66,8 @@ dfs.createOrReplaceTempView('temp')
 # COMMAND ----------
 
 spark.sql("""
-          with cte as (
-            SELECT
+with cte as (
+SELECT
 `SalesOrderID` as SalesOrderID,
  `Voucher` AS Voucher,
  `TransactionDate` as TransactionDate,
@@ -100,13 +100,20 @@ CASE WHEN EntityID = 'Austria'	THEN 'AT2'
   Voucher,
   ResellerCode,
   ResellerNameInternal,
-    LEFT(
-      RIGHT(
-        LedgAccount,
-        LEN(LedgAccount) - charindex('VAC', LedgAccount) + 1
-      ),
-      9
-    )AS VendorCode,
+   case when charindex('VAC', RIGHT (LedgAccount, LEN(LedgAccount) - charindex('VAC', LedgAccount)-2))>0 
+       then   RIGHT(
+                       RIGHT (LedgAccount, LEN(LedgAccount) - charindex('VAC', LedgAccount)-2),
+                       LEN(RIGHT (LedgAccount, LEN(LedgAccount) - charindex('VAC', LedgAccount)-2)) - charindex('VAC', RIGHT (LedgAccount, LEN(LedgAccount) - charindex('VAC', LedgAccount)-2)) + 1
+                   )
+   else 
+           LEFT(
+           RIGHT(
+               LedgAccount,
+               LEN(LedgAccount) - charindex('VAC', LedgAccount) + 1
+           ),
+           9
+           )
+   end AS VendorCode,
   AccountName,
   CurrencyCode,
   AmountLCY * (-1) AS AmountLCY
