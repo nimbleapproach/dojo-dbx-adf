@@ -43,8 +43,8 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_region_late (
   Sys_Gold_InsertedDateTime_UTC,
   Sys_Gold_ModifiedDateTime_UTC)
 AS select distinct
-    drg.DimensionSetID AS region_code,
-    coalesce(drg.DimensionValueCode,'NaN') AS region_name,
+    drg.DimensionValueCode AS region_code,
+    drg.DimensionValueCode AS region_name,
     ''  country_code,
     ''  country,
     ''  country_detail,
