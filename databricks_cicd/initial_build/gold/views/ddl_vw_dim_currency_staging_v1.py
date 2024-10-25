@@ -36,7 +36,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_currency_staging (
   is_current,
   Sys_Gold_InsertedDateTime_UTC,
   Sys_Gold_ModifiedDateTime_UTC)
-AS select distinct COD_VALUTAD AS Currency_Code,
+AS select distinct COD_VALUTA AS Currency_Code,
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,
