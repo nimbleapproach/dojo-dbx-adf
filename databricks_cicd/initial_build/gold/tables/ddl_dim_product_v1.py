@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_product (
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',
   Sys_Gold_InsertedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was inserted into gold',
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
-  CONSTRAINT `product_primary_key` PRIMARY KEY (`product_pk`)
+  CONSTRAINT `product_dim_primary_key` PRIMARY KEY (`product_pk`)
 )
 USING delta
 CLUSTER BY (source_system_id,product_code)
@@ -64,3 +64,21 @@ TBLPROPERTIES (
   'delta.feature.rowTracking' = 'supported',
   'delta.feature.v2Checkpoint' = 'supported')
 """)
+
+# COMMAND ----------
+
+# now add in the default member
+sqldf= spark.sql("""
+SELECT CAST(-1 AS BIGINT) AS product_pk,
+       CAST('N/A' AS STRING) AS product_code,
+       CAST(NULL AS STRING) AS product_type,
+       CAST('N/A' AS STRING) AS line_item_type,
+       CAST(NULL AS STRING) AS local_product_id,
+       CAST(-1 AS BIGINT) AS source_system_id,
+       CAST(NULL AS STRING) AS product_description,
+       CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
+       CAST(NULL AS TIMESTAMP) AS end_datetime,
+       CAST(1 AS INTEGER) AS is_current,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_product")
