@@ -226,6 +226,7 @@ else:
 # COMMAND ----------
 
 deduped_df = fillnas(source_df)
+deduped_df = deduped_df.na.drop(subset= BUSINESS_KEYS)
 
 # COMMAND ----------
 
@@ -276,6 +277,7 @@ else:
     deduped_df.alias("s"),
     condition)
     .whenMatchedUpdate('t.Sys_Silver_HashKey <> s.Sys_Silver_HashKey',set = updateDict)
+    .whenMatchedUpdate('t.Sys_Silver_IsCurrent != s.Sys_Silver_IsCurrent', set = {'t.Sys_Silver_IsCurrent' : 's.Sys_Silver_IsCurrent'})
     .whenNotMatchedBySourceUpdate(set = {'t.Sys_Silver_IsCurrent' : lit(False)})
     .whenNotMatchedInsert(values  = insertDict)
     .execute()

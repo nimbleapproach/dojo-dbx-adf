@@ -78,7 +78,29 @@ select
   'NaN' AS  BillingFrequencyMaster,
   'NaN' AS  ConsumptionModelMaster,
   VendorID as VendorCode,
-  Vendor as VendorNameInternal,
+  CASE WHEN ID in (1,2) AND Product  in (
+                      'D365'
+                      ,'Azure NCE'
+                      ,'Software NCE'
+                      ,'M365 NCE'
+                      ,'Azure'
+                      ,'Business Voice'
+                      ,'Power Platform NCE'
+                      ,'Perpetual Licencing'
+                      ,'Managed Services'
+                      ,'D365 NCE'
+                      ,'Windows 365'
+                      ,'Perpetual Licencing NCE'
+                      ,'Windows 365 NCE'
+                      ,'Power Platform'
+                      ,'Copilot NCE '
+                      ,'M365'
+                      ,'Business Voice NCE'
+
+                      ) THEN 'Microsoft'
+  WHEN ID in (1,2) AND Vendor ='Microsoft' THEN  Product
+ELSE 
+  Vendor END as VendorNameInternal,
   'NaN' AS  VendorNameMaster,
   'NaN' AS  VendorGeography,
   NULL AS  VendorStartDate,
