@@ -39,7 +39,6 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_product (
   line_item_type STRING  COMMENT 'source table of the record, credit memo, item, sales order, msp',
   manufacturer_item_number STRING COMMENT 'The manufacturer item number if it exists',
   source_system_id BIGINT COMMENT 'The ID from the Source System Dimension',
-  product_description STRING COMMENT 'The description of the Product',
   start_datetime TIMESTAMP NOT NULL COMMENT 'The dimensional start date of the record',
   end_datetime TIMESTAMP COMMENT 'The dimensional end date of the record, those records with a NULL value are current',
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',
