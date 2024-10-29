@@ -1870,6 +1870,37 @@
 								"pm_TargetTable": "technology_group"
 							}
 						}
+					},
+					{
+						"name": "Load Item DSS",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Load Technology Group",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_ViewName": "igv_Azure_General_igt_DDS_Item",
+								"pm_SelectString": {
+									"value": "CAST(timestamp AS BIGINT) AS timestamp, [Source Entity] AS Source_Entity, [Vendor DIM Code] AS Vendor_DIM_Code, \n[Manufacturer Item No_] AS Manufacturer_Item_No_, [Item Category Code] AS Item_Category_Code,\n[PG1 Code] AS PG1_Code, [PG2 Code] AS PG2_Code, Description, [Description 2] AS Description_2,\n[Description 3] AS Description_3, [Description 4] AS Description_4, [Item Disc_ Group] AS Item_Disc_Group,\n[BUSINESSTYPE Dimension Code] AS BUSINESSTYPE_Dimension_Code, [Life Cycle Formula] AS Life_Cycle_Formula,\n[Physical Goods] AS Physical_Goods, [Lic Band Min_] AS Lic_Band_Min_, [Lic Band Max_] AS Lic_Band_Max_,\n[Technology Code] AS Technology_Code, [Default Technology] AS Default_Technology",
+									"type": "Expression"
+								},
+								"pm_TargetTable": "item_dds"
+							}
+						}
 					}
 				],
 				"policy": {
