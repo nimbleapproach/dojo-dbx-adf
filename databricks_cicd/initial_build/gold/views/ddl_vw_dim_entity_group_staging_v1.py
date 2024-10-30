@@ -1,6 +1,7 @@
 # Databricks notebook source
 # Importing Libraries
 import os
+spark = spark  # noqa
 
 # COMMAND ----------
 

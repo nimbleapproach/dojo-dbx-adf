@@ -14,6 +14,7 @@ dimension_name = dbutils.widgets.get("dimension_name")
 
 
 # COMMAND ----------
+spark = spark  # noqa
 
 # file_path = 'meta.json'
 # replacements = {

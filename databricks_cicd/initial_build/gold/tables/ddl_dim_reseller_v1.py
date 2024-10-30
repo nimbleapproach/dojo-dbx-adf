@@ -1,6 +1,7 @@
 # Databricks notebook source
 # Importing Libraries
 import os
+spark = spark  # noqa
 
 # COMMAND ----------
 
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_reseller (
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
   CONSTRAINT `reseller_primary_key` PRIMARY KEY (`reseller_pk`))
 USING delta
-CLUSTER BY (reseller_code)
+CLUSTER BY (source_system_fk, reseller_code)
 TBLPROPERTIES (
   'delta.checkpointPolicy' = 'v2',
   'delta.constraints.datewithinrange_start_datetime' = 'start_datetime >= "1900-01-01"',
@@ -60,3 +61,21 @@ TBLPROPERTIES (
   'delta.feature.rowTracking' = 'supported',
   'delta.feature.v2Checkpoint' = 'supported')
 """)
+
+
+sqldf= spark.sql(f"""
+SELECT CAST(-1 AS BIGINT) AS reseller_pk,
+       CAST('N/A' AS STRING) AS reseller_code,
+       CAST(NULL AS STRING) AS reseller_name_internal,
+       CAST(NULL AS STRING) AS reseller_geography_internal,
+       CAST('1900-01-01' AS TIMESTAMP) AS reseller_start_date,
+       CAST(-1 AS BIGINT) AS source_system_fk,
+       CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
+       CAST(NULL AS TIMESTAMP) AS end_datetime,
+       CAST(1 AS INTEGER) AS is_current,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+FROM {catalog}.{schema}.dim_reseller p
+WHERE NOT EXISTS ( SELECT 1 FROM {catalog}.{schema}.dim_reseller WHERE reseller_pk = -1)
+""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_reseller")
+

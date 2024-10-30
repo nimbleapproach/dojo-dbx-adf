@@ -1,6 +1,7 @@
 # Databricks notebook source
 # Importing Libraries
 import os
+spark = spark  # noqa
 
 # COMMAND ----------
 
@@ -56,3 +57,22 @@ TBLPROPERTIES (
   'delta.feature.rowTracking' = 'supported',
   'delta.feature.v2Checkpoint' = 'supported')
 """)
+
+
+# Add in the UNKNOWN Member
+sqldf= spark.sql(f"""
+SELECT CAST(-1 AS BIGINT) AS source_system_pk,
+       CAST('N/A' AS STRING) AS source_system,
+       CAST('N/A' AS STRING) AS source_database,
+       CAST('N/A' AS STRING) AS source_entity,
+       CAST('N/A' AS STRING) AS reporting_source_database,
+       CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
+       CAST(NULL AS TIMESTAMP) AS end_datetime,
+       CAST(1 AS INTEGER) AS is_current,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+FROM {catalog}.{schema}.dim_source_system p
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_source_system WHERE source_system_pk = -1)
+""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_source_system")
+
+

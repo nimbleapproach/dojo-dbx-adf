@@ -44,7 +44,8 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_entity_staging (
   is_current,
   Sys_Gold_InsertedDateTime_UTC,
   Sys_Gold_ModifiedDateTime_UTC)
-AS SELECT DISTINCT
+AS 
+SELECT DISTINCT
   b.entity_code,
   egm.entity_code_legacy,
   b.entity_description,
@@ -60,5 +61,23 @@ AS SELECT DISTINCT
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM gold_{ENVIRONMENT}.tag02.dim_entity b
-INNER JOIN gold_{ENVIRONMENT}.tag02.entity_group_mapping egm on b.entity_code = egm.entity_code
+LEFT JOIN gold_{ENVIRONMENT}.tag02.entity_group_mapping egm on b.entity_code = egm.entity_code
+WHERE b.is_current = TRUE
+UNION
+--had to do this as tag02.dim_entity does not have BE1
+SELECT DISTINCT
+  'BE1',
+  'BE1 + NL1',
+  'BENELUX',
+  1,
+  'N/A' as legal_headquarters,
+  'N/A' as administrative_city,
+  'N/A' as date_established,
+  'N/A' as consolidation_type,
+  'N/A' as entity_local_currency,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+  CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
   """)

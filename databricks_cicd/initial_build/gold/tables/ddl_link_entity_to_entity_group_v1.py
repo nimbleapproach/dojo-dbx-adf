@@ -1,6 +1,7 @@
 # Databricks notebook source
 # Importing Libraries
 import os
+spark = spark  # noqa
 
 # COMMAND ----------
 
@@ -56,3 +57,4 @@ TBLPROPERTIES (
   'delta.feature.rowTracking' = 'supported',
   'delta.feature.v2Checkpoint' = 'supported')
 """)
+

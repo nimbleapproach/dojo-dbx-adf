@@ -1,6 +1,7 @@
 # Databricks notebook source
 # Importing Libraries
 import os
+spark = spark  # noqa
 
 # COMMAND ----------
 
@@ -30,28 +31,29 @@ if ENVIRONMENT == 'dev':
 
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_source_system_staging AS
-WITH cte_report_igsql03 AS 
+with cte_report_dbs as 
 (
-  SELECT DISTINCT RIGHT(a.Sys_DatabaseName, 2) AS source_entity
-  FROM silver_{ENVIRONMENT}.igsql03.item a
-  -- LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_entity e ON RIGHT(a.Sys_DatabaseName, 2) = e.ventity_code
+  select distinct sys_databasename from silver_dev.igsql03.sales_invoice_line
 )
-SELECT
-  'Infinigate ERP' AS source_system,
-  source_entity AS source_entity,
+select
+  'Infinigate ERP' as source_system,
+  'igsql03' as source_database,
+  sys_databasename as reporting_source_database,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
   CAST('2024-10-02' AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST('2024-10-02' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC 
-FROM cte_report_igsql03
+  FROM cte_report_dbs
 UNION
-SELECT
-  'Wavelink ERP' AS source_system,
-  'TBC' AS source_entity,
+select
+  'Wavelink ERP' as source_system,
+  'TBC',
+  'TBC',
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
   CAST('2024-10-02' AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
-  CAST('2024-10-02' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
-""")
+  CAST('2024-10-02' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC 
+"""
+)
