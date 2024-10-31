@@ -66,7 +66,7 @@ sqldf = spark.sql(f"""
 SELECT CAST(-1 AS BIGINT) AS reseller_group_pk,
        CAST('N/A' AS STRING) AS reseller_group_code,
        CAST(NULL AS STRING) AS reseller_group_name_internal,
-       CAST(NULL AS STRING) AS reseller_group_start_date,
+       CAST('1900-01-01' AS TIMESTAMP) AS reseller_group_start_date,
        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
        CAST(NULL AS TIMESTAMP) AS end_datetime,
        CAST(1 AS INTEGER) AS is_current,
