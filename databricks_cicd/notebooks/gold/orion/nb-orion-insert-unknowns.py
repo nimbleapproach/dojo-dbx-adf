@@ -40,7 +40,7 @@ with cte_sources as
 (
    select source_system_pk from {catalog}.{schema}.dim_source_system where source_system_pk > 0
 )
-SELECT CAST(-1 AS BIGINT) AS document_pk,
+SELECT 
        CAST('N/A' AS STRING) AS local_document_id,
        CAST('N/A' AS STRING) AS associated_document_id,
        CAST('1900-01-01' AS DATE) AS document_date,
@@ -67,7 +67,7 @@ with cte_sources as
 (
    select source_system_pk from {catalog}.{schema}.dim_source_system where source_system_pk > 0
 )
-SELECT CAST(-1 AS BIGINT) AS product_pk,
+SELECT 
        CAST('N/A' AS STRING) AS product_code,
        CAST(NULL AS STRING) AS product_description,
        CAST(NULL AS STRING) AS local_product_id,
@@ -93,7 +93,7 @@ with cte_sources as
 (
    select source_system_pk from {catalog}.{schema}.dim_source_system where source_system_pk > 0
 )
-SELECT CAST(-1 AS BIGINT) AS reseller_pk,
+SELECT 
        CAST('N/A' AS STRING) AS reseller_code,
        CAST(NULL AS STRING) AS reseller_name_internal,
        CAST(NULL AS STRING) AS reseller_geography_internal,
@@ -118,7 +118,7 @@ with cte_sources as
 (
    select source_system_pk from {catalog}.{schema}.dim_source_system where source_system_pk > 0
 )
-SELECT CAST(-1 AS BIGINT) AS vendor_pk,
+SELECT 
        CAST('N/A' AS STRING) AS vendor_code,
        CAST(NULL AS STRING) AS vendor_name_internal,
        CAST(NULL AS STRING) AS country_code,
