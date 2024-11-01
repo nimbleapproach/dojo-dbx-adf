@@ -40,7 +40,7 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_vendor_staging 
 AS with cte_sources as 
 (
-  select distinct source_system_pk, reporting_source_database 
+  select distinct source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
   where s.source_system = 'Infinigate ERP' 
   and s.is_current = 1
@@ -58,7 +58,7 @@ coalesce(s.source_system_pk,-1) as source_system_fk,
     CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
     CAST('2000-01-01' as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.dimension_value d
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(d.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(d.Sys_DatabaseName,2))
 WHERE UPPER(DimensionCode) = 'VENDOR'
 AND Sys_Silver_IsCurrent = true
 """)

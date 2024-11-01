@@ -35,7 +35,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_document_staging
 AS 
 with cte_sources as 
 (
-  select distinct source_system_pk, reporting_source_database 
+  select distinct source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
   where s.source_system = 'Infinigate ERP' 
   and s.is_current = 1
@@ -70,7 +70,7 @@ FROM
   and sla.VersionNo_ = sha.VersionNo_
   and sla.Sys_DatabaseName = sha.Sys_DatabaseName
   and sla.Sys_Silver_IsCurrent = 1
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sha.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sha.Sys_DatabaseName,2))
 union
 --msp
 select distinct
@@ -89,7 +89,7 @@ select distinct
   CAST(msp_h.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST(msp_h.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 from silver_{ENVIRONMENT}.igsql03.inf_msp_usage_header as msp_h
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(msp_h.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(msp_h.Sys_DatabaseName,2))
 where  msp_h.Sys_Silver_IsCurrent = true
 union
 --invoices
@@ -113,7 +113,7 @@ ON sih.No_ = sil.DocumentNo_
     AND sih.Sys_Silver_IsCurrent = true
     AND sil.Sys_Silver_IsCurrent = true
 LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sih.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
 union
 --credit memos
 select distinct
@@ -134,7 +134,7 @@ INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.
     AND sih.Sys_DatabaseName = sil.Sys_DatabaseName
     AND sih.Sys_Silver_IsCurrent = true
     AND sil.Sys_Silver_IsCurrent = true
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sih.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
 )
 SELECT
   local_document_id,

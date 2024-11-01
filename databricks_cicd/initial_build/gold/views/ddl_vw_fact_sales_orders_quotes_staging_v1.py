@@ -33,7 +33,7 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_orders_quotes_staging AS
 WITH cte_sources AS 
 (
-  SELECT DISTINCT source_system_pk, reporting_source_database FROM {catalog}.{schema}.dim_source_system s 
+  SELECT DISTINCT source_system_pk, source_entity FROM {catalog}.{schema}.dim_source_system s 
   WHERE s.source_system = 'Infinigate ERP' AND s.is_current = 1
 ) ,
 min_fx_rate AS 
@@ -110,7 +110,7 @@ AND sla.VersionNo_ = sha2.VersionNo_
 AND sla.Sys_DatabaseName = sha2.Sys_DatabaseName
 AND sha2.Sys_Silver_IsCurrent = true
 
-LEFT JOIN cte_sources s ON LOWER(s.reporting_source_database) = LOWER(sla.Sys_DatabaseName)
+LEFT JOIN cte_sources s ON LOWER(s.source_entity) = LOWER(right(sla.Sys_DatabaseName,2))
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON it.No_ = sla.No_ 
 AND it.Sys_Silver_IsCurrent = true 

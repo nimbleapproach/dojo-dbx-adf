@@ -34,7 +34,7 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_staging as
 with cte_sources as 
 (
-  select distinct source_system_pk, reporting_source_database 
+  select distinct source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
   where s.source_system = 'Infinigate ERP' 
   and s.is_current = 1
@@ -65,7 +65,7 @@ select distinct
     MAX(it.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
     MAX(it.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.item it 
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(it.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(it.Sys_DatabaseName,2))
 Where it.Sys_Silver_IsCurrent = true
 group by
     coalesce(it.No_, 'N/A'),
@@ -94,10 +94,10 @@ select distinct
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,
-    MIN(sil.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
-    MIN(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
+    MAX(sil.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
+    MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil 
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sil.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
 WHERE sil.Sys_Silver_IsCurrent = true
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.No_ 
@@ -118,8 +118,8 @@ select distinct
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,
-    MIN(sil.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
-    MIN(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
+    MAX(sil.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
+    MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 from silver_{ENVIRONMENT}.igsql03.sales_line_archive as sil
 inner join (
   select
@@ -139,7 +139,7 @@ and sil.Doc_No_Occurrence = 1
 and sil.VersionNo_ = sha.VersionNo_
 and sil.Sys_DatabaseName = sha.Sys_DatabaseName
 and sil.Sys_Silver_IsCurrent = 1
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sil.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
 WHERE sil.Sys_Silver_IsCurrent = true
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.No_ 
@@ -159,10 +159,10 @@ select distinct
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,
-    MIN(sil.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
-    MIN(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
+    MAX(sil.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
+    MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil 
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sil.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.No_ 
                 and i.Sys_Silver_IsCurrent = true 
@@ -183,10 +183,10 @@ select distinct
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
     1 AS is_current,
-    MIN(sil.Sys_Silver_InsertDateTime_UTC)as Sys_Gold_InsertedDateTime_UTC,
-    MIN(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
+    MAX(sil.Sys_Silver_InsertDateTime_UTC)as Sys_Gold_InsertedDateTime_UTC,
+    MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.inf_msp_usage_line sil 
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sil.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
 WHERE sil.Sys_Silver_IsCurrent = true
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.ItemNo_ 

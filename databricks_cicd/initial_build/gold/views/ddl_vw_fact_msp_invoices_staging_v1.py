@@ -33,7 +33,7 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_msp_invoices_staging AS
 WITH cte_sources AS 
 (
-  SELECT DISTINCT source_system_pk, reporting_source_database FROM {catalog}.{schema}.dim_source_system s 
+  SELECT DISTINCT source_system_pk, source_entity FROM {catalog}.{schema}.dim_source_system s 
   WHERE s.source_system = 'Infinigate ERP' AND s.is_current = 1
 ) ,
 min_fx_rate AS 
@@ -138,7 +138,7 @@ LEFT JOIN (SELECT DISTINCT Calendar_Year,Month,Currency,Period_FX_rate FROM gold
 AND YEAR(msp_h.DocumentDate) = fx2.Calendar_Year
 AND MONTH(msp_h.DocumentDate) = fx2.Month
 
-LEFT JOIN cte_sources s on LOWER(s.reporting_source_database) = LOWER(msp_h.Sys_DatabaseName)
+LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(right(msp_h.Sys_DatabaseName,2))
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON msp_l.ItemNo_ = it.No_
 AND msp_l.Sys_DatabaseName = it.Sys_DatabaseName

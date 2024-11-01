@@ -35,7 +35,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_reseller_staging
 AS 
 with cte_sources as 
 (
-  select distinct source_system_pk, reporting_source_database 
+  select distinct source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
   where s.source_system = 'Infinigate ERP' 
   and s.is_current = 1
@@ -66,7 +66,7 @@ LEFT JOIN silver_{ENVIRONMENT}.masterdata.resellergroups AS rg
     ON rg.ResellerID = cu.No_
     AND UPPER(rg.Entity) = UPPER(entity.TagetikEntityCode)
     AND rg.Sys_Silver_IsCurrent = true
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sih.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
 WHERE sih.Sys_Silver_IsCurrent = true
 GROUP BY 
     coalesce(cu.No_, 'N/A'),
@@ -102,7 +102,7 @@ FROM
     ON rg.ResellerID = cu.No_
     AND UPPER(rg.Entity) = UPPER(entity.TagetikEntityCode)
     AND rg.Sys_Silver_IsCurrent = true
-LEFT JOIN cte_sources s on lower(s.reporting_source_database) = lower(sih.Sys_DatabaseName)
+LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
 WHERE sih.Sys_Silver_IsCurrent = true
 GROUP BY 
     coalesce(cu.No_, 'N/A'),

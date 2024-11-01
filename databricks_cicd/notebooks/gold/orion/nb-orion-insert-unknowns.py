@@ -23,11 +23,11 @@ schema = 'orion'
 # SOURCE SYSTEM 
 # Now do the insert for DIM source system as the default members need 1 default member per source system
 spark.sql(f"""insert into {catalog}.{schema}.dim_source_system (
-  source_system,source_database,reporting_source_database,start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
+  source_system,source_database,source_entity,start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
 )
-select source_system,source_database,reporting_source_database,start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
+select source_system,source_database,source_entity,start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
 from {catalog}.{schema}.vw_dim_source_system_staging ss
-where not exists (select 1 from {catalog}.{schema}.dim_source_system s where s.source_system = ss.source_system and s.reporting_source_database = ss.reporting_source_database)
+where not exists (select 1 from {catalog}.{schema}.dim_source_system s where s.source_system = ss.source_system and s.source_entity = ss.source_entity)
 """)
 
 
@@ -135,4 +135,5 @@ WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_vendor v WHERE v.vendor_p
 
 
 # COMMAND ----------
-dbutils.notebook.exit(0)
+# dbutils.notebook.exit(0)
+
