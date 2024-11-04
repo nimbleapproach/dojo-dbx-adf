@@ -9,7 +9,7 @@
 dbutils.widgets.text("dimension_name", "", "Dimension Name")
 dimension_name = dbutils.widgets.get("dimension_name")
 #DEBUG dimension_name = 'entity_to_entity_group_link'
-#dimension_name = 'entity_group'
+#dimension_name = 'product'
 #dimension_name = 'reseller_group'
 
 
@@ -141,3 +141,4 @@ def merge_dimension(dimension_name):
 # run the function
 merge_dimension(dimension_name)
 dbutils.notebook.exit(0)
+

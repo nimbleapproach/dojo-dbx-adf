@@ -1,4 +1,3 @@
-
 # Databricks notebook source
 # Importing Libraries
 import os
@@ -11,9 +10,7 @@ ENVIRONMENT
 
 # COMMAND ----------
 
-
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
-
 
 # COMMAND ----------
 

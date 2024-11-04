@@ -217,9 +217,9 @@
         "run_group": 100,
         "run_order": 1,
         "processing_notebook" : "nb-process-fact-nav",
-        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_trannsaction", 
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction", 
         "destination_key_columns" : ["reseller_group_code"], 
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_trannsaction_nav_staging" , 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_nav_staging" , 
         "source_key_columns" : ["source_system_fk","entity_code"],
         "active": 0
                 }

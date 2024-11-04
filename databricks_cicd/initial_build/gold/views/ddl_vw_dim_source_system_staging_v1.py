@@ -39,6 +39,7 @@ select
   'Infinigate ERP' as source_system,
   'igsql03' as source_database,
   right(sys_databasename,2) as source_entity,
+  sys_databasename as reporting_source_database,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -48,6 +49,7 @@ select
 UNION
 select
   'Wavelink ERP' as source_system,
+  'TBC',
   'TBC',
   'TBC',
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,

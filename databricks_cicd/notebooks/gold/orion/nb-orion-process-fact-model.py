@@ -159,5 +159,3 @@ run_objects_by_group(data=data, object_type='dim', max_workers=4)
 
 #Now refresh the fact table
 run_objects_by_group(data=data, object_type='fact', max_workers=4)
-
-

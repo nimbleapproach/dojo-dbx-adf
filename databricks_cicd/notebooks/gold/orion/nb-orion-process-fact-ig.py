@@ -98,18 +98,22 @@ for dim_name in dimension_names:
     if dim_name not in fact_direct_dimensions:
         continue
     df_dim, bus_keys = get_dimension_keys(dim_name.lower()) #bus_keys should all be LOWER CASE now
-    print("processing" , dim_name, "using", bus_keys)
-    #print(df_fact_staging.count(),dim_name)
+    #print("processing" , dim_name, "using", bus_keys)
+    print(df_fact_staging.count(),dim_name)
     
     # Future - might need to incorporate the fact staging document_date as a filter to the dimension join
     # Future - the is_current might need to be removed from the above get_dimension_keys function
     # Future - and then this filter added to the .join
     # .filter(F.col("start_datetime") > F.col("document_date") AND F.col("coalesce(end_datetime, '2099-01-01'") <= F.col("document_date"))
     df_fact_temp = df_fact_staging.join(df_dim, [*bus_keys], 'inner')
-    if "source_system_fk" in bus_keys:
-        bus_keys.remove("source_system_fk") # don't remove this column from the dataframe
-    if "document_source" in bus_keys:
-        bus_keys.remove("document_source") # don't remove this column from the dataframe
+    # build a list of keys to drop from the temp df
+    for remove_key in ["source_system_fk","document_source","line_item_type"]: # don't remove these columns from the dataframe
+        if remove_key in bus_keys:
+            bus_keys.remove(remove_key) # don't remove this column from the dataframe
+    # if "document_source" in bus_keys:
+    #     bus_keys.remove("document_source") # don't remove this column from the dataframe
+    # if "line_item_type" in bus_keys:
+    #     bus_keys.remove("line_item_type") # don't remove this column from the dataframe
     df_fact_temp_insert = df_fact_temp.drop(*bus_keys) # drop the business keys e.g. product_code, document_code etc..
     df_fact_staging = df_fact_temp_insert
 
@@ -157,5 +161,8 @@ FROM cte_max_timestamp
 """
 )
 
+
+
 # COMMAND ----------
+
 dbutils.notebook.exit(0)
