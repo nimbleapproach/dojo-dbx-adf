@@ -49,15 +49,14 @@ except:
 
 # COMMAND ----------
 
+# NOTE: (DP 23/10/2024 T22814) (https://dev.azure.com/InfinigateHolding/Group%20IT%20Program/_workitems/edit/22814)
+#       the setting has no bearing but is used by databricks jobs,
+#       it should be removed from jobs first, then from here
 try:
     FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true' )
 except:
     dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload")== 'true')
-
-# COMMAND ----------
-
-FULL_LOAD = True
+    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true')
 
 # COMMAND ----------
 
@@ -146,29 +145,6 @@ BUSINESS_KEYS
 
 # COMMAND ----------
 
-# MAGIC %md Calculating the current watermark to only load newly arrived data at bronze.
-# MAGIC
-
-# COMMAND ----------
-
-from datetime import datetime
-
-if FULL_LOAD:
-    currentWatermark = datetime.strptime('01-01-1900', '%m-%d-%Y').date()
-else:
-    currentWatermark = (
-                        target_df
-                        .agg(
-                            coalesce(
-                                max(col('Sys_Bronze_InsertDateTime_UTC').cast('TIMESTAMP')),
-                                lit('1900-01-01').cast('TIMESTAMP')
-                                )
-                            .alias('current_watermark'))
-                        .collect()[0]['current_watermark']
-                        )
-
-# COMMAND ----------
-
 # MAGIC %md For our column selection we get the target columns to do a select on.
 # MAGIC
 
@@ -199,7 +175,6 @@ if DELTA_LOAD == 'delta':
               .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
               .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
               .select(selection_column)
-              .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
               .dropDuplicates(SILVER_PRIMARY_KEYS)
               .dropDuplicates(['Sys_Silver_HashKey'])
               )
@@ -325,7 +300,7 @@ chanceForOptimizing = random.random()
 
 # COMMAND ----------
 
-# MAGIC %md By chance loadings we want to use liquid clustering to optimzie our silver table.
+# MAGIC %md By chance loadings we want to use liquid clustering to optimize our silver table.
 
 # COMMAND ----------
 
