@@ -20,7 +20,7 @@ resources:
         - task_key: run_gold_layer
           description: task to load orion gold layer
           notebook_task:
-            notebook_path: ../notebooks/gold/orion/nb-orion-process-model.py
+            notebook_path: ../notebooks/gold/orion/nb-orion-process-fact-model.py
             base_parameters:
               azure_tenant_id: ${workspace.azure_tenant_id}
               azure_host: ${workspace.host}
