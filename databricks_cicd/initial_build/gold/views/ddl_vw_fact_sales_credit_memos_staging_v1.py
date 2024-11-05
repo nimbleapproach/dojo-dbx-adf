@@ -33,7 +33,7 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_credit_memos_staging AS
 WITH cte_sources AS 
 (
-  SELECT DISTINCT source_system_pk, source_entity FROM {catalog}.{schema}.dim_source_system s 
+  SELECT DISTINCT source_system_pk, reporting_source_database FROM {catalog}.{schema}.dim_source_system s 
   WHERE s.source_system = 'Infinigate ERP' AND s.is_current = 1
 ) ,
 min_fx_rate AS 
@@ -55,6 +55,7 @@ min_fx_rate AS
   sih.CurrencyFactor AS currency_factor,
   TO_DATE(sih.PostingDate) AS document_date, --JOIN to dim_date
   'credit memo' AS document_source, 
+  --concat(right(sih.Sys_DatabaseName, 2), '1') as EntityCode,
   COALESCE(it.No_, sil.No_, 'N/A') AS product_code, -- JOIN to dim_product
   CASE WHEN it.No_ IS NOT NULL THEN 'item' ELSE 'Credit Memo Line Item' END AS line_item_type,
   COALESCE(it.ProductType, 'N/A') AS product_type,
@@ -115,7 +116,7 @@ LEFT JOIN (
 AND it.Sys_DatabaseName = ven.Sys_DatabaseName
 AND it.Sys_Silver_IsCurrent = true
 
-LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(right(sih.Sys_DatabaseName,2))
+LEFT JOIN cte_sources s on LOWER(s.reporting_source_database) = LOWER(sih.Sys_DatabaseName)
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON cu.Sys_DatabaseName = sih.Sys_DatabaseName
 AND cu.Sys_Silver_IsCurrent = TRUE
@@ -151,5 +152,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
 WHERE sih.Sys_Silver_IsCurrent = true 
 AND sil.Sys_Silver_IsCurrent = true
 AND sil.sid IS NOT NULL
+limit(100)
 """
 )

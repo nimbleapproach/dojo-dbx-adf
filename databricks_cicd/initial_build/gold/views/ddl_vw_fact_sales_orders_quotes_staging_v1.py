@@ -33,7 +33,7 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_orders_quotes_staging AS
 WITH cte_sources AS 
 (
-  SELECT DISTINCT source_system_pk, source_entity FROM {catalog}.{schema}.dim_source_system s 
+  SELECT DISTINCT source_system_pk, reporting_source_database FROM {catalog}.{schema}.dim_source_system s 
   WHERE s.source_system = 'Infinigate ERP' AND s.is_current = 1
 ) ,
 min_fx_rate AS 
@@ -55,6 +55,7 @@ SELECT
   sha2.CurrencyFactor AS currency_factor,
   CAST(sha.DocumentDate AS date) AS document_date, --JOIN to dim_date
   CASE WHEN sla.DocumentType = 0 THEN 'sales quote' WHEN sla.DocumentType = 1 THEN 'sales order' ELSE 'N/A' END AS document_source, 
+  --concat(right(sha.Sys_DatabaseName, 2), '1') as EntityCode,
   COALESCE(sla.No_,'N/A') AS product_code,
   CASE WHEN it.No_ IS NOT NULL THEN 'item' ELSE 'Sales Archive Line Item' END AS line_item_type,
   COALESCE('N/A') AS product_type,
@@ -110,7 +111,7 @@ AND sla.VersionNo_ = sha2.VersionNo_
 AND sla.Sys_DatabaseName = sha2.Sys_DatabaseName
 AND sha2.Sys_Silver_IsCurrent = true
 
-LEFT JOIN cte_sources s ON LOWER(s.source_entity) = LOWER(right(sla.Sys_DatabaseName,2))
+LEFT JOIN cte_sources s ON LOWER(s.reporting_source_database) = LOWER(sla.Sys_DatabaseName)
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON it.No_ = sla.No_ 
 AND it.Sys_Silver_IsCurrent = true 
@@ -148,5 +149,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
   END
 WHERE sla.Sys_Silver_IsCurrent = true
 AND sla.sid IS NOT NULL
+limit(100)
 """
 )

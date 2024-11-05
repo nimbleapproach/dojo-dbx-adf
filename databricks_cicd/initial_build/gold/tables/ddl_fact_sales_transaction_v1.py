@@ -43,11 +43,11 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.fact_sales_transaction_ig (
   document_source STRING,
   product_type STRING,
   manufacturer_item_number STRING,
-  amount_local_currency DECIMAL(38,20),
+  amount_local_currency DECIMAL(10,2),
   amount_EUR DECIMAL(10,2),
   amount_including_vat_local_currency STRING,
   amount_including_vat_EUR STRING,
-  cost_amount_local_currency DECIMAL(38,20),
+  cost_amount_local_currency DECIMAL(10,2),
   cost_amount_EUR DECIMAL(10,2),
   quantity DECIMAL(10,2),
   total_cost_purchase_currency DECIMAL(10,2),
@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.fact_sales_transaction_ig (
   currency_fk BIGINT,
   reseller_fk BIGINT,
   vendor_fk BIGINT,
+  entity_fk BIGINT,
   Sys_Gold_FactProcessedDateTime_UTC TIMESTAMP
   )
 USING delta
