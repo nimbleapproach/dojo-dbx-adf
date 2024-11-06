@@ -164,35 +164,26 @@ hash_columns = [col(column) for column in target_columns if not column in ['SID'
 # COMMAND ----------
 
 if DELTA_LOAD == 'delta':
-  source_df = (
-              spark.sql(f"""
+  print('Delta Loading')
+  source_df = spark.sql(f"""
                       Select *,
                       max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
                       {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
-                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
-            """)
-              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
-              .select(selection_column)
-              .dropDuplicates(SILVER_PRIMARY_KEYS)
-              .dropDuplicates(['Sys_Silver_HashKey'])
-              )
-  print('Delta Loading')
-
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
 else:
-
-  source_df = (
-              spark.sql(f"""
-                      Select *, true as Sys_Silver_IsCurrent
-                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
-            """)
-              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
-              .select(selection_column)
-              )
   print('Full Loading')
+  source_df = spark.sql(f"""
+                      Select *, true as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
+
+source_df = (
+    source_df.withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
+             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+             .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
+             .select(selection_column)
+             .dropDuplicates(SILVER_PRIMARY_KEYS)
+             .dropDuplicates(['Sys_Silver_HashKey'])
+    )
 
 # COMMAND ----------
 

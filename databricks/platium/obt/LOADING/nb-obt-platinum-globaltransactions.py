@@ -165,15 +165,15 @@ ON ga.Sys_Silver_IsCurrent =1
 AND g.SKUInternal = ga.No_
 and g.Sys_DatabaseName = ga.Sys_DatabaseName
 
-LEFT JOIN gold_{ENVIRONMENT}.igsql03.end_customer ec
+LEFT JOIN gold_{ENVIRONMENT}.obt.end_customer ec
 ON g.EndCustomerInternal = ec.Contact_No_
 AND RIGHT(g.Sys_DatabaseName, 2) = ec.entity
 
-LEFT JOIN gold_{ENVIRONMENT}.igsql03.nace_2_codes nace
+LEFT JOIN gold_{ENVIRONMENT}.obt.nace_2_codes nace
 ON ec.section = nace.section
 AND nace.division is NULL
 
-LEFT JOIN gold_{ENVIRONMENT}.igsql03.technology t
+LEFT JOIN gold_{ENVIRONMENT}.obt.technology t
 ON g.TechnologyCode = t.Code
 
 WHERE g.GroupEntityCode ='IG'
