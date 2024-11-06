@@ -49,6 +49,7 @@ spark.sql(f"""SELECT
   SKUInternal,
   SKUMaster,
   Description,
+  Technology,
   ProductTypeInternal,
   ProductTypeMaster,
   CommitmentDuration1Master,
@@ -67,6 +68,8 @@ spark.sql(f"""SELECT
   ResellerGroupCode,
   ResellerGroupName,  
   ResellerGroupStartDate,
+  EndCustomer,
+  IndustryVertical,
   CurrencyCode,
   SUM(RevenueAmount) AS RevenueAmount,
   Period_FX_rate,
@@ -111,6 +114,7 @@ SELECT
     else r.Type end as Type,
   g.SKUMaster,
   g.Description,
+  t.Name as Technology,
   g.ProductTypeInternal,
   g.ProductTypeMaster,
   g.CommitmentDuration1Master,
@@ -129,6 +133,8 @@ SELECT
   g.ResellerGroupCode,
   g.ResellerGroupName,  
   g.ResellerGroupStartDate,
+  ec.Name as EndCustomer,
+  nace.display_text as IndustryVertical,
   g.CurrencyCode,
   g.RevenueAmount as RevenueAmount,
   e.Period_FX_rate ,
@@ -154,10 +160,21 @@ LEFT JOIN (
         where Sys_Silver_IsCurrent =1
         group by all)  r ON g.SKUInternal = r.No
 
-LEFT JOIN silver_dev.igsql03.g_l_account ga 
+LEFT JOIN silver_{ENVIRONMENT}.igsql03.g_l_account ga 
 ON ga.Sys_Silver_IsCurrent =1
 AND g.SKUInternal = ga.No_
 and g.Sys_DatabaseName = ga.Sys_DatabaseName
+
+LEFT JOIN gold_{ENVIRONMENT}.igsql03.end_customer ec
+ON g.EndCustomerInternal = ec.Contact_No_
+AND RIGHT(g.Sys_DatabaseName, 2) = ec.entity
+
+LEFT JOIN gold_{ENVIRONMENT}.igsql03.nace_2_codes nace
+ON ec.section = nace.section
+AND nace.division is NULL
+
+LEFT JOIN gold_{ENVIRONMENT}.igsql03.technology t
+ON g.TechnologyCode = t.Code
 
 WHERE g.GroupEntityCode ='IG'
 and right(cast(g.TransactionDate as varchar(108)),8) <>'23:59:59'
@@ -176,6 +193,7 @@ SELECT
   'Revenue' as Type,
   NULL AS SKUMaster,
   NULL AS Description,
+  NULL AS Technology,
   NULL AS ProductTypeInternal,
   NULL AS ProductTypeMaster,
   NULL AS CommitmentDuration1Master,
@@ -194,6 +212,8 @@ SELECT
   NULL AS ResellerGroupCode,
   NULL AS ResellerGroupName,  
   NULL AS ResellerGroupStartDate,
+  NULL AS EndCustomer,
+  NULL AS IndustryVertical,
   NULL AS CurrencyCode,
   CAST(SUM(CASE WHEN GL_Group like  '%Revenue%' THEN ((-1) * tc.CostAmount)
       ELSE 0.00 END )AS DECIMAL(20,2)) AS RevenueAmount,
@@ -230,6 +250,7 @@ SELECT
   g.SKUInternal,
   g.SKUMaster,
   g.Description,
+  NULL AS Technology,
   g.ProductTypeInternal,
   g.ProductTypeMaster,
   g.CommitmentDuration1Master,
@@ -248,6 +269,8 @@ SELECT
   g.ResellerGroupCode,
   g.ResellerGroupName,  
   g.ResellerGroupStartDate,
+  NULL AS EndCustomer,
+  NULL AS IndustryVertical,
   g.CurrencyCode,
   g.RevenueAmount,
   CASE 
@@ -371,45 +394,48 @@ from
 )
 
 SELECT
-   g.GroupEntityCode,
-   g.EntityCode,
-   g.DocumentNo,
-   g.TransactionDate,
-   g.SalesOrderDate,
-   g.SalesOrderID,
-   g.SalesOrderItemID,
-   g.SKUInternal,
-   g.SKUMaster,
-   g.Description,
-   g.ProductTypeInternal,
-   g.ProductTypeMaster,
-   g.CommitmentDuration1Master,
-   g.CommitmentDuration2Master,
-   g.BillingFrequencyMaster,
-   g.ConsumptionModelMaster,
-   g.VendorCode,
-   g.VendorNameInternal,
-   g.VendorNameMaster,
-   g.VendorGeography,
-   g.VendorStartDate,
-   g.ResellerCode,
-   g.ResellerNameInternal,
-   g.ResellerGeographyInternal,
-   g.ResellerStartDate,
-   g.ResellerGroupCode,
-   g.ResellerGroupName,  
-   g.ResellerGroupStartDate,
-   g.CurrencyCode,
-   g.RevenueAmount,
+  g.GroupEntityCode,
+  g.EntityCode,
+  g.DocumentNo,
+  g.TransactionDate,
+  g.SalesOrderDate,
+  g.SalesOrderID,
+  g.SalesOrderItemID,
+  g.SKUInternal,
+  g.SKUMaster,
+  g.Description,
+  NULL AS Technology,
+  g.ProductTypeInternal,
+  g.ProductTypeMaster,
+  g.CommitmentDuration1Master,
+  g.CommitmentDuration2Master,
+  g.BillingFrequencyMaster,
+  g.ConsumptionModelMaster,
+  g.VendorCode,
+  g.VendorNameInternal,
+  g.VendorNameMaster,
+  g.VendorGeography,
+  g.VendorStartDate,
+  g.ResellerCode,
+  g.ResellerNameInternal,
+  g.ResellerGeographyInternal,
+  g.ResellerStartDate,
+  g.ResellerGroupCode,
+  g.ResellerGroupName,  
+  g.ResellerGroupStartDate,
+  NULL AS EndCustomer,
+  NULL AS IndustryVertical,
+  g.CurrencyCode,
+  g.RevenueAmount,
   e.Period_FX_rate AS Period_FX_rate,
   cast(g.RevenueAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2)) AS RevenueAmount_Euro,
-   g.GP1,
-   cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))  GP1_Euro,
-   --Added Cost Amount
-   g.Cost AS COGS,
-   cast(g.Cost / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))  AS COGS_Euro,
-  'Revenue_Adj_NU' as GL_Group
-   ,0 as TopCostFlag
+  g.GP1,
+  cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))  GP1_Euro,
+  --Added Cost Amount
+  g.Cost AS COGS,
+  cast(g.Cost / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))  AS COGS_Euro,
+  'Revenue_Adj_NU' as GL_Group,
+  0 as TopCostFlag
   --  ,IFG_Mapping
  FROM cte g
 
@@ -446,6 +472,7 @@ SELECT
    g.SKUInternal,
    g.SKUMaster,
    g.Description,
+   NULL AS Technology,
    g.ProductTypeInternal,
    g.ProductTypeMaster,
    g.CommitmentDuration1Master,
@@ -464,6 +491,8 @@ SELECT
    g.ResellerGroupCode,
    g.ResellerGroupName,  
    g.ResellerGroupStartDate,
+   NULL AS EndCustomer,
+   NULL AS IndustryVertical,
    g.CurrencyCode,
    g.RevenueAmount,
    CASE 
@@ -547,6 +576,7 @@ spark.sql(f"""SELECT
   g.SKUInternal,
   g.SKUMaster,
   g.Description,
+  NULL AS Technology,
   g.ProductTypeInternal,
   g.ProductTypeMaster,
   g.CommitmentDuration1Master,
@@ -565,6 +595,8 @@ spark.sql(f"""SELECT
   g.ResellerGroupCode,
   g.ResellerGroupName,
   to_date('1900-01-01') AS ResellerGroupStartDate,
+  NULL AS EndCustomer,
+  NULL AS IndustryVertical,
   g.CurrencyCode,
   g.RevenueAmount,
   CASE
