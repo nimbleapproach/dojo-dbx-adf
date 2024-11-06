@@ -32,7 +32,8 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_vendor_arr_staging as
 select distinct
 concat(it.Vendor_Name,'|',it.sku) as product_vendor_code,
-coalesce(it.sku,'NaN') as local_product_id ,
+coalesce(it.sku,'NaN') as product_code ,
+coalesce(it.Vendor_Name,'NaN') as vendor_code ,
 coalesce(it.Product_Type,'NaN') as product_type,
 Commitment_Duration_in_months AS commitment_duration_in_months,
 Commitment_Duration2 AS commitment_duration2,
