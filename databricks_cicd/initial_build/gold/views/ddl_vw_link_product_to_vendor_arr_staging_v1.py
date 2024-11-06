@@ -23,16 +23,18 @@ schema = 'orion'
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
-              DROP VIEW IF EXISTS {catalog}.{schema}.vw_dim_product_vendor_arr_staging
+              DROP VIEW IF EXISTS {catalog}.{schema}.vw_link_product_to_vendor_arr_staging
               """)
 
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_vendor_arr_staging as
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_link_product_to_vendor_arr_staging as
 select distinct
 concat(it.Vendor_Name,'|',it.sku) as product_vendor_code,
 coalesce(it.sku,'NaN') as product_code ,
+coalesce(p.product_pk,-1) product_fk, 
+coalesce(v.vendor_pk,-1) vendor_fk, 
 coalesce(it.Vendor_Name,'NaN') as vendor_code ,
 coalesce(it.Product_Type,'NaN') as product_type,
 Commitment_Duration_in_months AS commitment_duration_in_months,
@@ -54,6 +56,8 @@ Consumption_Model AS consumption_model,
     it.Sys_Silver_InsertDateTime_UTC AS Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.masterdata.datanowarr it 
   cross join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Managed Datasets' and is_current = 1) ss 
+LEFT OUTER JOIN {catalog}.{schema}.dim_product p on p.product_code =coalesce(it.sku,'NaN') and p.is_current = 1
+LEFT OUTER JOIN {catalog}.{schema}.dim_vendor v on v.vendor_code = coalesce(it.Vendor_Name,'NaN') and v.is_current = 1
 WHERE 
   it.Sys_Silver_IsCurrent = true
 """)

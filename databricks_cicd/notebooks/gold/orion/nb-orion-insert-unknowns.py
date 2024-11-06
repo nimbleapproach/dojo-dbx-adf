@@ -78,7 +78,6 @@ SELECT
        CAST(NULL AS STRING) AS product_description,
        CAST(NULL AS STRING) AS local_product_id,
        CAST(NULL AS STRING) AS product_type,
-       CAST('N/A' AS STRING) AS line_item_type,
        CAST(li.line_item_type AS STRING) AS line_item_type,
        CAST(s.source_system_pk AS BIGINT) AS source_system_fk,
        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
@@ -86,8 +85,14 @@ SELECT
        CAST(1 AS INTEGER) AS is_current,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+FROM cte_sources s
 cross join cte_line_item_types li
-WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_product v WHERE v.product_pk = -1 AND v.source_system_fk = s.source_system_pk and li.line_item_type = v.line_item_type)
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_product v 
+WHERE 
+v.product_code = CAST('N/A' AS STRING) 
+AND v.line_item_type = li.line_item_type
+AND v.source_system_fk = s.source_system_pk 
+AND li.line_item_type = v.line_item_type)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_product")
 
 
@@ -112,7 +117,9 @@ SELECT
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM cte_sources s
-WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_reseller v WHERE v.reseller_pk = -1 AND v.source_system_fk = s.source_system_pk)
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_reseller v 
+         WHERE v.reseller_code = CAST('N/A' AS STRING) 
+            AND v.source_system_fk = s.source_system_pk)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_reseller")
 
 
@@ -137,10 +144,11 @@ SELECT
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM cte_sources s
-WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_vendor v WHERE v.vendor_pk = -1 AND v.source_system_fk = s.source_system_pk)
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_vendor v WHERE v.vendor_code = CAST('N/A' AS STRING) AND v.source_system_fk = s.source_system_pk)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_vendor")
 
 
 # COMMAND ----------
+
 # dbutils.notebook.exit(0)
 

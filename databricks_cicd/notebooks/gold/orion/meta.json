@@ -117,6 +117,17 @@
         "source_key_columns" : ["master_vendor_fk","vendor_fk"],
         "active": 0
                  },
+    "link_product_to_vendor_arr" : {
+        "type": "link",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_product_to_vendor_arr",  
+        "destination_key_columns" : ["product_vendor_code","source_system_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_product_to_vendor_arr_staging" ,
+        "source_key_columns" : ["product_vendor_code","source_system_fk"],
+        "active": 1
+                 },
     "vendor" : {
         "type": "dim",
         "run_group": 1,
@@ -185,7 +196,7 @@
         "destination_key_columns" : ["master_reseller_group_code"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_master_reseller_group_staging" , 
         "source_key_columns" : ["master_reseller_group_code"],
-        "active": 1
+        "active": 0
                 },
 
     "fact_sales_transaction_ig" : {

@@ -14,6 +14,7 @@ dimension_name = dbutils.widgets.get("dimension_name")
 
 
 # COMMAND ----------
+
 spark = spark  # noqa
 
 # file_path = 'meta.json'
@@ -39,7 +40,8 @@ def merge_dimension(dimension_name):
     
     # Get the last part of the string after the period, then split at the first underscore
     table_pk = destination_table_name_only.split('.')[-1].split('_', 1)[1] + "_pk"
-
+    # print('table_pk', table_pk)
+    
     # source of data config
     updates_dimension_table = dimension_config['source_table_name'] # string
     source_key_columns = dimension_config['source_key_columns'] # string
@@ -62,6 +64,10 @@ def merge_dimension(dimension_name):
     insert_columns_sql = ""
     select_columns_sql = ""
     destination_columns_list = spark.table(f"{destination_dimension_table_name}").columns
+    
+    # print('column_list')
+    # print(destination_columns_list)
+
     source_columns_list = spark.table(f"{updates_dimension_table}").columns
     destination_columns_lower = [destination_col.lower() for destination_col in destination_columns_list]
     destination_columns_lower.remove(table_pk)
