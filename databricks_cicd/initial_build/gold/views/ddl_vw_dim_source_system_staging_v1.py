@@ -57,5 +57,16 @@ select
   1 AS is_current,
   CAST('2024-10-02' AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST('2024-10-02' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC 
+UNION
+SELECT
+  'Managed Datasets' AS source_system,
+  'TBC',
+  'TBC',
+  'TBC',
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  CAST(NOW() AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+  CAST(NOW() AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 """
 )
