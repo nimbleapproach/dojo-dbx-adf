@@ -78,7 +78,6 @@ SELECT
        CAST(NULL AS STRING) AS product_description,
        CAST(NULL AS STRING) AS local_product_id,
        CAST(NULL AS STRING) AS product_type,
-       CAST('N/A' AS STRING) AS line_item_type,
        CAST(li.line_item_type AS STRING) AS line_item_type,
        CAST(s.source_system_pk AS BIGINT) AS source_system_fk,
        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,

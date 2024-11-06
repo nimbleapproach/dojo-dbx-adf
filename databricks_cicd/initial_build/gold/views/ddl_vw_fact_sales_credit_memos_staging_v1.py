@@ -33,7 +33,7 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_credit_memos_staging AS
 WITH cte_sources AS 
 (
-  SELECT DISTINCT source_system_pk, reporting_source_database FROM {catalog}.{schema}.dim_source_system s 
+  SELECT DISTINCT source_system_pk, source_entity FROM {catalog}.{schema}.dim_source_system s 
   WHERE s.source_system = 'Infinigate ERP' AND s.is_current = 1
 ) ,
 min_fx_rate AS 
@@ -116,7 +116,7 @@ LEFT JOIN (
 AND it.Sys_DatabaseName = ven.Sys_DatabaseName
 AND it.Sys_Silver_IsCurrent = true
 
-LEFT JOIN cte_sources s on LOWER(s.reporting_source_database) = LOWER(sih.Sys_DatabaseName)
+LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(sih.Sys_DatabaseName)
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON cu.Sys_DatabaseName = sih.Sys_DatabaseName
 AND cu.Sys_Silver_IsCurrent = TRUE
