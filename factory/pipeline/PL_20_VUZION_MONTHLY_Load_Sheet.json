@@ -1,0 +1,384 @@
+{
+	"name": "PL_20_VUZION_MONTHLY_Load_Sheet",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load Sheet",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"additionalColumns": [
+							{
+								"name": "Sys_Bronze_InsertDateTime_UTC",
+								"value": {
+									"value": "@utcNow()",
+									"type": "Expression"
+								}
+							},
+							{
+								"name": "Sys_SheetName",
+								"value": {
+									"value": "@pipeline().parameters.pm_SheetName",
+									"type": "Expression"
+								}
+							},
+							{
+								"name": "Sys_FileName",
+								"value": {
+									"value": "@pipeline().parameters.pm_FileName",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"wildcardFolderPath": {
+								"value": "vuzion/monthly_export/pending",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "@pipeline().parameters.pm_FileName",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings",
+							"maxConcurrentConnections": 4,
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Vendor ID",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "VendorID",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Territory",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Territory",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "ID",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ID",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Customer",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Customer",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Product",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Product",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Product Category",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ProductCategory",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Revenue Type",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "RevenueType",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Revenue",
+									"type": "Double",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Revenue",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Cost",
+									"type": "Double",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Cost",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Margin",
+									"type": "Double",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Margin",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Owner",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Owner",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Revenue Category",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "RevenueCategory",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Vendor",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Vendor",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Month",
+									"type": "Date",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Month",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Platform",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Platform",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Revenue Source",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "RevenueSource",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Customer ID count",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "CustomerIDcount",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Quantity",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Quantity",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sys_SheetName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Sys_SheetName",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sys_FileName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Sys_FileName",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_DV_VUZION_MONTHLY_EXCEL",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "dev",
+								"type": "Expression"
+							},
+							"pm_SheetName": {
+								"value": "@pipeline().parameters.pm_SheetName",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "@pipeline().parameters.pm_FileName",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_PARQUET_STATIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileSystem": {
+								"value": "bronze",
+								"type": "Expression"
+							},
+							"pm_Directory": {
+								"value": "vuzion_monthly/vuzion_monthly_revenue",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "bronze-vuzion-monthly-@{pipeline().parameters.pm_SheetName}-@{utcNow()}",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"pm_SheetName": {
+				"type": "string"
+			},
+			"pm_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION/MONTHLY"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-03-13T08:46:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

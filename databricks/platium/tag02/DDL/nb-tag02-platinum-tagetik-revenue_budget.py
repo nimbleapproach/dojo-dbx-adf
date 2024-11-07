@@ -95,12 +95,12 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        y.category AS category,
 # MAGIC        y.revenue - coalesce(y.prev_revenue,0) AS monthly_revenue_in_lcy,
 # MAGIC        ROUND(CAST(((y.revenue - coalesce(y.prev_revenue,0)) * 1 / y.exchange_rate) AS DECIMAL(20,2)),3) AS monthly_revenue_in_euros,
-# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_revenue_in_lcy,
-# MAGIC       (CASE WHEN atyp.total_revenue = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_revenue_in_euros,
-# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_cogs_in_lcy,
-# MAGIC       (CASE WHEN atyp.total_cogs = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_cogs_in_euros,
-# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_lcy ELSE 0 END) AS total_gp1_in_lcy,
-# MAGIC       (CASE WHEN atyp.gp1 = 1 THEN monthly_revenue_in_euros ELSE 0 END) AS total_gp1_in_euros
+# MAGIC       (CASE WHEN atyp.total_revenue = 1 AND y.category <> 'GP_ALLOC' THEN monthly_revenue_in_lcy ELSE 0 END) AS total_revenue_in_lcy,
+# MAGIC       (CASE WHEN atyp.total_revenue = 1 AND y.category <> 'GP_ALLOC' THEN monthly_revenue_in_euros ELSE 0 END) AS total_revenue_in_euros,
+# MAGIC       (CASE WHEN atyp.total_cogs = 1 AND y.category <> 'GP_ALLOC' THEN monthly_revenue_in_lcy ELSE 0 END) AS total_cogs_in_lcy,
+# MAGIC       (CASE WHEN atyp.total_cogs = 1 AND y.category <> 'GP_ALLOC' THEN monthly_revenue_in_euros ELSE 0 END) AS total_cogs_in_euros,
+# MAGIC       (CASE WHEN atyp.gp1 = 1 AND y.category <> 'GP_ALLOC' THEN monthly_revenue_in_lcy ELSE 0 END) AS total_gp1_in_lcy,
+# MAGIC       (CASE WHEN atyp.gp1 = 1 AND y.category <> 'GP_ALLOC' THEN monthly_revenue_in_euros ELSE 0 END) AS total_gp1_in_euros
 # MAGIC FROM
 # MAGIC (
 # MAGIC SELECT x.date_id,

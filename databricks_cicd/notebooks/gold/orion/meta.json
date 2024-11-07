@@ -1,0 +1,227 @@
+{
+    "source_system" : {
+        "type": "core",
+        "run_group": 0,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_source_system", 
+        "destination_key_columns" : ["source_system"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_source_system_staging" , 
+        "source_key_columns" : ["source_system"],
+        "active": 1
+                },
+
+    "product" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 3,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
+        "destination_key_columns" : ["product_code","line_item_type", "source_system_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_staging" , 
+        "source_key_columns" : ["product_code","line_item_type", "source_system_fk"],
+        "active": 1
+                 },
+
+    "currency" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_currency",  
+        "destination_key_columns" : ["currency_code"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_currency_staging" ,  
+        "source_key_columns" : ["currency_code"],
+        "active": 1
+                 },
+    
+    "entity" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_entity",  
+        "destination_key_columns" : ["entity_code"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_entity_staging" ,  
+        "source_key_columns" : ["entity_code"],
+        "active": 1
+                 },
+    
+    "entity_group" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 2,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_entity_group",  
+        "destination_key_columns" : ["entity_group_code"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_entity_group_staging" ,  
+        "source_key_columns" : ["entity_group_code"],
+        "active": 1
+                 },
+    
+    "document" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 3,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_document",  
+        "destination_key_columns" : ["local_document_id", "source_system_fk", "document_source"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_document_staging" ,  
+        "source_key_columns" : ["local_document_id", "source_system_fk", "document_source"],
+        "active": 1
+                 },
+    
+    "region" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 2,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_region",  
+        "destination_key_columns" : ["region_code"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_region_staging" ,  
+        "source_key_columns" : ["region_code"],
+        "active": 1
+                 },
+    
+    "link_entity_to_entity_group" : {
+        "type": "link",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_entity_to_entity_group",  
+        "destination_key_columns" : ["entity_group_fk","entity_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_entity_to_entity_group_staging" ,  
+        "source_key_columns" : ["entity_group_fk","entity_fk"],
+        "active": 1
+                 },
+    
+    "link_reseller_to_reseller_group" : {
+        "type": "link",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_reseller_to_reseller_group",  
+        "destination_key_columns" : ["reseller_group_fk","reseller_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_reseller_to_reseller_group_staging" ,
+        "source_key_columns" : ["reseller_group_fk","reseller_fk"],
+        "active": 0
+                 },
+    "link_vendor_to_vendor_master" : {
+        "type": "link",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_vendor_master",  
+        "destination_key_columns" : ["master_vendor_fk","vendor_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_vendor_to_vendor_master_staging" ,
+        "source_key_columns" : ["master_vendor_fk","vendor_fk"],
+        "active": 0
+                 },
+    "vendor" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 2,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_vendor", 
+        "destination_key_columns" : ["vendor_code", "source_system_fk"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_vendor_staging" , 
+        "source_key_columns" : ["vendor_code", "source_system_fk"],
+        "active": 1
+                },
+
+    "reseller" : {
+        "type": "dim",
+        "run_group": 1,
+        "run_order": 2,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_reseller", 
+        "destination_key_columns" : ["reseller_code", "source_system_fk"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_reseller_staging" , 
+        "source_key_columns" : ["reseller_code", "source_system_fk"],
+        "active": 1
+                },
+    
+    "product_stg1" : {
+        "type": "dim",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
+        "destination_key_columns" : ["product_code","product_type",  "source_system_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_late_stg1" , 
+        "source_key_columns" : ["product_code", "product_type", "source_system_fk"],
+        "active": 1
+                },
+    "product_stg2" : {
+        "type": "dim",
+        "run_group": 3,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_product", 
+        "destination_key_columns" : ["product_code","product_type", "source_system_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_product_late_stg2" , 
+        "source_key_columns" : ["product_code", "product_type", "source_system_fk"],
+        "active": 1
+                },
+
+    "reseller_group" : {
+        "type": "dim",
+        "run_group": 10,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_reseller_group", 
+        "destination_key_columns" : ["reseller_group_code"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_reseller_group_staging" , 
+        "source_key_columns" : ["reseller_group_code"],
+        "active": 1
+                },
+    
+    "master_reseller_group" : {
+        "type": "dim",
+        "run_group": 40,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_master_reseller_group", 
+        "destination_key_columns" : ["master_reseller_group_code"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_dim_master_reseller_group_staging" , 
+        "source_key_columns" : ["master_reseller_group_code"],
+        "active": 1
+                },
+
+    "fact_sales_transaction_ig" : {
+        "type": "fact",
+        "run_group": 100,
+        "run_order": 1,
+        "processing_notebook" : "nb-orion-process-fact-ig",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction_ig", 
+        "destination_key_columns" : ["source_system_fk","local_fact_id","document_source"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_ig_staging" , 
+        "source_key_columns" : ["source_system_fk","local_fact_id","document_source"],
+        "active": 1
+                },
+    
+    "fact_sales_transaction_nuv" : {
+        "type": "fact",
+        "run_group": 100,
+        "run_order": 1,
+        "processing_notebook" : "nb-process-fact-nuv",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction_nuv", 
+        "destination_key_columns" : ["reseller_group_code"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_nuv_staging" , 
+        "source_key_columns" : ["source_system_fk","entity_code"],
+        "active": 0
+                },
+    
+    "fact_sales_transaction_nav" : {
+        "type": "fact",
+        "run_group": 100,
+        "run_order": 1,
+        "processing_notebook" : "nb-process-fact-nav",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction", 
+        "destination_key_columns" : ["reseller_group_code"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_nav_staging" , 
+        "source_key_columns" : ["source_system_fk","entity_code"],
+        "active": 0
+                }
+
+    }

@@ -85,7 +85,8 @@ COD_CATEGORIA in (
 ,'INP_HQ07'
 ,'INP_MSP2018'
 ,'SYN2'
- ) )
+ ) 
+ OR COD_CATEGORIA LIKE 'IFCSYN%')
     AND Sys_Silver_IsCurrent = 1
     AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null)
   group by

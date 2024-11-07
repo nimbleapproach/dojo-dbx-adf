@@ -33,8 +33,25 @@ ven.Name as VendorName,
 SUM( gle.Amount) as CostAmount,
 CASE WHEN ga.Consol_CreditAcc_ IN (
 --- Revenue level adj.
-'309988'
-,'310188'
+ '309988'
+,'320988'
+,'322988') THEN 'CA_ProductRevenue' 
+ WHEN ga.Consol_CreditAcc_ IN (
+ '400988'
+,'401988'
+,'402988'
+,'420988'
+,'421988'
+,'422988'
+,'450888'
+,'450988'
+) THEN 'CA_ProductCost' 
+WHEN ga.Consol_CreditAcc_ IN (
+'468988') THEN 'CA_OthersCost'
+WHEN ga.Consol_CreditAcc_ IN (
+'370988') THEN 'CA_OthersRevenue'
+WHEN ga.Consol_CreditAcc_ IN (
+ '310188'
 ,'310288'
 ,'310388'
 ,'310488'
@@ -46,10 +63,30 @@ CASE WHEN ga.Consol_CreditAcc_ IN (
 ,'311088'
 ,'312088'
 ,'313088'
-,'314088'
-,'320988'
-,'322988'
-,'370988') THEN 'Revenue' ELSE 'GP1'
+,'314088')  THEN 'CA_ServiceRevenue'
+WHEN ga.Consol_CreditAcc_ IN (
+ '440188'
+,'440288'
+,'440388'
+,'440488'
+,'440588'
+,'440688'
+,'440788'
+,'440888'
+,'449988'
+,'452888'
+,'452988'
+)  THEN 'CA_ServiceCost'
+WHEN ga.Consol_CreditAcc_ IN (
+'350988'
+,'351988'
+,'371988'
+,'391988'
+,'451988'
+,'452788'
+,'469988'
+,'499988') THEN 'CA_IC'
+ ELSE 'GP1'
 END AS GL_Group
 
  from silver_{ENVIRONMENT}.igsql03.g_l_entry gle
@@ -112,6 +149,7 @@ and ga.Consol_CreditAcc_ in (
 ,'440188'
 ,'440288'
 ,'440388'
+,'440488'
 ,'440588'
 ,'440688'
 ,'440788'

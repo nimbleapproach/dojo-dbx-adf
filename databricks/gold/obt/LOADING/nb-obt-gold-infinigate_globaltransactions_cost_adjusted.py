@@ -385,6 +385,7 @@ SELECT
   ,obt.Gen_Prod_PostingGroup
   ,obt.SKUMaster
   ,obt.Description
+  ,obt.TechnologyCode
   ,obt.ProductTypeInternal
   ,obt.ProductTypeMaster
   ,obt.CommitmentDuration1Master
@@ -403,7 +404,8 @@ SELECT
   ,obt.ResellerGroupCode
   ,obt.ResellerGroupName
   ,obt.ResellerGroupStartDate
-  ,obt.CurrencyCode 
+  ,obt.EndCustomerInternal
+  ,obt.CurrencyCode
   ,obt.RevenueAmount   AS RevenueAmount
   ,obt.CostAmount AS CostAmount
   ,obt.GP1  AS GP1
@@ -431,6 +433,7 @@ SELECT
   ,obt.Gen_Prod_PostingGroup
   ,obt.SKUMaster
   ,obt.Description
+  ,obt.TechnologyCode
   ,obt.ProductTypeInternal
   ,obt.ProductTypeMaster
   ,obt.CommitmentDuration1Master
@@ -449,6 +452,7 @@ SELECT
   ,obt.ResellerGroupCode
   ,obt.ResellerGroupName
   ,obt.ResellerGroupStartDate
+  ,obt.EndCustomerInternal
   ,obt.CurrencyCode 
   ,0.00  AS RevenueAmount
   ,0.00  AS CostAmount
@@ -480,6 +484,7 @@ INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
     obt.Gen_Prod_PostingGroup,
     obt.SKUMaster,
     obt.Description,
+    obt.TechnologyCode,
     obt.ProductTypeInternal,
     obt.ProductTypeMaster,
     obt.CommitmentDuration1Master,
@@ -498,6 +503,7 @@ INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
     obt.ResellerGroupCode,
     obt.ResellerGroupName,
     obt.ResellerGroupStartDate,
+    obt.EndCustomerInternal,
     obt.CurrencyCode,
     0.00 AS RevenueAmount,
     0.00 AS CostAmount,
@@ -552,6 +558,7 @@ INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
     '' AS Gen_Prod_PostingGroup,
     '' AS SKUMaster,
     '' AS Description,
+    '' AS TechnologyCode,
     '' AS ProductTypeInternal,
     '' AS ProductTypeMaster,
     '' AS CommitmentDuration1Master,
@@ -570,6 +577,7 @@ INNER JOIN value_entry_adjustments ve ON obt.DocumentNo = ve.DocumentNo_
     '' AS ResellerGroupCode,
     '' AS ResellerGroupName,
     '' AS ResellerGroupStartDate,
+    '' AS EndCustomerInternal,
     '' AS CurrencyCode,
     0.00 AS RevenueAmount,
     0.00 AS CostAmount,
@@ -602,6 +610,7 @@ WHERE CONCAT(ca.Sys_DatabaseName,ca.EntityCode,ca.DocumentNo,ca.VendorCode) NOT 
         ,fc.Gen_Prod_PostingGroup
         ,fc.SKUMaster
         ,fc.Description
+        ,fc.TechnologyCode
         ,fc.ProductTypeInternal
         ,fc.ProductTypeMaster
         ,fc.CommitmentDuration1Master
@@ -620,6 +629,7 @@ WHERE CONCAT(ca.Sys_DatabaseName,ca.EntityCode,ca.DocumentNo,ca.VendorCode) NOT 
         ,fc.ResellerGroupCode
         ,fc.ResellerGroupName
         ,fc.ResellerGroupStartDate
+        ,fc.EndCustomerInternal
         ,fc.CurrencyCode 
         ,SUM(fc.RevenueAmount) AS RevenueAmount
         ,SUM(fc.CostAmount) AS CostAmount
