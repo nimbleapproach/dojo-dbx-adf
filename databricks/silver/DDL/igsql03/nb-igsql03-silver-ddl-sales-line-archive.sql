@@ -47,13 +47,13 @@ CREATE OR REPLACE TABLE sales_line_archive
       COMMENT 'Line item number'
     ,Type INT
       COMMENT 'item type'
-   ,Quantity DECIMAL
+   ,Quantity DECIMAL(10,2)
       COMMENT 'Line quantity'
-    ,Amount DECIMAL
+    ,Amount DECIMAL(10,2)
       COMMENT 'Line Amount'
-    ,AmountIncludingVAT DECIMAL
+    ,AmountIncludingVAT DECIMAL(10,2)
       COMMENT 'Line amount including VAT'
-    ,CostAmountLCY DECIMAL
+    ,CostAmountLCY DECIMAL(10,2)
       COMMENT 'Line Cost'
     ,Alternative INT
       COMMENT 'flag whether a sales quote is alternative or not'
@@ -75,6 +75,10 @@ CREATE OR REPLACE TABLE sales_line_archive
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
+    ,Sys_Silver_IsCurrent BOOLEAN
+      COMMENT 'Flag if this is the current version.'
+    ,Sys_Silver_IsDeleted BOOLEAN
+      COMMENT 'Flag if this is the deleted version.'
 ,CONSTRAINT sales_line_archivee_pk PRIMARY KEY(DocumentNo_,VersionNo_,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the header data for sales line archive. \n' 

@@ -20,7 +20,7 @@ schema = 'ref'
 
 spark.sql(
     f"""
-    CREATE OR REPLACE TABLE {catalog}.{schema}.calendar (
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.calendar (
         date DATE NOT NULL,
         year SMALLINT NOT NULL,
         month TINYINT NOT NULL,
@@ -118,7 +118,7 @@ spark.sql(
 
 spark.sql(
     f"""
-    CREATE OR REPLACE FUNCTION {catalog}.{schema}.ig_week_number (
+    CREATE FUNCTION IF NOT EXISTS {catalog}.{schema}.ig_week_number (
         d DATE COMMENT 'date or timestamp'
     )
     RETURNS TINYINT 

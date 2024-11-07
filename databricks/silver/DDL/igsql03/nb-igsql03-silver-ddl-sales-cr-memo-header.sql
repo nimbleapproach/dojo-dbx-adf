@@ -51,6 +51,8 @@ CREATE OR REPLACE TABLE sales_cr_memo_header
      COMMENT 'TODO'
     ,`MSPUsageHeaderBizTalkGuid` STRING
       COMMENT 'identifier if an invoice is created via MSP portal'
+    ,`Sell-toContactNo_` STRING
+      COMMENT 'Key of end customer.'
     ,Sys_RowNumber BIGINT NOT NULL
       COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
     ,Sys_DatabaseName STRING NOT NULL

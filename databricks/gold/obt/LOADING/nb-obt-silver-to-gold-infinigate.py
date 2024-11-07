@@ -176,7 +176,8 @@ cte as (
         )
       )
     ) AS Description,
-   coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
+    itd.Technology_Code AS TechnologyCode,
+    coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
    /*coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
     coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
     coalesce(datanowarr.Commitment_Duration_Value, 'NaN') AS CommitmentDuration2Master,
@@ -201,7 +202,11 @@ cte as (
     coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
     coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
     to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
-    Case
+    CASE
+      WHEN sil.ContactNo_EndCustomer1 = 'NaN' THEN sih.`Sell-toContactNo_`
+      ELSE sil.ContactNo_EndCustomer1
+    END AS EndCustomerInternal,
+    CASE
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
       WHEN sih.CurrencyCode = 'NaN'
@@ -332,6 +337,11 @@ cte as (
         AND Sys_Silver_IsCurrent = true
     ) ven2 ON res.GlobalDimension1Code = ven2.Code
     AND res.Sys_DatabaseName = ven2.Sys_DatabaseName
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.item_dds itd
+      ON it.ManufacturerItemNo_ = itd.Manufacturer_Item_No_
+      AND it.GlobalDimension1Code = itd.Vendor_DIM_Code
+      AND RIGHT(it.Sys_DatabaseName, 2) = itd.Source_Entity
+      AND itd.Sys_Silver_IsCurrent
   WHERE
     (
       UPPER(sil.No_) NOT LIKE 'PORTO'
@@ -379,6 +389,7 @@ cte as (
         regexp_replace(it.Description4, 'NaN', '')
       )
     ) AS Description,
+    itd.Technology_Code AS TechnologyCode,
     coalesce(it.ProductType, 'NaN') AS ProductTypeInternal,
     -- coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
     -- coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
@@ -400,6 +411,7 @@ cte as (
     coalesce(rg.ResellerGroupCode,'NaN') AS ResellerGroupCode,
     coalesce(rg.ResellerGroupName,'NaN') AS ResellerGroupName,
     to_date('1900-01-01', 'yyyy-MM-dd') AS ResellerGroupStartDate,
+    sih.`Sell-toContactNo_` AS EndCustomerInternal,
     Case
       WHEN sih.CurrencyCode = 'NaN'
       AND left(entity.TagetikEntityCode, 2) = 'CH' THEN 'CHF'
@@ -533,6 +545,11 @@ cte as (
         AND Sys_Silver_IsCurrent = true
     ) ven2 ON res.GlobalDimension1Code = ven2.Code
     AND res.Sys_DatabaseName = ven2.Sys_DatabaseName
+    LEFT JOIN silver_{ENVIRONMENT}.igsql03.item_dds itd
+      ON it.ManufacturerItemNo_ = itd.Manufacturer_Item_No_
+      AND it.GlobalDimension1Code = itd.Vendor_DIM_Code
+      AND RIGHT(it.Sys_DatabaseName, 2) = itd.Source_Entity
+      AND itd.Sys_Silver_IsCurrent
   WHERE
     (
       UPPER(sil.No_) NOT LIKE 'PORTO'
@@ -579,6 +596,7 @@ select
  Gen_Prod_PostingGroup,
   coalesce(datanowarr.SKU, 'NaN') AS SKUMaster,
   cte.Description,
+  cte.TechnologyCode,
   cte.ProductTypeInternal,
   coalesce(datanowarr.Product_Type, 'NaN') AS ProductTypeMaster,
   coalesce(datanowarr.Commitment_Duration_in_months, 'NaN') AS CommitmentDuration1Master,
@@ -619,6 +637,7 @@ select
       end
     )
   end AS ResellerGroupStartDate,
+  cte.EndCustomerInternal,
   cte.CurrencyCode,
   -- cte.CurrencyFactor,
   cast (

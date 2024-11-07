@@ -8,17 +8,20 @@ import base64
 import os
 
 # COMMAND ----------
+
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
+
 # COMMAND ----------
 
 
 spark.catalog.setCurrentCatalog(f"bida_metadata_{ENVIRONMENT}")
 
-# COMMAND ---------- 
+# COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
 bida_schema = 'meta'
+
 # COMMAND ----------
 
 def get_param(param: str, default: str = "") -> str:
@@ -147,13 +150,15 @@ def get_ddl_deployment_df():
                                             FROM {catalog}.{bida_schema}.ddl_deployment)
                                 SELECT object,deployment_content FROM cte where row_number = 1;
         """).toPandas()
-    except:
-        ddl_deployment_df = spark.sql(f""" SELECT 'n/a' AS object,'n/a' AS deployment_content""").toPandas()
+    except Exception as e:
+        # Raise the exception so it can be handled at the call site
+        raise RuntimeError(f"Error fetching DDL deployment data: {str(e)}")
     
     return ddl_deployment_df
 
 
 # COMMAND ----------
+
 # detect type from file name
 def get_notebook_content(directory_path: str, notebook: str,workspace_client: WorkspaceClient) -> str:
     """ Get notebook content"""
@@ -194,6 +199,7 @@ def sort_key(notebook: str) -> tuple:
     return (priority, version, notebook)
 
 # COMMAND ----------
+
 # Function to Run a Notebook
 def run_notebook(directory_path: str, notebook_content: str, notebook_path: str,workspace_client: WorkspaceClient) -> str:
     try:
@@ -215,6 +221,7 @@ def run_notebook(directory_path: str, notebook_content: str, notebook_path: str,
     return result
 
 # COMMAND ----------
+
 def deploy_notebooks(sorted_ddl_notebooks, directory_path, ddl_deployment_df, w):
     """
     Deploys notebooks if they have not been deployed or if their content has changed.
@@ -257,6 +264,7 @@ def deploy_notebooks(sorted_ddl_notebooks, directory_path, ddl_deployment_df, w)
     return errors
 
 # COMMAND ----------
+
 # Initialization and Setup
 # ------------------------
 # Define and initialize global parameters
@@ -271,15 +279,17 @@ directory_path = "/".join(full_path.split("/")[:-2])
 
 # Find and process DDL notebooks
 ddl_notebooks = find_ddl_notebooks(f"{directory_path}/", w.workspace)
-ddl_deployment_df = get_ddl_deployment_df()
-#ddl_notebooks = clean_ddl_notebooks(ddl_notebooks)
 
 # Sort the notebooks for execution
 sorted_ddl_notebooks = sorted(ddl_notebooks, key=sort_key)
 
 # COMMAND ----------
-# Filter the sorted_ddl_notebooks to only include those that match 'bida_metadata'
-if ddl_deployment_df['object'].iloc[0] == 'n/a':
+
+try:
+    # Call the function
+    ddl_deployment_df = get_ddl_deployment_df()
+    #ddl_notebooks = clean_ddl_notebooks(ddl_notebooks)
+except RuntimeError as e:
     
     filtered_ddl_notebooks = [notebook for notebook in sorted_ddl_notebooks if 'bida_metadata' in notebook]
 
@@ -298,7 +308,9 @@ if ddl_deployment_df['object'].iloc[0] == 'n/a':
         raise ValueError(f"Notebook failed: {filtered_ddl_notebooks}")
 
 
+
 # COMMAND ----------
+
 # Execution of Notebooks
 # ----------------------
 errors = deploy_notebooks(sorted_ddl_notebooks, directory_path, ddl_deployment_df, w)

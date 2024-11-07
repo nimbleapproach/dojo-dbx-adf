@@ -101,6 +101,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC                             'INP_MSP2018',
 # MAGIC                             'SYN2',
 # MAGIC                             'GP_ALLOC')
+# MAGIC       OR dsl.COD_CATEGORIA LIKE 'IFCSYN%'
+# MAGIC
 # MAGIC        )
 # MAGIC
 

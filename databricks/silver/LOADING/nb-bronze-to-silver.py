@@ -49,15 +49,14 @@ except:
 
 # COMMAND ----------
 
+# NOTE: (DP 23/10/2024 T22814) (https://dev.azure.com/InfinigateHolding/Group%20IT%20Program/_workitems/edit/22814)
+#       the setting has no bearing but is used by databricks jobs,
+#       it should be removed from jobs first, then from here
 try:
     FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true' )
 except:
     dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload")== 'true')
-
-# COMMAND ----------
-
-FULL_LOAD = True
+    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true')
 
 # COMMAND ----------
 
@@ -146,29 +145,6 @@ BUSINESS_KEYS
 
 # COMMAND ----------
 
-# MAGIC %md Calculating the current watermark to only load newly arrived data at bronze.
-# MAGIC
-
-# COMMAND ----------
-
-from datetime import datetime
-
-if FULL_LOAD:
-    currentWatermark = datetime.strptime('01-01-1900', '%m-%d-%Y').date()
-else:
-    currentWatermark = (
-                        target_df
-                        .agg(
-                            coalesce(
-                                max(col('Sys_Bronze_InsertDateTime_UTC').cast('TIMESTAMP')),
-                                lit('1900-01-01').cast('TIMESTAMP')
-                                )
-                            .alias('current_watermark'))
-                        .collect()[0]['current_watermark']
-                        )
-
-# COMMAND ----------
-
 # MAGIC %md For our column selection we get the target columns to do a select on.
 # MAGIC
 
@@ -188,36 +164,26 @@ hash_columns = [col(column) for column in target_columns if not column in ['SID'
 # COMMAND ----------
 
 if DELTA_LOAD == 'delta':
-  source_df = (
-              spark.sql(f"""
+  print('Delta Loading')
+  source_df = spark.sql(f"""
                       Select *,
                       max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
                       {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
-                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
-            """)
-              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
-              .select(selection_column)
-              .where(col('Sys_Bronze_InsertDateTime_UTC') > currentWatermark)
-              .dropDuplicates(SILVER_PRIMARY_KEYS)
-              .dropDuplicates(['Sys_Silver_HashKey'])
-              )
-  print('Delta Loading')
-
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
 else:
-
-  source_df = (
-              spark.sql(f"""
-                      Select *, true as Sys_Silver_IsCurrent
-                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}
-            """)
-              .withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
-              .select(selection_column)
-              )
   print('Full Loading')
+  source_df = spark.sql(f"""
+                      Select *, true as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
+
+source_df = (
+    source_df.withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
+             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+             .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
+             .select(selection_column)
+             .dropDuplicates(SILVER_PRIMARY_KEYS)
+             .dropDuplicates(['Sys_Silver_HashKey'])
+    )
 
 # COMMAND ----------
 
@@ -325,7 +291,7 @@ chanceForOptimizing = random.random()
 
 # COMMAND ----------
 
-# MAGIC %md By chance loadings we want to use liquid clustering to optimzie our silver table.
+# MAGIC %md By chance loadings we want to use liquid clustering to optimize our silver table.
 
 # COMMAND ----------
 
