@@ -165,7 +165,12 @@ ON ga.Sys_Silver_IsCurrent =1
 AND g.SKUInternal = ga.No_
 and g.Sys_DatabaseName = ga.Sys_DatabaseName
 
-LEFT JOIN gold_{ENVIRONMENT}.obt.end_customer ec
+LEFT JOIN (
+    select distinct  Contact_No_,
+    Entity,
+    name,
+    section
+    from  gold_{ENVIRONMENT}.obt.end_customer) ec
 ON g.EndCustomerInternal = ec.Contact_No_
 AND RIGHT(g.Sys_DatabaseName, 2) = ec.entity
 

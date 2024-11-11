@@ -130,10 +130,8 @@ and b.constraint_type = 'PRIMARY KEY'
 # COMMAND ----------
 
 BUSINESS_KEYS = SILVER_PRIMARY_KEYS.copy()
-try :
-    BUSINESS_KEYS.remove(WATERMARK_COLUMN)
-except:
-    BUSINESS_KEYS = SILVER_PRIMARY_KEYS.copy()
+
+BUSINESS_KEYS = list(set([x for x in BUSINESS_KEYS if x != WATERMARK_COLUMN]))
 
 # COMMAND ----------
 
