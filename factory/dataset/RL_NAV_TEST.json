@@ -1,0 +1,20 @@
+{
+	"name": "RL_NAV_TEST",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SQLDB_NAV_DYNAMIC",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_DatabaseName": "ReportsCH",
+				"pm_Environment": "dev"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "G_L Account"
+		}
+	}
+}
