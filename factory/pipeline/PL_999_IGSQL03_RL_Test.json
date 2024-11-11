@@ -62,18 +62,6 @@
 				]
 			}
 		],
-		"parameters": {
-			"pm_DatabaseName": {
-				"type": "string"
-			},
-			"pm_ViewName": {
-				"type": "string"
-			},
-			"pm_FullLoad": {
-				"type": "bool",
-				"defaultValue": false
-			}
-		},
 		"variables": {
 			"v_Watermark": {
 				"type": "String"
