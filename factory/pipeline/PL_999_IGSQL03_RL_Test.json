@@ -1,0 +1,92 @@
+{
+	"name": "PL_999_IGSQL03_RL_Test",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "Select t.*, cast([timestamp] as bigint) as [Sys_RowNumber] FROM [dbo].[G_L Account] t WHERE [Sys_RowNumber] > 1509659360",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "RL_NAV_TEST",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_PARQUET",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": "dev",
+							"pm_FileSystem": "bronze",
+							"pm_Directory": "TEST"
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"pm_DatabaseName": {
+				"type": "string"
+			},
+			"pm_ViewName": {
+				"type": "string"
+			},
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"variables": {
+			"v_Watermark": {
+				"type": "String"
+			},
+			"v_NewWatermark": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/IGSQL03 [Navision]"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-19T10:31:26Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
