@@ -18,6 +18,12 @@
 					"name": "RenameColumns"
 				}
 			],
+			"udfLibraries": [
+				{
+					"referenceName": "General",
+					"type": "DataFlowReference"
+				}
+			],
 			"scriptLines": [
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -26,7 +32,7 @@
 				"     format: 'query') ~> Navision",
 				"Navision select(mapColumn(",
 				"          each(match(true()),",
-				"               regexReplace($$,'[^a-zA-Z]','') = $$)",
+				"               applyParquetNaming($$) = $$)",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> RenameColumns"
