@@ -3,11 +3,33 @@
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
-			"sources": [],
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RL_NAV_TEST",
+						"type": "DatasetReference"
+					},
+					"name": "Navision"
+				}
+			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "RenameColumns"
+				}
+			],
 			"scriptLines": [
-				""
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'Select * FROM [dbo].[G_L Account] WHERE cast (timestamp as bigint) > 1509659360',",
+				"     format: 'query') ~> Navision",
+				"Navision select(mapColumn(",
+				"          each(match(true()),",
+				"               regexReplace($$,'[^a-zA-Z]','') = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RenameColumns"
 			]
 		}
 	}
