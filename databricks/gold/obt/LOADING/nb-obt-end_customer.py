@@ -33,7 +33,7 @@ FROM
            Description,
            row_number() OVER 
              (PARTITION BY Entity, Contact_No_ ORDER BY `timestamp` DESC) row_
-    FROM silver_dev.igsql03.end_customer
+    FROM silver_{ENVIRONMENT}.igsql03.end_customer
     WHERE Sys_Silver_IsCurrent
       AND NACE_2_Code != 'NaN'
   )
@@ -42,5 +42,6 @@ WHERE row_ = 1
 SELECT uec.*, nc.section
 FROM unique_end_customer uec
 JOIN nace_2_codes nc
-  ON uec.section_or_division = nc.section OR uec.section_or_division = nc.division
+  ON (uec.section_or_division = nc.section AND nc.division IS NULL)
+  OR uec.section_or_division = nc.division
 """)
