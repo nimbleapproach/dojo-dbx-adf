@@ -18,7 +18,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "Select t.*, cast([timestamp] as bigint) as [Sys_RowNumber] FROM [dbo].[G_L Account] t WHERE [Sys_RowNumber] > 1509659360",
+							"value": "Select t.*, cast([timestamp] as bigint) as [Sys_RowNumber] FROM [dbo].[G_L Account] t",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
