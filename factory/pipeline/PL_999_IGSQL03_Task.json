@@ -170,9 +170,9 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"variableName": "Clean_File_Name",
+					"variableName": "File_Name_Clean",
 					"value": {
-						"value": "@{concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow())}",
+						"value": "@{concat('bronze-igsql03-', replace(replace(pipeline().parameters.pm_TableName,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow())}",
 						"type": "Expression"
 					}
 				}
@@ -391,6 +391,11 @@
 			},
 			"pm_TableName": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"File_Name_Clean": {
+				"type": "String"
 			}
 		},
 		"annotations": []
