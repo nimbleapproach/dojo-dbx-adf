@@ -30,7 +30,7 @@
 						"parameters": {
 							"pm_SchemaName": "adf",
 							"pm_TableName": "CT_IGSQL03_TABLES",
-							"pm_Environment": "dev"
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
 						}
 					},
 					"firstRowOnly": false
