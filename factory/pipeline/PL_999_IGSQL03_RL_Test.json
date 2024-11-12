@@ -98,7 +98,10 @@
 							"inputs": [
 								{
 									"referenceName": "RL_NAV_TEST",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_TableName": "@item().TABLE_NAME"
+									}
 								}
 							],
 							"outputs": [
