@@ -3,8 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy data1",
-				"type": "Copy",
+				"name": "Get DatabasesControl Table",
+				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -16,96 +16,138 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "SqlServerSource",
-						"sqlReaderQuery": {
-							"value": "Select * FROM [dbo].[G_L Account] WHERE cast (timestamp as bigint) > 0",
-							"type": "Expression"
-						},
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
-					"sink": {
-						"type": "DelimitedTextSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
-						},
-						"formatSettings": {
-							"type": "DelimitedTextWriteSettings",
-							"quoteAllText": true,
-							"fileExtension": ".txt"
-						}
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "RL_NAV_TEST",
-						"type": "DatasetReference"
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "RL_ADLS_CSV",
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
 						"type": "DatasetReference",
 						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_IGSQL03_DATABASES",
 							"pm_Environment": "dev"
 						}
 					}
-				]
+				}
 			},
 			{
-				"name": "Data flow1",
-				"type": "ExecuteDataFlow",
+				"name": "For Each Table",
+				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Copy data1",
+						"activity": "Get DatabasesControl Table",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					}
 				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "RL_DF_TEST",
-						"type": "DataFlowReference",
-						"parameters": {
-							"filename": {
-								"value": "'@{pipeline().parameters.filename}'",
-								"type": "Expression"
-							}
-						},
-						"datasetParameters": {
-							"LoadCSV": {
-								"pm_Environment": "dev"
+					"items": {
+						"value": "@activity('Get DatabasesControl Table').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy data2",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
 							},
-							"SaveParquet": {
-								"pm_Environment": "dev",
-								"pm_FileSystem": "bronze",
-								"pm_Directory": "test"
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "RL_NAV_TEST",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "RL_ADLS_CSV",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": "dev"
+									}
+								}
+							]
+						},
+						{
+							"name": "Data flow2",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [
+								{
+									"activity": "Copy data2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "RL_DF_TEST",
+									"type": "DataFlowReference",
+									"datasetParameters": {
+										"LoadCSV": {
+											"pm_Environment": "dev"
+										},
+										"SaveParquet": {
+											"pm_Environment": "dev",
+											"pm_FileSystem": "bronze",
+											"pm_Directory": "test"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
 							}
 						}
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine"
+					]
 				}
 			}
 		],
