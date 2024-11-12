@@ -118,11 +118,11 @@
 									"parameters": {
 										"pm_Environment": "dev",
 										"pm_FileName": {
-											"value": "variables('Clean_File_Name')",
+											"value": "@variables('Clean_File_Name')",
 											"type": "Expression"
 										},
 										"pm_FileLocation": {
-											"value": "variables('Clean_File_Name')",
+											"value": "@variables('Clean_File_Name')",
 											"type": "Expression"
 										},
 										"pm_SourceFolderName": "test"
@@ -163,11 +163,11 @@
 										"LoadCSV": {
 											"pm_Environment": "dev",
 											"pm_FileName": {
-												"value": "variables('Clean_File_Name')",
+												"value": "@variables('Clean_File_Name')",
 												"type": "Expression"
 											},
 											"pm_FileLocation": {
-												"value": "variables('Clean_File_Name')",
+												"value": "@variables('Clean_File_Name')",
 												"type": "Expression"
 											},
 											"pm_SourceFolderName": "test"
