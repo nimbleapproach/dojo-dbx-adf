@@ -86,7 +86,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"filename": {
-								"value": "'@{test}'",
+								"value": "'@{pipeline().parameters.filename}'",
 								"type": "Expression"
 							}
 						},
@@ -109,6 +109,12 @@
 				}
 			}
 		],
+		"parameters": {
+			"filename": {
+				"type": "string",
+				"defaultValue": "test.parquet"
+			}
+		},
 		"variables": {
 			"v_Watermark": {
 				"type": "String"
