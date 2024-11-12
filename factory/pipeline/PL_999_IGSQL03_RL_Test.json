@@ -17,7 +17,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "SELECT *\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where Active = 1",
+						"sqlReaderQuery": "SELECT *\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = 'ReportsCH'",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
