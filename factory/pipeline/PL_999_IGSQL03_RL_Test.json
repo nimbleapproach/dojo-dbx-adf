@@ -55,7 +55,14 @@
 						{
 							"name": "Copy Source Data",
 							"type": "Copy",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Set File Name",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -111,11 +118,11 @@
 									"parameters": {
 										"pm_Environment": "dev",
 										"pm_FileName": {
-											"value": "@{replace(item().TABLE_NAME,' ','_')}",
+											"value": "variables('Clean_File_Name')",
 											"type": "Expression"
 										},
 										"pm_FileLocation": {
-											"value": "@{replace(item().TABLE_NAME,' ','_')}",
+											"value": "variables('Clean_File_Name')",
 											"type": "Expression"
 										},
 										"pm_SourceFolderName": "test"
@@ -148,7 +155,7 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"filename": {
-											"value": "'@{concat(replace(item().TABLE_NAME,' ','_'), '.parquet')}'",
+											"value": "'@{variables('Clean_File_Name')}'",
 											"type": "Expression"
 										}
 									},
@@ -156,11 +163,11 @@
 										"LoadCSV": {
 											"pm_Environment": "dev",
 											"pm_FileName": {
-												"value": "@{replace(item().TABLE_NAME,' ','_')}",
+												"value": "variables('Clean_File_Name')",
 												"type": "Expression"
 											},
 											"pm_FileLocation": {
-												"value": "@{replace(item().TABLE_NAME,' ','_')}",
+												"value": "variables('Clean_File_Name')",
 												"type": "Expression"
 											},
 											"pm_SourceFolderName": "test"
@@ -168,7 +175,7 @@
 										"SaveParquet": {
 											"pm_Environment": "dev",
 											"pm_FileSystem": {
-												"value": "@{replace(item().TABLE_NAME,' ','_')}",
+												"value": "variables('Clean_File_Name')",
 												"type": "Expression"
 											},
 											"pm_Directory": "test"
@@ -181,6 +188,23 @@
 								},
 								"traceLevel": "Fine"
 							}
+						},
+						{
+							"name": "Set File Name",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Clean_File_Name",
+								"value": {
+									"value": "@{replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_')}",
+									"type": "Expression"
+								}
+							}
 						}
 					]
 				}
@@ -189,6 +213,11 @@
 		"parameters": {
 			"filename": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"Clean_File_Name": {
+				"type": "String"
 			}
 		},
 		"folder": {
