@@ -7,7 +7,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run  ../../library/nb-silver-library
+# MAGIC %run  ../../library/nb-silver-library 
 
 # COMMAND ----------
 
@@ -173,15 +173,24 @@ else:
   source_df = spark.sql(f"""
                       Select *, true as Sys_Silver_IsCurrent
                       from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
-
-source_df = (
-    source_df.withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
-             .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
-             .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
-             .select(selection_column)
-             .dropDuplicates(SILVER_PRIMARY_KEYS)
-             .dropDuplicates(['Sys_Silver_HashKey'])
-    )
+if SILVER_PRIMARY_KEYS:
+  source_df = (
+      source_df.withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
+              .select(selection_column)
+              .dropDuplicates(SILVER_PRIMARY_KEYS)
+              .dropDuplicates(['Sys_Silver_HashKey'])
+      )
+  print("has silver key")
+else:
+  source_df = (
+      source_df.withColumn('Sys_Silver_InsertDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_ModifedDateTime_UTC', current_timestamp())
+              .withColumn('Sys_Silver_HashKey', xxhash64(*hash_columns))
+              .select(selection_column)
+      )
+  print("no silver key")
 
 # COMMAND ----------
 
@@ -190,7 +199,9 @@ source_df = (
 # COMMAND ----------
 
 deduped_df = fillnas(source_df)
-deduped_df = deduped_df.na.drop(subset= BUSINESS_KEYS)
+
+if BUSINESS_KEYS:
+  deduped_df = deduped_df.na.drop(subset= BUSINESS_KEYS)
 
 # COMMAND ----------
 
