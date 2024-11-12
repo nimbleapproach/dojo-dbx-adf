@@ -18,19 +18,21 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "Select Name, timestamp FROM [dbo].[G_L Account] WHERE cast (timestamp as bigint) > 1509659360",
+							"value": "Select * FROM [dbo].[G_L Account] WHERE cast (timestamp as bigint) > 1509659360",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
 					"sink": {
-						"type": "ParquetSink",
+						"type": "DelimitedTextSink",
 						"storeSettings": {
 							"type": "AzureBlobFSWriteSettings"
 						},
 						"formatSettings": {
-							"type": "ParquetWriteSettings"
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
 						}
 					},
 					"enableStaging": false,
@@ -51,12 +53,10 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_ADLS_PARQUET",
+						"referenceName": "RL_ADLS_CSV",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_Environment": "dev",
-							"pm_FileSystem": "bronze",
-							"pm_Directory": "TEST"
+							"pm_Environment": "dev"
 						}
 					}
 				]
