@@ -138,7 +138,10 @@
 									"type": "DataFlowReference",
 									"datasetParameters": {
 										"LoadCSV": {
-											"pm_Environment": "dev"
+											"pm_Environment": "dev",
+											"pm_FileName": "@item().TABLE_NAME",
+											"pm_FileLocation": "@item().TABLE_NAME",
+											"pm_SourceFolderName": "test"
 										},
 										"SaveParquet": {
 											"pm_Environment": "dev",
