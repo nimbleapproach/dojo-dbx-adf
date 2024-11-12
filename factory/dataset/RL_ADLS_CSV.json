@@ -11,6 +11,15 @@
 		"parameters": {
 			"pm_Environment": {
 				"type": "string"
+			},
+			"pm_FileName": {
+				"type": "string"
+			},
+			"pm_FileLocation": {
+				"type": "string"
+			},
+			"pm_SourceFolderName": {
+				"type": "string"
 			}
 		},
 		"annotations": [],
@@ -19,10 +28,10 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "test.csv",
+					"value": "@{dataset().pm_FileName}.csv",
 					"type": "Expression"
 				},
-				"folderPath": "test",
+				"folderPath": "@{dataset().pm_SourceFolderName}/@{dataset().pm_FileLocation}",
 				"fileSystem": "bronze"
 			},
 			"columnDelimiter": ",",
