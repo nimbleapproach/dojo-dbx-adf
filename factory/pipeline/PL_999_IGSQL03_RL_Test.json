@@ -420,7 +420,7 @@
 										"pm_SourceFolderName": "test"
 									}
 								},
-								"enableLogging": true,
+								"enableLogging": false,
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
@@ -442,9 +442,6 @@
 		},
 		"variables": {
 			"Clean_File_Name": {
-				"type": "String"
-			},
-			"Clean_folder_name": {
 				"type": "String"
 			},
 			"Clean_Folder_Name": {
