@@ -136,6 +136,12 @@
 								"dataflow": {
 									"referenceName": "RL_DF_TEST",
 									"type": "DataFlowReference",
+									"parameters": {
+										"filename": {
+											"value": "'@{item().TABLE_NAME}'",
+											"type": "Expression"
+										}
+									},
 									"datasetParameters": {
 										"LoadCSV": {
 											"pm_Environment": "dev",
@@ -145,7 +151,10 @@
 										},
 										"SaveParquet": {
 											"pm_Environment": "dev",
-											"pm_FileSystem": "bronze",
+											"pm_FileSystem": {
+												"value": "@{replace(item().TABLE_NAME,' ','_')}",
+												"type": "Expression"
+											},
 											"pm_Directory": "test"
 										}
 									}
