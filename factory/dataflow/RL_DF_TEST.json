@@ -1,0 +1,40 @@
+{
+	"name": "RL_DF_TEST",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "RL_ADLS_CSV",
+						"type": "DatasetReference"
+					},
+					"name": "LoadCSV"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "RenameColumns"
+				}
+			],
+			"udfLibraries": [
+				{
+					"referenceName": "General",
+					"type": "DataFlowReference"
+				}
+			],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> LoadCSV",
+				"LoadCSV select(mapColumn(",
+				"          each(match(true()),",
+				"               applyParquetNaming($$) = $$)",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RenameColumns"
+			]
+		}
+	}
+}
