@@ -34,7 +34,13 @@
 									"referenceName": "PL_998_IGSQL03_Table_Runner",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_DatabaseName": {
+										"value": "@item().DATABASE_NAME",
+										"type": "Expression"
+									}
+								}
 							}
 						}
 					]
