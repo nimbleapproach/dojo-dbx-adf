@@ -175,14 +175,6 @@
 				"type": "string"
 			}
 		},
-		"variables": {
-			"v_Watermark": {
-				"type": "String"
-			},
-			"v_NewWatermark": {
-				"type": "String"
-			}
-		},
 		"folder": {
 			"name": "10 Bronze/IGSQL03 [Navision]"
 		},
