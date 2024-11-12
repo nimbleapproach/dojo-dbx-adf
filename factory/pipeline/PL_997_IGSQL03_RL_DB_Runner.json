@@ -34,13 +34,7 @@
 									"referenceName": "PL_999_IGSQL03_Task",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"pm_DatabaseName": {
-										"value": "@item().DATABASE_NAME",
-										"type": "Expression"
-									}
-								}
+								"waitOnCompletion": true
 							}
 						}
 					]
