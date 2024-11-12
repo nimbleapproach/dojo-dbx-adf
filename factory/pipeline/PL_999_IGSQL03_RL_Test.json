@@ -155,7 +155,7 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"filename": {
-											"value": "'@{variables('Clean_File_Name')}'",
+											"value": "'@{test.parquet}'",
 											"type": "Expression"
 										}
 									},
