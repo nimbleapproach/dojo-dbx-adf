@@ -281,7 +281,7 @@
 									},
 									"watermark": {
 										"value": {
-											"value": "@variables('v_NewWatermark')",
+											"value": "@string(\n    coalesce(\n        activity('Get Latest Watermark').output.value[0].NewWatermark,\n        0\n        )\n    )",
 											"type": "Expression"
 										},
 										"type": "Single"
