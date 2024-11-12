@@ -9,12 +9,17 @@
 				"pm_Environment": "dev"
 			}
 		},
+		"parameters": {
+			"pm_TableName": {
+				"type": "string"
+			}
+		},
 		"annotations": [],
 		"type": "SqlServerTable",
 		"schema": [],
 		"typeProperties": {
 			"schema": "dbo",
-			"table": "G_L Account"
+			"table": "@dataset().pm_TableName"
 		}
 	}
 }
