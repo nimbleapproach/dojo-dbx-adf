@@ -385,6 +385,14 @@
 				}
 			}
 		],
+		"parameters": {
+			"pm_DatabaseName": {
+				"type": "string"
+			},
+			"pm_TableName": {
+				"type": "string"
+			}
+		},
 		"annotations": []
 	},
 	"parameters": {
