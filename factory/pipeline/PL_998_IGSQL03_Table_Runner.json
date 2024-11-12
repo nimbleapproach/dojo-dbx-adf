@@ -56,7 +56,7 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Copy And Cleanse Data",
+							"name": "PL_999",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
