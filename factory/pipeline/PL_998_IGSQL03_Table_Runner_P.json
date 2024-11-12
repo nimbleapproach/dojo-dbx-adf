@@ -140,11 +140,11 @@
 									"parameters": {
 										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 										"pm_FileName": {
-											"value": "@{concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)}",
+											"value": "@concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
 											"type": "Expression"
 										},
 										"pm_FileLocation": {
-											"value": "@variables('Folder_Name_Clean')",
+											"value": "@concat(replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
 											"type": "Expression"
 										},
 										"pm_SourceFolderName": "test"
@@ -185,11 +185,11 @@
 										"LoadCSV": {
 											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 											"pm_FileName": {
-												"value": "@{concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)}",
+												"value": "@concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
 												"type": "Expression"
 											},
 											"pm_FileLocation": {
-												"value": "@variables('Folder_Name_Clean')",
+												"value": "@concat(replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
 												"type": "Expression"
 											},
 											"pm_SourceFolderName": "test"
@@ -201,7 +201,7 @@
 												"type": "Expression"
 											},
 											"pm_Directory": {
-												"value": "@concat('test/', variables('Folder_Name_Clean'))",
+												"value": "@concat('test/', replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
 												"type": "Expression"
 											}
 										}
@@ -426,7 +426,7 @@
 									"parameters": {
 										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 										"pm_FileName": {
-											"value": "@{concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)}",
+											"value": "@concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
 											"type": "Expression"
 										},
 										"pm_FileLocation": {
