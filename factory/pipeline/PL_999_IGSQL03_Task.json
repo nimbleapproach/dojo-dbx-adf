@@ -391,6 +391,9 @@
 			},
 			"pm_TableName": {
 				"type": "string"
+			},
+			"pm_Watermark": {
+				"type": "int"
 			}
 		},
 		"variables": {
