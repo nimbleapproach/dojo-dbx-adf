@@ -64,6 +64,12 @@
 									"dependencyConditions": [
 										"Succeeded"
 									]
+								},
+								{
+									"activity": "Set Folder name",
+									"dependencyConditions": [
+										"Succeeded"
+									]
 								}
 							],
 							"policy": {
@@ -127,11 +133,11 @@
 									"parameters": {
 										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 										"pm_FileName": {
-											"value": "@variables('Clean_File_Name')",
+											"value": "@concat(variables('Clean_File_Name'), '-' ,utcNow())",
 											"type": "Expression"
 										},
 										"pm_FileLocation": {
-											"value": "@variables('Clean_File_Name')",
+											"value": "@variables('Clean_Folder_Name')",
 											"type": "Expression"
 										},
 										"pm_SourceFolderName": "test"
@@ -176,7 +182,7 @@
 												"type": "Expression"
 											},
 											"pm_FileLocation": {
-												"value": "@variables('Clean_File_Name')",
+												"value": "@variables('Clean_Folder_Name')",
 												"type": "Expression"
 											},
 											"pm_SourceFolderName": "test"
@@ -188,7 +194,7 @@
 												"type": "Expression"
 											},
 											"pm_Directory": {
-												"value": "@concat('test/', variables('Clean_File_Name'))",
+												"value": "@concat('test/', variables('Clean_Folder_Name'))",
 												"type": "Expression"
 											}
 										}
@@ -213,6 +219,23 @@
 							"typeProperties": {
 								"variableName": "Clean_File_Name",
 								"value": {
+									"value": "@{concat(replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', utcNow())}",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Folder name",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Clean_Folder_Name",
+								"value": {
 									"value": "@{replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_')}",
 									"type": "Expression"
 								}
@@ -235,6 +258,12 @@
 		},
 		"variables": {
 			"Clean_File_Name": {
+				"type": "String"
+			},
+			"Clean_folder_name": {
+				"type": "String"
+			},
+			"Clean_Folder_Name": {
 				"type": "String"
 			}
 		},
