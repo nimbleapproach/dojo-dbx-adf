@@ -33,6 +33,9 @@
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     filename as string",
+				"}",
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> LoadCSV",
@@ -45,11 +48,13 @@
 				"RenameColumns sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
+				"     partitionFileNames:['$filename'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> SaveParquet"
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> SaveParquet"
 			]
 		}
 	}
