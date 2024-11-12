@@ -18,7 +18,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "Select * FROM [dbo].[G_L Account] WHERE cast (timestamp as bigint) > 1509659360",
+							"value": "Select * FROM [dbo].[G_L Account] WHERE cast (timestamp as bigint) > 0",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -60,6 +60,47 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "RL_DF_TEST",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"LoadCSV": {
+								"pm_Environment": "dev"
+							},
+							"SaveParquet": {
+								"pm_Environment": "dev",
+								"pm_FileSystem": "bronze",
+								"pm_Directory": "test"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
 			}
 		],
 		"variables": {
