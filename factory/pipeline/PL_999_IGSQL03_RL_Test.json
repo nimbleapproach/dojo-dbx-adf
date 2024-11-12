@@ -29,7 +29,8 @@
 							"pm_TableName": "CT_IGSQL03_DATABASES",
 							"pm_Environment": "dev"
 						}
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
@@ -52,7 +53,7 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Copy data2",
+							"name": "Copy Source Data",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -114,11 +115,11 @@
 							]
 						},
 						{
-							"name": "Data flow2",
+							"name": "Clean Source Data",
 							"type": "ExecuteDataFlow",
 							"dependsOn": [
 								{
-									"activity": "Copy data2",
+									"activity": "Copy Source Data",
 									"dependencyConditions": [
 										"Succeeded"
 									]
