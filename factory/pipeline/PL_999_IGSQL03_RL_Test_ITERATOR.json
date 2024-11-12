@@ -36,8 +36,10 @@
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_DatabaseName": "@item().DATABASE_NAME",
-									"pm_FullLoad": "@pipeline().parameters.pm_FullLoad"
+									"pm_DatabaseName": {
+										"value": "@item().DATABASE_NAME",
+										"type": "Expression"
+									}
 								}
 							}
 						}
@@ -82,10 +84,18 @@
 				}
 			}
 		],
-		"parameters": {
-			"pm_FullLoad": {
-				"type": "bool",
-				"defaultValue": false
+		"variables": {
+			"Clean_folder_name": {
+				"type": "String"
+			},
+			"Clean_Folder_Name": {
+				"type": "String"
+			},
+			"v_New_Watermark": {
+				"type": "String"
+			},
+			"V_NewWatermark": {
+				"type": "String"
 			}
 		},
 		"folder": {
