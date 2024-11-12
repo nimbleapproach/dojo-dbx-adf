@@ -155,7 +155,7 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"filename": {
-											"value": "'@{test.parquet}'",
+											"value": "'@{concat(variables('Clean_File_Name'), '.parquet')}'",
 											"type": "Expression"
 										}
 									},
@@ -175,10 +175,13 @@
 										"SaveParquet": {
 											"pm_Environment": "dev",
 											"pm_FileSystem": {
-												"value": "variables('Clean_File_Name')",
+												"value": "bronze",
 												"type": "Expression"
 											},
-											"pm_Directory": "test"
+											"pm_Directory": {
+												"value": "@concat('test/', variables('Clean_File_Name'))",
+												"type": "Expression"
+											}
 										}
 									}
 								},
