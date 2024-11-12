@@ -2,13 +2,10 @@
 	"name": "RL_ADLS_CSV",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "LS_ADLS_DV",
+			"referenceName": "LS_ADLS",
 			"type": "LinkedServiceReference",
 			"parameters": {
-				"pm_environment": {
-					"value": "@dataset().pm_Environment",
-					"type": "Expression"
-				}
+				"pm_Environment": "dev"
 			}
 		},
 		"parameters": {
