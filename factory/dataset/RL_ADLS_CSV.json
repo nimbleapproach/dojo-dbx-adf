@@ -1,0 +1,42 @@
+{
+	"name": "RL_ADLS_CSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": {
+					"value": "@dataset().pm_Environment",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "test.csv",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "igsql03/test",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
