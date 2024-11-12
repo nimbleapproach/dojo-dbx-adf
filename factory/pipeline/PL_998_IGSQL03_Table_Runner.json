@@ -70,7 +70,10 @@
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName",
+									"pm_DatabaseName": {
+										"value": "@pipeline().parameters.pm_DatabaseName",
+										"type": "Expression"
+									},
 									"pm_TableName": {
 										"value": "@item().TABLE_NAME",
 										"type": "Expression"
