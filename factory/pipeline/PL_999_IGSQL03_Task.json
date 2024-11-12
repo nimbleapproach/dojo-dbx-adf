@@ -37,7 +37,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
+							"value": "SELECT * FROM dbo.[@{pipeline().parameters.pm_TableName}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -71,7 +71,7 @@
 						"parameters": {
 							"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 							"pm_TableName": {
-								"value": "@item().TABLE_NAME",
+								"value": "@pipeline().parameters.pm_TableName",
 								"type": "Expression"
 							},
 							"pm_SchemaName": "dbo",
