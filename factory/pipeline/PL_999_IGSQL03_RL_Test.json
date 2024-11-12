@@ -86,7 +86,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"filename": {
-								"value": "'@{pipeline().parameters.filename}'",
+								"value": "@pipeline().parameters.filename",
 								"type": "Expression"
 							}
 						},
