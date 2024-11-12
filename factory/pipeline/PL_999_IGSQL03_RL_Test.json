@@ -18,7 +18,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = @{pipeline().parameters.pm_DatabaseName}",
+							"value": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = 'ReportsCH'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
