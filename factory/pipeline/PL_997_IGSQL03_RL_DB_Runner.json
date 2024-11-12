@@ -1,5 +1,5 @@
 {
-	"name": "PL_999_IGSQL03_RL_Test_ITERATOR",
+	"name": "PL_997_IGSQL03_RL_DB_Runner",
 	"properties": {
 		"activities": [
 			{
@@ -31,7 +31,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_999_IGSQL03_RL_Test",
+									"referenceName": "PL_999_IGSQL03_Task",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
