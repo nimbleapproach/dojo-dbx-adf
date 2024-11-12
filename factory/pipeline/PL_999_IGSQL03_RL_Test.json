@@ -228,6 +228,9 @@
 			},
 			"pm_DatabaseName": {
 				"type": "string"
+			},
+			"pm_FullLoad": {
+				"type": "bool"
 			}
 		},
 		"variables": {
