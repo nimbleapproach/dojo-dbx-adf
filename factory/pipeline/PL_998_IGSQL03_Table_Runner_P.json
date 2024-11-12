@@ -357,7 +357,7 @@
 											"type": "Expression"
 										},
 										"pm_FileLocation": {
-											"value": "@variables('Folder_Name_Clean')",
+											"value": "@concat(replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
 											"type": "Expression"
 										},
 										"pm_SourceFolderName": "test"
