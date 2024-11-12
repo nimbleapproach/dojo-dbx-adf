@@ -17,7 +17,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
+						"sqlReaderQuery": "SELECT *\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where Active = 1",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -26,7 +26,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_IGSQL03_DATABASES",
+							"pm_TableName": "CT_IGSQL03_TABLES",
 							"pm_Environment": "dev"
 						}
 					},
