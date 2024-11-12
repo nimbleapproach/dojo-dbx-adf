@@ -308,6 +308,8 @@
 						{
 							"name": "Update Watermark",
 							"type": "SqlServerStoredProcedure",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
 							"dependsOn": [
 								{
 									"activity": "Clean Source Data",
@@ -355,6 +357,8 @@
 						{
 							"name": "Add Logging Entry",
 							"type": "SqlServerStoredProcedure",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
 							"dependsOn": [
 								{
 									"activity": "Clean Source Data",
