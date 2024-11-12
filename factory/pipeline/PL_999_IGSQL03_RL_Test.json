@@ -138,7 +138,7 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"filename": {
-											"value": "'@{item().TABLE_NAME}'",
+											"value": "'@{concat(item().TABLE_NAME, '.parquet')}'",
 											"type": "Expression"
 										}
 									},
