@@ -187,9 +187,9 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"variableName": "Clean_Folder_Name",
+					"variableName": "Folder_Name_Clean",
 					"value": {
-						"value": "@{replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_')}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
+						"value": "@{replace(replace(pipeline().parameters.pm_TableName,'  ','_'), ' ', '_')}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
 						"type": "Expression"
 					}
 				}
@@ -395,6 +395,9 @@
 		},
 		"variables": {
 			"File_Name_Clean": {
+				"type": "String"
+			},
+			"Folder_Name_Clean": {
 				"type": "String"
 			}
 		},
