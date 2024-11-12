@@ -25,10 +25,7 @@
 					"value": "test.csv",
 					"type": "Expression"
 				},
-				"folderPath": {
-					"value": "igsql03/test",
-					"type": "Expression"
-				},
+				"folderPath": "test",
 				"fileSystem": "bronze"
 			},
 			"columnDelimiter": ",",
