@@ -3,415 +3,412 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "For Each Table",
-				"type": "ForEach",
-				"dependsOn": [],
+				"name": "Copy Source Data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set Latest Watermark",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Folder name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set File Name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
-					"isSequential": false,
-					"batchCount": 5,
-					"activities": [
-						{
-							"name": "Copy Source Data",
-							"type": "Copy",
-							"dependsOn": [
-								{
-									"activity": "Set Latest Watermark",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								},
-								{
-									"activity": "Set Folder name",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								},
-								{
-									"activity": "Set File Name",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "SqlServerSource",
-									"sqlReaderQuery": {
-										"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
-										"type": "Expression"
-									},
-									"queryTimeout": "02:00:00",
-									"partitionOption": "None"
-								},
-								"sink": {
-									"type": "DelimitedTextSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "DelimitedTextWriteSettings",
-										"quoteAllText": true,
-										"fileExtension": ".txt"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-										"pm_TableName": {
-											"value": "@item().TABLE_NAME",
-											"type": "Expression"
-										},
-										"pm_SchemaName": "dbo",
-										"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "RL_ADLS_CSV",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-										"pm_FileName": {
-											"value": "@variables('Clean_File_Name')",
-											"type": "Expression"
-										},
-										"pm_FileLocation": {
-											"value": "@variables('Clean_Folder_Name')",
-											"type": "Expression"
-										},
-										"pm_SourceFolderName": "test"
-									}
-								}
-							]
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
+							"type": "Expression"
 						},
-						{
-							"name": "Clean Source Data",
-							"type": "ExecuteDataFlow",
-							"dependsOn": [
-								{
-									"activity": "Copy Source Data",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+							"pm_TableName": {
+								"value": "@item().TABLE_NAME",
+								"type": "Expression"
 							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataflow": {
-									"referenceName": "RL_DF_TEST",
-									"type": "DataFlowReference",
-									"parameters": {
-										"filename": {
-											"value": "'@{concat(variables('Clean_File_Name'), '.parquet')}'",
-											"type": "Expression"
-										}
-									},
-									"datasetParameters": {
-										"LoadCSV": {
-											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-											"pm_FileName": {
-												"value": "@variables('Clean_File_Name')",
-												"type": "Expression"
-											},
-											"pm_FileLocation": {
-												"value": "@variables('Clean_Folder_Name')",
-												"type": "Expression"
-											},
-											"pm_SourceFolderName": "test"
-										},
-										"SaveParquet": {
-											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-											"pm_FileSystem": {
-												"value": "bronze",
-												"type": "Expression"
-											},
-											"pm_Directory": {
-												"value": "@concat('test/', variables('Clean_Folder_Name'))",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								"compute": {
-									"coreCount": 8,
-									"computeType": "General"
-								},
-								"traceLevel": "Fine"
+							"pm_SchemaName": "dbo",
+							"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "RL_ADLS_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+							"pm_FileName": {
+								"value": "@variables('Clean_File_Name')",
+								"type": "Expression"
+							},
+							"pm_FileLocation": {
+								"value": "@variables('Clean_Folder_Name')",
+								"type": "Expression"
+							},
+							"pm_SourceFolderName": "test"
+						}
+					}
+				]
+			},
+			{
+				"name": "Clean Source Data",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "Copy Source Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "RL_DF_TEST",
+						"type": "DataFlowReference",
+						"parameters": {
+							"filename": {
+								"value": "'@{concat(variables('Clean_File_Name'), '.parquet')}'",
+								"type": "Expression"
 							}
 						},
-						{
-							"name": "Set File Name",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "Clean_File_Name",
-								"value": {
-									"value": "@{concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow())}",
+						"datasetParameters": {
+							"LoadCSV": {
+								"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+								"pm_FileName": {
+									"value": "@variables('Clean_File_Name')",
 									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "Set Folder name",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "Clean_Folder_Name",
-								"value": {
-									"value": "@{replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_')}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "Get Latest Watermark",
-							"type": "Lookup",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "SqlServerSource",
-									"sqlReaderQuery": "Select max([Sys_RowNumber]) as NewWatermark FROM [dbo].[@{item().TABLE_NAME}]",
-									"queryTimeout": "02:00:00",
-									"partitionOption": "None"
 								},
-								"dataset": {
-									"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-										"pm_TableName": {
-											"value": "@item().TABLE_NAME",
-											"type": "Expression"
-										},
-										"pm_SchemaName": "dbo",
-										"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
-									}
-								}
-							}
-						},
-						{
-							"name": "Set Latest Watermark",
-							"type": "SetVariable",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
-							"dependsOn": [
-								{
-									"activity": "Get Latest Watermark",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "V_NewWatermark",
-								"value": {
-									"value": "@string(\n    coalesce(\n        activity('Get Latest Watermark').output.value[0].NewWatermark,\n        0\n        )\n    )",
+								"pm_FileLocation": {
+									"value": "@variables('Clean_Folder_Name')",
 									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "Update Watermark",
-							"type": "SqlServerStoredProcedure",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
-							"dependsOn": [
-								{
-									"activity": "Clean Source Data",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"storedProcedureName": "[adf].[sp_igsql03_tables_watermark_upsert]",
-								"storedProcedureParameters": {
-									"database_name": {
-										"value": "@pipeline().parameters.pm_DatabaseName",
-										"type": "String"
-									},
-									"table_name": {
-										"value": {
-											"value": "@item().TABLE_NAME",
-											"type": "Expression"
-										},
-										"type": "String"
-									},
-									"watermark": {
-										"value": "@variables('v_NewWatermark')",
-										"type": "Single"
-									}
-								}
-							},
-							"linkedServiceName": {
-								"referenceName": "LS_SQLDB_METADATA",
-								"type": "LinkedServiceReference",
-								"parameters": {
-									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
-								}
-							}
-						},
-						{
-							"name": "Add Logging Entry",
-							"type": "SqlServerStoredProcedure",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
-							"dependsOn": [
-								{
-									"activity": "Clean Source Data",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"storedProcedureName": "[adf].[sp_igsql03_logging]"
-							},
-							"linkedServiceName": {
-								"referenceName": "LS_SQLDB_METADATA",
-								"type": "LinkedServiceReference",
-								"parameters": {
-									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
-								}
-							}
-						},
-						{
-							"name": "Delete CSV",
-							"type": "Delete",
-							"dependsOn": [
-								{
-									"activity": "Clean Source Data",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataset": {
-									"referenceName": "RL_ADLS_CSV",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-										"pm_FileName": "@variables('Clean_File_Name')",
-										"pm_FileLocation": "@variables('Clean_Folder_Name')",
-										"pm_SourceFolderName": "test"
-									}
 								},
-								"enableLogging": false,
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
+								"pm_SourceFolderName": "test"
+							},
+							"SaveParquet": {
+								"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+								"pm_FileSystem": {
+									"value": "bronze",
+									"type": "Expression"
+								},
+								"pm_Directory": {
+									"value": "@concat('test/', variables('Clean_Folder_Name'))",
+									"type": "Expression"
 								}
 							}
 						}
-					]
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "Set File Name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Clean_File_Name",
+					"value": {
+						"value": "@{concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow())}",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set Folder name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Clean_Folder_Name",
+					"value": {
+						"value": "@{replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_')}/DatabaseName=@{pipeline().parameters.pm_DatabaseName}",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Latest Watermark",
+				"type": "Lookup",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [dbo].[@{item().TABLE_NAME}]",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+							"pm_TableName": {
+								"value": "@item().TABLE_NAME",
+								"type": "Expression"
+							},
+							"pm_SchemaName": "dbo",
+							"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set Latest Watermark",
+				"type": "SetVariable",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Get Latest Watermark",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "V_NewWatermark",
+					"value": {
+						"value": "@string(\n    coalesce(\n        activity('Get Latest Watermark').output.value[0].NewWatermark,\n        0\n        )\n    )",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Update Watermark",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Clean Source Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[adf].[sp_igsql03_tables_watermark_upsert]",
+					"storedProcedureParameters": {
+						"database_name": {
+							"value": {
+								"value": "@pipeline().parameters.pm_DatabaseName",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"table_name": {
+							"value": {
+								"value": "@item().TABLE_NAME",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"watermark": {
+							"value": {
+								"value": "@variables('v_NewWatermark')",
+								"type": "Expression"
+							},
+							"type": "Single"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQLDB_METADATA",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+					}
+				}
+			},
+			{
+				"name": "Add Logging Entry",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Clean Source Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[adf].[sp_igsql03_logging]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SQLDB_METADATA",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+					}
+				}
+			},
+			{
+				"name": "Delete CSV",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Clean Source Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "RL_ADLS_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+							"pm_FileName": "@variables('Clean_File_Name')",
+							"pm_FileLocation": "@variables('Clean_Folder_Name')",
+							"pm_SourceFolderName": "test"
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
 				}
 			}
 		],
-		"parameters": {
-			"filename": {
-				"type": "string"
-			},
-			"pm_DatabaseName": {
-				"type": "string"
-			}
-		},
-		"variables": {
-			"Clean_File_Name": {
-				"type": "String"
-			},
-			"Clean_Folder_Name": {
-				"type": "String"
-			},
-			"V_NewWatermark": {
-				"type": "String"
-			}
-		},
-		"folder": {
-			"name": "10 Bronze/IGSQL03 [Navision]"
-		},
-		"annotations": [],
-		"lastPublishTime": "2024-08-19T10:31:26Z"
+		"annotations": []
 	},
+	"parameters": {
+		"filename": {
+			"type": "string"
+		},
+		"pm_DatabaseName": {
+			"type": "string"
+		}
+	},
+	"variables": {
+		"Clean_File_Name": {
+			"type": "String"
+		},
+		"Clean_Folder_Name": {
+			"type": "String"
+		},
+		"V_NewWatermark": {
+			"type": "String"
+		}
+	},
+	"folder": {
+		"name": "10 Bronze/IGSQL03 [Navision]"
+	},
+	"lastPublishTime": "2024-08-19T10:31:26Z",
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }
