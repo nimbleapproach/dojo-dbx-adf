@@ -68,7 +68,7 @@
 								"source": {
 									"type": "SqlServerSource",
 									"sqlReaderQuery": {
-										"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > 0",
+										"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -110,8 +110,14 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"pm_Environment": "dev",
-										"pm_FileName": "@item().TABLE_NAME",
-										"pm_FileLocation": "@item().TABLE_NAME",
+										"pm_FileName": {
+											"value": "@{replace(item().TABLE_NAME,' ','_')}",
+											"type": "Expression"
+										},
+										"pm_FileLocation": {
+											"value": "@{replace(item().TABLE_NAME,' ','_')}",
+											"type": "Expression"
+										},
 										"pm_SourceFolderName": "test"
 									}
 								}
@@ -142,15 +148,21 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"filename": {
-											"value": "'@{concat(item().TABLE_NAME, '.parquet')}'",
+											"value": "'@{concat(replace(item().TABLE_NAME,' ','_'), '.parquet')}'",
 											"type": "Expression"
 										}
 									},
 									"datasetParameters": {
 										"LoadCSV": {
 											"pm_Environment": "dev",
-											"pm_FileName": "@item().TABLE_NAME",
-											"pm_FileLocation": "@item().TABLE_NAME",
+											"pm_FileName": {
+												"value": "@{replace(item().TABLE_NAME,' ','_')}",
+												"type": "Expression"
+											},
+											"pm_FileLocation": {
+												"value": "@{replace(item().TABLE_NAME,' ','_')}",
+												"type": "Expression"
+											},
 											"pm_SourceFolderName": "test"
 										},
 										"SaveParquet": {
