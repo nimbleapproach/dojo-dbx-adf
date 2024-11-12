@@ -84,6 +84,12 @@
 					"dataflow": {
 						"referenceName": "RL_DF_TEST",
 						"type": "DataFlowReference",
+						"parameters": {
+							"filename": {
+								"value": "'@{test}'",
+								"type": "Expression"
+							}
+						},
 						"datasetParameters": {
 							"LoadCSV": {
 								"pm_Environment": "dev"
