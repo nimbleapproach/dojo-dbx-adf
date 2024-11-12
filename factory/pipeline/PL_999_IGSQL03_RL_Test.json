@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Get DatabasesControl Table",
+				"name": "Get Tables",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -17,7 +17,10 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = 'ReportsCH'",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = @{pipeline().parameters.pm_DatabaseName}",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -38,7 +41,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get DatabasesControl Table",
+						"activity": "Get Tables",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -47,7 +50,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get DatabasesControl Table').output.value",
+						"value": "@activity('Get Tables').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,
@@ -104,10 +107,16 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "RL_NAV_TEST",
+									"referenceName": "DS_SQLDB_NAV_DYNAMIC",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_TableName": "@item().TABLE_NAME"
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+										"pm_TableName": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"pm_SchemaName": "dbo",
+										"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
 									}
 								}
 							],
@@ -116,7 +125,7 @@
 									"referenceName": "RL_ADLS_CSV",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_Environment": "dev",
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 										"pm_FileName": {
 											"value": "@variables('Clean_File_Name')",
 											"type": "Expression"
@@ -161,7 +170,7 @@
 									},
 									"datasetParameters": {
 										"LoadCSV": {
-											"pm_Environment": "dev",
+											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 											"pm_FileName": {
 												"value": "@variables('Clean_File_Name')",
 												"type": "Expression"
@@ -173,7 +182,7 @@
 											"pm_SourceFolderName": "test"
 										},
 										"SaveParquet": {
-											"pm_Environment": "dev",
+											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 											"pm_FileSystem": {
 												"value": "bronze",
 												"type": "Expression"
@@ -215,6 +224,9 @@
 		],
 		"parameters": {
 			"filename": {
+				"type": "string"
+			},
+			"pm_DatabaseName": {
 				"type": "string"
 			}
 		},
