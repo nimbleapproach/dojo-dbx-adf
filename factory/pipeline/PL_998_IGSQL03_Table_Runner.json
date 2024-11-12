@@ -1,0 +1,110 @@
+{
+	"name": "PL_998_IGSQL03_Table_Runner",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Tables",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = '@{pipeline().parameters.pm_DatabaseName}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_IGSQL03_TABLES",
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Tables').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy And Cleanse Data",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_999_IGSQL03_Task",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_DatabaseName": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"filename": {
+				"type": "string"
+			},
+			"pm_DatabaseName": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"Clean_File_Name": {
+				"type": "String"
+			},
+			"Clean_Folder_Name": {
+				"type": "String"
+			},
+			"V_NewWatermark": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/IGSQL03 [Navision]"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-19T10:31:26Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
