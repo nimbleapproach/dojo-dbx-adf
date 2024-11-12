@@ -212,7 +212,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [dbo].[@{item().TABLE_NAME}]",
+							"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [dbo].[@{pipeline().parameters.pm_TableName}]",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -224,7 +224,7 @@
 						"parameters": {
 							"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 							"pm_TableName": {
-								"value": "@item().TABLE_NAME",
+								"value": "@pipeline().parameters.pm_TableName",
 								"type": "Expression"
 							},
 							"pm_SchemaName": "dbo",
