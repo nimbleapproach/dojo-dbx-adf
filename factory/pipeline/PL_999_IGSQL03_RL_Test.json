@@ -66,6 +66,10 @@
 							"typeProperties": {
 								"source": {
 									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > 0",
+										"type": "Expression"
+									},
 									"queryTimeout": "02:00:00",
 									"partitionOption": "None"
 								},
@@ -101,7 +105,10 @@
 									"referenceName": "RL_ADLS_CSV",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_Environment": "dev"
+										"pm_Environment": "dev",
+										"pm_FileName": "@item().TABLE_NAME",
+										"pm_FileLocation": "@item().TABLE_NAME",
+										"pm_SourceFolderName": "test"
 									}
 								}
 							]
