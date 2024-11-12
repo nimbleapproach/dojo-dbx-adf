@@ -172,8 +172,7 @@
 		],
 		"parameters": {
 			"filename": {
-				"type": "string",
-				"defaultValue": "test.parquet"
+				"type": "string"
 			}
 		},
 		"variables": {
