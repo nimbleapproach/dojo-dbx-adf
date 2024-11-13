@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Tables",
+				"name": "Get Count",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -16,21 +16,22 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "AzureSqlSource",
+						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = '@{pipeline().parameters.pm_DatabaseName}'",
+							"value": "SELECT COUNT(*) FROM Customer WHERE cast([timestamp] as bigint) > 1000",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
 					"dataset": {
-						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"referenceName": "DS_SQLDB_NAV_DYNAMIC",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_IGSQL03_TABLES",
-							"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+							"pm_TableName": "Customer",
+							"pm_SchemaName": "dbo",
+							"pm_DatabaseName": "ReportsBE"
 						}
 					},
 					"firstRowOnly": false
