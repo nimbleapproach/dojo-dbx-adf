@@ -90,7 +90,8 @@
 										"pm_SchemaName": "dbo",
 										"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
 									}
-								}
+								},
+								"firstRowOnly": false
 							}
 						},
 						{
