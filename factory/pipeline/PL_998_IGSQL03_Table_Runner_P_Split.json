@@ -1,5 +1,5 @@
 {
-	"name": "PL_998_IGSQL03_Table_Runner_P_DBX",
+	"name": "PL_998_IGSQL03_Table_Runner_P_Split",
 	"properties": {
 		"activities": [
 			{
@@ -264,6 +264,52 @@
 								"parameters": {
 									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
 								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "For Each File",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "For Each Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Tables').output.value",
+						"type": "Expression"
+					},
+					"batchCount": 5,
+					"activities": [
+						{
+							"name": "Clean Data",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "RL_DF_TEST",
+									"type": "DataFlowReference"
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
 							}
 						}
 					]
