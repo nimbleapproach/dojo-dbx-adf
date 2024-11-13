@@ -39,6 +39,8 @@
 			{
 				"name": "For Each Table",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Get Tables",
