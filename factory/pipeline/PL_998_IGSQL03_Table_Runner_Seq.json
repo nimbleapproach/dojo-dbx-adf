@@ -264,6 +264,82 @@
 									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
 								}
 							}
+						},
+						{
+							"name": "Get Row Count",
+							"type": "Lookup",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "SELECT COUNT(timestamp) AS rows FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+										"pm_TableName": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"pm_SchemaName": "dbo",
+										"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
+									}
+								}
+							}
+						},
+						{
+							"name": "If Condition1",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Get Row Count",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@greater(activity('Get Row Count').output.value[0].rows, 0)",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "Copy data1",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"enableStaging": false
+										}
+									}
+								]
+							}
 						}
 					]
 				}
