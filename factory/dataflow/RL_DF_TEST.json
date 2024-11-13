@@ -37,7 +37,7 @@
 				"     partitionBy('hash', 1)) ~> LoadCSV",
 				"LoadCSV select(mapColumn(",
 				"          each(match(true()),",
-				"               regexReplace($$,'\\\\s\\\\{\\\\}\\\\(\\\\)\\\\;','') = $$)",
+				"               regexReplace(regexReplace(regexReplace(regexReplace(regexReplace(regexReplace($$,' ',''), '(', ''), ')', ''), ';', ''), '{', ''), '}', '') = $$)",
 				"     ),",
 				"     partitionBy('hash', 1),",
 				"     skipDuplicateMapInputs: true,",
