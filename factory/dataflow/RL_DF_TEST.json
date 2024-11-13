@@ -38,7 +38,7 @@
 				"}",
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
+				"     ignoreNoFilesFound: true,",
 				"     purgeFiles: true,",
 				"     partitionBy('hash', 1)) ~> LoadCSV",
 				"LoadCSV select(mapColumn(",
