@@ -319,7 +319,7 @@
 										},
 										"SaveParquet": {
 											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-											"pm_FileSystem": "test",
+											"pm_FileSystem": "bronze",
 											"pm_Directory": "@concat('test/', replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)"
 										}
 									}
