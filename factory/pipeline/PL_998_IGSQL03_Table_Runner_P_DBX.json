@@ -1,5 +1,5 @@
 {
-	"name": "PL_998_IGSQL03_Table_Runner_P_WC",
+	"name": "PL_998_IGSQL03_Table_Runner_P_DBX",
 	"properties": {
 		"activities": [
 			{
@@ -125,7 +125,7 @@
 											"type": "Expression"
 										},
 										"pm_FileLocation": {
-											"value": "@concat('rawfiles/', utcNow('yyyy'), '/', utcNow('MM'), '/', utcNow('dd'), '/', replace(item().TABLE_NAME, '  ','_'))",
+											"value": "@concat('rawfiles/', utcNow('yyyy'), '/', utcNow('MM'), '/', utcNow('dd'), '/', pipeline().parameters.pm_DatabaseName)",
 											"type": "Expression"
 										},
 										"pm_SourceFolderName": "test"
