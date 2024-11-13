@@ -28,36 +28,116 @@ if ENVIRONMENT == 'dev':
 
 # COMMAND ----------
 
-spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_link_product_to_vendor_arr_staging as
-select distinct
-concat(it.Vendor_Name,'|',it.sku) as product_vendor_code,
-coalesce(it.sku,'NaN') as product_code ,
-coalesce(p.product_pk,-1) product_fk, 
-coalesce(v.vendor_pk,-1) vendor_fk, 
-coalesce(it.Vendor_Name,'NaN') as vendor_code ,
-coalesce(it.Product_Type,'NaN') as product_type,
-Commitment_Duration_in_months AS commitment_duration_in_months,
-Commitment_Duration2 AS commitment_duration2,
-Billing_Frequency AS billing_frequency,
-Billing_Frequency2 AS billing_frequency2,
-Consumption_Model AS consumption_model,
--- Mapping_Type_Duration AS mapping_type_duration,
--- Mapping_Type_Billing AS mapping_type_billing,
--- null AS mrr_ratio,
--- null AS commitment_duration_value,
--- Billing_Frequency_Value2 AS billing_frequency_value2,
-  ss.source_system_pk as source_system_fk,
-    CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
-    CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
-    1 AS is_current,
-'item' as sys_item_source,
-    it.Sys_Silver_InsertDateTime_UTC AS Sys_Gold_InsertedDateTime_UTC,
-    it.Sys_Silver_InsertDateTime_UTC AS Sys_Gold_ModifiedDateTime_UTC
-FROM silver_{ENVIRONMENT}.masterdata.datanowarr it 
-  cross join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Managed Datasets' and is_current = 1) ss 
-LEFT OUTER JOIN {catalog}.{schema}.dim_product p on p.product_code =coalesce(it.sku,'NaN') and p.is_current = 1
-LEFT OUTER JOIN {catalog}.{schema}.dim_vendor v on v.vendor_code = coalesce(it.Vendor_Name,'NaN') and v.is_current = 1
-WHERE 
-  it.Sys_Silver_IsCurrent = true
-""")
+!pip install openpyxl --quiet
+
+# COMMAND ----------
+
+# MAGIC %restart_python
+
+# COMMAND ----------
+
+import pandas as pd
+import pyspark.pandas as ps
+
+# COMMAND ----------
+
+
+# File path in DBFS
+file_path = "/Workspace/Users/akhtar.miah@infinigate.com/2024_05_incremental.xlsx"
+
+df = pd.read_excel(file_path)
+
+# COMMAND ----------
+
+display(df)
+
+# COMMAND ----------
+
+from pyspark.sql import functions as F
+from pyspark.sql import SparkSession
+import re
+
+# Utility function to parse months from row[18] column
+def parse_months(df):
+    return df.withColumn(
+        "months",
+        F.when(F.col("row[18]").isNotNull(), F.regexp_replace(F.col("row[18]"), "_x0005_", "").cast("int")).otherwise(0)
+    )
+
+# Transformations based on `months` column
+def apply_month_based_transformations(df):
+    return df.withColumn("duration", F.when(F.col("months") > 1, (F.col("months") / 12).cast("string") + " YR")
+                                .when(F.col("months") == 1, "1M")
+                                .otherwise("Perpetual")) \
+             .withColumn("Mapping_type_Duration", F.when(F.col("months") > 1, "Sure mapping")
+                                                     .when(F.col("months") == 1, "Sure mapping")
+                                                     .otherwise("other mapping")) \
+             .withColumn("frequency", F.when(F.col("months") > 1, "Upfront")
+                                       .when(F.col("months") == 1, "Monthly")
+                                       .otherwise("Upfront")) \
+             .withColumn("Consumption", F.when(F.col("months") == 1, "Flexible").otherwise("Capacity"))
+
+# Product-specific transformations for each vendor
+def apply_vendor_transformations(df):
+    # Add transformations specific to "Software" and "Professional Service" categories
+    df = df.withColumn("Type", 
+                F.when((F.col("row[21]") == "Software") & F.col("duration").contains("YR"), "SW Subscription")
+                 .when((F.col("row[21]") == "Software") & F.col("duration").contains("M"), "SW Subscription")
+                 .when(F.col("row[21]") == "Professional Service", "Professional services")
+    )
+
+    # Watchguard-specific transformations
+    df = df.withColumn("duration", 
+            F.when(F.col("row[3]") == "Watchguard", 
+                F.when(F.col("description").rlike("1-Year|1 -Year|1 Year|1-yr"), "1 YR")
+                 .when(F.col("description").rlike("3-Year|3 Year|3-yr|3 -Year"), "3 YR")
+                 .when(F.col("description").rlike("FireboxV.*MSSP Appliance"), "3 YR")
+                 .when(F.col("description").rlike("IPSec VPN Client"), "Perpetual"))
+    ) \
+    .withColumn("Type", 
+            F.when(F.col("row[3]") == "Watchguard", 
+                F.when(F.col("description").rlike("Total Security Suite|Standard Support|Basic Security Suite"), "Vendor support")
+                 .when(F.col("description").rlike("Panda Endpoint Protection Plus"), "SW Subscription")
+                 .when(F.col("description").rlike("VPN Client"), "SW Perpetual"))
+    )
+
+    # Hardware transformation based on `row[16]` pattern
+    df = df.withColumn("Type",
+            F.when((F.col("row[3]") == "Watchguard") & F.col("row[16]").rlike("WG\\d{4}|WGT49023-EU"), "Hardware")
+             .otherwise(F.col("Type"))
+    )
+
+    # DDN-specific transformations
+    df = df.withColumn("duration",
+            F.when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("SUP-.*-(\\d+)YR"), F.regexp_extract(F.col("row[16]"), "SUP-.*-(\\d+)YR", 1) + " YR")
+             .when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("REINSTATE-BASIC-VM"), "Perpetual")
+    ) \
+    .withColumn("Type",
+            F.when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("SUP-.*"), "Vendor support")
+             .when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("REINSTATE-BASIC-VM"), "SW Perpetual")
+    )
+
+    # Entrust-specific transformations (similar approach as above for other vendors)
+    df = df.withColumn("duration",
+            F.when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("NC-.*-PR|NC-.*-ST|SUP-ESSENTIALS-PLAT"), "1 YR")
+             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("ECS-ADVA|SMSPC-R-MFA-.*-12"), "1 YR")
+             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("SMSPC-R-MFA-.*-36"), "3 YR")
+    ) \
+    .withColumn("Type",
+            F.when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("NC-.*-PR|SUP-ESSENTIALS-PLAT"), "Vendor support")
+             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("ECS-ADVA|SMSPC-R-MFA-.*-12"), "SW Subscription")
+             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("NC-M-010114-L-EU.*"), "Hardware")
+    )
+
+    # Repeat similar transformations for each vendor: Juniper, Extreme Networks, Riverbed, WithSecure, Acronis, etc.
+
+    return df
+
+# Apply transformations in sequence
+df = parse_months(df)
+df = apply_month_based_transformations(df)
+df = apply_vendor_transformations(df)
+
+# Show the resulting dataframe
+df.show()
+

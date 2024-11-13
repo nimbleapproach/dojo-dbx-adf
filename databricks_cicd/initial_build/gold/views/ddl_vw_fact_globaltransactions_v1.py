@@ -30,7 +30,7 @@ if ENVIRONMENT == 'dev':
 
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.globaltransactions as (
-select 
+select
   f.GroupEntityCode
 , f.EntityCode
 , f.DocumentNo
@@ -73,6 +73,19 @@ select
 , f.GL_Group
 , f.TopCostFlag
  from platinum_dev.obt.globaltransactions f 
-left join  {catalog}.{schema}.link_product_to_vendor_arr x on x.product_code=SKUInternal and x.vendor_code=VendorNameMaster
+left join 
+  (select distinct 
+        lower(product_code) product_code, lower(vendor_code)  vendor_code
+        ,product_type
+        ,Commitment_Duration_in_months
+        ,Commitment_Duration_Value
+        ,Billing_Frequency
+        ,Consumption_Model
+        from {catalog}.{schema}.link_product_to_vendor_arr
+        where is_current=1 
+  )x 
+    on x.product_code= lower(SKUInternal)
+    and x.vendor_code= lower(VendorNameMaster)
+    --case when VendorNameMaster ='NaN' then VendorNameInternal else VendorNameMaster end 
 )
 """)
