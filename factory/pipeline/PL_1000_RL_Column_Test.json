@@ -18,7 +18,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "SELECT COUNT(*) FROM Customer WHERE cast([timestamp] as bigint) > 1000",
+							"value": "SELECT *\nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_NAME = N'Customer'",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
