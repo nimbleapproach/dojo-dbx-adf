@@ -1,0 +1,29 @@
+{
+	"name": "PL_00_RESOURCE_Load_Sheet_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_10_RESOURCE_Load_Sheet",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_RESOURCE_Load_Sheet",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/RESOURCE"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-10-10T09:38:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

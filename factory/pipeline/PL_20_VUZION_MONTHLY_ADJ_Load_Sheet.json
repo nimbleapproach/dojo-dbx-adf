@@ -1,0 +1,558 @@
+{
+	"name": "PL_20_VUZION_MONTHLY_ADJ_Load_Sheet",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load Sheet",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Clean sink",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "vuzion/monthly_revenue_adjustment/pending/",
+							"wildcardFileName": "*.xlsx",
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Entity",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Entity",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Reporting Entity Name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ReportingEntityName",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Invoice Date",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "InvoiceDate",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sales Order",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "SalesOrder",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Invoice Number",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "InvoiceNumber",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Item ID",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ItemID",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "SKU",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "SKU",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "SearchName",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "SearchName",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Item Group",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ItemGroup",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Practice",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Practice",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Practice Short",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "PracticeShort",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "PracticeDescr",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "PracticeDescr",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Customer Name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "CustomerName",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Vendor Practice",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "VendorPractice",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Qty",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Qty",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Vendor ID",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "VendorID",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Vendor Name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "VendorName",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Order Type",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "OrderType",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Customer Account",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "CustomerAccount",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Currency",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Currency",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Short Entity Name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "ShortEntityName",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Revenue Local",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Revenue_Local",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Cost Local",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Cost_Local",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Adjustment Local",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Adjustment_Local",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Margin Local",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Margin_Local",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "FX Index",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "FXIndex",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "SKU Description",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "SKUDescription",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "LFL FX",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "LFL_FX",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Revenue LFL FX GBP",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Revenue_LFL_FX_GBP",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Margin LFL FX GBP",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "Margin_LFL_FX_GBP",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "EntCust",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "EntCust",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Customer Account Grouped",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "CustomerAccountGrouped",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Customer Name Grouped",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "CustomerNameGrouped",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "FX Index2",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "FXIndex2",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "GP Filter",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "GPFilter",
+									"physicalType": "UTF8"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_DV_VUZION_MONTHLY_ADJ_EXCEL",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_SheetIndex": {
+								"value": "@pipeline().parameters.pm_SheetIndex",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_PARQUET_STATIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileSystem": {
+								"value": "bronze",
+								"type": "Expression"
+							},
+							"pm_Directory": {
+								"value": "vuzion_monthly/vuzion_monthly_adjustment",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "bronze-vuzion-monthly-adjustment-@{pipeline().parameters.pm_SheetIndex}-@{utcNow()}",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Clean sink",
+				"type": "Delete",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS_PARQUET_STATIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileSystem": {
+								"value": "bronze",
+								"type": "Expression"
+							},
+							"pm_Directory": {
+								"value": "vuzion_monthly/vuzion_monthly_adjustment",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "bronze-vuzion-monthly-adjustment-@{pipeline().parameters.pm_SheetIndex}-@{utcNow()}",
+								"type": "Expression"
+							}
+						}
+					},
+					"logStorageSettings": {
+						"linkedServiceName": {
+							"referenceName": "LS_ADLS",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"pm_Environment": "dev"
+							}
+						},
+						"path": "logging/adf/copyactivity-logs"
+					},
+					"enableLogging": true,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"wildcardFileName": "*.parquet",
+						"enablePartitionDiscovery": false
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pm_SheetIndex": {
+				"type": "int",
+				"defaultValue": 0
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION/MONTHLY_ADJ"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-11-01T13:55:23Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

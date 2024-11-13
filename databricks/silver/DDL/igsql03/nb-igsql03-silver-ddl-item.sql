@@ -54,6 +54,7 @@ CREATE OR REPLACE TABLE item
   ,PhysicalGoods BIGINT
     COMMENT 'TODO'
   ,ManufacturerItemNo_ STRING
+    COMMENT 'The key linking to the item_dds'
   ,Sys_RowNumber BIGINT NOT NULL
     COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
   ,Sys_DatabaseName STRING NOT NULL

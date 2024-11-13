@@ -54,13 +54,13 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       FROM silver_${tableObject.environment}.tag02.dati_saldi_lordi a
 # MAGIC       LEFT OUTER JOIN (SELECT silver_sid FROM gold_${tableObject.environment}.tag02.fact_tagetik_revenue WHERE silver_source = 1) b
 # MAGIC         ON a.SID = b.silver_sid
-# MAGIC       WHERE b.silver_sid IS NULL AND a.Sys_Silver_IsCurrent = 1
-# MAGIC       UNION -- we either want to load the transactional record where it hasn't been seen before or we want to load a more recent version of one that has
+# MAGIC       WHERE b.silver_sid IS NULL AND a.Sys_Silver_IsCurrent
+# MAGIC       UNION -- we either want to load the transactional record where it hasn't been seen before or we want to load a more recent version of one that has and is now inactive
 # MAGIC       SELECT SID
 # MAGIC       FROM silver_${tableObject.environment}.tag02.dati_saldi_lordi a2
 # MAGIC       INNER JOIN (SELECT silver_sid, source_date_updated FROM gold_${tableObject.environment}.tag02.fact_tagetik_revenue WHERE silver_source = 1 AND Sys_Gold_is_active = 1) b2
 # MAGIC         ON a2.SID = b2.silver_sid
-# MAGIC       WHERE CAST(a2.Sys_Silver_ModifedDateTime_UTC AS TIMESTAMP) > b2.source_date_updated AND a2.Sys_Silver_IsDeleted = 'true') sid
+# MAGIC       WHERE a2.Sys_Silver_IsDeleted OR NOT a2.Sys_Silver_IsCurrent) sid
 # MAGIC INNER JOIN silver_${tableObject.environment}.tag02.dati_saldi_lordi dsl
 # MAGIC   ON sid.SID = dsl.SID
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_exchange_rate er
@@ -99,7 +99,10 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC                             'INP_HQ06',
 # MAGIC                             'INP_HQ07',
 # MAGIC                             'INP_MSP2018',
-# MAGIC                             'SYN2')
+# MAGIC                             'SYN2',
+# MAGIC                             'GP_ALLOC')
+# MAGIC       OR dsl.COD_CATEGORIA LIKE 'IFCSYN%'
+# MAGIC
 # MAGIC        )
 # MAGIC
 

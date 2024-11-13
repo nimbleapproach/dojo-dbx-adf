@@ -1,0 +1,155 @@
+{
+	"name": "PL_10_VENDOR_MAPPING_Load_Sheet",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load Sheet",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"additionalColumns": [
+							{
+								"name": "Sys_Bronze_InsertDateTime_UTC",
+								"value": {
+									"value": "@utcNow()",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "vendor_mapping",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "*.xlsx",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "VendorCode",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "VendorCode",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "VendorNameInternal",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "VendorNameInternal",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Vendor Group",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "VendorGroup",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Sys_Bronze_InsertDateTime_UTC",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_DV_VENDORMAPPING_EXCEL",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "dev",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_PARQUET_STATIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							},
+							"pm_FileSystem": {
+								"value": "bronze",
+								"type": "Expression"
+							},
+							"pm_Directory": {
+								"value": "masterdata/vendor_mapping",
+								"type": "Expression"
+							},
+							"pm_FileName": {
+								"value": "bronze-vendor_mapping-@{utcNow()}",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/VENDOR_MAPPING"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-10-10T09:38:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
