@@ -1,0 +1,305 @@
+{
+	"name": "PL_998_IGSQL03_Table_Runner_P_WC",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Tables",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = '@{pipeline().parameters.pm_DatabaseName}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_IGSQL03_TABLES",
+							"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Tables').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 10,
+					"activities": [
+						{
+							"name": "Copy Source Data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+										"pm_TableName": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"pm_SchemaName": "dbo",
+										"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "RL_ADLS_CSV",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+										"pm_FileName": {
+											"value": "@concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
+											"type": "Expression"
+										},
+										"pm_FileLocation": {
+											"value": "@concat(replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
+											"type": "Expression"
+										},
+										"pm_SourceFolderName": "test"
+									}
+								}
+							]
+						},
+						{
+							"name": "Get Latest Watermark",
+							"type": "Lookup",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
+							"dependsOn": [
+								{
+									"activity": "Copy Source Data",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [dbo].[@{item().TABLE_NAME}]",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+										"pm_TableName": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"pm_SchemaName": "dbo",
+										"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
+									}
+								}
+							}
+						},
+						{
+							"name": "Update Watermark",
+							"type": "SqlServerStoredProcedure",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
+							"dependsOn": [
+								{
+									"activity": "Get Latest Watermark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[adf].[sp_igsql03_tables_watermark_upsert]",
+								"storedProcedureParameters": {
+									"database_name": {
+										"value": {
+											"value": "@pipeline().parameters.pm_DatabaseName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"table_name": {
+										"value": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"watermark": {
+										"value": {
+											"value": "@string(\n    coalesce(\n        activity('Get Latest Watermark').output.value[0].NewWatermark,\n        0\n        )\n    )",
+											"type": "Expression"
+										},
+										"type": "Single"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+								}
+							}
+						},
+						{
+							"name": "Add Logging Entry",
+							"type": "SqlServerStoredProcedure",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
+							"dependsOn": [
+								{
+									"activity": "Copy Source Data",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[adf].[sp_igsql03_logging]"
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"filename": {
+				"type": "string"
+			},
+			"pm_DatabaseName": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"Clean_File_Name": {
+				"type": "String"
+			},
+			"Clean_Folder_Name": {
+				"type": "String"
+			},
+			"V_NewWatermark": {
+				"type": "String"
+			},
+			"File_Name_Clean": {
+				"type": "String"
+			},
+			"Folder_Name_Clean": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/IGSQL03 [Navision]"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-19T10:31:26Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
