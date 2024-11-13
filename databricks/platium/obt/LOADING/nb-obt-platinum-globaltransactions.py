@@ -165,7 +165,12 @@ ON ga.Sys_Silver_IsCurrent =1
 AND g.SKUInternal = ga.No_
 and g.Sys_DatabaseName = ga.Sys_DatabaseName
 
-LEFT JOIN gold_{ENVIRONMENT}.obt.end_customer ec
+LEFT JOIN (
+    select distinct  Contact_No_,
+    Entity,
+    name,
+    section
+    from  gold_{ENVIRONMENT}.obt.end_customer) ec
 ON g.EndCustomerInternal = ec.Contact_No_
 AND RIGHT(g.Sys_DatabaseName, 2) = ec.entity
 
@@ -535,7 +540,7 @@ SELECT
  FROM gold_{ENVIRONMENT}.obt.globaltransactions_sl_gp1 g
 
  LEFT JOIN
-   gold_dev.obt.exchange_rate e
+   gold_{ENVIRONMENT}.obt.exchange_rate e
  ON
    e.Calendar_Year = cast(year(g.TransactionDate) as string)
  AND
@@ -547,7 +552,7 @@ SELECT
    e.ScenarioGroup = 'Actual'
  --Only for VU and entitycode 'NOTINTAGETIK'
  LEFT JOIN
-   (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_dev.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
+   (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_{ENVIRONMENT}.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
  ON
    e1.Calendar_Year = cast(year(g.TransactionDate) as string)
  AND
