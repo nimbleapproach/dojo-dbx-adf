@@ -272,6 +272,8 @@
 			{
 				"name": "For Each File",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "For Each Table",
