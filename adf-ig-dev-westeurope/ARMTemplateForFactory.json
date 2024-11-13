@@ -11190,7 +11190,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"pm_Environment": {
-										"value": "dev",
+										"value": "@pipeline().globalParameters.gpm_Environment",
 										"type": "Expression"
 									},
 									"pm_SheetIndex": {
@@ -11631,7 +11631,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"pm_Environment": {
-										"value": "dev",
+										"value": "@pipeline().globalParameters.gpm_Environment",
 										"type": "Expression"
 									},
 									"pm_SheetName": {
