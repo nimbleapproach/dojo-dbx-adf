@@ -53,7 +53,8 @@
 						"value": "@activity('Get Tables').output.value",
 						"type": "Expression"
 					},
-					"isSequential": true,
+					"isSequential": false,
+					"batchCount": 10,
 					"activities": [
 						{
 							"name": "Get Row Count",
