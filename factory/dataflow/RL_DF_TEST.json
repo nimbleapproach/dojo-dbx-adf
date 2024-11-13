@@ -26,12 +26,6 @@
 					"name": "RenameColumns"
 				}
 			],
-			"udfLibraries": [
-				{
-					"referenceName": "General",
-					"type": "DataFlowReference"
-				}
-			],
 			"scriptLines": [
 				"parameters{",
 				"     filename as string",
@@ -43,7 +37,17 @@
 				"     partitionBy('hash', 1)) ~> LoadCSV",
 				"LoadCSV select(mapColumn(",
 				"          each(match(true()),",
-				"               applyParquetNaming($$) = $$)",
+				"               regexReplace($$, ' ', '') = $$),",
+				"          each(match(true()),",
+				"               regexReplace($$, '(', '') = $$),",
+				"          each(match(true()),",
+				"               regexReplace($$, ')', '') = $$),",
+				"          each(match(true()),",
+				"               regexReplace($$, ';', '') = $$),",
+				"          each(match(true()),",
+				"               regexReplace($$, '{', '') = $$),",
+				"          each(match(true()),",
+				"               regexReplace($$, '}', '') = $$)",
 				"     ),",
 				"     partitionBy('hash', 1),",
 				"     skipDuplicateMapInputs: true,",
