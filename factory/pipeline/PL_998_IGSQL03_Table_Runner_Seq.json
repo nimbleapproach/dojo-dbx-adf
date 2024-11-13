@@ -319,6 +319,45 @@
 												"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
 											}
 										}
+									},
+									{
+										"name": "Get Columns",
+										"type": "Lookup",
+										"state": "Inactive",
+										"onInactiveMarkAs": "Succeeded",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "SqlServerSource",
+												"sqlReaderQuery": {
+													"value": "SELECT *\nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_NAME = N'@{item().TABLE_NAME}'",
+													"type": "Expression"
+												},
+												"queryTimeout": "02:00:00",
+												"partitionOption": "None"
+											},
+											"dataset": {
+												"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+												"type": "DatasetReference",
+												"parameters": {
+													"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+													"pm_TableName": {
+														"value": "@item().TABLE_NAME",
+														"type": "Expression"
+													},
+													"pm_SchemaName": "dbo",
+													"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
+												}
+											}
+										}
 									}
 								]
 							}
