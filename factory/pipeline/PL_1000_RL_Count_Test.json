@@ -18,7 +18,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "SELECT COUNT(timestamp) FROM Customer WHERE cast([timestamp] as bigint) > 1000",
+							"value": "SELECT COUNT(timestamp) AS ROWCOUNT FROM Customer WHERE cast([timestamp] as bigint) > 1000",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
