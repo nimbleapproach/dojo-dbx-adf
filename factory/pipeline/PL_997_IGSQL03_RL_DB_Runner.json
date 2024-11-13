@@ -31,7 +31,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_998_IGSQL03_Table_Runner",
+									"referenceName": "PL_1000_RL_Column_Test",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
