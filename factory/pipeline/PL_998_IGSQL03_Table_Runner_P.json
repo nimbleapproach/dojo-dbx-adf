@@ -327,50 +327,6 @@
 									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
 								}
 							}
-						},
-						{
-							"name": "Delete CSV",
-							"type": "Delete",
-							"dependsOn": [
-								{
-									"activity": "Clean Source Data",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataset": {
-									"referenceName": "RL_ADLS_CSV",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-										"pm_FileName": {
-											"value": "@concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
-											"type": "Expression"
-										},
-										"pm_FileLocation": {
-											"value": "@concat(replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
-											"type": "Expression"
-										},
-										"pm_SourceFolderName": "test"
-									}
-								},
-								"enableLogging": false,
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								}
-							}
 						}
 					]
 				}
