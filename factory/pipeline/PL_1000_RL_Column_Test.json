@@ -1,5 +1,5 @@
 {
-	"name": "PL_998_IGSQL03_Table_Runner",
+	"name": "PL_1000_RL_Column_Test",
 	"properties": {
 		"activities": [
 			{
@@ -34,59 +34,6 @@
 						}
 					},
 					"firstRowOnly": false
-				}
-			},
-			{
-				"name": "For Each Table",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Get Tables",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Get Tables').output.value",
-						"type": "Expression"
-					},
-					"isSequential": false,
-					"batchCount": 5,
-					"activities": [
-						{
-							"name": "PL_999",
-							"type": "ExecutePipeline",
-							"dependsOn": [],
-							"policy": {
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "PL_999_IGSQL03_Task",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"pm_DatabaseName": {
-										"value": "@pipeline().parameters.pm_DatabaseName",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "@item().TABLE_NAME",
-										"type": "Expression"
-									},
-									"pm_Watermark": {
-										"value": "@item().WATERMARK",
-										"type": "Expression"
-									}
-								}
-							}
-						}
-					]
 				}
 			}
 		],
