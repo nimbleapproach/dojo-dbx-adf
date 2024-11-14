@@ -324,112 +324,112 @@
 												},
 												"table_name": {
 													"value": {
-														"value": "@pipeline().parameters.pm_ViewName",
+														"value": "@item().TABLE_NAME",
 														"type": "Expression"
 													},
 													"type": "String"
 												},
 												"dataread": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.dataRead",
+														"value": "@activity('Copy Source Data').output.dataRead",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"datawritten": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.datawritten",
+														"value": "@activity('Copy Source Data').output.datawritten",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"fileswritten": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.fileswritten",
+														"value": "@activity('Copy Source Data').output.fileswritten",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"sourcepeakconnections": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.sourcepeakconnections",
+														"value": "@activity('Copy Source Data').output.sourcepeakconnections",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"sinkpeakconnections": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.sinkpeakconnections",
+														"value": "@activity('Copy Source Data').output.sinkpeakconnections",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"rowsread": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.rowsread",
+														"value": "@activity('Copy Source Data').output.rowsread",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"rowscopied": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.rowscopied",
+														"value": "@activity('Copy Source Data').output.rowscopied",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"copyduration": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.copyduration",
+														"value": "@activity('Copy Source Data').output.copyduration",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"throughput": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.throughput",
+														"value": "@activity('Copy Source Data').output.throughput",
 														"type": "Expression"
 													},
 													"type": "Decimal"
 												},
 												"usedparallelcopies": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.usedparallelcopies",
+														"value": "@activity('Copy Source Data').output.usedparallelcopies",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"queuingduration": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.executiondetails[0].detaileddurations.queuingduration",
+														"value": "@activity('Copy Source Data').output.executiondetails[0].detaileddurations.queuingduration",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"timetofirstbyte": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.executiondetails[0].detaileddurations.timetofirstbyte",
+														"value": "@activity('Copy Source Data').output.executiondetails[0].detaileddurations.timetofirstbyte",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"transferduration": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.executiondetails[0].detaileddurations.transferduration",
+														"value": "@activity('Copy Source Data').output.executiondetails[0].detaileddurations.transferduration",
 														"type": "Expression"
 													},
 													"type": "Int64"
 												},
 												"start": {
 													"value": {
-														"value": "@activity('Delta Load Navision View').output.executiondetails[0].start",
+														"value": "@activity('Copy Source Data').output.executiondetails[0].start",
 														"type": "Expression"
 													},
 													"type": "Datetime"
 												},
 												"full_load": {
 													"value": {
-														"value": "@pipeline().parameters.pm_FullLoad",
+														"value": "False",
 														"type": "Expression"
 													},
 													"type": "Boolean"
