@@ -237,7 +237,8 @@
 													"pm_SchemaName": "dbo",
 													"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
 												}
-											}
+											},
+											"firstRowOnly": false
 										}
 									},
 									{
@@ -429,7 +430,7 @@
 												},
 												"full_load": {
 													"value": {
-														"value": "@greater(item().WATERMARK, 0)",
+														"value": "@greater(int(item().WATERMARK), 0)",
 														"type": "Expression"
 													},
 													"type": "Boolean"
