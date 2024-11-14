@@ -386,7 +386,7 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"filename": {
-											"value": "'@{concat('bronze-igsql03-', replace(replace(item(),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow(), '-','.parquet')}'",
+											"value": "'@{concat('bronze-igsql03-', replace(replace(item(),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow(),'.parquet')}'",
 											"type": "Expression"
 										}
 									},
