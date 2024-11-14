@@ -84,20 +84,6 @@
 				}
 			}
 		],
-		"variables": {
-			"Clean_folder_name": {
-				"type": "String"
-			},
-			"Clean_Folder_Name": {
-				"type": "String"
-			},
-			"v_New_Watermark": {
-				"type": "String"
-			},
-			"V_NewWatermark": {
-				"type": "String"
-			}
-		},
 		"folder": {
 			"name": "10 Bronze/IGSQL03 [Navision]"
 		},
