@@ -430,7 +430,7 @@
 												},
 												"full_load": {
 													"value": {
-														"value": "@greater(int(item().WATERMARK), 0)",
+														"value": "@equals(int(item().WATERMARK), 0)",
 														"type": "Expression"
 													},
 													"type": "Boolean"
