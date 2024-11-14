@@ -429,7 +429,7 @@
 												},
 												"full_load": {
 													"value": {
-														"value": "False",
+														"value": "@greater(item().WATERMARK, 0)",
 														"type": "Expression"
 													},
 													"type": "Boolean"
