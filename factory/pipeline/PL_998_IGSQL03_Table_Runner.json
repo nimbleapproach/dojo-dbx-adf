@@ -279,7 +279,7 @@
 												},
 												"watermark": {
 													"value": {
-														"value": "@string(\n    coalesce(\n        activity('Get Latest Watermark').output.value[0].NewWatermark,\n        0\n        )\n    )",
+														"value": "@int(activity('Get Latest Watermark').output.value[0].NewWatermark)",
 														"type": "Expression"
 													},
 													"type": "Single"
