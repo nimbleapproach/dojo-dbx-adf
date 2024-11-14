@@ -366,7 +366,7 @@
 						"type": "Expression"
 					},
 					"isSequential": false,
-					"batchCount": 5,
+					"batchCount": 3,
 					"activities": [
 						{
 							"name": "Clean Data",
