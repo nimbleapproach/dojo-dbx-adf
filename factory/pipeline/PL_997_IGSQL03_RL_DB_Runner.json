@@ -31,15 +31,12 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_1000_RL_Column_Test",
+									"referenceName": "PL_998_IGSQL03_Table_Runner_Seq",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_DatabaseName": {
-										"value": "@item().DATABASE_NAME",
-										"type": "Expression"
-									}
+									"pm_DatabaseName": "@item().DATABASE_NAME"
 								}
 							}
 						}
