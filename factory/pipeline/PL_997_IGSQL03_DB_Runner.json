@@ -1,5 +1,5 @@
 {
-	"name": "PL_997_IGSQL03_RL_DB_Runner",
+	"name": "PL_997_IGSQL03_DB_Runner",
 	"properties": {
 		"activities": [
 			{
@@ -31,12 +31,15 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_998_IGSQL03_Table_Runner_Seq",
+									"referenceName": "PL_998_IGSQL03_Table_Runner",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_DatabaseName": "@item().DATABASE_NAME"
+									"pm_DatabaseName": {
+										"value": "@item().DATABASE_NAME",
+										"type": "Expression"
+									}
 								}
 							}
 						}
