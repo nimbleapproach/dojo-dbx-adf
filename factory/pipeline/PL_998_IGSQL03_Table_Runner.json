@@ -219,7 +219,7 @@
 											"source": {
 												"type": "SqlServerSource",
 												"sqlReaderQuery": {
-													"value": "Select max([Sys_RowNumber]) as NewWatermark FROM [dbo].[@{item().TABLE_NAME}]",
+													"value": "Select MAX(cast([timestamp] as bigint)) as NewWatermark FROM [dbo].[@{item().TABLE_NAME}]",
 													"type": "Expression"
 												},
 												"queryTimeout": "02:00:00",
