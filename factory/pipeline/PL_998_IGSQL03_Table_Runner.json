@@ -199,8 +199,6 @@
 									{
 										"name": "Get Latest Watermark",
 										"type": "Lookup",
-										"state": "Inactive",
-										"onInactiveMarkAs": "Succeeded",
 										"dependsOn": [
 											{
 												"activity": "Copy Source Data",
@@ -245,8 +243,6 @@
 									{
 										"name": "Update Watermark",
 										"type": "SqlServerStoredProcedure",
-										"state": "Inactive",
-										"onInactiveMarkAs": "Succeeded",
 										"dependsOn": [
 											{
 												"activity": "Get Latest Watermark",
@@ -300,8 +296,6 @@
 									{
 										"name": "Add Logging Entry",
 										"type": "SqlServerStoredProcedure",
-										"state": "Inactive",
-										"onInactiveMarkAs": "Succeeded",
 										"dependsOn": [
 											{
 												"activity": "Copy Source Data",
@@ -319,7 +313,12 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"storedProcedureName": "[adf].[sp_igsql03_logging]"
+											"storedProcedureName": "[adf].[sp_igsql03_logging]",
+											"storedProcedureParameters": {
+												"TEST": {
+													"value": "TEST"
+												}
+											}
 										},
 										"linkedServiceName": {
 											"referenceName": "LS_SQLDB_METADATA",
