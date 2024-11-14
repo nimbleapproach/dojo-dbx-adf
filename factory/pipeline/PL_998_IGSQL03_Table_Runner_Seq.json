@@ -336,7 +336,10 @@
 										"userProperties": [],
 										"typeProperties": {
 											"variableName": "Files_To_Clean",
-											"value": "@item().TABLE_NAME"
+											"value": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											}
 										}
 									}
 								]
@@ -348,8 +351,6 @@
 			{
 				"name": "For Each File",
 				"type": "ForEach",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "For Each Table",
