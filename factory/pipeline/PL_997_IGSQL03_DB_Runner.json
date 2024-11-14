@@ -7,7 +7,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get DatabasesControl Table",
+						"activity": "Get Databases",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get DatabasesControl Table').output.value",
+						"value": "@activity('Get Databases').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,
@@ -47,7 +47,7 @@
 				}
 			},
 			{
-				"name": "Get DatabasesControl Table",
+				"name": "Get Databases",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -62,7 +62,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
+							"value": "SELECT DISTINCT DATABASE_NAME\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -73,7 +73,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_IGSQL03_DATABASES",
+							"pm_TableName": "CT_IGSQL03_TABLES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
