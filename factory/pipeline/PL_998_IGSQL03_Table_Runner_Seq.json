@@ -361,7 +361,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Tables').output.value",
+						"value": "@variables('Files_To_Clean')",
 						"type": "Expression"
 					},
 					"isSequential": true,
@@ -384,21 +384,30 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"filename": {
-											"value": "'@{concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow(), '-','.parquet')}'",
+											"value": "'@{concat('bronze-igsql03-', replace(replace(item(),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow(), '-','.parquet')}'",
 											"type": "Expression"
 										}
 									},
 									"datasetParameters": {
 										"LoadCSV": {
 											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-											"pm_FileName": "@concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
-											"pm_FileLocation": "@concat(replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
+											"pm_FileName": {
+												"value": "@concat('bronze-igsql03-', replace(replace(item(),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
+												"type": "Expression"
+											},
+											"pm_FileLocation": {
+												"value": "@concat(replace(replace(item(), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
+												"type": "Expression"
+											},
 											"pm_SourceFolderName": "test"
 										},
 										"SaveParquet": {
 											"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 											"pm_FileSystem": "bronze",
-											"pm_Directory": "@concat('test/', replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)"
+											"pm_Directory": {
+												"value": "@concat('test/', replace(replace(item(), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
+												"type": "Expression"
+											}
 										}
 									}
 								},
