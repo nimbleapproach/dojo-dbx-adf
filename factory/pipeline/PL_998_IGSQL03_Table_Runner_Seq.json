@@ -39,7 +39,14 @@
 			{
 				"name": "For Each Table",
 				"type": "ForEach",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Get Tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
@@ -108,7 +115,14 @@
 									{
 										"name": "Copy Source Data",
 										"type": "Copy",
-										"dependsOn": [],
+										"dependsOn": [
+											{
+												"activity": "Update Tables Variable",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
 										"policy": {
 											"timeout": "0.12:00:00",
 											"retry": 0,
@@ -314,6 +328,16 @@
 												"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
 											}
 										}
+									},
+									{
+										"name": "Update Tables Variable",
+										"type": "AppendVariable",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "Files_To_Clean",
+											"value": "@item().TABLE_NAME"
+										}
 									}
 								]
 							}
@@ -387,39 +411,6 @@
 						}
 					]
 				}
-			},
-			{
-				"name": "ForEach1",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Get Tables",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"activities": [
-						{
-							"name": "Copy data1",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"enableStaging": false
-							}
-						}
-					]
-				}
 			}
 		],
 		"parameters": {
@@ -431,20 +422,8 @@
 			}
 		},
 		"variables": {
-			"Clean_File_Name": {
-				"type": "String"
-			},
-			"Clean_Folder_Name": {
-				"type": "String"
-			},
-			"V_NewWatermark": {
-				"type": "String"
-			},
-			"File_Name_Clean": {
-				"type": "String"
-			},
-			"Folder_Name_Clean": {
-				"type": "String"
+			"Files_To_Clean": {
+				"type": "Array"
 			}
 		},
 		"folder": {
