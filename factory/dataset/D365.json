@@ -2,7 +2,7 @@
 	"name": "D365",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "LS_D365_NUVIAS",
+			"referenceName": "LS_D365_NUVIAS2",
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
