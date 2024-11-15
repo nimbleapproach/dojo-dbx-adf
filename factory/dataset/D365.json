@@ -1,0 +1,18 @@
+{
+	"name": "D365",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_D365_NUVIAS",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Sources/NUVIAS"
+		},
+		"annotations": [],
+		"type": "ODataResource",
+		"schema": [],
+		"typeProperties": {
+			"path": "SalesOrderHeadersV2"
+		}
+	}
+}
