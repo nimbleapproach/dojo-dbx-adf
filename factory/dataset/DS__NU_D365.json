@@ -1,12 +1,12 @@
 {
-	"name": "D365",
+	"name": "DS__NU_D365",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_D365_NUVIAS2",
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "Sources/NUVIAS"
+			"name": "Sources/NUVIAS/D365"
 		},
 		"annotations": [],
 		"type": "ODataResource",
