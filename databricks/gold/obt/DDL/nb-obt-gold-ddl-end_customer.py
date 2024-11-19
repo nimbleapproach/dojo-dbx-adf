@@ -35,7 +35,6 @@ FROM
              (PARTITION BY Entity, Contact_No_ ORDER BY `timestamp` DESC) row_
     FROM silver_{ENVIRONMENT}.igsql03.end_customer
     WHERE Sys_Silver_IsCurrent
-      AND NACE_2_Code != 'NaN'
   )
 WHERE row_ = 1
 )
