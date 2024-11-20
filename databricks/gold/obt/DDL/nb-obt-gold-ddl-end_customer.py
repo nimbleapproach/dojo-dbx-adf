@@ -40,7 +40,7 @@ WHERE row_ = 1
 )
 SELECT uec.*, nc.section
 FROM unique_end_customer uec
-JOIN nace_2_codes nc
+LEFT JOIN nace_2_codes nc
   ON (uec.section_or_division = nc.section AND nc.division IS NULL)
   OR uec.section_or_division = nc.division
 """)
