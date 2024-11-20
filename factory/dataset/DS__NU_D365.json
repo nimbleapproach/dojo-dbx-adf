@@ -19,7 +19,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "SalesInvoiceHeadersV2?%24@{dataset().pm_top}",
+				"value": "SalesInvoiceHeadersV2?%24top=@{dataset().pm_top}",
 				"type": "Expression"
 			}
 		}
