@@ -41,7 +41,7 @@
 						"referenceName": "DS__NU_D365",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_top": 10
+							"pm_top": 5
 						}
 					}
 				],
