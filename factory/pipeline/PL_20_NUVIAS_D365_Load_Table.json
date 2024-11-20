@@ -19,8 +19,8 @@
 						"type": "ODataSource",
 						"additionalColumns": [
 							{
-								"name": "$filter",
-								"value": "InvoiceNumber eq 'INV00000010_NGS1'"
+								"name": "$top",
+								"value": "5"
 							}
 						],
 						"httpRequestTimeout": "00:10:00"

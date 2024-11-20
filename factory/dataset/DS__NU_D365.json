@@ -5,6 +5,12 @@
 			"referenceName": "LS_D365_NUVIAS2",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"pm_top": {
+				"type": "int",
+				"defaultValue": 10
+			}
+		},
 		"folder": {
 			"name": "Sources/NUVIAS/D365"
 		},
@@ -12,7 +18,10 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "SalesInvoiceHeadersV2?%24filter=InvoiceNumber eq 'INV00000010_NGS1'&%24top=10"
+			"path": {
+				"value": "SalesInvoiceHeadersV2?%24@{dataset().pm_top}",
+				"type": "Expression"
+			}
 		}
 	}
 }
