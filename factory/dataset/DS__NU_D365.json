@@ -12,7 +12,7 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "SalesInvoiceHeadersV2"
+			"path": "SalesInvoiceHeadersV2?%24filter=InvoiceNumber eq 'INV00000010_NGS1'&%24top=10"
 		}
 	}
 }
