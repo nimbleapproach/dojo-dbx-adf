@@ -139,7 +139,7 @@ LEFT JOIN (SELECT DISTINCT Calendar_Year,Month,Currency,Period_FX_rate FROM gold
 AND YEAR(msp_h.DocumentDate) = fx2.Calendar_Year
 AND MONTH(msp_h.DocumentDate) = fx2.Month
 
-LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(msp_h.Sys_DatabaseName)
+LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(right(msp_h.Sys_DatabaseName,2))
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON msp_l.ItemNo_ = it.No_
 AND msp_l.Sys_DatabaseName = it.Sys_DatabaseName
@@ -171,6 +171,6 @@ LEFT JOIN min_fx_rate mfx ON mfx.currency =  CASE
 END
 WHERE msp_l.Sys_Silver_IsCurrent = true
 AND msp_l.sid IS NOT NULL
-LIMIT(100)
+--LIMIT(100)
 """
 )

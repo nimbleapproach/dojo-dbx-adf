@@ -116,7 +116,7 @@ LEFT JOIN (
 AND it.Sys_DatabaseName = ven.Sys_DatabaseName
 AND it.Sys_Silver_IsCurrent = true
 
-LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(sih.Sys_DatabaseName)
+LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(right(sih.Sys_DatabaseName,2))
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.customer cu ON cu.Sys_DatabaseName = sih.Sys_DatabaseName
 AND cu.Sys_Silver_IsCurrent = TRUE
@@ -152,6 +152,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
 WHERE sih.Sys_Silver_IsCurrent = true 
 AND sil.Sys_Silver_IsCurrent = true
 AND sil.sid IS NOT NULL
-limit(100)
+--limit(100)
 """
 )
