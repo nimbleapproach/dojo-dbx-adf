@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "PL_10_IGSQL03_Load_View_ITERATOR",
+				"name": "PL_10_IGSQL03_DB_ITERATOR",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"policy": {
@@ -12,16 +12,10 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_10_IGSQL03_Load_View_ITERATOR",
+						"referenceName": "PL_10_IGSQL03_DB_ITERATOR",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true,
-					"parameters": {
-						"pm_FullLoad": {
-							"value": "@pipeline().parameters.pm_FullLoad",
-							"type": "Expression"
-						}
-					}
+					"waitOnCompletion": true
 				}
 			},
 			{
@@ -29,7 +23,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "PL_10_IGSQL03_Load_View_ITERATOR",
+						"activity": "PL_10_IGSQL03_DB_ITERATOR",
 						"dependencyConditions": [
 							"Completed"
 						]

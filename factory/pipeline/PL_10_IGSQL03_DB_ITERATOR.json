@@ -1,5 +1,5 @@
 {
-	"name": "PL_10_IGSQL03_Load_View_ITERATOR",
+	"name": "PL_10_IGSQL03_DB_ITERATOR",
 	"properties": {
 		"activities": [
 			{
@@ -7,7 +7,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get DatabasesControl Table",
+						"activity": "Get Databases",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,13 +16,13 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get DatabasesControl Table').output.value",
+						"value": "@activity('Get Databases').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "PL_20_IGSQL03_Load_View",
+							"name": "Run Table Runner",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -31,17 +31,13 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_IGSQL03_Load_View_ITERATOR",
+									"referenceName": "PL_20_IGSQL03_Table_ITERATOR",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
 									"pm_DatabaseName": {
 										"value": "@item().DATABASE_NAME",
-										"type": "Expression"
-									},
-									"pm_FullLoad": {
-										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									}
 								}
@@ -51,7 +47,7 @@
 				}
 			},
 			{
-				"name": "Get DatabasesControl Table",
+				"name": "Get Databases",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -66,7 +62,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT *\n  FROM [adf].[CT_IGSQL03_DATABASES]\n  where Active = 1",
+							"value": "SELECT DISTINCT DATABASE_NAME\n  FROM [adf].[CT_IGSQL03_TABLES]",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -77,7 +73,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"pm_SchemaName": "adf",
-							"pm_TableName": "CT_IGSQL03_DATABASES",
+							"pm_TableName": "CT_IGSQL03_TABLES",
 							"pm_Environment": {
 								"value": "@pipeline().globalParameters.gpm_Environment",
 								"type": "Expression"
@@ -88,12 +84,6 @@
 				}
 			}
 		],
-		"parameters": {
-			"pm_FullLoad": {
-				"type": "bool",
-				"defaultValue": false
-			}
-		},
 		"folder": {
 			"name": "10 Bronze/IGSQL03 [Navision]"
 		},
