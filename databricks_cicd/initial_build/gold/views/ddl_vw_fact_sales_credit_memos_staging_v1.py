@@ -152,6 +152,5 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
 WHERE sih.Sys_Silver_IsCurrent = true 
 AND sil.Sys_Silver_IsCurrent = true
 AND sil.sid IS NOT NULL
---limit(100)
 """
 )
