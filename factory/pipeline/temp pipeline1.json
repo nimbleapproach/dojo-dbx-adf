@@ -34,7 +34,7 @@
 							}
 						],
 						"sqlReaderQuery": {
-							"value": "Select * FROM  Contact",
+							"value": "Select\nNo_,\nName,\n[Search Name] AS SearchName,\n[Name 2] AS Name2,\nCity,\n[Territory Code] AS TerritoryCode,\n[Currency Code] AS CurrencyCode,\n[Country_Region Code] AS Country_RegionCode,\n[Last Date Modified] AS LastDateModified,\n[VAT Registration No_] AS VATRegistrationNo_,\nType,\n[Company No_] AS CompanyNo_,\n[Company Name] AS CompanyName,\n[Last Time Modified] AS LastTimeModified,\n[Created on] AS Createdon,\n[Customer No_] AS CustomerNo_,\n[Vendor No_] AS VendorNo_\nFROM  Contact",
 							"type": "Expression"
 						},
 						"queryTimeout": "01:30:00",
