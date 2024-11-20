@@ -17,6 +17,12 @@
 				"typeProperties": {
 					"source": {
 						"type": "ODataSource",
+						"additionalColumns": [
+							{
+								"name": "$filter",
+								"value": "InvoiceNumber eq 'INV00000010_NGS1'"
+							}
+						],
 						"httpRequestTimeout": "00:10:00"
 					},
 					"sink": {
