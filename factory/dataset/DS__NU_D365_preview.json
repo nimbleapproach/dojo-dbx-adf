@@ -1,5 +1,5 @@
 {
-	"name": "DS__NU_D365",
+	"name": "DS__NU_D365_preview",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_D365_NUVIAS2",
@@ -20,12 +20,6 @@
 		},
 		"annotations": [],
 		"type": "ODataResource",
-		"schema": [],
-		"typeProperties": {
-			"path": {
-				"value": "SalesInvoiceHeadersV2?%24top=@{dataset().pm_top}&$InvoiceDate ge @{dataset().pm_date}",
-				"type": "Expression"
-			}
-		}
+		"schema": []
 	}
 }

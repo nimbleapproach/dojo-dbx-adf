@@ -17,12 +17,6 @@
 				"typeProperties": {
 					"source": {
 						"type": "ODataSource",
-						"additionalColumns": [
-							{
-								"name": "$top",
-								"value": "5"
-							}
-						],
 						"httpRequestTimeout": "00:10:00"
 					},
 					"sink": {
