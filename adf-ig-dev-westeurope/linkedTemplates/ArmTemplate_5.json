@@ -13,6 +13,161 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_99_NUAZ-SQLSERVER-01')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Database",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get DatabasesControl Table",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get DatabasesControl Table').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Copy Task Information Schema",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"additionalColumns": [
+												{
+													"name": "InsertedDateTime",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"sqlReaderQuery": "SELECT * FROM INFORMATION_SCHEMA.COLUMNS",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_SQLDB_NUVIAS_FO_DYNAMIC_SCRIPT",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_DatabaseType": {
+													"value": "@split(item().DATABASE_NAME,'_')[1]",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_SchemaName": "adf",
+												"pm_TableName": "CT_NUAZ-SQLSERVER-01_SCHEMA",
+												"pm_Environment": "DEV"
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get DatabasesControl Table",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT *\n  FROM [adf].[CT_NUAZ-SQLSERVER-01_DATABASES]\n  where Active = 1",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_NUAZ-SQLSERVER-01_DATABASES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseType": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-07-24T10:20:15Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DF_CLOUD_DISTRIBUTION_EXEL_LOAD')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -630,6 +785,76 @@
 						"          Sys_Bronze_InsertDateTime_UTC",
 						"     ),",
 						"     partitionBy('hash', 1)) ~> WriteDeltaFiles"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_IGSQL03_CLEAN_COLUMNS')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "IGSQL03"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_ADLS_CSV_BRONZE",
+								"type": "DatasetReference"
+							},
+							"name": "LoadCSV"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_ADLS_PARQUET",
+								"type": "DatasetReference"
+							},
+							"name": "SaveParquet"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RenameColumns"
+						}
+					],
+					"udfLibraries": [
+						{
+							"referenceName": "General",
+							"type": "DataFlowReference"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     filename as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     purgeFiles: true,",
+						"     partitionBy('hash', 1)) ~> LoadCSV",
+						"LoadCSV select(mapColumn(",
+						"          each(match(true()),",
+						"               applyParquetNaming($$) = $$)",
+						"     ),",
+						"     partitionBy('hash', 1),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+						"RenameColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:[($filename)],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SaveParquet"
 					]
 				}
 			},
@@ -1307,6 +1532,130 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DEPRECATED_PL_20_IGSQL03_Load_View_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Views",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Views').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "PL_30_IGSQL03_Load_View",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "DEPRECATED_PL_30_IGSQL03_Load_View",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_DatabaseName": {
+												"value": "@pipeline().parameters.pm_DatabaseName",
+												"type": "Expression"
+											},
+											"pm_ViewName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Get EDW Views",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "Select [TABLE_NAME] FROM INFORMATION_SCHEMA.TABLES\nwhere [TABLE_SCHEMA] = 'edw_@{pipeline().globalParameters.gpm_Environment}'\nand [TABLE_CATALOG] = '@{pipeline().parameters.pm_DatabaseName}'",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "TABLES",
+										"type": "Expression"
+									},
+									"pm_SchemaName": "INFORMATION_SCHEMA",
+									"pm_DatabaseName": {
+										"value": "@pipeline().parameters.pm_DatabaseName",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_DatabaseName": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL03 [Navision]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-16T10:41:06Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1686,375 +2035,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-09-27T15:44:28Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_DATANOW_ARR_Load_Sheet_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "GetSheetNames",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "\nSELECT [SheetName]\n  FROM [adf].[CT_DATANOW_ARR_SHEETS]\n  where ShouldBeLoaded = 1",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_DATANOW_ARR_SHEETS",
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEachSheet",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetSheetNames",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetSheetNames').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_DATANOW_ARR_Load_Sheet",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_DATANOW_ARR_Load_Sheet",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_SheetName": {
-												"value": "@item().SheetName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/DATANOW"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-10-05T12:26:41Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL03_Load_ReportsAll_Views')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Load End Custormer",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_ViewName": "igv_Azure_General_igt_DDS_EndCustomer",
-								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, No_, Entity, [Contact No_] AS Contact_No_, Name, [Name 2] AS Name_2, [Post Code] AS PostCode, City, [Country_Region Code] AS Country_Region_Code, [NACE 2 Code] AS NACE_2_Code, Description, [Max Quantity (Long-Term License)] AS Max_Quantity_Long_Term_License",
-								"pm_TargetTable": "end_customer"
-							}
-						}
-					},
-					{
-						"name": "Load Technology",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Load End Custormer",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_ViewName": "igv_Azure_General_igt_DDS_Technology",
-								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name,\n    [Technology Group Code] AS Technology_Group_Code,\n    [Sort Order] AS SortOrder",
-								"pm_TargetTable": "technology"
-							}
-						}
-					},
-					{
-						"name": "Load Technology Group",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Load Technology",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_ViewName": "igv_Azure_General_igt_DDS_Technology_Group",
-								"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, Code, Name, [Sort Order] AS SortOrder",
-								"pm_TargetTable": "technology_group"
-							}
-						}
-					},
-					{
-						"name": "Load Item DSS",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Load Technology Group",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_20_IGSQL03_Load_ReportsAll_View",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_ViewName": "igv_Azure_General_igt_DDS_Item",
-								"pm_SelectString": {
-									"value": "CAST(timestamp AS BIGINT) AS timestamp, [Source Entity] AS Source_Entity, [Vendor DIM Code] AS Vendor_DIM_Code, \n[Manufacturer Item No_] AS Manufacturer_Item_No_, [Item Category Code] AS Item_Category_Code,\n[PG1 Code] AS PG1_Code, [PG2 Code] AS PG2_Code, Description, [Description 2] AS Description_2,\n[Description 3] AS Description_3, [Description 4] AS Description_4, [Item Disc_ Group] AS Item_Disc_Group,\n[BUSINESSTYPE Dimension Code] AS BUSINESSTYPE_Dimension_Code, [Life Cycle Formula] AS Life_Cycle_Formula,\n[Physical Goods] AS Physical_Goods, [Lic Band Min_] AS Lic_Band_Min_, [Lic Band Max_] AS Lic_Band_Max_,\n[Technology Code] AS Technology_Code, [Default Technology] AS Default_Technology",
-									"type": "Expression"
-								},
-								"pm_TargetTable": "item_dds"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/IGSQL03 [Navision]"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-08-19T10:31:26Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_TAG02_Load_View_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get EDW Views",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT  * FROM INFORMATION_SCHEMA.views\nwhere table_SCHEMA='edw_@{pipeline().globalParameters.gpm_Environment}' \n",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_TAGETIK_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": {
-										"value": "INFORMATION_SCHEMA",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "VIEWS",
-										"type": "Expression"
-									},
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEachView",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get EDW Views",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get EDW Views').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_TAG02_Load_View",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_TAG02_Load_View",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_ViewName": {
-												"value": "@item().TABLE_NAME",
-												"type": "Expression"
-											},
-											"pm_FullLoad": {
-												"value": "@pipeline().parameters.pm_FullLoad",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "PL_20_TAG02_Sync_Keys",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "PL_20_TAG02_Load_View",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_TAG02_Sync_Keys",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_ViewName": {
-												"value": "@item().TABLE_NAME",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-03-06T11:16:28Z"
 			},
 			"dependsOn": []
 		}
