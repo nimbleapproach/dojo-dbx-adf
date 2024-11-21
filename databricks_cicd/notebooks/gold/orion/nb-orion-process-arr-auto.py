@@ -1010,22 +1010,22 @@ def apply_vendor_transformations(df):
         "Type",
         F.when(
             (F.col("Consolidated Vendor Name") == "Cambium") &
-            (F.col("SKU").rlike(r"(?i).*RNW-1.*")),
+            (F.col("Manufacturer Item No_").rlike(r"(?i).*RNW-1.*")),
             "Vendor support"
         ).when(
             (F.col("Consolidated Vendor Name") == "Cambium") &
-            (F.col("SKU").rlike(r"(?i).*SUB-.*-3")),
+            (F.col("Manufacturer Item No_").rlike(r"(?i).*SUB-.*-3")),
             "SW Subscription"
         ).otherwise(F.col("Type"))
     ).withColumn(
         "duration",
         F.when(
             (F.col("Consolidated Vendor Name") == "Cambium") &
-            (F.col("SKU").rlike(r"(?i).*RNW-1.*")),
+            (F.col("Manufacturer Item No_").rlike(r"(?i).*RNW-1.*")),
             "1 YR"
         ).when(
             (F.col("Consolidated Vendor Name") == "Cambium") &
-            (F.col("SKU").rlike(r"(?i).*SUB-.*-3")),
+            (F.col("Manufacturer Item No_").rlike(r"(?i).*SUB-.*-3")),
             "3 YR"
         ).otherwise(F.col("duration"))
     ).withColumn(
@@ -1047,14 +1047,14 @@ def apply_vendor_transformations(df):
         "Type",
         F.when(
             (F.col("Consolidated Vendor Name") == "CarbonBlack") &
-            (F.col("SKU").rlike(r"(?i).*-1Y-EU-R-.*")),
+            (F.col("Manufacturer Item No_").rlike(r"(?i).*-1Y-EU-R-.*")),
             "Vendor support"
         ).otherwise(F.col("Type"))
     ).withColumn(
         "duration",
         F.when(
             (F.col("Consolidated Vendor Name") == "CarbonBlack") &
-            (F.col("SKU").rlike(r"(?i).*-1Y-EU-R-.*")),
+            (F.col("Manufacturer Item No_").rlike(r"(?i).*-1Y-EU-R-.*")),
             "1 YR"
         ).otherwise(F.col("duration"))
     ).withColumn(
@@ -1075,39 +1075,39 @@ def apply_vendor_transformations(df):
     df = df.withColumn(
         "Type",
         F.when(F.col("Consolidated Vendor Name") == "Cato Networks",
-            F.when(F.col("SKU").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*"), "SW Subscription")
-            .when(F.col("SKU").rlike(r"(?i).*CATO-DR-KIT.*|.*CATO-DEPLOYMENT-FEE.*"), "Hardware")
-            .when(F.col("SKU").rlike(r"(?i).*CAN-RENEW-QTR.*"), "Vendor Support")
-            .when(F.col("SKU").rlike(r"(?i).*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "SW Subscription")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*"), "SW Subscription")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO-DR-KIT.*|.*CATO-DEPLOYMENT-FEE.*"), "Hardware")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*CAN-RENEW-QTR.*"), "Vendor Support")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "SW Subscription")
             .otherwise(F.col("Type"))
         )
     ).withColumn(
         "duration",
         F.when(F.col("Consolidated Vendor Name") == "Cato Networks",
-            F.when(F.col("SKU").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "3 YR")
-            .when(F.col("SKU").rlike(r"(?i).*CAN-RENEW-QTR.*"), "3M")
-            .when(F.col("SKU").rlike(r"(?i).*CATO-DR-KIT.*|.*CATO-DEPLOYMENT-FEE.*"), "Perpetual")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "3 YR")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*CAN-RENEW-QTR.*"), "3M")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO-DR-KIT.*|.*CATO-DEPLOYMENT-FEE.*"), "Perpetual")
             .otherwise(F.col("duration"))
         )
     ).withColumn(
         "Mapping_type_Duration",
         F.when(F.col("Consolidated Vendor Name") == "Cato Networks",
-            F.when(F.col("SKU").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "Ratio mapping")
-            .when(F.col("SKU").rlike(r"(?i).*CAN-RENEW-QTR.*|.*CATO-DR-KIT.*|.*CATO-DEPLOYMENT-FEE.*"), "Other mapping")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "Ratio mapping")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*CAN-RENEW-QTR.*|.*CATO-DR-KIT.*|.*CATO-DEPLOYMENT-FEE.*"), "Other mapping")
             .otherwise(F.col("Mapping_type_Duration"))
         )
     ).withColumn(
         "frequency",
         F.when(F.col("Consolidated Vendor Name") == "Cato Networks",
-            F.when(F.col("SKU").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "Monthly")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "Monthly")
             .otherwise(lit("Upfront"))
-        )
+        ).otherwise("frequency")
     ).withColumn(
         "Mapping_type_Billing",
         F.when(F.col("Consolidated Vendor Name") == "Cato Networks",
-            F.when(F.col("SKU").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "Other mapping")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*CATO-SUBSCRIPTION.*|.*CATO-SITES.*|.*CATO-SDP-USERS.*|.*CATO-SN-SDP.*|.*CATO INTRUSION PREVENTION SYSTEM.*|.*CATO-NEXTGEN-ANTI-MALWARE.*|.*CATO-SSE-SITES.*|.*CATO-IPS.*|.*CATO-ANTI-MALWARE.*|.*CATO-CASB.*|.*CATO-REMOTE-BROWSER.*|.*CATO SDP USERS.*|.*CATO-SN-EUR-100MBPS-R.*"), "Other mapping")
             .otherwise("Sure mapping")
-        )
+        ).otherwise("Mapping_type_Billing")
     ).withColumn(
         "Consumption", F.when(F.col("Consolidated Vendor Name") == "Cato Networks", "Capacity").otherwise(F.col("Consumption"))
     )
@@ -1117,17 +1117,17 @@ def apply_vendor_transformations(df):
     df = df.withColumn(
         "Type",
         F.when(F.col("Consolidated Vendor Name") == "conpal",
-            F.when(F.col("SKU").rlike(r"(?i).*USC-12.*|.*USC-24.*|.*USC-36.*"), "Vendor Support")
-            .when(F.col("SKU").rlike(r"(?i).*LIC-PP.*"), "SW Perpetual")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*USC-12.*|.*USC-24.*|.*USC-36.*"), "Vendor Support")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*LIC-PP.*"), "SW Perpetual")
             .otherwise(F.col("Type"))
         )
     ).withColumn(
         "duration",
         F.when(F.col("Consolidated Vendor Name") == "conpal",
-            F.when(F.col("SKU").rlike(r"(?i).*USC-12.*"), "1 YR")
-            .when(F.col("SKU").rlike(r"(?i).*USC-24.*"), "2 YR")
-            .when(F.col("SKU").rlike(r"(?i).*USC-36.*"), "3 YR")
-            .when(F.col("SKU").rlike(r"(?i).*LIC-PP.*"), "Perpetual")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*USC-12.*"), "1 YR")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*USC-24.*"), "2 YR")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*USC-36.*"), "3 YR")
+            .when(F.col("Manufacturer Item No_").rlike(r"(?i).*LIC-PP.*"), "Perpetual")
             .otherwise(F.col("duration"))
         )
     ).withColumn(
@@ -1136,31 +1136,31 @@ def apply_vendor_transformations(df):
     ).withColumn(
         "frequency",
         F.when(F.col("Consolidated Vendor Name") == "conpal",
-            F.when(F.col("SKU").rlike(r"(?i).*USC-01.*"), "Monthly")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*USC-01.*"), "Monthly")
             .otherwise(lit("Upfront"))
-        )
+        ).otherwise(F.col("frequency"))
     ).withColumn(
         "Mapping_type_Billing",
         F.when(F.col("Consolidated Vendor Name") == "conpal", "Sure mapping").otherwise(F.col("Mapping_type_Billing"))
     ).withColumn(
         "Consumption",
         F.when(F.col("Consolidated Vendor Name") == "conpal",
-            F.when(F.col("SKU").rlike(r"(?i).*USC-01.*"), "Flexible")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*USC-01.*"), "Flexible")
             .otherwise("Capacity")
-        )
+        ).otherwise(F.col("Consumption"))
     )
 
     # CloudFlare-Specific Transformations
     df = df.withColumn(
         "Type",
         F.when(F.col("Consolidated Vendor Name") == "CloudFlare",
-            F.when(F.col("SKU").rlike(r"(?i).*CLOUDFLARE-CONTRACT.*"), "SW Subscription")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*CLOUDFLARE-CONTRACT.*"), "SW Subscription")
             .otherwise(F.col("Type"))
         )
     ).withColumn(
         "duration",
         F.when(F.col("Consolidated Vendor Name") == "CloudFlare",
-            F.when(F.col("SKU").rlike(r"(?i).*CLOUDFLARE-CONTRACT.*"), "Not Assigned")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*CLOUDFLARE-CONTRACT.*"), "Not Assigned")
             .otherwise(F.col("duration"))
         )
     ).withColumn(
@@ -1178,13 +1178,13 @@ def apply_vendor_transformations(df):
     df = df.withColumn(
         "Type",
         F.when(F.col("Consolidated Vendor Name") == "CyberArk",
-            F.when(F.col("SKU").rlike(r"(?i).*EPM-TARGET-WRK-SAAS.*"), "SW Subscription")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*EPM-TARGET-WRK-SAAS.*"), "SW Subscription")
             .otherwise(F.col("Type"))
         )
     ).withColumn(
         "duration",
         F.when(F.col("Consolidated Vendor Name") == "CyberArk",
-            F.when(F.col("SKU").rlike(r"(?i).*EPM-TARGET-WRK-SAAS.*"), "Not Assigned")
+            F.when(F.col("Manufacturer Item No_").rlike(r"(?i).*EPM-TARGET-WRK-SAAS.*"), "Not Assigned")
             .otherwise(F.col("duration"))
         )
     ).withColumn(
@@ -2693,6 +2693,20 @@ def apply_vendor_transformations(df):
 
 # COMMAND ----------
 
+# DBTITLE 1,Apply transformations to 1 record
+# Apply transformations to 1 record
+df_1 = parse_months(df_source.filter(col('sku')=='01-SSC-0234'))
+
+df_1 = default_columns(df_1)
+df_1 = apply_vendor_transformations(df_1)
+df_1 = apply_final_transformations(df_1)
+
+
+display(df_1.select('Consolidated Vendor Name','description', 'duration','frequency','consumption', 'Type', 'match_type'))
+
+
+# COMMAND ----------
+
 # Apply transformations in sequence
 df = parse_months(df_source)
 df = default_columns(df)
@@ -2703,16 +2717,15 @@ df = apply_final_transformations(df)
 
 # COMMAND ----------
 
-# DBTITLE 1,Apply transformations to 1 record
-# Apply transformations to 1 record
-df_1 = parse_months(df_source.filter(col('sku')=='01-SSC-0234'))
-
-df_1 = default_columns(df_1)
-df_1 = apply_vendor_transformations(df_1)
-# df_1 = apply_final_transformations(df_1)
-
-
-display(df_1.select('Consolidated Vendor Name','description', 'duration','frequency','consumption', 'Type', 'match_type'))
+def optimize_df(df, temp_name="temp_opt_table"):
+    """Optimize DataFrame with ZORDER on frequently used columns"""
+    
+    df.write.format("delta").mode("overwrite").saveAsTable(temp_name)
+    spark.sql(f"OPTIMIZE {temp_name} ZORDER BY (sku, vendor_name, description)")
+    optimized_df = spark.table(temp_name)
+    spark.sql(f"DROP TABLE IF EXISTS {temp_name}")
+    
+    return optimized_df.cache()
 
 
 # COMMAND ----------
@@ -2728,6 +2741,9 @@ df = rename_columns(df, columns_to_rename)
 
 # Apply the function to clean column names
 df_cleaned = clean_column_names(df)
+
+# try optimising (usually takes 6 mins)
+df_cleaned = optimize_df(df_cleaned)
 
 # Write the cleaned DataFrame to Delta table
 df_cleaned.write \
@@ -2746,8 +2762,8 @@ df_pierre_arr_1= spark.table(f"{catalog}.{schema}.pierre_arr_1")
 print(df_pierre_arr_0.count())
 print(df_pierre_arr_1.count())
 
-df_pierre_arr_0.printSchema()
-df_pierre_arr_1.printSchema()
+# df_pierre_arr_0.printSchema()
+# df_pierre_arr_1.printSchema()
 
 
 # COMMAND ----------
