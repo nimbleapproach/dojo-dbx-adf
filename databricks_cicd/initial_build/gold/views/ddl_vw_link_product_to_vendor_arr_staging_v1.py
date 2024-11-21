@@ -30,6 +30,14 @@ if ENVIRONMENT == 'dev':
 
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_link_product_to_vendor_arr_staging as
+with cte as (
+  select row_number() over (partition by lower((concat(it.Vendor_Name, '|', it.sku)))
+  order by it.Sys_Bronze_InsertDateTime_UTC desc) latest_rn
+  ,* 
+  from silver_dev.masterdata.datanowarr it
+ WHERE
+  it.Sys_Silver_IsCurrent = true
+  )
 select distinct
 concat(it.Vendor_Name,'|',it.sku) as product_vendor_code,
 coalesce(it.sku,'NaN') as product_code ,
@@ -54,10 +62,10 @@ Commitment_Duration_Value AS commitment_duration_value,
 'item' as sys_item_source,
     it.Sys_Silver_InsertDateTime_UTC AS Sys_Gold_InsertedDateTime_UTC,
     it.Sys_Silver_InsertDateTime_UTC AS Sys_Gold_ModifiedDateTime_UTC
-FROM silver_{ENVIRONMENT}.masterdata.datanowarr it 
+FROM cte it 
   cross join (select source_system_pk, source_entity from {catalog}.{schema}.dim_source_system where source_system = 'Managed Datasets' and is_current = 1) ss 
 LEFT OUTER JOIN {catalog}.{schema}.dim_product p on p.product_code =coalesce(it.sku,'NaN') and p.is_current = 1
 LEFT OUTER JOIN {catalog}.{schema}.dim_vendor v on v.vendor_code = coalesce(it.Vendor_Name,'NaN') and v.is_current = 1
 WHERE 
-  it.Sys_Silver_IsCurrent = true
+latest_rn =1
 """)

@@ -23,121 +23,102 @@ schema = 'orion'
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
-              DROP VIEW IF EXISTS {catalog}.{schema}.vw_link_product_to_vendor_arr_staging
+              DROP VIEW IF EXISTS {catalog}.{schema}.vw_link_product_to_vendor_arr_stg2
               """)
 
 # COMMAND ----------
 
-!pip install openpyxl --quiet
-
-# COMMAND ----------
-
-# MAGIC %restart_python
-
-# COMMAND ----------
-
-import pandas as pd
-import pyspark.pandas as ps
-
-# COMMAND ----------
-
-
-# File path in DBFS
-file_path = "/Workspace/Users/akhtar.miah@infinigate.com/2024_05_incremental.xlsx"
-
-df = pd.read_excel(file_path)
-
-# COMMAND ----------
-
-display(df)
-
-# COMMAND ----------
-
-from pyspark.sql import functions as F
-from pyspark.sql import SparkSession
-import re
-
-# Utility function to parse months from row[18] column
-def parse_months(df):
-    return df.withColumn(
-        "months",
-        F.when(F.col("row[18]").isNotNull(), F.regexp_replace(F.col("row[18]"), "_x0005_", "").cast("int")).otherwise(0)
-    )
-
-# Transformations based on `months` column
-def apply_month_based_transformations(df):
-    return df.withColumn("duration", F.when(F.col("months") > 1, (F.col("months") / 12).cast("string") + " YR")
-                                .when(F.col("months") == 1, "1M")
-                                .otherwise("Perpetual")) \
-             .withColumn("Mapping_type_Duration", F.when(F.col("months") > 1, "Sure mapping")
-                                                     .when(F.col("months") == 1, "Sure mapping")
-                                                     .otherwise("other mapping")) \
-             .withColumn("frequency", F.when(F.col("months") > 1, "Upfront")
-                                       .when(F.col("months") == 1, "Monthly")
-                                       .otherwise("Upfront")) \
-             .withColumn("Consumption", F.when(F.col("months") == 1, "Flexible").otherwise("Capacity"))
-
-# Product-specific transformations for each vendor
-def apply_vendor_transformations(df):
-    # Add transformations specific to "Software" and "Professional Service" categories
-    df = df.withColumn("Type", 
-                F.when((F.col("row[21]") == "Software") & F.col("duration").contains("YR"), "SW Subscription")
-                 .when((F.col("row[21]") == "Software") & F.col("duration").contains("M"), "SW Subscription")
-                 .when(F.col("row[21]") == "Professional Service", "Professional services")
-    )
-
-    # Watchguard-specific transformations
-    df = df.withColumn("duration", 
-            F.when(F.col("row[3]") == "Watchguard", 
-                F.when(F.col("description").rlike("1-Year|1 -Year|1 Year|1-yr"), "1 YR")
-                 .when(F.col("description").rlike("3-Year|3 Year|3-yr|3 -Year"), "3 YR")
-                 .when(F.col("description").rlike("FireboxV.*MSSP Appliance"), "3 YR")
-                 .when(F.col("description").rlike("IPSec VPN Client"), "Perpetual"))
-    ) \
-    .withColumn("Type", 
-            F.when(F.col("row[3]") == "Watchguard", 
-                F.when(F.col("description").rlike("Total Security Suite|Standard Support|Basic Security Suite"), "Vendor support")
-                 .when(F.col("description").rlike("Panda Endpoint Protection Plus"), "SW Subscription")
-                 .when(F.col("description").rlike("VPN Client"), "SW Perpetual"))
-    )
-
-    # Hardware transformation based on `row[16]` pattern
-    df = df.withColumn("Type",
-            F.when((F.col("row[3]") == "Watchguard") & F.col("row[16]").rlike("WG\\d{4}|WGT49023-EU"), "Hardware")
-             .otherwise(F.col("Type"))
-    )
-
-    # DDN-specific transformations
-    df = df.withColumn("duration",
-            F.when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("SUP-.*-(\\d+)YR"), F.regexp_extract(F.col("row[16]"), "SUP-.*-(\\d+)YR", 1) + " YR")
-             .when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("REINSTATE-BASIC-VM"), "Perpetual")
-    ) \
-    .withColumn("Type",
-            F.when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("SUP-.*"), "Vendor support")
-             .when((F.col("row[3]") == "DDN") & F.col("row[16]").rlike("REINSTATE-BASIC-VM"), "SW Perpetual")
-    )
-
-    # Entrust-specific transformations (similar approach as above for other vendors)
-    df = df.withColumn("duration",
-            F.when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("NC-.*-PR|NC-.*-ST|SUP-ESSENTIALS-PLAT"), "1 YR")
-             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("ECS-ADVA|SMSPC-R-MFA-.*-12"), "1 YR")
-             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("SMSPC-R-MFA-.*-36"), "3 YR")
-    ) \
-    .withColumn("Type",
-            F.when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("NC-.*-PR|SUP-ESSENTIALS-PLAT"), "Vendor support")
-             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("ECS-ADVA|SMSPC-R-MFA-.*-12"), "SW Subscription")
-             .when((F.col("row[3]") == "Entrust") & F.col("row[16]").rlike("NC-M-010114-L-EU.*"), "Hardware")
-    )
-
-    # Repeat similar transformations for each vendor: Juniper, Extreme Networks, Riverbed, WithSecure, Acronis, etc.
-
-    return df
-
-# Apply transformations in sequence
-df = parse_months(df)
-df = apply_month_based_transformations(df)
-df = apply_vendor_transformations(df)
-
-# Show the resulting dataframe
-df.show()
-
+spark.sql(f"""
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_link_product_to_vendor_arr_stg2 AS
+WITH cte AS (
+  SELECT 
+    row_number() OVER (
+      PARTITION BY 
+        LOWER(
+          CONCAT(
+            CASE 
+              WHEN ID IN (1,2) AND Product IN (
+                'D365', 'Azure NCE', 'Software NCE', 'M365 NCE', 'Azure', 'Business Voice', 
+                'Power Platform NCE', 'Perpetual Licencing', 'Managed Services', 'D365 NCE', 
+                'Windows 365', 'Perpetual Licencing NCE', 'Windows 365 NCE', 'Power Platform', 
+                'Copilot NCE ', 'M365', 'Business Voice NCE'
+              ) THEN 'Microsoft'
+              WHEN ID IN (1,2) AND Vendor ='Microsoft' THEN Product
+              ELSE Vendor 
+            END, 
+            '|', Product
+          )
+        ) 
+      ORDER BY it.Sys_Bronze_InsertDateTime_UTC DESC
+    ) AS latest_rn,
+    LOWER(
+      CONCAT(
+        CASE 
+          WHEN ID IN (1,2) AND Product IN (
+            'D365', 'Azure NCE', 'Software NCE', 'M365 NCE', 'Azure', 'Business Voice', 
+            'Power Platform NCE', 'Perpetual Licencing', 'Managed Services', 'D365 NCE', 
+            'Windows 365', 'Perpetual Licencing NCE', 'Windows 365 NCE', 'Power Platform', 
+            'Copilot NCE ', 'M365', 'Business Voice NCE'
+          ) THEN 'Microsoft'
+          WHEN ID IN (1,2) AND Vendor ='Microsoft' THEN Product
+          ELSE Vendor 
+        END, 
+        '|', Product
+      )
+    ) AS product_vendor_code,
+    ProductCategory AS ProductTypeMaster,
+    LOWER(
+      CASE 
+        WHEN ID IN (1,2) AND Product IN (
+          'D365', 'Azure NCE', 'Software NCE', 'M365 NCE', 'Azure', 'Business Voice', 
+          'Power Platform NCE', 'Perpetual Licencing', 'Managed Services', 'D365 NCE', 
+          'Windows 365', 'Perpetual Licencing NCE', 'Windows 365 NCE', 'Power Platform', 
+          'Copilot NCE ', 'M365', 'Business Voice NCE'
+        ) THEN 'Microsoft'
+        WHEN ID IN (1,2) AND Vendor ='Microsoft' THEN Product
+        ELSE Vendor 
+      END
+    ) AS vendor_code,
+    LOWER(Product) AS product_code,
+    ProductCategory,
+    Sys_Silver_InsertDateTime_UTC
+  FROM silver_{ENVIRONMENT}.vuzion_monthly.vuzion_monthly_revenue it
+  WHERE it.Sys_Silver_IsCurrent = TRUE
+)
+SELECT DISTINCT
+  it.product_vendor_code AS product_vendor_code,
+  COALESCE(it.product_code,'NaN') AS product_code,
+  COALESCE(p.product_pk,-1) AS product_fk, 
+  COALESCE(v.vendor_pk,-1) AS vendor_fk, 
+  COALESCE(it.vendor_code,'NaN') AS vendor_code,
+  COALESCE(it.ProductCategory,'NaN') AS product_type,
+  'NaN' AS commitment_duration_in_months,
+  'NaN' AS commitment_duration2,
+  'NaN' AS billing_frequency,
+  'NaN' AS billing_frequency2,
+  'NaN' AS consumption_model,
+  'NaN' AS commitment_duration_value,
+  ss.source_system_pk AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  'vuzion_monthly' AS sys_item_source,
+  it.Sys_Silver_InsertDateTime_UTC AS Sys_Gold_InsertedDateTime_UTC,
+  it.Sys_Silver_InsertDateTime_UTC AS Sys_Gold_ModifiedDateTime_UTC
+FROM cte it
+CROSS JOIN (
+  SELECT source_system_pk, source_entity 
+  FROM {catalog}.{schema}.dim_source_system 
+  WHERE source_system = 'Managed Datasets' AND is_current = 1
+) ss 
+LEFT OUTER JOIN {catalog}.{schema}.dim_product p ON p.product_code = it.product_code AND p.is_current = 1
+LEFT OUTER JOIN {catalog}.{schema}.dim_vendor v ON v.vendor_code = COALESCE(it.vendor_code,'NaN') AND v.is_current = 1
+WHERE latest_rn=1
+AND NOT EXISTS (
+  SELECT 1 
+  FROM {catalog}.{schema}.link_product_to_vendor_arr x 
+  WHERE x.sys_item_source='vuzion_monthly'
+  AND x.product_fk=p.product_pk
+  AND x.vendor_fk=v.vendor_pk
+)
+""")

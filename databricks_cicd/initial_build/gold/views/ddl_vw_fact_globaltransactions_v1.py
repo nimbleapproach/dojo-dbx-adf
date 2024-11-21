@@ -23,15 +23,24 @@ schema = 'orion'
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
-              DROP VIEW IF EXISTS {catalog}.{schema}.globaltransactions
+              DROP VIEW IF EXISTS {catalog}.{schema}.vw_globaltransactions_staging
               """)
 
 # COMMAND ----------
 
 spark.sql(f"""
-CREATE VIEW IF NOT EXISTS {catalog}.{schema}.globaltransactions as (
+CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_globaltransactions_staging as (
 select
-  f.GroupEntityCode
+Id
+, case when x.product_type is not null then 1 else 0 end  is_matched
+, 'direct'  matched_type
+, '' product_vendor_code_arr
+, x.product_type ProductTypeMaster
+, x.Commitment_Duration_in_months CommitmentDuration1Master
+, x.Commitment_Duration_Value CommitmentDuration2Master
+, x.Billing_Frequency BillingFrequencyMaster
+, x.Consumption_Model ConsumptionModelMaster
+, f.GroupEntityCode
 , f.EntityCode
 , f.DocumentNo
 , f.TransactionDate
@@ -43,11 +52,6 @@ select
 , f.Description
 , f.Technology
 , f.ProductTypeInternal
-, x.product_type ProductTypeMaster
-, x.Commitment_Duration_in_months CommitmentDuration1Master
-, x.Commitment_Duration_Value CommitmentDuration2Master
-, x.Billing_Frequency BillingFrequencyMaster
-, x.Consumption_Model ConsumptionModelMaster
 , f.VendorCode
 , f.VendorNameInternal
 , f.VendorNameMaster
@@ -72,7 +76,7 @@ select
 , f.COGS_Euro
 , f.GL_Group
 , f.TopCostFlag
- from platinum_dev.obt.globaltransactions f 
+ from {catalog}.{schema}.globaltransactions_obt f 
 left join 
   (select distinct 
         lower(product_code) product_code, lower(vendor_code)  vendor_code
@@ -89,3 +93,4 @@ left join
     --case when VendorNameMaster ='NaN' then VendorNameInternal else VendorNameMaster end 
 )
 """)
+

@@ -128,6 +128,17 @@
         "source_key_columns" : ["product_vendor_code","source_system_fk"],
         "active": 1
                  },
+    "link_product_to_vendor_arr_stg2" : {
+        "type": "link",
+        "run_group": 2,
+        "run_order": 1,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_product_to_vendor_arr",  
+        "destination_key_columns" : ["product_vendor_code","source_system_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_product_to_vendor_arr_stg2" ,
+        "source_key_columns" : ["product_vendor_code","source_system_fk"],
+        "active": 1
+                 },
     "vendor" : {
         "type": "dim",
         "run_group": 1,

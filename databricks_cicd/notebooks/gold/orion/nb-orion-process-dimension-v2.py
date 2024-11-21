@@ -13,6 +13,10 @@ dimension_name = dbutils.widgets.get("dimension_name")
 #dimension_name = 'reseller_group'
 
 
+dbutils.widgets.text("delta", "0", "load delta records")  # Convert True to "True"
+delta = dbutils.widgets.get("delta")
+
+
 # COMMAND ----------
 
 spark = spark  # noqa
@@ -89,15 +93,18 @@ def merge_dimension(dimension_name):
     # grab a timestamp of the data from the destination dimension
     # this is where we only pull through stuff that has changed from 
     # into destination_dimension_table_name
-    delta_df = spark.sql(f"""select 
+    if delta == 1:
+        delta_df = spark.sql(f"""select 
                                     coalesce(case when max(Sys_Gold_InsertedDateTime_UTC) > max(Sys_Gold_ModifiedDateTime_UTC)
                                     then max(Sys_Gold_InsertedDateTime_UTC)
                                     else max(Sys_Gold_ModifiedDateTime_UTC)
                                     end, CAST('1990-12-31' AS TIMESTAMP)) as delta_timestamp
                                 from {destination_dimension_table_name}
                                 """)
-    # pull into a string for extracting the delta
-    delta_timestamp = delta_df.first()['delta_timestamp']
+        # pull into a string for extracting the delta
+        delta_timestamp = delta_df.first()['delta_timestamp']
+    else:
+        delta_timestamp='1990-12-31'
     #print('delta_timestamp',delta_timestamp)
 
     # the updates_dimension_table will contain all the changed and new records for a dim, not the entire dim
@@ -137,7 +144,7 @@ def merge_dimension(dimension_name):
         FROM {updates_dimension_table} 
         WHERE Sys_Gold_InsertedDateTime_UTC > '{delta_timestamp}'
         OR coalesce(Sys_Gold_ModifiedDateTime_UTC, CAST('1990-12-31' AS TIMESTAMP)) > '{delta_timestamp}' """
-    #print(insert_sql)
+    print(insert_sql)
 
     sqldf= spark.sql(insert_sql)
 
