@@ -60,7 +60,8 @@
 		],
 		"parameters": {
 			"pm_TableName": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "LedgerJournalTransBiEntities"
 			}
 		},
 		"folder": {

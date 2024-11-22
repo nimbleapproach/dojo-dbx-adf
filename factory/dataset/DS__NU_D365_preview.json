@@ -22,7 +22,7 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "LedgerJournalTransBiEntities"
+			"path": "SubledgerVoucherGeneralJournalEntryBiEntities"
 		}
 	}
 }

@@ -9,6 +9,9 @@
 			"pm_table": {
 				"type": "string",
 				"defaultValue": "LedgerJournalTransBiEntities"
+			},
+			"pm_date": {
+				"type": "string"
 			}
 		},
 		"folder": {
