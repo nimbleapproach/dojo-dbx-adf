@@ -3,11 +3,11 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Full Load",
-				"type": "Copy",
+				"name": "Get Meta Information",
+				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
-					"timeout": "05:10:00",
+					"timeout": "0.12:00:00",
 					"retry": 0,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
@@ -16,65 +16,133 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "ODataSource",
-						"httpRequestTimeout": "00:10:00"
-					},
-					"sink": {
-						"type": "ParquetSink",
+						"type": "JsonSource",
 						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
-							"type": "ParquetWriteSettings"
+							"type": "JsonReadSettings"
 						}
 					},
-					"enableStaging": false
-				},
-				"inputs": [
+					"dataset": {
+						"referenceName": "DS_D365_METADATA",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach",
+				"type": "ForEach",
+				"dependsOn": [
 					{
-						"referenceName": "DS__NU_D365",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_table": {
-								"value": "@pipeline().parameters.pm_TableName",
-								"type": "Expression"
-							},
-							"pm_date": {
-								"value": "@pipeline().parameters.pm_DateColumn",
-								"type": "Expression"
-							}
-						}
+						"activity": "Get Meta Information",
+						"dependencyConditions": [
+							"Completed"
+						]
 					}
 				],
-				"outputs": [
-					{
-						"referenceName": "DS_ADLS_PARQUET",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_Environment": {
-								"value": "@pipeline().globalParameters.gpm_Environment",
-								"type": "Expression"
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Meta Information').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Load Source Table",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "05:10:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
 							},
-							"pm_FileSystem": "bronze",
-							"pm_Directory": {
-								"value": "nuvias_d365/@{pipeline().parameters.pm_TableName}",
-								"type": "Expression"
-							}
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ODataSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"value": "@utcNow()"
+										}
+									],
+									"httpRequestTimeout": "00:10:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": true
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS__NU_D365",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_table": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										},
+										"pm_date": {
+											"value": "@item().WatermarkColumn",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "nuvias_d365/@{item().TableName}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
 						}
-					}
-				]
+					]
+				}
 			}
 		],
-		"parameters": {
-			"pm_TableName": {
-				"type": "string",
-				"defaultValue": "LedgerJournalTransBiEntities "
-			},
-			"pm_DateColumn": {
-				"type": "string",
-				"defaultValue": "TransDate"
-			}
-		},
 		"folder": {
 			"name": "10 Bronze/NUVIAS/D365"
 		},
