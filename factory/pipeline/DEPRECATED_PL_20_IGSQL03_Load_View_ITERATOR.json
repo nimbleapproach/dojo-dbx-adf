@@ -1,5 +1,5 @@
 {
-	"name": "PL_20_IGSQL03_Load_View_ITERATOR",
+	"name": "DEPRECATED_PL_20_IGSQL03_Load_View_ITERATOR",
 	"properties": {
 		"activities": [
 			{
@@ -32,7 +32,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_30_IGSQL03_Load_View",
+									"referenceName": "DEPRECATED_PL_30_IGSQL03_Load_View",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,

@@ -1,9 +1,9 @@
 {
-	"name": "PL_20_IGSQL03_Recreate_View_ITERATOR",
+	"name": "DEPRECATED_PL_10_IGSQL03_Load_View_ITERATOR",
 	"properties": {
 		"activities": [
 			{
-				"name": "For Each Table",
+				"name": "For Each Database",
 				"type": "ForEach",
 				"dependsOn": [
 					{
@@ -19,9 +19,10 @@
 						"value": "@activity('Get DatabasesControl Table').output.value",
 						"type": "Expression"
 					},
+					"isSequential": true,
 					"activities": [
 						{
-							"name": "PL_30_IGSQL03_Recreate_View",
+							"name": "PL_20_IGSQL03_Load_View",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -30,17 +31,17 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_30_IGSQL03_Recreate_View",
+									"referenceName": "DEPRECATED_PL_20_IGSQL03_Load_View_ITERATOR",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"pm_TableName": {
-										"value": "@pipeline().parameters.pm_TableName",
-										"type": "Expression"
-									},
 									"pm_DatabaseName": {
 										"value": "@item().DATABASE_NAME",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@pipeline().parameters.pm_FullLoad",
 										"type": "Expression"
 									}
 								}
@@ -88,15 +89,16 @@
 			}
 		],
 		"parameters": {
-			"pm_TableName": {
-				"type": "string"
+			"pm_FullLoad": {
+				"type": "bool",
+				"defaultValue": false
 			}
 		},
 		"folder": {
-			"name": "00 Setup/[DEPRECATED] IGSQL03 [Navision]/Recreate View"
+			"name": "10 Bronze/IGSQL03 [Navision]"
 		},
 		"annotations": [],
-		"lastPublishTime": "2023-09-25T15:09:24Z"
+		"lastPublishTime": "2024-08-16T10:41:06Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

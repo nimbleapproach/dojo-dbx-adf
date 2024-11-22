@@ -85,6 +85,7 @@ SELECT
        CAST(1 AS INTEGER) AS is_current,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+FROM cte_sources s
 cross join cte_line_item_types li
 WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_product v WHERE v.product_pk = -1 AND v.source_system_fk = s.source_system_pk and li.line_item_type = v.line_item_type)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_product")
