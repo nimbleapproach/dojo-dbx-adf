@@ -6,13 +6,9 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"pm_top": {
-				"type": "int",
-				"defaultValue": 10
-			},
-			"pm_date": {
+			"pm_table": {
 				"type": "string",
-				"defaultValue": "2020-01-01"
+				"defaultValue": "LedgerJournalTransBiEntities"
 			}
 		},
 		"folder": {
@@ -23,7 +19,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "SalesInvoiceHeadersV2?%24top=@{dataset().pm_top}&$InvoiceDate ge @{dataset().pm_date}",
+				"value": "@{dataset().pm_table}?%$@{dataset().pm_date} ge 2024-01-01",
 				"type": "Expression"
 			}
 		}
