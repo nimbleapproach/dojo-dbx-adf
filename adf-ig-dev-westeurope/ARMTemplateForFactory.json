@@ -10058,7 +10058,7 @@
 															}
 														],
 														"sqlReaderQuery": {
-															"value": "SELECT * FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
+															"value": "SELECT cast([timestamp] as bigint) as [Sys_RowNumber], t.* FROM dbo.[@{item().TABLE_NAME}] t WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
 															"type": "Expression"
 														},
 														"queryTimeout": "02:00:00",
@@ -20175,6 +20175,7 @@
 						"}",
 						"source(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
 						"     ignoreNoFilesFound: false,",
 						"     purgeFiles: true,",
 						"     partitionBy('hash', 1)) ~> LoadCSV",

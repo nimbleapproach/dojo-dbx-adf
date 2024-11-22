@@ -835,6 +835,7 @@
 						"}",
 						"source(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
 						"     ignoreNoFilesFound: false,",
 						"     purgeFiles: true,",
 						"     partitionBy('hash', 1)) ~> LoadCSV",
