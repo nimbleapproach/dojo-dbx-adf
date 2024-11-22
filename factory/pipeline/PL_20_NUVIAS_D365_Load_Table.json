@@ -193,6 +193,30 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "FixedJsonOutput",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "json",
+					"value": {
+						"value": "@json(concat('[', replace(variables('UpdatedWatermarks2'), '}{', '},{'), ']'))",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"variables": {
@@ -201,6 +225,9 @@
 			},
 			"UpdatedWatermarks2": {
 				"type": "String"
+			},
+			"json": {
+				"type": "Array"
 			}
 		},
 		"folder": {
