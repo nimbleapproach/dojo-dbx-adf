@@ -10122,14 +10122,7 @@
 											{
 												"name": "Get Latest Watermark",
 												"type": "Lookup",
-												"dependsOn": [
-													{
-														"activity": "Copy Source Data",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
+												"dependsOn": [],
 												"policy": {
 													"timeout": "0.12:00:00",
 													"retry": 3,
@@ -10162,59 +10155,6 @@
 														}
 													},
 													"firstRowOnly": false
-												}
-											},
-											{
-												"name": "Update Watermark",
-												"type": "SqlServerStoredProcedure",
-												"dependsOn": [
-													{
-														"activity": "Get Latest Watermark",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"storedProcedureName": "[[adf].[sp_igsql03_tables_watermark_upsert]",
-													"storedProcedureParameters": {
-														"database_name": {
-															"value": {
-																"value": "@pipeline().parameters.pm_DatabaseName",
-																"type": "Expression"
-															},
-															"type": "String"
-														},
-														"table_name": {
-															"value": {
-																"value": "@item().TABLE_NAME",
-																"type": "Expression"
-															},
-															"type": "String"
-														},
-														"watermark": {
-															"value": {
-																"value": "@string(activity('Get Latest Watermark').output.value[0].NewWatermark)",
-																"type": "Expression"
-															},
-															"type": "String"
-														}
-													}
-												},
-												"linkedServiceName": {
-													"referenceName": "LS_SQLDB_METADATA",
-													"type": "LinkedServiceReference",
-													"parameters": {
-														"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
-													}
 												}
 											},
 											{
@@ -10371,12 +10311,19 @@
 											{
 												"name": "Update Tables Variable",
 												"type": "AppendVariable",
-												"dependsOn": [],
+												"dependsOn": [
+													{
+														"activity": "Get Latest Watermark",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
 												"userProperties": [],
 												"typeProperties": {
 													"variableName": "Files_To_Clean",
 													"value": {
-														"value": "@item().TABLE_NAME",
+														"value": "@concat(item().TABLE_NAME, '-', string(activity('Get Latest Watermark').output.value[0].NewWatermark))",
 														"type": "Expression"
 													}
 												}
@@ -10425,7 +10372,7 @@
 											"type": "DataFlowReference",
 											"parameters": {
 												"filename": {
-													"value": "'@{concat('bronze-igsql03-', replace(replace(item(),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow(),'.parquet')}'",
+													"value": "'@{concat('bronze-igsql03-', replace(replace(first(split(item(), '-')),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow(),'.parquet')}'",
 													"type": "Expression"
 												}
 											},
@@ -10433,11 +10380,11 @@
 												"LoadCSV": {
 													"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 													"pm_FileName": {
-														"value": "@concat('bronze-igsql03-', replace(replace(item(),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
+														"value": "@concat('bronze-igsql03-', replace(replace(first(split(item(), '-')),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
 														"type": "Expression"
 													},
 													"pm_FileLocation": {
-														"value": "@concat(replace(replace(item(), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
+														"value": "@concat(replace(replace(first(split(item(), '-')), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
 														"type": "Expression"
 													},
 													"pm_SourceFolderName": "igsql03"
@@ -10446,7 +10393,7 @@
 													"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 													"pm_FileSystem": "bronze",
 													"pm_Directory": {
-														"value": "@concat('igsql03/', replace(replace(item(), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
+														"value": "@concat('igsql03/', replace(replace(first(split(item(), '-')), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
 														"type": "Expression"
 													}
 												}
@@ -10458,6 +10405,59 @@
 											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "Update Watermark",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Clean Data",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[adf].[sp_igsql03_tables_watermark_upsert]",
+										"storedProcedureParameters": {
+											"database_name": {
+												"value": {
+													"value": "@pipeline().parameters.pm_DatabaseName",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"table_name": {
+												"value": {
+													"value": "@first(split(item(), '-'))",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"watermark": {
+												"value": {
+													"value": "@last(split(item(), '-'))",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_SQLDB_METADATA",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
+										}
 									}
 								}
 							]
@@ -10491,8 +10491,8 @@
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/dataflows/DF_IGSQL03_CLEAN_COLUMNS')]",
 				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_CSV_BRONZE')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_METADATA')]"
+				"[concat(variables('factoryId'), '/linkedServices/LS_SQLDB_METADATA')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_CSV_BRONZE')]"
 			]
 		},
 		{
