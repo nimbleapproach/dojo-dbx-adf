@@ -246,15 +246,6 @@ for column in source_columns:
 
 # COMMAND ----------
 
-## Fix for IGSQL03 - Add Sys_RowNumber column - This should be updated to a metadata driven process in the future
-
-if TABLE_SCHEMA == "igsql03":
-  deduped_df = (deduped_df.withColumn("timestamp_updated", F.regexp_replace("timestamp", "0x", ""))
-      .withColumn("Sys_RowNumber", F.conv(F.col("timestamp_updated"), 16, 10).cast("bigint"))
-      .drop(*["timestamp_updated"]))
-
-# COMMAND ----------
-
 if INIT_LOAD:
     print('We are initial loading...')
     deduped_df.writeTo(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}').append()
