@@ -35,7 +35,14 @@
 						"referenceName": "DS__NU_D365",
 						"type": "DatasetReference",
 						"parameters": {
-							"pm_table": "LedgerJournalTransBiEntities"
+							"pm_table": {
+								"value": "@pipeline().parameters.pm_TableName",
+								"type": "Expression"
+							},
+							"pm_date": {
+								"value": "@pipeline().parameters.pm_DateColumn",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -61,7 +68,11 @@
 		"parameters": {
 			"pm_TableName": {
 				"type": "string",
-				"defaultValue": "LedgerJournalTransBiEntities"
+				"defaultValue": "LedgerJournalTransBiEntities "
+			},
+			"pm_DateColumn": {
+				"type": "string",
+				"defaultValue": "TransDate"
 			}
 		},
 		"folder": {
