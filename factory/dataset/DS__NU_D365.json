@@ -21,10 +21,7 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": {
-				"value": "@{dataset().pm_table}?%$@{dataset().pm_date} ge 2024-01-01",
-				"type": "Expression"
-			}
+			"path": "LedgerJournalTransBiEntities?TransDate ge 2024-01-01"
 		}
 	}
 }
