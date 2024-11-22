@@ -50,6 +50,7 @@
 						"value": "@activity('Get Meta Information').output.value",
 						"type": "Expression"
 					},
+					"isSequential": true,
 					"activities": [
 						{
 							"name": "Load Source Table",
@@ -69,7 +70,10 @@
 									"additionalColumns": [
 										{
 											"name": "Sys_Bronze_InsertDateTime_UTC",
-											"value": "@utcNow()"
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
 										}
 									],
 									"httpRequestTimeout": "00:10:00"
@@ -138,11 +142,67 @@
 									}
 								}
 							]
+						},
+						{
+							"name": "Set variable1",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Load Source Table",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "UpdatedWatermarks",
+								"value": {
+									"value": "@variables('UpdatedWatermarks2')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set variable2",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Set variable1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "UpdatedWatermarks2",
+								"value": {
+									"value": "@concat(variables('UpdatedWatermarks'),item())",
+									"type": "Expression"
+								}
+							}
 						}
 					]
 				}
 			}
 		],
+		"variables": {
+			"UpdatedWatermarks": {
+				"type": "String"
+			},
+			"UpdatedWatermarks2": {
+				"type": "String"
+			}
+		},
 		"folder": {
 			"name": "10 Bronze/NUVIAS/D365"
 		},
