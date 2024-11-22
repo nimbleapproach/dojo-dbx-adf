@@ -21,7 +21,10 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "LedgerJournalTransBiEntities?$filter=TransDate ge 2024-01-01"
+			"path": {
+				"value": "@{dataset().pm_table}?$filter=@{dataset().pm_date} ge 2024-01-01",
+				"type": "Expression"
+			}
 		}
 	}
 }
