@@ -1,0 +1,36 @@
+{
+	"name": "DS_D365_METADATA",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_DV",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_environment": "dev"
+			}
+		},
+		"folder": {
+			"name": "METADATA"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "ControlTable_d365.json",
+				"folderPath": "nuvias_d365",
+				"fileSystem": "external"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"TableName": {
+					"type": "string"
+				},
+				"WatermarkColumn": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}
