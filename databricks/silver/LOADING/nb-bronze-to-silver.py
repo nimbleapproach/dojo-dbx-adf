@@ -12,6 +12,7 @@
 # COMMAND ----------
 
 import os
+import pyspark.sql.functions as F
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
@@ -236,14 +237,27 @@ deltaTable = DeltaTable.forName(spark,tableOrViewName=f"silver_{ENVIRONMENT}.{TA
 
 # COMMAND ----------
 
+## Cast source data to desired types
+
+source_columns = deduped_df.columns
+for column in source_columns:
+        target_datatype = [pair[1] for pair in target_datatypes if pair[0] == column][0]
+        deduped_df = deduped_df.withColumn(column, col(column).cast(target_datatype))
+
+# COMMAND ----------
+
+## Fix for IGSQL03 - Add Sys_RowNumber column - This should be updated to a metadata driven process in the future
+
+if TABLE_SCHEMA == "igsql03":
+  deduped_df = (deduped_df.withColumn("timestamp_updated", F.regexp_replace("timestamp", "0x", ""))
+      .withColumn("Sys_RowNumber", F.conv(F.col("timestamp_updated"), 16, 10).cast("bigint"))
+      .drop(*["timestamp_updated"]))
+
+# COMMAND ----------
+
 if INIT_LOAD:
     print('We are initial loading...')
-    casted_df = deduped_df
-    for column in deduped_df.columns:
-            target_datatype = [pair[1] for pair in target_datatypes if pair[0] == column][0]
-            casted_df = casted_df.withColumn(column, col(column).cast(target_datatype))
-
-    casted_df.writeTo(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}').append()
+    deduped_df.writeTo(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}').append()
 else:
     print('We are merging...')
     condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[i]}' for i in range(len(SILVER_PRIMARY_KEYS))])

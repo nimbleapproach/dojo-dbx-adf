@@ -65,16 +65,13 @@ There are some prerequisites & build consider before running this project
 # CICD Release guide
 the main branch holds the latest code of the data ware house solution
 1. create a feature branch off the main branch
-2. once changes are added to the feature and you interactive tests are complete, create a PR from the feature into main
+2. once changes are added to the feature and your interactive tests are complete, create a PR from the feature into main
 3. the main branch should then be published into dev to allow the trigger jobs to pickup changes as it reference the adf_publish branch
-4. create a PR from the main into release branch
-5. a PR into a "release" branch will automatically triggers the deployment process to the respective enviornment, provided that the factory folder or the deplyment folder has been changed. The following branches trigger the deployment
-  - release/adf-release-full
-  - release/adf-release-upto-uat
-
+4. create a PR from main into the testing branch, completion of this will trigger the deployment process to the respective environment, provided that the factory folder or the deployment folder has been changed.
+4. create a PR from testing into the prod branch, completion of this will trigger the deployment process to the respective environment, provided that the factory folder or the deployment folder has been changed.
 **filter paths are used to specifiy what folders trigger the Deployment
   ![Paths that will trigger the pipeline](./images/TriggeredPaths1.PNG)
-7. note: the ADF paramaters might be dependant on the enviornment the solution is deployed to. using the files below will help overrid values for environment specific paramaters. As a general guideline, the static datasources must be repointed their respected enviornments
+7. note: the ADF paramaters might be dependant on the enviornment the solution is deployed to. using the files below will help override values for environment specific paramaters. As a general guideline, the static datasources must be repointed their respected enviornments
 
 - [arm-template-parameters-uat.json](/factory/arm-template-parameters-uat.json)
 - [arm-template-parameters-test.json](/factory/arm-template-parameters-test.json)
