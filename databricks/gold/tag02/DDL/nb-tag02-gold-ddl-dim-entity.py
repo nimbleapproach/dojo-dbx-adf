@@ -48,12 +48,15 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ,entity_description STRING
 # MAGIC       COMMENT 'The descriptive name of the associated entity'
 # MAGIC     ,entity_type STRING
+# MAGIC       COMMENT 'The type of the entity'
 # MAGIC     ,legal_headquarters STRING
 # MAGIC       COMMENT 'The address of the legal entity'
 # MAGIC     ,administrative_city STRING
 # MAGIC       COMMENT 'City registered for administration of the entity'
 # MAGIC     ,date_established TIMESTAMP
 # MAGIC       COMMENT 'Date the entity was first established'
+# MAGIC     ,consolidation_type STRING
+# MAGIC       COMMENT 'The type of consolidation on the base entity'
 # MAGIC     ,entity_local_currency STRING
 # MAGIC       COMMENT 'Local currency where the entity is based'    
 # MAGIC     ,entity_group STRING
@@ -94,13 +97,14 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC %py
 # MAGIC
 # MAGIC sqldf= spark.sql("""
-# MAGIC SELECT CAST(-1 AS BIGINT) AS entity_id,
+# MAGIC SELECT CAST(-1 AS BIGINT) AS dim_entity_pk,
 # MAGIC        CAST('N/A' AS STRING) AS entity_code,
 # MAGIC        CAST(NULL AS STRING) AS entity_description,
 # MAGIC        CAST(NULL AS STRING) AS entity_type,
 # MAGIC        CAST(NULL AS STRING) AS legal_headquarters,
 # MAGIC        CAST(NULL AS STRING) AS administrative_city,
 # MAGIC        CAST(NULL AS TIMESTAMP) AS date_established,
+# MAGIC        CAST(NULL AS STRING) AS consolidation_type,
 # MAGIC        CAST(NULL AS STRING) AS entity_local_currency,
 # MAGIC        CAST(NULL AS STRING) AS entity_group,
 # MAGIC        CAST(NULL AS STRING) AS entity_code_legacy,     
