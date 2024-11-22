@@ -1,5 +1,5 @@
 {
-	"name": "PL_30_IGSQL03_Sync_Keys",
+	"name": "DEPRECATED_PL_30_IGSQL03_Sync_Keys",
 	"properties": {
 		"activities": [
 			{
@@ -34,7 +34,7 @@
 							}
 						],
 						"sqlReaderQuery": {
-							"value": "Select DISTINCT @{join(pipeline().parameters.pm_BuinessKeys,',')} FROM [edw_@{pipeline().globalParameters.gpm_Environment}].[@{pipeline().parameters.pm_ViewName}]\n",
+							"value": "Select DISTINCT @{join(pipeline().parameters.pm_BuinessKeys,',')} FROM [dbo].[@{pipeline().parameters.pm_TableName}]\n",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
@@ -70,10 +70,10 @@
 								"type": "Expression"
 							},
 							"pm_TableName": {
-								"value": "@pipeline().parameters.pm_ViewName",
+								"value": "@pipeline().parameters.pm_TableName",
 								"type": "Expression"
 							},
-							"pm_SchemaName": "edw",
+							"pm_SchemaName": "dbo",
 							"pm_DatabaseName": {
 								"value": "@pipeline().parameters.pm_DatabaseName",
 								"type": "Expression"
@@ -92,11 +92,11 @@
 							},
 							"pm_FileSystem": "keys",
 							"pm_Directory": {
-								"value": "igsql03/@{toLower(replace(pipeline().parameters.pm_ViewName,' ','_'))}",
+								"value": "igsql03/@{toLower(replace(pipeline().parameters.pm_TableName,' ','_'))}",
 								"type": "Expression"
 							},
 							"pm_FileName": {
-								"value": "@{pipeline().parameters.pm_ViewName}-@{pipeline().parameters.pm_DatabaseName}",
+								"value": "@{pipeline().parameters.pm_TableName}-@{pipeline().parameters.pm_DatabaseName}",
 								"type": "Expression"
 							}
 						}
@@ -108,7 +108,7 @@
 			"pm_DatabaseName": {
 				"type": "string"
 			},
-			"pm_ViewName": {
+			"pm_TableName": {
 				"type": "string"
 			},
 			"pm_BuinessKeys": {

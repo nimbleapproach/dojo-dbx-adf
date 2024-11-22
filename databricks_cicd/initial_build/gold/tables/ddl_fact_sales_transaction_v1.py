@@ -74,25 +74,3 @@ TBLPROPERTIES (
   'delta.minReaderVersion' = '3',
   'delta.minWriterVersion' = '7')
 """)
-
-# COMMAND ----------
-
-spark.sql(f"""
-truncate table  {catalog}.{schema}.fact_delta_timestamp
-""")
-
-# COMMAND ----------
-
-
-# Now populate with a default value - initial values to prevent an empty join
-spark.sql(f"""
-INSERT INTO {catalog}.{schema}.fact_delta_timestamp (document_source,max_transaction_line_timestamp,Sys_Gold_FactProcessedDateTime_UTC)
-VALUES
-  ('sales invoice', '2000-01-01', current_timestamp()),
-  ('credit memo', '2000-01-01', current_timestamp()),
-  ('msp sales credit memo', '2000-01-01', current_timestamp()),
-  ('msp sales invoice', '2000-01-01', current_timestamp()),
-  ('sales quote', '2000-01-01', current_timestamp()),
-  ('sales order', '2000-01-01', current_timestamp())
-"""
-)

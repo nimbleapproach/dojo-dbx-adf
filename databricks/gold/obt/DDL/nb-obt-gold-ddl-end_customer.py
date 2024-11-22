@@ -17,16 +17,14 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 spark.sql( f"""
 CREATE OR REPLACE VIEW end_customer AS
 WITH unique_end_customer AS (
-SELECT No_, 
-       Entity,
+SELECT Entity,
        Contact_No_,
        `Name`,
        NACE_2_Code,
        Description,
        split_part(NACE_2_Code, '.', 1) AS section_or_division
 FROM
-  ( SELECT No_, 
-           Entity,
+  ( SELECT Entity,
            Contact_No_,
            `Name`,
            NACE_2_Code,
@@ -35,13 +33,23 @@ FROM
              (PARTITION BY Entity, Contact_No_ ORDER BY `timestamp` DESC) row_
     FROM silver_{ENVIRONMENT}.igsql03.end_customer
     WHERE Sys_Silver_IsCurrent
-      AND NACE_2_Code != 'NaN'
+      AND Contact_No_ != 'NaN'
   )
 WHERE row_ = 1
 )
-SELECT uec.*, nc.section
+SELECT c.No_ AS ContactNo_,
+      c.CompanyNo_,
+      uec.Entity,
+      uec.Name,
+      uec.NACE_2_Code,
+      uec.Description,
+      nc.section
 FROM unique_end_customer uec
-JOIN nace_2_codes nc
+JOIN silver_{ENVIRONMENT}.igsql03.contact c
+  ON uec.Contact_No_ = c.CompanyNo_
+    AND uec.Entity = RIGHT(c.Sys_DatabaseName, 2)
+    AND c.Sys_Silver_IsCurrent
+LEFT JOIN nace_2_codes nc
   ON (uec.section_or_division = nc.section AND nc.division IS NULL)
-  OR uec.section_or_division = nc.division
+    OR uec.section_or_division = nc.division
 """)

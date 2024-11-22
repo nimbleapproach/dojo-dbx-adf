@@ -1,0 +1,51 @@
+{
+	"name": "DS_ADLS_CSV_BRONZE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_Environment": "dev"
+			}
+		},
+		"parameters": {
+			"pm_Environment": {
+				"type": "string"
+			},
+			"pm_FileName": {
+				"type": "string"
+			},
+			"pm_FileLocation": {
+				"type": "string"
+			},
+			"pm_SourceFolderName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADLS"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@{dataset().pm_FileName}.csv",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@{dataset().pm_SourceFolderName}/@{dataset().pm_FileLocation}",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

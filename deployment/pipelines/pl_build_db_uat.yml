@@ -1,11 +1,23 @@
-
 trigger:
-  - testing
+  batch: true
+  branches:
+    include:
+      - testing
+  paths:
+    include:
+      - databricks
+      - deployment
+    exclude:
+      - README.md
+      - deployment/images
+      - deployment/pipelines/templates
+      - deployment/pipelines/pl_adf_uat.yml
+      - deployment/pipelines/pl_adf_prod.yml
+      - deployment/pipelines/ci.yml
 
 variables:
   - group: vg-inf-edw-deployment
   - group: inf-edw-uat
-
 
 pool:
   vmImage: ubuntu-latest

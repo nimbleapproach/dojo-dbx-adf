@@ -111,7 +111,7 @@ AND sla.VersionNo_ = sha2.VersionNo_
 AND sla.Sys_DatabaseName = sha2.Sys_DatabaseName
 AND sha2.Sys_Silver_IsCurrent = true
 
-LEFT JOIN cte_sources s ON LOWER(s.source_entity) = LOWER(sla.Sys_DatabaseName)
+LEFT JOIN cte_sources s ON LOWER(s.source_entity) = LOWER(right(sla.Sys_DatabaseName,2))
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON it.No_ = sla.No_ 
 AND it.Sys_Silver_IsCurrent = true 
@@ -149,6 +149,5 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
   END
 WHERE sla.Sys_Silver_IsCurrent = true
 AND sla.sid IS NOT NULL
-limit(100)
 """
 )

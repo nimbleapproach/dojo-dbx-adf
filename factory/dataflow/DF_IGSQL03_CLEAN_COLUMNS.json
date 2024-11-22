@@ -1,0 +1,68 @@
+{
+	"name": "DF_IGSQL03_CLEAN_COLUMNS",
+	"properties": {
+		"folder": {
+			"name": "IGSQL03"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_ADLS_CSV_BRONZE",
+						"type": "DatasetReference"
+					},
+					"name": "LoadCSV"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_ADLS_PARQUET",
+						"type": "DatasetReference"
+					},
+					"name": "SaveParquet"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RenameColumns"
+				}
+			],
+			"udfLibraries": [
+				{
+					"referenceName": "General",
+					"type": "DataFlowReference"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     filename as string",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: false,",
+				"     purgeFiles: true,",
+				"     partitionBy('hash', 1)) ~> LoadCSV",
+				"LoadCSV select(mapColumn(",
+				"          each(match(true()),",
+				"               applyParquetNaming($$) = $$)",
+				"     ),",
+				"     partitionBy('hash', 1),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RenameColumns",
+				"RenameColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:[($filename)],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> SaveParquet"
+			]
+		}
+	}
+}
