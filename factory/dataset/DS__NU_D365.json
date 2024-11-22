@@ -21,7 +21,7 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "LedgerJournalTransBiEntities?%24top=100&$filter=TransDate ge 2024-01-01"
+			"path": "LedgerJournalTransBiEntities?$filter=TransDate ge 2024-01-01"
 		}
 	}
 }
