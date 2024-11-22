@@ -55,7 +55,14 @@
 						{
 							"name": "Load Source Table",
 							"type": "Copy",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Set variable2",
+									"dependencyConditions": [
+										"Skipped"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "05:10:00",
 								"retry": 0,
@@ -146,14 +153,7 @@
 						{
 							"name": "Set variable1",
 							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Load Source Table",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"secureOutput": false,
 								"secureInput": false
@@ -186,7 +186,7 @@
 							"typeProperties": {
 								"variableName": "UpdatedWatermarks2",
 								"value": {
-									"value": "@concat(variables('UpdatedWatermarks'),item())",
+									"value": "@json(concat(variables('UpdatedWatermarks'),item()))",
 									"type": "Expression"
 								}
 							}
@@ -200,7 +200,7 @@
 				"type": "String"
 			},
 			"UpdatedWatermarks2": {
-				"type": "String"
+				"type": "Array"
 			}
 		},
 		"folder": {
