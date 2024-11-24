@@ -216,15 +216,6 @@
 				"typeProperties": {
 					"source": {
 						"type": "JsonSource",
-						"additionalColumns": [
-							{
-								"name": "json",
-								"value": {
-									"value": "@variables('json')",
-									"type": "Expression"
-								}
-							}
-						],
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
