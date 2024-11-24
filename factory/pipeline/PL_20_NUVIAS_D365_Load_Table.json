@@ -247,7 +247,7 @@
 					},
 					"enableStaging": false,
 					"translator": {
-						"value": "@variables('UpdatedWatermarks2')",
+						"value": "@replace(variables('UpdatedWatermarks2'),'}{','},{') ",
 						"type": "Expression"
 					}
 				},
@@ -277,9 +277,6 @@
 				"type": "String"
 			},
 			"UpdatedWatermarks2": {
-				"type": "String"
-			},
-			"json": {
 				"type": "String"
 			}
 		},
