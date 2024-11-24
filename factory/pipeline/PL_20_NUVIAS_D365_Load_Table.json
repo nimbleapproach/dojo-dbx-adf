@@ -195,35 +195,11 @@
 				}
 			},
 			{
-				"name": "FixedJsonOutput",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "ForEach",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "json",
-					"value": {
-						"value": "@json(concat('[', replace(variables('UpdatedWatermarks2'), '}{', '},{'), ']'))",
-						"type": "Expression"
-					}
-				}
-			},
-			{
 				"name": "Write JSON to file",
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "FixedJsonOutput",
+						"activity": "ForEach",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -244,7 +220,7 @@
 							{
 								"name": "json",
 								"value": {
-									"value": "@variables('json')",
+									"value": "@variables('UpdatedWatermarks2')",
 									"type": "Expression"
 								}
 							}
@@ -259,35 +235,20 @@
 						}
 					},
 					"sink": {
-						"type": "JsonSink",
+						"type": "DelimitedTextSink",
 						"storeSettings": {
 							"type": "AzureBlobFSWriteSettings"
 						},
 						"formatSettings": {
-							"type": "JsonWriteSettings"
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
 						}
 					},
 					"enableStaging": false,
 					"translator": {
-						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"path": "$['TableName']"
-								},
-								"sink": {
-									"path": "$['TableName']"
-								}
-							},
-							{
-								"source": {
-									"path": "$['WatermarkColumn']"
-								},
-								"sink": {
-									"path": "$['WatermarkColumn']"
-								}
-							}
-						]
+						"value": "@variables('UpdatedWatermarks2')",
+						"type": "Expression"
 					}
 				},
 				"inputs": [
@@ -298,8 +259,15 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_D365_METADATA",
-						"type": "DatasetReference"
+						"referenceName": "DS_ADLS_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Environment": "dev",
+							"pm_FileName": "test",
+							"pm_FileLocation": "meta",
+							"pm_FileExtension": ".json",
+							"pm_SourceFolderName": "nuvias_d365"
+						}
 					}
 				]
 			}
@@ -312,7 +280,7 @@
 				"type": "String"
 			},
 			"json": {
-				"type": "Array"
+				"type": "String"
 			}
 		},
 		"folder": {
