@@ -821,6 +821,9 @@
 					"transformations": [
 						{
 							"name": "RenameColumns"
+						},
+						{
+							"name": "UpdateTypes"
 						}
 					],
 					"udfLibraries": [
@@ -837,16 +840,15 @@
 						"     validateSchema: false,",
 						"     inferDriftedColumnTypes: true,",
 						"     ignoreNoFilesFound: false,",
-						"     purgeFiles: true,",
-						"     partitionBy('hash', 1)) ~> LoadCSV",
+						"     purgeFiles: true) ~> LoadCSV",
 						"LoadCSV select(mapColumn(",
 						"          each(match(true()),",
 						"               applyParquetNaming($$) = $$)",
 						"     ),",
-						"     partitionBy('hash', 1),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> RenameColumns",
-						"RenameColumns sink(allowSchemaDrift: true,",
+						"RenameColumns derive(each(match(name=='Sys_RowNumber'), $$ = toLong($$))) ~> UpdateTypes",
+						"UpdateTypes sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
 						"     partitionFileNames:[($filename)],",
