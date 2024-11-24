@@ -21,16 +21,6 @@
 				"fileSystem": "external"
 			}
 		},
-		"schema": {
-			"type": "object",
-			"properties": {
-				"TableName": {
-					"type": "string"
-				},
-				"WatermarkColumn": {
-					"type": "string"
-				}
-			}
-		}
+		"schema": {}
 	}
 }
