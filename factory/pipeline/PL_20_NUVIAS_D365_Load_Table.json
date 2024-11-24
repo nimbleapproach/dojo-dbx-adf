@@ -217,6 +217,91 @@
 						"type": "Expression"
 					}
 				}
+			},
+			{
+				"name": "Write JSON to file",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "FixedJsonOutput",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"additionalColumns": [
+							{
+								"name": "json",
+								"value": {
+									"value": "@variables('json')",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['TableName']"
+								},
+								"sink": {
+									"path": "$['TableName']"
+								}
+							},
+							{
+								"source": {
+									"path": "$['WatermarkColumn']"
+								},
+								"sink": {
+									"path": "$['WatermarkColumn']"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_D365_METADATA",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_D365_METADATA",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"variables": {
