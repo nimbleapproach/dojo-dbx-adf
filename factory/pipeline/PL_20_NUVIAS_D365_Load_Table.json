@@ -199,7 +199,7 @@
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "ForEach",
+						"activity": "Set variable3",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -220,7 +220,7 @@
 							{
 								"name": "json",
 								"value": {
-									"value": "@variables('UpdatedWatermarks2')",
+									"value": "@variables('json')",
 									"type": "Expression"
 								}
 							}
@@ -247,7 +247,7 @@
 					},
 					"enableStaging": false,
 					"translator": {
-						"value": "@replace(variables('UpdatedWatermarks2'),'}{','},{') ",
+						"value": "@variables('json')",
 						"type": "Expression"
 					}
 				},
@@ -270,6 +270,30 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "Set variable3",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "json",
+					"value": {
+						"value": "@replace(variables('UpdatedWatermarks2'),'}{','},{') ",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"variables": {
@@ -277,6 +301,9 @@
 				"type": "String"
 			},
 			"UpdatedWatermarks2": {
+				"type": "String"
+			},
+			"json": {
 				"type": "String"
 			}
 		},
