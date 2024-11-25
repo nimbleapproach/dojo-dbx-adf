@@ -55,108 +55,6 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Load Source Table",
-							"type": "Copy",
-							"dependsOn": [
-								{
-									"activity": "Get New Water Mark",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "05:10:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "ODataSource",
-									"additionalColumns": [
-										{
-											"name": "Sys_Bronze_InsertDateTime_UTC",
-											"value": {
-												"value": "@utcNow()",
-												"type": "Expression"
-											}
-										}
-									],
-									"httpRequestTimeout": "00:10:00"
-								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false,
-								"logSettings": {
-									"enableCopyActivityLog": true,
-									"copyActivityLogSettings": {
-										"logLevel": "Info",
-										"enableReliableLogging": true
-									},
-									"logLocationSettings": {
-										"linkedServiceName": {
-											"referenceName": "LS_ADLS",
-											"type": "LinkedServiceReference",
-											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												}
-											}
-										},
-										"path": "logging/adf"
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "DS__NU_D365",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_table": {
-											"value": "@item().TABLE_NAME",
-											"type": "Expression"
-										},
-										"pm_date": {
-											"value": "@item().WATERMARK_COLUMN",
-											"type": "Expression"
-										},
-										"pm_watermark": {
-											"value": "@item().WATERMARK",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "DS_ADLS_PARQUET",
-									"type": "DatasetReference",
-									"parameters": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										},
-										"pm_FileSystem": "bronze",
-										"pm_Directory": {
-											"value": "nuvias_d365/@{item().TABLE_NAME}",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						},
-						{
 							"name": "Get New Water Mark",
 							"type": "DatabricksNotebook",
 							"dependsOn": [
@@ -213,7 +111,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "Load Source Table",
+									"activity": "Copy data1",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -341,6 +239,100 @@
 									}
 								}
 							}
+						},
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Get New Water Mark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ODataSource",
+									"httpRequestTimeout": "00:05:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": false,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": true
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS__NU_D365",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_table": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"pm_date": {
+											"value": "@variables('v_Watermark')",
+											"type": "Expression"
+										},
+										"pm_watermark": {
+											"value": "@item().WATERMARK_COLUMN",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "nuvias_d365/@{item().TABLE_NAME}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
 						}
 					]
 				}
