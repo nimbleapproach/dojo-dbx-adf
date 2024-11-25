@@ -262,7 +262,7 @@
 							"typeProperties": {
 								"source": {
 									"type": "ODataSource",
-									"httpRequestTimeout": "00:05:00"
+									"httpRequestTimeout": "00:10:00"
 								},
 								"sink": {
 									"type": "ParquetSink",
