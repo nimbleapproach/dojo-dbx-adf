@@ -61,7 +61,7 @@
 								{
 									"activity": "Get New Water Mark",
 									"dependencyConditions": [
-										"Skipped"
+										"Succeeded"
 									]
 								}
 							],
@@ -124,11 +124,15 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"pm_table": {
-											"value": "@item().TableName",
+											"value": "@item().TABLE_NAME",
 											"type": "Expression"
 										},
 										"pm_date": {
-											"value": "@item().WatermarkColumn",
+											"value": "@item().WATERMARK_COLUMN",
+											"type": "Expression"
+										},
+										"pm_watermark": {
+											"value": "@item().WATERMARK",
 											"type": "Expression"
 										}
 									}
@@ -172,7 +176,17 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"notebookPath": "/Repos/ying-zhen.chen@infinigate.com/inf-edw/databricks/bronze/nb-get-watermark"
+								"notebookPath": "/Repos/ying-zhen.chen@infinigate.com/inf-edw/databricks/bronze/nb-get-watermark",
+								"baseParameters": {
+									"table_name": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"watermark_column": {
+										"value": "@item().WATERMARK_COLUMN",
+										"type": "Expression"
+									}
+								}
 							},
 							"linkedServiceName": {
 								"referenceName": "LS_ADB",
@@ -199,7 +213,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "Get New Water Mark",
+									"activity": "Load Source Table",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -276,6 +290,55 @@
 								"value": {
 									"value": "@if(empty(activity('GetWatermark').output.value),'0',activity('GetWatermark').output.value[0].WATERMARK)",
 									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "UpdateWatermark",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Set New Water Mark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[adf].[sp_nu_d365_tables_watermark_upsert]",
+								"storedProcedureParameters": {
+									"table_name": {
+										"value": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"watermark": {
+										"value": {
+											"value": "@variables('v_NewWatermark')",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SQLDB_METADATA",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
 								}
 							}
 						}
