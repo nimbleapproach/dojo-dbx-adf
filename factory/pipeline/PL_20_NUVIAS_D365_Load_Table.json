@@ -111,7 +111,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "Copy data1",
+									"activity": "Load Table",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -241,7 +241,7 @@
 							}
 						},
 						{
-							"name": "Copy data1",
+							"name": "Load Table",
 							"type": "Copy",
 							"dependsOn": [
 								{
