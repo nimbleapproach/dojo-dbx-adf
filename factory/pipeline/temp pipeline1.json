@@ -28,7 +28,7 @@
 							{
 								"name": "Sys_DatabaseName",
 								"value": {
-									"value": "ReportsDE",
+									"value": "@pipeline().parameters.pm_DbName",
 									"type": "Expression"
 								}
 							}
@@ -50,7 +50,7 @@
 							"type": "ParquetWriteSettings",
 							"maxRowsPerFile": 1000000,
 							"fileNamePrefix": {
-								"value": "bronze-igsql03-contacts_test-ReportsAll-@{utcNow()}",
+								"value": "bronze-igsql03-contact-@{pipeline().parameters.pm_DbName}-@{utcNow()}",
 								"type": "Expression"
 							}
 						}
@@ -101,7 +101,7 @@
 							},
 							"pm_SchemaName": "dbo",
 							"pm_DatabaseName": {
-								"value": "ReportsDE",
+								"value": "@pipeline().parameters.pm_DbName",
 								"type": "Expression"
 							}
 						}
@@ -118,7 +118,7 @@
 							},
 							"pm_FileSystem": "bronze",
 							"pm_Directory": {
-								"value": "igsql03/contacts_test/DatabaseName=ReportsDE",
+								"value": "igsql03_test/contact_test/DatabaseName=@{pipeline().parameters.pm_DbName}",
 								"type": "Expression"
 							}
 						}
@@ -126,6 +126,11 @@
 				]
 			}
 		],
+		"parameters": {
+			"pm_DbName": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "10 Bronze/IGSQL03 [Navision]"
 		},
