@@ -16,19 +16,21 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "JsonSource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "JsonReadSettings"
-						}
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
 					},
 					"dataset": {
-						"referenceName": "DS_D365_METADATA",
-						"type": "DatasetReference"
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_NU_D365_TABLES",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
 					},
 					"firstRowOnly": false
 				}
@@ -40,7 +42,7 @@
 					{
 						"activity": "Get Meta Information",
 						"dependencyConditions": [
-							"Completed"
+							"Succeeded"
 						]
 					}
 				],
@@ -57,7 +59,7 @@
 							"type": "Copy",
 							"dependsOn": [
 								{
-									"activity": "Set variable2",
+									"activity": "Set Water Mark",
 									"dependencyConditions": [
 										"Skipped"
 									]
@@ -151,7 +153,7 @@
 							]
 						},
 						{
-							"name": "Set variable1",
+							"name": "Get Water Mark",
 							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
@@ -168,11 +170,11 @@
 							}
 						},
 						{
-							"name": "Set variable2",
+							"name": "Set Water Mark",
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "Set variable1",
+									"activity": "Get Water Mark",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -187,6 +189,72 @@
 								"variableName": "UpdatedWatermarks2",
 								"value": {
 									"value": "@concat(variables('UpdatedWatermarks'),item())",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Get New Water Mark",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "Set Water Mark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Repos/ying-zhen.chen@infinigate.com/inf-edw/databricks/bronze/nb-get-watermark"
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_ADB",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"pm_Databrick_Workspace_URL": {
+										"value": "@pipeline().globalParameters.gpm_Databrick_Workspace_URL",
+										"type": "Expression"
+									},
+									"pm_Databricks_Workspace_Resource_ID": {
+										"value": "@pipeline().globalParameters.gpm_Databricks_Workspace_Resource_ID",
+										"type": "Expression"
+									},
+									"pm_Databricks_Cluster_ID": {
+										"value": "@pipeline().globalParameters.gpm_lightweight_jobs_Databricks_ClusterID",
+										"type": "Expression"
+									},
+									"pm_NumberOfWorkers": "1"
+								}
+							}
+						},
+						{
+							"name": "Set New Water Mark",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Get New Water Mark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "v_NewWatermark",
+								"value": {
+									"value": "@activity('Get New Water Mark').output.runOutput",
 									"type": "Expression"
 								}
 							}
@@ -294,7 +362,7 @@
 			"UpdatedWatermarks2": {
 				"type": "String"
 			},
-			"json": {
+			"v_NewWatermark": {
 				"type": "String"
 			}
 		},
