@@ -59,7 +59,7 @@
 							"type": "Copy",
 							"dependsOn": [
 								{
-									"activity": "Set Water Mark",
+									"activity": "Get New Water Mark",
 									"dependencyConditions": [
 										"Skipped"
 									]
@@ -153,52 +153,11 @@
 							]
 						},
 						{
-							"name": "Get Water Mark",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "UpdatedWatermarks",
-								"value": {
-									"value": "@variables('UpdatedWatermarks2')",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "Set Water Mark",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Get Water Mark",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "UpdatedWatermarks2",
-								"value": {
-									"value": "@concat(variables('UpdatedWatermarks'),item())",
-									"type": "Expression"
-								}
-							}
-						},
-						{
 							"name": "Get New Water Mark",
 							"type": "DatabricksNotebook",
 							"dependsOn": [
 								{
-									"activity": "Set Water Mark",
+									"activity": "SetWatermark",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -258,16 +217,74 @@
 									"type": "Expression"
 								}
 							}
+						},
+						{
+							"name": "GetWatermark",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT [WATERMARK]\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where TABLE_NAME = '@{item().TABLE_NAME}'",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_SchemaName": "adf",
+										"pm_TableName": "CT_NU_D365_TABLES",
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "SetWatermark",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "GetWatermark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "v_Watermark",
+								"value": {
+									"value": "@if(empty(activity('GetWatermark').output.value),'0',activity('GetWatermark').output.value[0].WATERMARK)",
+									"type": "Expression"
+								}
+							}
 						}
 					]
 				}
 			}
 		],
 		"variables": {
-			"UpdatedWatermarks": {
-				"type": "String"
-			},
-			"UpdatedWatermarks2": {
+			"v_Watermark": {
 				"type": "String"
 			},
 			"v_NewWatermark": {
