@@ -149,7 +149,7 @@
 										},
 										"pm_FileSystem": "bronze",
 										"pm_Directory": {
-											"value": "nuvias_d365/@{item().TableName}",
+											"value": "nuvias_d365/@{item().TABLE_NAME}",
 											"type": "Expression"
 										}
 									}
