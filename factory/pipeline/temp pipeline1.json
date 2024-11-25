@@ -3,132 +3,159 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Test load manual",
-				"type": "Copy",
+				"name": "ForEach1",
+				"type": "ForEach",
 				"dependsOn": [],
-				"policy": {
-					"timeout": "0.00:30:00",
-					"retry": 2,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
 				"userProperties": [],
 				"typeProperties": {
-					"source": {
-						"type": "SqlServerSource",
-						"additionalColumns": [
-							{
-								"name": "Sys_Bronze_InsertDateTime_UTC",
-								"value": {
-									"value": "@utcNow()",
-									"type": "Expression"
-								}
+					"items": {
+						"value": "@variables('Dbs')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Test load manual",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.00:30:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
 							},
-							{
-								"name": "Sys_DatabaseName",
-								"value": {
-									"value": "@pipeline().parameters.pm_DbName",
-									"type": "Expression"
-								}
-							}
-						],
-						"sqlReaderQuery": {
-							"value": "Select\nNo_,\nName,\n[Search Name] AS SearchName,\n[Name 2] AS Name2,\nCity,\n[Territory Code] AS TerritoryCode,\n[Currency Code] AS CurrencyCode,\n[Country_Region Code] AS Country_RegionCode,\n[Last Date Modified] AS LastDateModified,\n[VAT Registration No_] AS VATRegistrationNo_,\nType,\n[Company No_] AS CompanyNo_,\n[Company Name] AS CompanyName,\n[Last Time Modified] AS LastTimeModified,\n[Created on] AS Createdon,\n[Customer No_] AS CustomerNo_,\n[Vendor No_] AS VendorNo_\nFROM  Contact",
-							"type": "Expression"
-						},
-						"queryTimeout": "01:30:00",
-						"isolationLevel": "ReadCommitted",
-						"partitionOption": "None"
-					},
-					"sink": {
-						"type": "ParquetSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
-						},
-						"formatSettings": {
-							"type": "ParquetWriteSettings",
-							"maxRowsPerFile": 1000000,
-							"fileNamePrefix": {
-								"value": "bronze-igsql03-contact-@{pipeline().parameters.pm_DbName}-@{utcNow()}",
-								"type": "Expression"
-							}
-						}
-					},
-					"enableStaging": false,
-					"validateDataConsistency": true,
-					"logSettings": {
-						"enableCopyActivityLog": true,
-						"copyActivityLogSettings": {
-							"logLevel": "Info",
-							"enableReliableLogging": true
-						},
-						"logLocationSettings": {
-							"linkedServiceName": {
-								"referenceName": "LS_ADLS",
-								"type": "LinkedServiceReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "Sys_DatabaseName",
+											"value": {
+												"value": "@item()",
+												"type": "Expression"
+											}
+										}
+									],
+									"sqlReaderQuery": {
+										"value": "Select\nNo_,\nName,\n[Name 2] AS Name2,\nCity,\n[Territory Code] AS TerritoryCode,\n[Currency Code] AS CurrencyCode,\n[Country_Region Code] AS Country_RegionCode,\n[Last Date Modified] AS LastDateModified,\n[VAT Registration No_] AS VATRegistrationNo_,\nType,\n[Company No_] AS CompanyNo_,\n[Company Name] AS CompanyName,\n[Last Time Modified] AS LastTimeModified,\n[Created on] AS Createdon,\n[Customer No_] AS CustomerNo_,\n[Vendor No_] AS VendorNo_,\nCAST(timestamp AS BIGINT) AS Sys_RowNumber\nFROM  Contact",
 										"type": "Expression"
+									},
+									"queryTimeout": "01:30:00",
+									"isolationLevel": "ReadCommitted",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings",
+										"maxRowsPerFile": 1000000,
+										"fileNamePrefix": {
+											"value": "bronze-igsql03-contact-@{item()}-@{utcNow()}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": true
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LS_ADLS",
+											"type": "LinkedServiceReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												}
+											}
+										},
+										"path": "logging/adf"
+									}
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
 									}
 								}
 							},
-							"path": "logging/adf"
+							"inputs": [
+								{
+									"referenceName": "DS_SQLDB_NAV_DYNAMIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "dev",
+											"type": "Expression"
+										},
+										"pm_TableName": {
+											"value": "Contact",
+											"type": "Expression"
+										},
+										"pm_SchemaName": "dbo",
+										"pm_DatabaseName": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "igsql03_test/contact_test/DatabaseName=@{item()}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
 						}
-					},
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_Environment": {
-								"value": "dev",
-								"type": "Expression"
-							},
-							"pm_TableName": {
-								"value": "Contacts",
-								"type": "Expression"
-							},
-							"pm_SchemaName": "dbo",
-							"pm_DatabaseName": {
-								"value": "@pipeline().parameters.pm_DbName",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "DS_ADLS_PARQUET",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_Environment": {
-								"value": "@pipeline().globalParameters.gpm_Environment",
-								"type": "Expression"
-							},
-							"pm_FileSystem": "bronze",
-							"pm_Directory": {
-								"value": "igsql03_test/contact_test/DatabaseName=@{pipeline().parameters.pm_DbName}",
-								"type": "Expression"
-							}
-						}
-					}
-				]
+					]
+				}
 			}
 		],
-		"parameters": {
-			"pm_DbName": {
-				"type": "string"
+		"variables": {
+			"Dbs": {
+				"type": "Array",
+				"defaultValue": [
+					"ReportsDE",
+					"ReportsCH",
+					"ReportsDK",
+					"ReportsSE",
+					"ReportsNL",
+					"ReportsBE",
+					"ReportsFI",
+					"ReportsNO",
+					"ReportsUK",
+					"ReportsFR",
+					"ReportsAT"
+				]
 			}
 		},
 		"folder": {
