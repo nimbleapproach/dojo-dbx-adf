@@ -305,12 +305,12 @@
 											"value": "@item().TABLE_NAME",
 											"type": "Expression"
 										},
-										"pm_date": {
-											"value": "@variables('v_Watermark')",
+										"pm_watermarkcolumn": {
+											"value": "@item().WATERMARK_COLUMN",
 											"type": "Expression"
 										},
 										"pm_watermark": {
-											"value": "@item().WATERMARK_COLUMN",
+											"value": "@variables('v_Watermark')",
 											"type": "Expression"
 										}
 									}

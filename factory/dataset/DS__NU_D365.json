@@ -10,7 +10,7 @@
 				"type": "string",
 				"defaultValue": "LedgerJournalTransBiEntities"
 			},
-			"pm_date": {
+			"pm_watermarkcolumn": {
 				"type": "string"
 			},
 			"pm_watermark": {
@@ -25,7 +25,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "@{dataset().pm_table}?$filter=@{dataset().pm_date} ge @{dataset().pm_watermark}",
+				"value": "@{dataset().pm_table}?$filter=@{dataset().pm_watermarkcolumn} ge @{dataset().pm_watermark}",
 				"type": "Expression"
 			}
 		}
