@@ -28,13 +28,11 @@ This pipeline is formed of the following stages:
 - Using the country DB name to filter rows, provided by the PL_10_IGSQL03_DB_Runner pipeline, an object of tables to pull data from, and their associated watermarks, is collected from the metadata database
 
 This object is then iterated over with the following steps, with up to 10 runs occuring in parallel
-- A row count is calculated, using the latest watermark, to determine if new data is available
+- A row count is calculated, using the current watermark, to determine if new data is available
 - If no new data is available, the process ends
-- If new data is available, a pipeline variable is updated to add the table_name, for use in the downstream cleansing activity
-- Data is then pulled from the table, using the watermark to pull only new / updated data, and saved as a CSV file in the datalake
-- The watermark value in the metadata table is then updated and a logging entry added to the logging table in the same database
-- Once completed for all tables, a final version of the table_name variable will be available, which is then iterated over via a mapping data flow, with 4 processes running in parallel
-- For each table that had new / updated data, the csv is loaded, column names are cleaned, the data is saved out as a parquet file and the source csv deleted
+- If new data is available, the latest watermark and a list of columns (from the information schema) are pulled from the associated database
+- Data is then pulled from the table, using the current watermark to pull only new / updated data, and saved as a parquet file in the datalake
+- The watermark value in the metadata table is then updated to the latest value and a logging entry added to the logging table in the same database
 
 
 ## Tables
