@@ -13,6 +13,131 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_CLOUDBLUE_PBA_Load_Table_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get EDW Tables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT DISTINCT [TABLE_NAME] ,[COLUMN_NAME] , [WATERMARK] \n  FROM [adf].[CT_CLOUDBLUE_PBA_TABLES]",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_CLOUDBLUE_PBA_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "PL_20_CLOUDBLUE_Copy_Data",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_CLOUDBLUE_PBA_Copy_Data",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_full_load": {
+												"value": "@pipeline().parameters.pm_full_load",
+												"type": "Expression"
+											},
+											"pm_TableName": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_WaterMark": {
+												"value": "@item().WATERMARK",
+												"type": "Expression"
+											},
+											"pm_ColumnName": {
+												"value": "@item().COLUMN_NAME",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_full_load": {
+						"type": "string",
+						"defaultValue": "false"
+					}
+				},
+				"variables": {
+					"v_tabelnames": {
+						"type": "String"
+					},
+					"Watermark_int_delta": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/CLOUDBLUE/PBA"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-27T15:44:28Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_10_DATANOW_ARR_Load_Sheet_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -108,6 +233,105 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-10-05T12:26:41Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_IGSQL03_DB_ITERATOR')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Database",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Databases",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Databases').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Run Table Runner",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_IGSQL03_Table_ITERATOR",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_DatabaseName": {
+												"value": "@item().DATABASE_NAME",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Get Databases",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT DISTINCT DATABASE_NAME\n  FROM [adf].[CT_IGSQL03_TABLES]",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_IGSQL03_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/IGSQL03 [Navision]"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-08-16T10:41:06Z"
 			},
 			"dependsOn": []
 		},
@@ -1538,591 +1762,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL03_Table_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get Tables",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": {
-									"value": "SELECT DISTINCT TABLE_NAME, WATERMARK\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where DATABASE_NAME = '@{pipeline().parameters.pm_DatabaseName}'",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_SchemaName": "adf",
-									"pm_TableName": "CT_IGSQL03_TABLES",
-									"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "For Each Table",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Tables",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Tables').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 10,
-							"activities": [
-								{
-									"name": "Get Row Count",
-									"type": "Lookup",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "SqlServerSource",
-											"sqlReaderQuery": {
-												"value": "SELECT COUNT(timestamp) AS rows FROM dbo.[@{item().TABLE_NAME}] WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
-												"type": "Expression"
-											},
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"dataset": {
-											"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-											"type": "DatasetReference",
-											"parameters": {
-												"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-												"pm_TableName": {
-													"value": "@item().TABLE_NAME",
-													"type": "Expression"
-												},
-												"pm_SchemaName": "dbo",
-												"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
-											}
-										},
-										"firstRowOnly": false
-									}
-								},
-								{
-									"name": "If New Data",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "Get Row Count",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@greater(activity('Get Row Count').output.value[0].rows, 0)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "Copy Source Data",
-												"type": "Copy",
-												"dependsOn": [
-													{
-														"activity": "Update Tables Variable",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "SqlServerSource",
-														"additionalColumns": [
-															{
-																"name": "Sys_Bronze_InsertDateTime_UTC",
-																"value": {
-																	"value": "@utcNow()",
-																	"type": "Expression"
-																}
-															},
-															{
-																"name": "Sys_DatabaseName",
-																"value": {
-																	"value": "@pipeline().parameters.pm_DatabaseName",
-																	"type": "Expression"
-																}
-															}
-														],
-														"sqlReaderQuery": {
-															"value": "SELECT cast([timestamp] as bigint) as [Sys_RowNumber], t.* FROM dbo.[@{item().TABLE_NAME}] t WHERE cast([timestamp] as bigint) > @{item().WATERMARK}",
-															"type": "Expression"
-														},
-														"queryTimeout": "02:00:00",
-														"partitionOption": "None"
-													},
-													"sink": {
-														"type": "DelimitedTextSink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														},
-														"formatSettings": {
-															"type": "DelimitedTextWriteSettings",
-															"quoteAllText": true,
-															"fileExtension": ".txt"
-														}
-													},
-													"enableStaging": false,
-													"translator": {
-														"type": "TabularTranslator",
-														"typeConversion": true,
-														"typeConversionSettings": {
-															"allowDataTruncation": true,
-															"treatBooleanAsNumber": false
-														}
-													}
-												},
-												"inputs": [
-													{
-														"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-														"type": "DatasetReference",
-														"parameters": {
-															"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-															"pm_TableName": {
-																"value": "@item().TABLE_NAME",
-																"type": "Expression"
-															},
-															"pm_SchemaName": "dbo",
-															"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "DS_ADLS_CSV_BRONZE",
-														"type": "DatasetReference",
-														"parameters": {
-															"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-															"pm_FileName": {
-																"value": "@concat('bronze-igsql03-', replace(replace(item().TABLE_NAME,'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
-																"type": "Expression"
-															},
-															"pm_FileLocation": {
-																"value": "@concat(replace(replace(item().TABLE_NAME, '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
-																"type": "Expression"
-															},
-															"pm_SourceFolderName": "igsql03"
-														}
-													}
-												]
-											},
-											{
-												"name": "Get Latest Watermark",
-												"type": "Lookup",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "SqlServerSource",
-														"sqlReaderQuery": {
-															"value": "Select MAX(cast([timestamp] as bigint)) as NewWatermark FROM [dbo].[@{item().TABLE_NAME}]",
-															"type": "Expression"
-														},
-														"queryTimeout": "02:00:00",
-														"partitionOption": "None"
-													},
-													"dataset": {
-														"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-														"type": "DatasetReference",
-														"parameters": {
-															"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-															"pm_TableName": {
-																"value": "@item().TABLE_NAME",
-																"type": "Expression"
-															},
-															"pm_SchemaName": "dbo",
-															"pm_DatabaseName": "@pipeline().parameters.pm_DatabaseName"
-														}
-													},
-													"firstRowOnly": false
-												}
-											},
-											{
-												"name": "Add Logging Entry",
-												"type": "SqlServerStoredProcedure",
-												"dependsOn": [
-													{
-														"activity": "Copy Source Data",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"storedProcedureName": "[[adf].[sp_igsql03_logging]",
-													"storedProcedureParameters": {
-														"database_name": {
-															"value": {
-																"value": "@pipeline().parameters.pm_DatabaseName",
-																"type": "Expression"
-															},
-															"type": "String"
-														},
-														"table_name": {
-															"value": {
-																"value": "@item().TABLE_NAME",
-																"type": "Expression"
-															},
-															"type": "String"
-														},
-														"dataread": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.dataRead",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"datawritten": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.datawritten",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"fileswritten": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.fileswritten",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"sourcepeakconnections": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.sourcepeakconnections",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"sinkpeakconnections": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.sinkpeakconnections",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"rowsread": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.rowsread",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"rowscopied": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.rowscopied",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"copyduration": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.copyduration",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"throughput": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.throughput",
-																"type": "Expression"
-															},
-															"type": "Decimal"
-														},
-														"usedparallelcopies": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.usedparallelcopies",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"queuingduration": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.executiondetails[0].detaileddurations.queuingduration",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"timetofirstbyte": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.executiondetails[0].detaileddurations.timetofirstbyte",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"transferduration": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.executiondetails[0].detaileddurations.transferduration",
-																"type": "Expression"
-															},
-															"type": "Int64"
-														},
-														"start": {
-															"value": {
-																"value": "@activity('Copy Source Data').output.executiondetails[0].start",
-																"type": "Expression"
-															},
-															"type": "Datetime"
-														},
-														"full_load": {
-															"value": {
-																"value": "@equals(int(item().WATERMARK), 0)",
-																"type": "Expression"
-															},
-															"type": "Boolean"
-														}
-													}
-												},
-												"linkedServiceName": {
-													"referenceName": "LS_SQLDB_METADATA",
-													"type": "LinkedServiceReference",
-													"parameters": {
-														"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
-													}
-												}
-											},
-											{
-												"name": "Update Tables Variable",
-												"type": "AppendVariable",
-												"dependsOn": [
-													{
-														"activity": "Get Latest Watermark",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"userProperties": [],
-												"typeProperties": {
-													"variableName": "Files_To_Clean",
-													"value": {
-														"value": "@concat(item().TABLE_NAME, '-', string(activity('Get Latest Watermark').output.value[0].NewWatermark))",
-														"type": "Expression"
-													}
-												}
-											}
-										]
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "For Each File",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "For Each Table",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@variables('Files_To_Clean')",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 4,
-							"activities": [
-								{
-									"name": "Clean Data",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "DF_IGSQL03_CLEAN_COLUMNS",
-											"type": "DataFlowReference",
-											"parameters": {
-												"filename": {
-													"value": "'@{concat('bronze-igsql03-', replace(replace(first(split(item(), '-')),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName, '-', utcNow(),'.parquet')}'",
-													"type": "Expression"
-												}
-											},
-											"datasetParameters": {
-												"LoadCSV": {
-													"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-													"pm_FileName": {
-														"value": "@concat('bronze-igsql03-', replace(replace(first(split(item(), '-')),'  ','_'), ' ', '_'), '-', pipeline().parameters.pm_DatabaseName)",
-														"type": "Expression"
-													},
-													"pm_FileLocation": {
-														"value": "@concat(replace(replace(first(split(item(), '-')), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
-														"type": "Expression"
-													},
-													"pm_SourceFolderName": "igsql03"
-												},
-												"SaveParquet": {
-													"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
-													"pm_FileSystem": "bronze",
-													"pm_Directory": {
-														"value": "@concat('igsql03/', replace(replace(first(split(item(), '-')), '  ','_'), ' ', '_'), '/DatabaseName=', pipeline().parameters.pm_DatabaseName)",
-														"type": "Expression"
-													}
-												}
-											}
-										},
-										"staging": {},
-										"integrationRuntime": {
-											"referenceName": "ir-ig-managed-dev-westeurope",
-											"type": "IntegrationRuntimeReference"
-										},
-										"traceLevel": "Fine"
-									}
-								},
-								{
-									"name": "Update Watermark",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "Clean Data",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": "[[adf].[sp_igsql03_tables_watermark_upsert]",
-										"storedProcedureParameters": {
-											"database_name": {
-												"value": {
-													"value": "@pipeline().parameters.pm_DatabaseName",
-													"type": "Expression"
-												},
-												"type": "String"
-											},
-											"table_name": {
-												"value": {
-													"value": "@first(split(item(), '-'))",
-													"type": "Expression"
-												},
-												"type": "String"
-											},
-											"watermark": {
-												"value": {
-													"value": "@last(split(item(), '-'))",
-													"type": "Expression"
-												},
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "LS_SQLDB_METADATA",
-										"type": "LinkedServiceReference",
-										"parameters": {
-											"pm_Environment": "@pipeline().globalParameters.gpm_Environment"
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"filename": {
-						"type": "string"
-					},
-					"pm_DatabaseName": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"Files_To_Clean": {
-						"type": "Array"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/IGSQL03 [Navision]"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-08-19T10:31:26Z"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_NETSAFE_Load_File')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2536,120 +2175,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2024-01-16T14:41:53Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_30_NUAZ-SQLSERVER-01_Load_Table')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Full Load Nuivas FO Table",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 60,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_NUAZ_SQLSERVER_01_TO_ADLS_BRONZE",
-								"type": "DataFlowReference",
-								"parameters": {
-									"pm_TableSchema": {
-										"value": "'@{pipeline().parameters.pm_SchemaName}'",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "'@{pipeline().parameters.pm_TableName}'",
-										"type": "Expression"
-									},
-									"pm_DatabaseName": {
-										"value": "'@{pipeline().parameters.pm_DatabaseName}'",
-										"type": "Expression"
-									}
-								},
-								"datasetParameters": {
-									"GetSQLTable": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										},
-										"pm_DatabaseType": {
-											"value": "@split(pipeline().parameters.pm_DatabaseName,'_')[1]",
-											"type": "Expression"
-										},
-										"pm_SchemaName": {
-											"value": "@pipeline().parameters.pm_SchemaName",
-											"type": "Expression"
-										},
-										"pm_TableName": {
-											"value": "@pipeline().parameters.pm_TableName",
-											"type": "Expression"
-										}
-									},
-									"WriteToBronzeADLS": {}
-								},
-								"linkedServiceParameters": {
-									"WriteToBronzeADLS": {
-										"linkedService": {
-											"pm_Environment": {
-												"value": "@pipeline().globalParameters.gpm_Environment",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "ir-ig-managed-dev-westeurope",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_DatabaseName": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					},
-					"pm_SchemaName": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"v_Watermark": {
-						"type": "String"
-					},
-					"v_NewWatermark": {
-						"type": "String"
-					},
-					"v_SelectionString": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/NUVIAS/[DEPRECATED] NUAZ-SQLSERVER-01 [FO]"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-07-24T10:20:14Z"
 			},
 			"dependsOn": []
 		}
