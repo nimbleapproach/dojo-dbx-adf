@@ -146,7 +146,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "SELECT [WATERMARK]\n  FROM [adf].[CT_IGSQL03_TABLES]\n  where TABLE_NAME = '@{item().TABLE_NAME}'",
+										"value": "SELECT [WATERMARK]\n  FROM [adf].[CT_NU_D365_TABLES]\n  where TABLE_NAME = '@{item().TABLE_NAME}'",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
