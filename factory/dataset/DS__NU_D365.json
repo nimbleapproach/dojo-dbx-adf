@@ -12,6 +12,9 @@
 			},
 			"pm_date": {
 				"type": "string"
+			},
+			"pm_watermark": {
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -22,7 +25,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "@{dataset().pm_table}?$filter=@{dataset().pm_date} ge 2024-01-01",
+				"value": "@{dataset().pm_table}?$filter=@{dataset().pm_date} ge @{dataset().pm_watermark}",
 				"type": "Expression"
 			}
 		}
