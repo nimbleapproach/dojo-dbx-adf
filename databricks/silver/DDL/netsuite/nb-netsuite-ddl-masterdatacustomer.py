@@ -43,6 +43,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
+# MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC ,CONSTRAINT masterdatacustomer_pk PRIMARY KEY(Customer_Name, Last_Modified)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for masterdatacustomer. \n' 

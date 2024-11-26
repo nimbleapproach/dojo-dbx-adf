@@ -57,6 +57,8 @@ CREATE OR REPLACE TABLE dimension_value
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
       COMMENT 'Flag if this is the current version.'
+    ,Sys_Silver_IsDeleted BOOLEAN
+      COMMENT 'Flag if this is the deleted version.'
 ,CONSTRAINT dimension_value_pk PRIMARY KEY(Code,DimensionCode,Sys_DatabaseName,Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for dimension value. \n' 

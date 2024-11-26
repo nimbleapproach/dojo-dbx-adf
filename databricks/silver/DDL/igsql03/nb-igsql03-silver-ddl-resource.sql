@@ -67,6 +67,8 @@ CREATE OR REPLACE TABLE resource
     COMMENT 'HashKey over all but Sys columns.'
   ,Sys_Silver_IsCurrent BOOLEAN
     COMMENT 'Flag if this is the current version.'
+  ,Sys_Silver_IsDeleted BOOLEAN
+    COMMENT 'Flag if this is the deleted version.'
 ,CONSTRAINT resource_pk PRIMARY KEY(No_, Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the line data for resource. \n' 

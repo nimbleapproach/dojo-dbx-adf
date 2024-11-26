@@ -34,6 +34,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC
 # MAGIC CREATE OR REPLACE TABLE chart_of_accounts 
 # MAGIC   ( 
+# MAGIC   Account_ID STRING,
+# MAGIC   Account_Desc STRING,
+# MAGIC   AccountR_ID STRING,
 # MAGIC   Level01  STRING
 # MAGIC       comment 'todo'
 # MAGIC   ,Level01_Desc  STRING

@@ -47,6 +47,8 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
+# MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC ,CONSTRAINT ecoresdistinctproduct_pk PRIMARY KEY(SAG_NGS1VendorID,DataLakeModified_DateTime)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for ecoresdistinctproduct. \n' 

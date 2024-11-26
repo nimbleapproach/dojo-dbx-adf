@@ -37,6 +37,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC
 # MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC
 # MAGIC ,CONSTRAINT ara_dim_company_pk PRIMARY KEY(CompanyID)
 # MAGIC   )

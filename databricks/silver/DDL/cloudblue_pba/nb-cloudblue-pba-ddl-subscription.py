@@ -94,6 +94,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
 # MAGIC     ,Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
+# MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
+# MAGIC       COMMENT 'Flag if this is the current version.'
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
+# MAGIC       COMMENT 'Flag if this is the deleted version.'
 # MAGIC ,CONSTRAINT subscription_pk PRIMARY KEY(subscriptionID,DateArc)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for subscription. \n' 
