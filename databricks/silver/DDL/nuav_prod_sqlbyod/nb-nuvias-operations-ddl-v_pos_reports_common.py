@@ -78,7 +78,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC , it.statusissue                                                      AS status_issue
 # MAGIC , it.statusreceipt                                                    AS status_receipt
 # MAGIC , it.invoicereturned                                                  AS invoice_returned
-# MAGIC , it.packingslipreturned                                              AS packing_slip_returned         
+# MAGIC , it.packingslipreturned                                              AS packing_slip_returned  
+# MAGIC , sl.SAG_RESELLERVENDORID                                             AS partner_id
+# MAGIC , ''                                                                  AS price_per_unit_for_this_deal
+# MAGIC , ''                                                                  AS extended_price_for_this_deal       
 # MAGIC   FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging sl
 # MAGIC   LEFT JOIN bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging it
 # MAGIC     ON it.inventtransid = sl.inventtransid
@@ -99,3 +102,16 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     AND cu.dataareaid = sh.dataareaid
 # MAGIC  WHERE 1 = 1 
 # MAGIC    AND sl.dataareaid NOT IN ('NGS1','NNL2')
+# MAGIC    AND TO_DATE(sl.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging)
+# MAGIC    AND TO_DATE(it.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging)
+# MAGIC    AND TO_DATE(sh.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging)
+# MAGIC    AND TO_DATE(sp.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.ara_so_po_id_list)
+# MAGIC    AND TO_DATE(pl.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging)
+# MAGIC    AND TO_DATE(di.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems)
+# MAGIC    AND TO_DATE(cu.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC ALTER VIEW silver_dev.nuav_prod_sqlbyod.v_pos_reports_common OWNER TO `az_edw_data_engineers_ext_db`
