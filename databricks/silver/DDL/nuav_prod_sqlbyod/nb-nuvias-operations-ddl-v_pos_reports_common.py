@@ -33,20 +33,30 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC
 # MAGIC , sh.salesname                                                        AS sales_name
 # MAGIC , cu.organizationname                                                 AS bill_to_name
-# MAGIC , 'To Be Done'                                                        AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
+# MAGIC , pa.addressdescription                                               AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
 # MAGIC , 'To Be Done'                                                        AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC , 'To Be Done'                                                        AS reseller_city -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC , 'To Be Done'                                                        AS reseller_state -- v_CustomerPrimaryPostalAddressSplit
+# MAGIC , SPLIT(pa.addressstreet,'\n')[0]                                     AS reseller_address1
+# MAGIC , SPLIT(pa.addressstreet,'\n')[1]                                     AS reseller_address2
+# MAGIC , SPLIT(pa.addressstreet,'\n')[2]                                     AS reseller_address3
+# MAGIC , SPLIT(pa.addressstreet,'\n')[3]                                     AS reseller_address4
+# MAGIC , SPLIT(pa.addressstreet,'\n')[4]                                     AS reseller_address5
+# MAGIC , pa.addresscity                                                      AS reseller_city
+# MAGIC , pa.addressstate                                                     AS reseller_state
 # MAGIC , cu.addresszipcode                                                   AS bill_to_postal_code
-# MAGIC , 'To Be Done'                                                        AS reseller_postal_code -- v_CustomerPrimaryPostalAddressSplit
+# MAGIC , pa.addresszipcode                                                   AS reseller_postal_code
 # MAGIC , cu.addresscountryregionisocode                                      AS bill_to_country
-# MAGIC , 'To Be Done'                                                        AS reseller_country -- v_CustomerPrimaryPostalAddressSplit
+# MAGIC , pa.addresscountryregionisocode                                      AS reseller_country
 # MAGIC , 'To Be Done'                                                        AS reseller_contact_name  -- ora.Oracle_Opportunities not ingested
 # MAGIC , 'To Be Done'                                                        AS reseller_contact_email -- ora.Oracle_Contacts not ingested
-# MAGIC , 'To Be Done'                                                        AS reseller_email -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC , 'To Be Done'                                                        AS ship_to_name
-# MAGIC , 'To Be Done'                                                        AS ship_to_country
-# MAGIC , 'To Be Done'                                                        AS ship_to_postal_code
+# MAGIC , 'To Be Done'                                                        AS reseller_email -- probably added by mistake
+# MAGIC , ad.description                                                      AS ship_to_name
+# MAGIC , b.isocode                                                           AS ship_to_country
+# MAGIC , ad.zipcode                                                          AS ship_to_postal_code
+# MAGIC , SPLIT(ad.street,'\n')[0]                                            AS ship_to_address1
+# MAGIC , SPLIT(ad.street,'\n')[1]                                            AS ship_to_address2
+# MAGIC , SPLIT(ad.street,'\n')[2]                                            AS ship_to_address3
+# MAGIC , SPLIT(ad.street,'\n')[3]                                            AS ship_to_address4
+# MAGIC , SPLIT(ad.street,'\n')[4]                                            AS ship_to_address5
 # MAGIC , sh.sag_euaddress_name                                               AS end_customer_name
 # MAGIC , sh.sag_euaddress_street1                                            AS end_customer_address1
 # MAGIC , sh.sag_euaddress_street2                                            AS end_customer_address2
@@ -79,36 +89,35 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC , it.statusreceipt                                                    AS status_receipt
 # MAGIC , it.invoicereturned                                                  AS invoice_returned
 # MAGIC , it.packingslipreturned                                              AS packing_slip_returned  
-# MAGIC , sl.SAG_RESELLERVENDORID                                             AS partner_id
+# MAGIC , sl.sag_resellervendorid                                             AS partner_id
 # MAGIC , ''                                                                  AS price_per_unit_for_this_deal
 # MAGIC , ''                                                                  AS extended_price_for_this_deal       
-# MAGIC   FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging sl
-# MAGIC   LEFT JOIN bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging it
+# MAGIC   FROM (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sl1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging sl1)) sl
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging it1)) it
 # MAGIC     ON it.inventtransid = sl.inventtransid
 # MAGIC    AND it.dataareaid NOT IN ('NGS1','NNL2')
-# MAGIC   LEFT JOIN bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging sh
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sh1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging sh1)) sh
 # MAGIC     ON sh.salesid = sl.salesid
 # MAGIC    AND sh.dataareaid NOT IN ('NGS1','NNL2')
-# MAGIC   LEFT JOIN bronze_dev.nuav_prod_sqlbyod.ara_so_po_id_list sp
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.ara_so_po_id_list WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sp1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.ara_so_po_id_list sp1)) sp
 # MAGIC     ON sp.saleslineid_local = sl.inventtransid
-# MAGIC   LEFT JOIN bronze_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging pl
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(pl1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging pl1)) pl
 # MAGIC     ON pl.inventtransid = sp.purchlineid_intercomp
 # MAGIC    AND pl.dataareaid IN ('NGS1','NNL2')
-# MAGIC   LEFT JOIN bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems di 
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(di1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems di1)) di 
 # MAGIC     ON di.itemid = sl.itemid
 # MAGIC     AND di.companyid = (CASE WHEN sl.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
-# MAGIC   LEFT JOIN bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging cu
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(cu1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging cu1)) cu
 # MAGIC     ON cu.customeraccount = sh.custaccount
 # MAGIC     AND cu.dataareaid = sh.dataareaid
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_customerpostaladdressstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(pa1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_customerpostaladdressstaging pa1)) pa
+# MAGIC     ON pa.customeraccountnumber = sh.invoiceaccount
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_logisticspostaladdressbasestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ad1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_logisticspostaladdressbasestaging ad1)) ad
+# MAGIC     ON ad.addressrecid = sh.deliverypostaladdress
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(b1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging b1)) b
+# MAGIC     ON b.countryregion = ad.countryregionid
 # MAGIC  WHERE 1 = 1 
-# MAGIC    AND sl.dataareaid NOT IN ('NGS1','NNL2')
-# MAGIC    AND TO_DATE(sl.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging)
-# MAGIC    AND TO_DATE(it.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging)
-# MAGIC    AND TO_DATE(sh.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging)
-# MAGIC    AND TO_DATE(sp.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.ara_so_po_id_list)
-# MAGIC    AND TO_DATE(pl.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging)
-# MAGIC    AND TO_DATE(di.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems)
-# MAGIC    AND TO_DATE(cu.Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging)
+# MAGIC     AND sl.dataareaid NOT IN ('NGS1','NNL2')
 
 # COMMAND ----------
 
