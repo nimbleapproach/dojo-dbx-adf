@@ -67,6 +67,10 @@ CREATE OR REPLACE TABLE sales_header_archive
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
+    ,Sys_Silver_IsCurrent BOOLEAN
+      COMMENT 'Flag if this is the current version.'
+    ,Sys_Silver_IsDeleted BOOLEAN
+      COMMENT 'Flag if this is the deleted version.'
 ,CONSTRAINT sales_header_archive_pk PRIMARY KEY(No_,VersionNo_,DocumentType,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the header data for sales header archive. \n' 

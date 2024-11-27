@@ -23,7 +23,7 @@ CREATE OR REPLACE VIEW staging_dim_scenario AS
 
 SELECT DISTINCT scenario_code,
                 scenario_type,
-                ScenarioGroup,
+                scenario_group,
                 original_scenario_code,
                 scenario_description,
                 COD_SCENARIO_PREC,
@@ -48,7 +48,7 @@ SELECT DISTINCT scenario_code,
 FROM (
 SELECT scenario_code,
        scenario_type,
-       ScenarioGroup,
+       scenario_group,
        original_scenario_code,
        scenario_description,
        COD_SCENARIO_PREC,
@@ -73,7 +73,7 @@ SELECT *,
 FROM (
 SELECT scenario_code,
        scenario_type,
-       ScenarioGroup,
+       scenario_group,
        original_scenario_code,
        scenario_description,
        COD_SCENARIO_PREC,
@@ -98,7 +98,7 @@ SELECT scenario_code,
 FROM (SELECT row_number() OVER(PARTITION BY a.scenario_code ORDER BY date_updated) AS row_id,
              a.scenario_code,
              a.scenario_type,
-             a.ScenarioGroup,
+             a.scenario_group,
              a.original_scenario_code,
              a.scenario_description,
              a.COD_SCENARIO_PREC,
@@ -120,7 +120,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.scenario_code ORDER BY date_update
                              TRIM(a.TIPO_SCENARIO) AS scenario_type,
                             (CASE WHEN a.COD_SCENARIO LIKE '%ACT%' THEN 'Actual'
                                   WHEN a.COD_SCENARIO LIKE '%FC%' THEN 'Forecast'
-                                  WHEN a.COD_SCENARIO LIKE '%BUD%' THEN 'Plan' END) AS ScenarioGroup,
+                                  WHEN a.COD_SCENARIO LIKE '%BUD%' THEN 'Plan' END) AS scenario_group,
                              TRIM(a.COD_SCENARIO_ORIGINARIO) AS original_scenario_code,
                              TRIM(a.DESC_SCENARIO) AS scenario_description,
                              TRIM(a.COD_SCENARIO_PREC) AS COD_SCENARIO_PREC,
@@ -147,7 +147,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.scenario_code ORDER BY date_update
                              TRIM(a.TIPO_SCENARIO) AS scenario_type,
                             (CASE WHEN a.COD_SCENARIO LIKE '%ACT%' THEN 'Actual'
                                   WHEN a.COD_SCENARIO LIKE '%FC%' THEN 'Forecast'
-                                  WHEN a.COD_SCENARIO LIKE '%BUD%' THEN 'Plan' END) AS ScenarioGroup,
+                                  WHEN a.COD_SCENARIO LIKE '%BUD%' THEN 'Plan' END) AS scenario_group,
                              TRIM(a.COD_SCENARIO_ORIGINARIO) AS original_scenario_code,
                              TRIM(a.DESC_SCENARIO) AS scenario_description,
                              TRIM(a.COD_SCENARIO_PREC) AS COD_SCENARIO_PREC,
@@ -204,7 +204,7 @@ FROM (SELECT row_number() OVER(PARTITION BY a.scenario_code ORDER BY date_update
 # MAGIC sqldf= spark.sql("""
 # MAGIC SELECT scenario_code,
 # MAGIC        scenario_type,
-# MAGIC        ScenarioGroup,
+# MAGIC        scenario_group,
 # MAGIC        original_scenario_code,
 # MAGIC        scenario_description,
 # MAGIC        COD_SCENARIO_PREC,

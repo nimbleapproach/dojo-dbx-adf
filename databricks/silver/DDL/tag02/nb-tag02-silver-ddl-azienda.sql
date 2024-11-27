@@ -64,6 +64,8 @@ CREATE OR REPLACE TABLE azienda
       COMMENT 'The timestamp when this entry was last modifed in silver.'
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys and DATEUPD columns.'
+    ,Sys_Silver_IsCurrent BOOLEAN
+    ,Sys_Silver_IsDeleted BOOLEAN
 ,CONSTRAINT azienda_pk PRIMARY KEY(COD_AZIENDA, DATEUPD)
   )
 COMMENT 'This table contains the "entity". \n

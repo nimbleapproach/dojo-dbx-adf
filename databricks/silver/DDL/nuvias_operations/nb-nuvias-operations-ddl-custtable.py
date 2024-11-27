@@ -45,6 +45,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC     ,Sys_Silver_IsCurrent BOOLEAN NOT NULL
 # MAGIC       COMMENT 'TODO'
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC     
 # MAGIC ,CONSTRAINT custtable_pk PRIMARY KEY(AccountNum,DataAreaId,DataLakeModified_DateTime)
 # MAGIC   )

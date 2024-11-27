@@ -33,8 +33,6 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,PARTYNUMBER	STRING	
 # MAGIC       COMMENT 'TODO'
-# MAGIC     -- ,DataLakeModified_DateTime	TIMESTAMP	
-# MAGIC     --   COMMENT 'TODO'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP

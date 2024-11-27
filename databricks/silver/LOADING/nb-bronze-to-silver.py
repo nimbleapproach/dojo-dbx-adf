@@ -7,12 +7,11 @@
 
 # COMMAND ----------
 
-# MAGIC %run  ../../library/nb-silver-library 
+# MAGIC %run  ../../library/nb-silver-library
 
 # COMMAND ----------
 
 import os
-import pyspark.sql.functions as F
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 

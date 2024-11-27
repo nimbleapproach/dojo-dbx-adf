@@ -86,6 +86,7 @@ CREATE OR REPLACE TABLE inf_msp_usage_line
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
+    ,Sys_Silver_IsDeleted BOOLEAN
 ,CONSTRAINT inf_msp_usage_line_pk PRIMARY KEY(BizTalkGuid,LineNo_,Sys_DatabaseName, Sys_RowNumber)
   )
 COMMENT 'This table contains the header data for MSP. \n' 
