@@ -95,11 +95,17 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS partner_id
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN 'To Be Done' -- Sophos TO DO 
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SUM(-1* it.qty) OVER(
+# MAGIC       PARTITION BY sl.salesid, it.datephysical, di.itemname, sl.inventtransid, sl.dataareaid, 
+# MAGIC       sh.purchorderformnum, sh.currencycode, pa.addressdescription, CONCAT_WS(', ',SPLIT(pa.addressstreet,'\n')[0],SPLIT(pa.addressstreet,'\n')[1]),
+# MAGIC       pa.addresscity, pa.addresszipcode, pa.addresscountryregionisocode,SPLIT(op.contact_name, ' +')[0], SPLIT(op.contact_name, ' +')[1],
+# MAGIC       co.emailaddress, sh.sag_euaddress_name, CONCAT_WS(', ', sh.sag_euaddress_street1, sh.sag_euaddress_street2),
+# MAGIC       sh.sag_euaddress_city, sh.sag_euaddress_county, sh.sag_euaddress_postcode, sh.sag_euaddress_country, sh.sag_euaddress_contact, sh.sag_euaddress_email,
+# MAGIC       co.contactisprimaryforaccount, co.creationdate) -- Sophos 
 # MAGIC     ELSE (-1* it.qty) 
 # MAGIC     END)                                                              AS quantity 
 # MAGIC , (CASE 
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN 'To Be Done'/*c.serial_numbers*/ -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN snc.serial_numbers -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS serial_numbers --- TO DO 
 # MAGIC , (CASE
@@ -131,7 +137,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN CONCAT_WS(',',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
 # MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[0]                                     AS reseller_address1
@@ -163,8 +169,18 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSCOUNTRYREGIONISOCODE -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_country
-# MAGIC , 'To Be Done'                                                        AS reseller_contact_name  -- ora.Oracle_Opportunities not ingested
-# MAGIC , 'To Be Done'                                                        AS reseller_contact_email -- ora.Oracle_Contacts not ingested
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(op.contact_name, ' +')[0] -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_contact_first_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(op.contact_name, ' +')[1] -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_contact_last_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN co.emailaddress -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_contact_email -- ora.Oracle_Contacts not ingested
 # MAGIC --, 'To Be Done'                                                        AS reseller_email -- probably added by mistake
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN ad.DESCRIPTION -- WatchGuard
@@ -291,6 +307,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(di1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems di1)) di 
 # MAGIC     ON di.itemid = sl.itemid
 # MAGIC     AND di.companyid = (CASE WHEN sl.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
+# MAGIC   -- LEFT JOIN v_distinctitems di 
+# MAGIC   -- ON di.itemid = sl.itemid
+# MAGIC   -- AND di.companyid = (CASE WHEN sl.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(cu1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging cu1)) cu
 # MAGIC     ON cu.customeraccount = sh.custaccount
 # MAGIC     AND cu.dataareaid = sh.dataareaid
@@ -300,6 +319,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ON ad.ADDRESSRECID = sh.DELIVERYPOSTALADDRESS
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(b1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging b1)) b
 # MAGIC     ON b.COUNTRYREGION = ad.COUNTRYREGIONID
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.ora_oracle_opportunities WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) =  (SELECT TO_DATE(MAX(op1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.ora_oracle_opportunities op1)) op 
+# MAGIC     ON op.sales_order = sl.salesid
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.ora_oracle_contacts WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(co1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.ora_oracle_contacts co1)) co 
+# MAGIC     ON CONCAT_WS(' ', STRING(co.firstName), STRING(co.lastName)) = STRING(op.contact_name)
 # MAGIC   LEFT JOIN serial_numbers_cte snc
 # MAGIC     ON sl.SALESID = snc.SALESID
 # MAGIC     AND it.ItemID = snc.ItemID
@@ -307,6 +330,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     AND sl.DATAAREAID = snc.DATAAREAID
 # MAGIC  WHERE 1 = 1 
 # MAGIC   AND sl.DATAAREAID NOT IN ('NGS1','NNL2')
+# MAGIC   AND pa.ISPRIMARY = 1
 
 # COMMAND ----------
 
