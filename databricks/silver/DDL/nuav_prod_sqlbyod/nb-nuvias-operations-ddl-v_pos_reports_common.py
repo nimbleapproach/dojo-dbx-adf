@@ -33,14 +33,14 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC 	,ig.name					AS itemgroupname
 # MAGIC 	,mg.name					AS itemmodelgroupname
 # MAGIC 	,fd.description				AS practicedescr
-# MAGIC FROM (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventtablestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventtablestaging it1)) it
-# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_vendvendorv2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ve1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_vendvendorv2staging ve1)) ve 
+# MAGIC FROM (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtablestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtablestaging it1)) it
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ve1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging ve1)) ve
 # MAGIC     ON (ve.vendoraccountnumber = it.primaryvendorid AND ve.dataareaid = it.dataareaid)
-# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventitemgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ig1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventitemgroupstaging ig1)) ig
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventitemgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ig1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventitemgroupstaging ig1)) ig
 # MAGIC     ON (ig.itemgroupid = it.itemgroupid AND ig.dataareaid = it.dataareaid)
-# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventmodelgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(mg1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventmodelgroupstaging mg1)) mg
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventmodelgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(mg1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventmodelgroupstaging mg1)) mg
 # MAGIC     ON (mg.modelgroupid = it.modelgroupid AND mg.dataareaid = it.dataareaid)
-# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_financialdimensionvalueentitystaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(fd1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_financialdimensionvalueentitystaging fd1)) fd 
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(fd1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging fd1)) fd
 # MAGIC     ON (fd.dimensionvalue = it.PRACTICE AND fd.financialdimension = 'Practice')
 # MAGIC WHERE LEFT(primaryvendorid,3) = 'VAC'
 # MAGIC ),
