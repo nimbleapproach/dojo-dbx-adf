@@ -17,81 +17,265 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC %sql
 # MAGIC
 # MAGIC CREATE OR REPLACE VIEW v_pos_reports_common AS
+# MAGIC WITH distinctitem_cte AS 
+# MAGIC (
 # MAGIC SELECT
-# MAGIC   it.datephysical                                                     AS invoice_date
-# MAGIC , it.datefinancial                                                    AS financial_date
-# MAGIC , sl.dataareaid                                                       AS entity
+# MAGIC 	ROW_NUMBER() OVER(PARTITION BY it.itemid, it.dataareaid ORDER BY it.itemid) rn
+# MAGIC 	,it.dataareaid				AS companyid
+# MAGIC 	,it.itemid					AS itemid
+# MAGIC 	,it.name					AS itemname
+# MAGIC 	,it.description				AS itemdescription
+# MAGIC 	,it.modelgroupid			AS itemmodelgroupid
+# MAGIC 	,it.itemgroupid				AS itemgroupid
+# MAGIC 	,it.practice				AS practice
+# MAGIC 	,it.primaryvendorid			AS primaryvendorid
+# MAGIC 	,ve.vendororganizationname	AS primaryvendorname
+# MAGIC 	,ig.name					AS itemgroupname
+# MAGIC 	,mg.name					AS itemmodelgroupname
+# MAGIC 	,fd.description				AS practicedescr
+# MAGIC FROM (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventtablestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventtablestaging it1)) it
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_vendvendorv2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ve1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_vendvendorv2staging ve1)) ve 
+# MAGIC     ON (ve.vendoraccountnumber = it.primaryvendorid AND ve.dataareaid = it.dataareaid)
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventitemgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ig1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventitemgroupstaging ig1)) ig
+# MAGIC     ON (ig.itemgroupid = it.itemgroupid AND ig.dataareaid = it.dataareaid)
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventmodelgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(mg1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_sag_inventmodelgroupstaging mg1)) mg
+# MAGIC     ON (mg.modelgroupid = it.modelgroupid AND mg.dataareaid = it.dataareaid)
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_financialdimensionvalueentitystaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(fd1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prodtrans_sqlbyod.dbo_financialdimensionvalueentitystaging fd1)) fd 
+# MAGIC     ON (fd.dimensionvalue = it.PRACTICE AND fd.financialdimension = 'Practice')
+# MAGIC WHERE LEFT(primaryvendorid,3) = 'VAC'
+# MAGIC ),
+# MAGIC v_distinctitems AS
+# MAGIC (
+# MAGIC   SELECT * FROM distinctitem_cte 
+# MAGIC   WHERE rn = 1
+# MAGIC ),
+# MAGIC serial_numbers_cte AS
+# MAGIC (
+# MAGIC   SELECT 
+# MAGIC     sl.SALESID,
+# MAGIC     it.ItemID,
+# MAGIC     it.INVENTTRANSID,
+# MAGIC     sl.DATAAREAID,
+# MAGIC     ARRAY_AGG(it.INVENTSERIALID) AS serial_numbers
+# MAGIC   FROM (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sl1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging sl1)) sl
+# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging it1)) it
+# MAGIC     ON it.inventtransid = sl.inventtransid
+# MAGIC     AND it.dataareaid = sl.dataareaid
+# MAGIC   GROUP BY
+# MAGIC     sl.SALESID,
+# MAGIC     it.ItemID,
+# MAGIC     it.INVENTTRANSID,
+# MAGIC     sl.DATAAREAID
+# MAGIC )
+# MAGIC SELECT DISTINCT
+# MAGIC   (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN NULL -- WatchGuard
+# MAGIC     ELSE it.datephysical
+# MAGIC     END)                                                              AS invoice_date
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS financial_date
+# MAGIC , (CASE
+# MAGIC     WHEN  di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
+# MAGIC     ELSE sl.dataareaid
+# MAGIC     END)                                                              AS entity
 # MAGIC , di.itemname                                                         AS part_code
-# MAGIC , di.itemdescription                                                  AS part_code_description
-# MAGIC , di.itemgroupname                                                    AS part_code_category
-# MAGIC , (-1* it.qty)                                                        AS quantity
-# MAGIC , 'To Be Done'                                                        AS serial_numbers
-# MAGIC , sh.purchorderformnum                                                AS special_pricing_identifier
-# MAGIC , sl.sag_vendorreferencenumber                                        AS vendor_promotion
-# MAGIC , sl.sag_vendorstandardcost                                           AS mspunit_cost
-# MAGIC , sl.sag_vendorstandardcost * (-1 * it.qty)                           AS mspunit_total_cost
-# MAGIC
-# MAGIC , sh.salesname                                                        AS sales_name
-# MAGIC , cu.organizationname                                                 AS bill_to_name
-# MAGIC , pa.addressdescription                                               AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC , 'To Be Done'                                                        AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC , SPLIT(pa.addressstreet,'\n')[0]                                     AS reseller_address1
-# MAGIC , SPLIT(pa.addressstreet,'\n')[1]                                     AS reseller_address2
-# MAGIC , SPLIT(pa.addressstreet,'\n')[2]                                     AS reseller_address3
-# MAGIC , SPLIT(pa.addressstreet,'\n')[3]                                     AS reseller_address4
-# MAGIC , SPLIT(pa.addressstreet,'\n')[4]                                     AS reseller_address5
-# MAGIC , pa.addresscity                                                      AS reseller_city
-# MAGIC , pa.addressstate                                                     AS reseller_state
-# MAGIC , cu.addresszipcode                                                   AS bill_to_postal_code
-# MAGIC , pa.addresszipcode                                                   AS reseller_postal_code
-# MAGIC , cu.addresscountryregionisocode                                      AS bill_to_country
-# MAGIC , pa.addresscountryregionisocode                                      AS reseller_country
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN di.itemdescription -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                                AS part_code_description
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN di.itemgroupname -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS part_code_category
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_resellervendorid -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN ''   -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS partner_id
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN 'To Be Done' -- Sophos TO DO 
+# MAGIC     ELSE (-1* it.qty) 
+# MAGIC     END)                                                              AS quantity 
+# MAGIC , (CASE 
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN 'To Be Done'/*c.serial_numbers*/ -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS serial_numbers --- TO DO 
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.purchorderformnum -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS special_pricing_identifier
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
+# MAGIC     ELSE sl.sag_vendorreferencenumber
+# MAGIC     END)                                                              AS vendor_promotion
+# MAGIC , (CASE 
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_vendorstandardcost -- WatchGuard
+# MAGIC     ELSE 0
+# MAGIC     END)                                                              AS mspunit_cost
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_vendorstandardcost * (-1 * it.qty)
+# MAGIC     ELSE 0
+# MAGIC     END)                                                              AS mspunit_total_cost
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sh.salesname -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS sales_name
+# MAGIC , (CASE 
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.organizationname -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS bill_to_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSDESCRIPTION -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN CONCAT_WS(',',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
+# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[0]                                     AS reseller_address1
+# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[1]                                     AS reseller_address2
+# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[2]                                     AS reseller_address3
+# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[3]                                     AS reseller_address4
+# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[4]                                     AS reseller_address5
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSCITY -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_city
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN ''  -- Sophos
+# MAGIC     ELSE NULL /*pa.ADDRESSSTATE*/
+# MAGIC     END)                                                              AS reseller_state
+# MAGIC , (CASE 
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.addresszipcode -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS bill_to_postal_code
+# MAGIC , (CASE 
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSZIPCODE -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_postal_code
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.addresscountryregionisocode -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS bill_to_country
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSCOUNTRYREGIONISOCODE -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_country
 # MAGIC , 'To Be Done'                                                        AS reseller_contact_name  -- ora.Oracle_Opportunities not ingested
 # MAGIC , 'To Be Done'                                                        AS reseller_contact_email -- ora.Oracle_Contacts not ingested
-# MAGIC , 'To Be Done'                                                        AS reseller_email -- probably added by mistake
-# MAGIC , ad.description                                                      AS ship_to_name
-# MAGIC , b.isocode                                                           AS ship_to_country
-# MAGIC , ad.zipcode                                                          AS ship_to_postal_code
-# MAGIC , SPLIT(ad.street,'\n')[0]                                            AS ship_to_address1
-# MAGIC , SPLIT(ad.street,'\n')[1]                                            AS ship_to_address2
-# MAGIC , SPLIT(ad.street,'\n')[2]                                            AS ship_to_address3
-# MAGIC , SPLIT(ad.street,'\n')[3]                                            AS ship_to_address4
-# MAGIC , SPLIT(ad.street,'\n')[4]                                            AS ship_to_address5
+# MAGIC --, 'To Be Done'                                                        AS reseller_email -- probably added by mistake
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN ad.DESCRIPTION -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS ship_to_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN b.ISOCODE -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS ship_to_country
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN ad.ZIPCODE -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS ship_to_postal_code
+# MAGIC --, SPLIT(ad.STREET,'\n')[0]                                            AS ship_to_address1
+# MAGIC --, SPLIT(ad.STREET,'\n')[1]                                            AS ship_to_address2
+# MAGIC --, SPLIT(ad.STREET,'\n')[2]                                            AS ship_to_address3
+# MAGIC --, SPLIT(ad.STREET,'\n')[3]                                            AS ship_to_address4
+# MAGIC --, SPLIT(ad.STREET,'\n')[4]                                            AS ship_to_address5
 # MAGIC , sh.sag_euaddress_name                                               AS end_customer_name
-# MAGIC , sh.sag_euaddress_street1                                            AS end_customer_address1
-# MAGIC , sh.sag_euaddress_street2                                            AS end_customer_address2
-# MAGIC , sh.sag_euaddress_city                                               AS end_customer_city
-# MAGIC , sh.sag_euaddress_county                                             AS end_customer_state
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN CONCAT_WS(',',sh.sag_euaddress_street1, sh.sag_euaddress_street2) -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_address
+# MAGIC --, sh.sag_euaddress_street1                                            AS end_customer_address1
+# MAGIC --, sh.sag_euaddress_street2                                            AS end_customer_address2
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.sag_euaddress_city -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_city
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.sag_euaddress_county -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_state
 # MAGIC , sh.sag_euaddress_postcode                                           AS end_customer_postal_code
 # MAGIC , sh.sag_euaddress_country                                            AS end_customer_country
-# MAGIC , sh.sag_euaddress_contact                                            AS end_customer_contact
-# MAGIC , sh.sag_euaddress_email                                              AS end_customer_email
-# MAGIC , it.inventserialid                                                   AS serial_number
+# MAGIC --, sh.sag_euaddress_contact                                            AS end_customer_contact
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(sh.sag_euaddress_contact,' ')[0] -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_contact_first_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(sh.sag_euaddress_contact,' ')[1] -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_contact_last_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.sag_euaddress_email -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_email
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.inventserialid -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS serial_number
 # MAGIC , sl.salesid                                                          AS d365_sales_order_number
-# MAGIC , CASE
-# MAGIC     WHEN pl.lineamount = 0 AND pl.purchqty = 0 THEN sl.sag_purchprice		
-# MAGIC     ELSE pl.lineamount / pl.purchqty	
-# MAGIC   END                                                                 AS po_unit_buy_price
 # MAGIC , 'Infinigate Global Services Ltd'                                    AS distributor_name
-# MAGIC , it.invoiceid                                                        AS invoice_number
-# MAGIC , sh.customerref                                                      AS reseller_po_to_infinigate
-# MAGIC , sp.purchtableid_intercomp                                           AS infinigate_po_to_vendor
+# MAGIC --, it.invoiceid                                                        AS invoice_number
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sh.customerref -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_po_to_infinigate
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sp.purchtableid_intercomp -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS infinigate_po_to_vendor
 # MAGIC , sl.currencycode                                                     AS sell_currency
-# MAGIC , sl.sag_purchprice                                                   AS final_vendor_unit_buy_price
-# MAGIC , sl.sag_purchprice * (-1 * it.qty)                                   AS final_vendor_total_buy_price
-# MAGIC , 0                                                                   AS claim_amount        --tbd
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_purchprice -- WatchGuard
+# MAGIC     ELSE 0
+# MAGIC     END)                                                              AS final_vendor_unit_buy_price
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_purchprice * (-1 * it.qty)  -- WatchGuard
+# MAGIC     ELSE 0
+# MAGIC     END)                                                              AS final_vendor_total_buy_price
+# MAGIC --, 0                                                                   AS claim_amount        --tbd
 # MAGIC , di.primaryvendorid                                                  AS vendor_id
 # MAGIC , di.primaryvendorname                                                AS vendor_name
-# MAGIC , sl.salesstatus                                                      AS sales_status
-# MAGIC , sl.sag_shipanddebit                                                 AS ship_and_debit
-# MAGIC , di.itemgroupid                                                      AS part_code_group_id
-# MAGIC , it.statusissue                                                      AS status_issue
-# MAGIC , it.statusreceipt                                                    AS status_receipt
-# MAGIC , it.invoicereturned                                                  AS invoice_returned
-# MAGIC , it.packingslipreturned                                              AS packing_slip_returned  
-# MAGIC , sl.sag_resellervendorid                                             AS partner_id
-# MAGIC , ''                                                                  AS price_per_unit_for_this_deal
-# MAGIC , ''                                                                  AS extended_price_for_this_deal       
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sl.salesstatus -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS sales_status
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sl.sag_shipanddebit -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS ship_and_debit
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN di.itemgroupid -- Sophos
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS part_code_group_id
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.statusissue  -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS status_issue
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.statusreceipt -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS status_receipt
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.invoicereturned -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS invoice_returned
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.packingslipreturned -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS packing_slip_returned  
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN '' -- Sophos
+# MAGIC     ELSE NULL 
+# MAGIC     END)                                                              AS price_per_unit_for_this_deal
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN '' -- Sophos
+# MAGIC     ELSE NULL 
+# MAGIC     END)                                                              AS extended_price_for_this_deal       
 # MAGIC   FROM (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sl1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging sl1)) sl
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging it1)) it
 # MAGIC     ON it.inventtransid = sl.inventtransid
@@ -111,13 +295,18 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC     ON cu.customeraccount = sh.custaccount
 # MAGIC     AND cu.dataareaid = sh.dataareaid
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_customerpostaladdressstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(pa1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_customerpostaladdressstaging pa1)) pa
-# MAGIC     ON pa.customeraccountnumber = sh.invoiceaccount
+# MAGIC     ON pa.CUSTOMERACCOUNTNUMBER = sh.INVOICEACCOUNT
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_logisticspostaladdressbasestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ad1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_logisticspostaladdressbasestaging ad1)) ad
-# MAGIC     ON ad.addressrecid = sh.deliverypostaladdress
+# MAGIC     ON ad.ADDRESSRECID = sh.DELIVERYPOSTALADDRESS
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(b1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging b1)) b
-# MAGIC     ON b.countryregion = ad.countryregionid
+# MAGIC     ON b.COUNTRYREGION = ad.COUNTRYREGIONID
+# MAGIC   LEFT JOIN serial_numbers_cte snc
+# MAGIC     ON sl.SALESID = snc.SALESID
+# MAGIC     AND it.ItemID = snc.ItemID
+# MAGIC     AND it.INVENTTRANSID = snc.INVENTTRANSID
+# MAGIC     AND sl.DATAAREAID = snc.DATAAREAID
 # MAGIC  WHERE 1 = 1 
-# MAGIC     AND sl.dataareaid NOT IN ('NGS1','NNL2')
+# MAGIC   AND sl.DATAAREAID NOT IN ('NGS1','NNL2')
 
 # COMMAND ----------
 
