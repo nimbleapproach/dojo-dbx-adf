@@ -34,13 +34,13 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC 	,mg.name					AS itemmodelgroupname
 # MAGIC 	,fd.description				AS practicedescr
 # MAGIC FROM (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtablestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtablestaging it1)) it
-# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ve1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging ve1)) ve
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ve1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging ve1)) ve 
 # MAGIC     ON (ve.vendoraccountnumber = it.primaryvendorid AND ve.dataareaid = it.dataareaid)
 # MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventitemgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(ig1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventitemgroupstaging ig1)) ig
 # MAGIC     ON (ig.itemgroupid = it.itemgroupid AND ig.dataareaid = it.dataareaid)
 # MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventmodelgroupstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(mg1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventmodelgroupstaging mg1)) mg
 # MAGIC     ON (mg.modelgroupid = it.modelgroupid AND mg.dataareaid = it.dataareaid)
-# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(fd1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging fd1)) fd
+# MAGIC 	LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(fd1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging fd1)) fd 
 # MAGIC     ON (fd.dimensionvalue = it.PRACTICE AND fd.financialdimension = 'Practice')
 # MAGIC WHERE LEFT(primaryvendorid,3) = 'VAC'
 # MAGIC ),
@@ -69,13 +69,17 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC )
 # MAGIC SELECT DISTINCT
 # MAGIC   (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
+# MAGIC     ELSE it.datephysical
+# MAGIC     END)                                                              AS report_date
+# MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN NULL -- WatchGuard
 # MAGIC     ELSE it.datephysical
 # MAGIC     END)                                                              AS invoice_date
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS financial_date
+# MAGIC , (CASE 
+# MAGIC      WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
+# MAGIC      ELSE NULL
+# MAGIC      END)                                                              AS financial_date
 # MAGIC , (CASE
 # MAGIC     WHEN  di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
 # MAGIC     ELSE sl.dataareaid
@@ -304,12 +308,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(pl1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging pl1)) pl
 # MAGIC     ON pl.inventtransid = sp.purchlineid_intercomp
 # MAGIC    AND pl.dataareaid IN ('NGS1','NNL2')
-# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(di1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_v_distinctitems di1)) di 
-# MAGIC     ON di.itemid = sl.itemid
-# MAGIC     AND di.companyid = (CASE WHEN sl.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
-# MAGIC   -- LEFT JOIN v_distinctitems di 
-# MAGIC   -- ON di.itemid = sl.itemid
-# MAGIC   -- AND di.companyid = (CASE WHEN sl.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
+# MAGIC   LEFT JOIN v_distinctitems di 
+# MAGIC   ON di.itemid = sl.itemid
+# MAGIC   AND di.companyid = (CASE WHEN sl.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(cu1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging cu1)) cu
 # MAGIC     ON cu.customeraccount = sh.custaccount
 # MAGIC     AND cu.dataareaid = sh.dataareaid
