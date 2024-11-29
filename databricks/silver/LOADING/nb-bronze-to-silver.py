@@ -49,17 +49,6 @@ except:
 
 # COMMAND ----------
 
-# NOTE: (DP 23/10/2024 T22814) (https://dev.azure.com/InfinigateHolding/Group%20IT%20Program/_workitems/edit/22814)
-#       the setting has no bearing but is used by databricks jobs,
-#       it should be removed from jobs first, then from here
-try:
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true' )
-except:
-    dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true')
-
-# COMMAND ----------
-
 try:
     TRUNCATE = bool(dbutils.widgets.get("wg_truncate") == 'true')
 except:
