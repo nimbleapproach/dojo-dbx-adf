@@ -46,7 +46,9 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC ),
 # MAGIC v_distinctitems AS
 # MAGIC (
-# MAGIC   SELECT * FROM distinctitem_cte 
+# MAGIC   SELECT *, 
+# MAGIC   ROW_NUMBER() OVER(ORDER BY itemid ASC) AS dirn 
+# MAGIC   FROM distinctitem_cte 
 # MAGIC   WHERE rn = 1
 # MAGIC ),
 # MAGIC serial_numbers_cte AS
@@ -295,12 +297,31 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN '' -- Sophos
 # MAGIC     ELSE NULL 
-# MAGIC     END)                                                              AS extended_price_for_this_deal       
-# MAGIC   FROM (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sl1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging sl1)) sl
-# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging it1)) it
+# MAGIC     END)                                                              AS extended_price_for_this_deal
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.slrn -- WatchGuard) 
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS dbo_sag_saleslinev2staging_surrogate_key
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sh.shrn -- WatchGuard) 
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS dbo_sag_salestablestaging_surrogate_key
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN di.dirn -- WatchGuard) 
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS v_distinctitems_surrogate_key
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.itrn -- WatchGuard) 
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS dbo_sag_inventtransstaging_surrogate_key
+# MAGIC   FROM (SELECT *, ROW_NUMBER() OVER(ORDER BY salesid ASC) AS slrn 
+# MAGIC         FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sl1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging sl1)) sl
+# MAGIC   LEFT JOIN (SELECT *, ROW_NUMBER() OVER(ORDER BY inventtransid ASC) AS itrn  
+# MAGIC          FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(it1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging it1)) it
 # MAGIC     ON it.inventtransid = sl.inventtransid
 # MAGIC    AND it.dataareaid NOT IN ('NGS1','NNL2')
-# MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sh1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging sh1)) sh
+# MAGIC   LEFT JOIN (SELECT *, ROW_NUMBER() OVER(ORDER BY salesid ASC) AS shrn  
+# MAGIC             FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sh1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging sh1)) sh
 # MAGIC     ON sh.salesid = sl.salesid
 # MAGIC    AND sh.dataareaid NOT IN ('NGS1','NNL2')
 # MAGIC   LEFT JOIN (SELECT * FROM bronze_dev.nuav_prod_sqlbyod.ara_so_po_id_list WHERE TO_DATE(Sys_Bronze_InsertDateTime_UTC) = (SELECT TO_DATE(MAX(sp1.Sys_Bronze_InsertDateTime_UTC)) FROM bronze_dev.nuav_prod_sqlbyod.ara_so_po_id_list sp1)) sp
