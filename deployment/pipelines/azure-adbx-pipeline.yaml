@@ -4,22 +4,13 @@
 trigger:
   branches:
     include:
-      - dev
-      - uat
-      - prod
+      - main
+      - testing
+      - production
   paths:
     include:
       - databricks_cicd
       - deployment
-    exclude:
-      - databricks
-# This pipeline is also triggered for pull requests made against the specified branches
-pr:
-  branches:
-    include:
-      - dev
-      - uat
-      - prod
 
 # Defines the agent pool where the jobs will run
 pool:
@@ -34,9 +25,9 @@ variables:
     ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
       value: "Validating and Deploying into $(Build.SourceBranchName)"
   - name: deploymentEnvironment
-    ${{ if eq(lower(variables.branchName), 'prod') }}:
+    ${{ if eq(lower(variables.branchName), 'production') }}:
       value: 'prod'
-    ${{ elseif eq(lower(variables.branchName), 'uat') }}:
+    ${{ elseif eq(lower(variables.branchName), 'testing') }}:
       value: 'uat'
     ${{ else }}:
       value: 'dev'
@@ -95,12 +86,9 @@ jobs:
             if [ "$(Build.Reason)" == "PullRequest" ]; then
               # Extract target branch name for pull requests
               BRANCH_NAME=$(System.PullRequest.TargetBranch)
-            elif [ "$(Build.SourceBranchName)" == "main" ]; then
-              # Use dev branch name for initialising the build
-              BRANCH_NAME="dev"
             else
-              # Use source branch name for direct commits/merges
-              BRANCH_NAME=$(Build.SourceBranchName)
+              # Use deployment env, which is determined by the branch name, for commits/merges
+              BRANCH_NAME=$(deploymentEnvironment)
             fi
             SUFFIX=-$BRANCH_NAME
             export BUNDLE_VAR_suffix=$SUFFIX
