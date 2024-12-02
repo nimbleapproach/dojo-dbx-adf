@@ -298,13 +298,10 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "DS__NU_D365",
+									"referenceName": "DS_NU_D365",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_table": {
-											"value": "@item().TABLE_NAME",
-											"type": "Expression"
-										},
+										"pm_table": "LedgerJournalTransBiEntities",
 										"pm_watermarkcolumn": {
 											"value": "@item().WATERMARK_COLUMN",
 											"type": "Expression"
