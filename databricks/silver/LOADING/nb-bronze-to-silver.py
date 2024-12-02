@@ -44,7 +44,7 @@ except:
 try:
     DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
 except:
-    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full'])
+    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full','most-recent'])
     DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
 
 # COMMAND ----------
@@ -155,6 +155,13 @@ if DELTA_LOAD == 'delta':
   source_df = spark.sql(f"""
                       Select *,
                       max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
+                      {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
+elif DELTA_LOAD == 'most-recent':
+  print('Most Recent Loading')
+  source_df = spark.sql(f"""
+                      Select *,
+                      max({WATERMARK_COLUMN})  OVER () AS Current_Version,
                       {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
                       from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
 else:
