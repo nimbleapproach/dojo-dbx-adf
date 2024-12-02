@@ -198,7 +198,7 @@
 								{
 									"activity": "Set New Water Mark",
 									"dependencyConditions": [
-										"Skipped"
+										"Succeeded"
 									]
 								}
 							],
