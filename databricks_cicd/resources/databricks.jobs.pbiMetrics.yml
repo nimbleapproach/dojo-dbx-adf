@@ -23,7 +23,7 @@ resources:
         - task_key: get_metric_data
           description: task to load metric data from the api into bronze
           notebook_task:
-            notebook_path: ../notebooks/powerbi/nb-powerbi-metrics-pull
+            notebook_path: ../notebooks/powerbi/nb-powerbi-metrics-pull.py
           existing_cluster_id: ${var.existing_cluster_id}
           max_retries: 1
           min_retry_interval_millis: 100000
