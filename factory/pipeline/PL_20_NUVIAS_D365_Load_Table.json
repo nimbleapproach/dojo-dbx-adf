@@ -59,7 +59,7 @@
 							"type": "DatabricksNotebook",
 							"dependsOn": [
 								{
-									"activity": "Load Table",
+									"activity": "SetWatermark",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -111,9 +111,9 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "Get New Water Mark",
+									"activity": "Load Table",
 									"dependencyConditions": [
-										"Succeeded"
+										"Skipped"
 									]
 								}
 							],
@@ -198,7 +198,7 @@
 								{
 									"activity": "Set New Water Mark",
 									"dependencyConditions": [
-										"Succeeded"
+										"Skipped"
 									]
 								}
 							],
@@ -245,9 +245,9 @@
 							"type": "Copy",
 							"dependsOn": [
 								{
-									"activity": "SetWatermark",
+									"activity": "Get New Water Mark",
 									"dependencyConditions": [
-										"Succeeded"
+										"Skipped"
 									]
 								}
 							],
