@@ -2,7 +2,7 @@
 	"name": "DS__NU_D365",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "LS_D365_NUVIAS2",
+			"referenceName": "LS_D365_NUVIAS",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
