@@ -83,14 +83,14 @@ summarised_execution_order = summarise_execution_order_with_layers(data)
 # now setup the run notebook function for the generic, where a dimension name is passed in as a paramters
 def process_logic(notebook_name,dim_name):
     dbutils.notebook.run(path = f"./{notebook_name}",
-                                        timeout_seconds = 6000, 
+                                        timeout_seconds = 10000, 
                                         arguments = {"dimension_name":dim_name})
     
 # function for calling a specific notebook, having no parmaters as it is specific
 # not used
 def process_nongeneric_dimension(notebook_name):
     dbutils.notebook.run(path = f"./{notebook_name}",
-                                        timeout_seconds = 6000)
+                                        timeout_seconds = 10000)
 
 
 # COMMAND ----------

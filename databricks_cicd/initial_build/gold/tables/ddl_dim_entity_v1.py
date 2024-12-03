@@ -82,6 +82,5 @@ SELECT CAST(-1 AS BIGINT) AS entity_pk,
        CAST(1 AS INTEGER) AS is_current,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
-FROM {catalog}.{schema}.dim_entity 
 WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_entity WHERE entity_pk = -1)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_entity")

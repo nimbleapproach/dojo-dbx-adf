@@ -53,6 +53,7 @@ VALUES
   ('msp sales credit memo', '2000-01-01', current_timestamp()),
   ('msp sales invoice', '2000-01-01', current_timestamp()),
   ('sales quote', '2000-01-01', current_timestamp()),
-  ('sales order', '2000-01-01', current_timestamp())
+  ('sales order', '2000-01-01', current_timestamp()),
+  ('nuvias sales invoice', '2000-01-01', current_timestamp())
 """
 )

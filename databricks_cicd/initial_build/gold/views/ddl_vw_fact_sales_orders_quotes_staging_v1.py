@@ -69,6 +69,7 @@ SELECT
     WHEN sha2.CurrencyCode = 'NaN' AND RIGHT(sha.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
     WHEN sha2.CurrencyCode = 'NaN' AND RIGHT(sha.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
     WHEN sha2.CurrencyCode = 'NaN' AND RIGHT(sha.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+    WHEN sha2.CurrencyCode = 'NaN' THEN 'N/A'
     ELSE sha2.CurrencyCode
   END AS currency_code,  
  coalesce(
@@ -149,5 +150,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
   END
 WHERE sla.Sys_Silver_IsCurrent = true
 AND sla.sid IS NOT NULL
+--limit(100)
 """
 )
