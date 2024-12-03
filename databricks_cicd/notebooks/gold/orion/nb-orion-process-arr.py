@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %run ./nb-orion-common
+
+# COMMAND ----------
+
 # Importing Libraries
 from databricks.sdk import WorkspaceClient
 import re
@@ -525,8 +529,35 @@ df_obt=spark.table(f"{catalog}.{schema}.globaltransactions_obt")
 df_orion=spark.table(f"{catalog}.{schema}.globaltransactions")
 # Rename the column 'id' to 'Id'
 # df_orion_renamed = df_orion.withColumnRenamed("id", "Id")
+# Define composite key
+composite_key = [
+    'Id'
+]
 
-comparison_df = compare_dataframes(df_obt, df_orion)
+# Define fields to compare - need to include mrrratio since we want to compare it
+fields_to_compare = [
+        'ProductTypeMaster', 'CommitmentDuration1Master', 'CommitmentDuration2Master', 
+        'BillingFrequencyMaster', 'ConsumptionModelMaster'
+]
+
+
+# Define additional fields
+additional_fields = [
+    'is_matched', 'matched_type', 'GroupEntityCode', 'EntityCode', 'CurrencyCode',
+    'RevenueAmount', 'Period_FX_rate', 'RevenueAmount_Euro'
+    ,'DocumentNo', 'TransactionDate', 'SKUInternal', 'VendorNameInternal', 
+    'ResellerCode', 'EndCustomer', 'GL_Group', 'SalesOrderDate'
+]
+
+
+
+
+comparison_df = compare_dataframes(                
+    df1=df_obt, 
+    df2=df_orion, 
+    composite_key=composite_key, 
+    fields_to_compare=fields_to_compare, 
+    additional_fields=additional_fields)
 #display(comparison_df)
 
 
@@ -546,7 +577,7 @@ df_comparison=spark.table(f"{catalog}.{schema}.globaltransactions_comparison")
 
 # COMMAND ----------
 
-display(df_comparison.filter(col('Id')==34361235258))
+display(df_comparison.filter(col('SKUInternal')=='MAXSMXXWXXE'))
 
 # COMMAND ----------
 
@@ -556,17 +587,17 @@ df_comparison=spark.table(f"{catalog}.{schema}.globaltransactions_comparison")
 
 
 df_significantdiff = df_comparison.filter(
-        (col('is_matched') >= 2) 
+        (col('is_matched') >= 2))
         # & 
         #(col('BillingFrequencyMaster_changes').like('NaN -> %')) & 
         #(~col('BillingFrequencyMaster_changes').like('NaN -> Not assigned'))
-    )
+    
 
-
-display(df_significantdiff.filter(
-    (col('GroupEntityCode') == 'VU') & 
-    (date_format(col('TransactionDate'), 'yyyy-MM') == '2024-09')
-))
+display(df_comparison)
+# display(df_significantdiff.filter(
+#     (col('GroupEntityCode') == 'VU') & 
+#     (date_format(col('TransactionDate'), 'yyyy-MM') == '2024-09')
+# ))
 
 # COMMAND ----------
 
