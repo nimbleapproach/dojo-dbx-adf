@@ -10,6 +10,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC
+# MAGIC CREATE SCHEMA if not EXISTS ops_reporting;
 # MAGIC USE SCHEMA ops_reporting;
 
 # COMMAND ----------
@@ -46,7 +48,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC ),
 # MAGIC v_distinctitems AS
 # MAGIC (
-# MAGIC   SELECT *--, ROW_NUMBER() OVER(ORDER BY itemid ASC) AS dirn
+# MAGIC   SELECT *
 # MAGIC   FROM distinctitem_cte 
 # MAGIC   WHERE rn = 1
 # MAGIC ),
