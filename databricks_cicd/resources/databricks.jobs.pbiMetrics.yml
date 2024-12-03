@@ -23,7 +23,25 @@ resources:
         - task_key: get_metric_data
           description: task to load metric data from the api into bronze
           notebook_task:
-            notebook_path: ../notebooks/powerbi/nb-powerbi-metrics-pull.py
+            notebook_path: ../notebooks/bronze/powerbi/nb-powerbi-metrics-pull.py
+          existing_cluster_id: ${var.existing_cluster_id}
+          max_retries: 1
+          min_retry_interval_millis: 100000
+          retry_on_timeout: true
+
+        - task_key: load_daily_metrics_to_silver
+          description: task to load metric data from bronze to silver
+          notebook_task:
+            notebook_path: ../notebooks/silver/powerbi/nb-powerbi-metrics-silver.py
+          existing_cluster_id: ${var.existing_cluster_id}
+          max_retries: 1
+          min_retry_interval_millis: 100000
+          retry_on_timeout: true
+
+        - task_key: load_daily_metrics_to_gold
+          description: task to load metric data from bsilver into gold tables
+          notebook_task:
+            notebook_path: ../notebooks/gold/powerbi/nb-powerbi-metrics-gold.py
           existing_cluster_id: ${var.existing_cluster_id}
           max_retries: 1
           min_retry_interval_millis: 100000

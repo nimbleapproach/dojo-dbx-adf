@@ -1,6 +1,7 @@
 # Databricks notebook source
 import os
 from datetime import datetime, timedelta
+from pyspark.sql import functions as F
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
@@ -38,7 +39,7 @@ while continuation_uri:
 # COMMAND ----------
 
 if len(activity_list) != 0:
-    activity_df = spark.createDataFrame(activity_list)
+    activity_df = spark.createDataFrame(activity_list).withColumn("SysBronzeInsertedDateTimeUTC", F.current_timestamp())
     (activity_df.write.format("delta")
         .option("mergeSchema", "true")
         .mode("append")
