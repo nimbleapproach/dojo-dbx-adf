@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "OData",
 		"typeProperties": {
-			"url": "https://nuvias.operations.dynamics.com/data/?$filter=Country eq 'NUK1'",
+			"url": "https://nuvias.operations.dynamics.com/data/",
 			"authenticationType": "AadServicePrincipal",
 			"tenant": "a6bd8ff7-f79d-452a-b4dc-d0277078196f",
 			"aadResourceId": "https://nuvias.operations.dynamics.com",
