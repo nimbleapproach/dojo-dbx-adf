@@ -40,6 +40,10 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'TODO'
 # MAGIC   , ITEMID STRING
 # MAGIC         COMMENT 'TODO'
+# MAGIC   , INVENTREFTRANSID STRING
+# MAGIC         COMMENT 'TODO'
+# MAGIC   , SAG_VENDORSTANDARDCOST DECIMAL(32, 6)
+# MAGIC         COMMENT 'TODO'
 # MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC   , Sys_Silver_InsertDateTime_UTC TIMESTAMP
