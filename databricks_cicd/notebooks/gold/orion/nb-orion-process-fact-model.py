@@ -157,5 +157,12 @@ run_objects_by_group(data=data, object_type='core', max_workers=4)
 # Run the objects by group, in parallel for each group
 run_objects_by_group(data=data, object_type='dim', max_workers=4)
 
+# COMMAND ----------
+
+# Run the objects by group, in parallel for each group
+run_objects_by_group(data=data, object_type='link', max_workers=4)
+
+# COMMAND ----------
+
 #Now refresh the fact table
 run_objects_by_group(data=data, object_type='fact', max_workers=4)
