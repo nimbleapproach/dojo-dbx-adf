@@ -34,37 +34,35 @@ reports_table = (spark.read.table(f"silver_{ENVIRONMENT}.powerbi.activities")
 
 existing_reports = DeltaTable.forName(spark, tableOrViewName=f"gold_{ENVIRONMENT}.powerbi.dim_reports")
 
-new_reports = (reports_table 
+report_updates = (reports_table 
   .alias("updates") 
   .join(existing_reports.toDF().alias("existing"), "ArtifactId") 
   .where("existing.IsCurrent = 1 AND (updates.ArtifactName <> existing.ArtifactName OR updates.WorkSpaceName <> existing.WorkSpaceName)"))
 
 staged_updates = (
-  new_reports
-  .selectExpr("NULL as MergeKey", "updates.*")   # Rows for 1
-  .union(reports_table.selectExpr("updates.ArtifactId as MergeKey", "*"))  # Rows for 2.
+  report_updates.withColumn("MergeKey", F.lit(-1)).select(["MergeKey", "updates.*"])
+  .unionByName(reports_table.withColumn("MergeKey", F.col("ArtifactId")), allowMissingColumns=False)
 )
-  
-# Apply SCD Type 2 operation using merge
+
 (existing_reports.alias("existing").merge(
   staged_updates.alias("staged"),
-  "existing.ArtifactId = MergeKey") 
+  "existing.ArtifactId = staged.MergeKey") 
 .whenMatchedUpdate(
-  condition = "existing.IsCurrent = 1 AND (updates.ArtifactName <> existing.ArtifactName OR updates.WorkSpaceName <> existing.WorkSpaceName)",
-  set = {                                      # Set current to false and endDate to source's effective date.
-    "current": 0,
-    "SysGoldModifiedDateTimeUTC": "staged_updates.SysGoldModifiedDateTimeUTC"
+  condition = "existing.IsCurrent = 1 AND (existing.ArtifactName <> staged.ArtifactName OR existing.WorkSpaceName <> staged.WorkSpaceName)",
+  set = {                                      
+    "IsCurrent": F.lit(0),
+    "SysGoldModifiedDateTimeUTC": "staged.SysGoldModifiedDateTimeUTC"
   }
-).whenNotMatchedInsert(
-  values = {
-    "ArtifactId": "staged_updates.ArtifactId",
-    "ArtifactName": "staged_updates.ArtifactName",
-    "ArtifactKind": "staged_updates.ArtifactKind",
-    "WorkSpaceName": "staged_updates.WorkSpaceName",  # Set current to true along with the new address and its effective date.
-    "IsCurrent": "staged_updates.IsCurrent",
-    "SysGoldModifiedDateTimeUTC": "staged_updates.SysGoldModifiedDateTimeUTC"
-  }
-).execute())
+).whenNotMatchedInsert(  
+    values = {
+    "ArtifactId": "staged.ArtifactId",
+    "ArtifactName": "staged.ArtifactName",
+    "ArtifactKind": "staged.ArtifactKind",
+    "WorkSpaceName": "staged.WorkSpaceName",
+    "IsCurrent": "staged.IsCurrent",
+    "SysGoldModifiedDateTimeUTC": "staged.SysGoldModifiedDateTimeUTC"
+  })
+.execute())
 
 # COMMAND ----------
 
