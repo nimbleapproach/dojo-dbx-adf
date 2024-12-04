@@ -2,6 +2,7 @@
 # Importing Libraries
 import os
 spark = spark  # noqa
+
 # COMMAND ----------
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
@@ -43,6 +44,10 @@ TBLPROPERTIES (
   'delta.minWriterVersion' = '7')
 """
 )
+
+
+# COMMAND ----------
+
 
 # Now populate with a default value - initial values to prevent an empty join
 spark.sql(f"""

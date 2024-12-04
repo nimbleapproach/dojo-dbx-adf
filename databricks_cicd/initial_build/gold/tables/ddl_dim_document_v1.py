@@ -105,4 +105,4 @@ SELECT CAST(-1 AS BIGINT) AS document_pk,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 WHERE NOT EXISTS ( SELECT 1 FROM {catalog}.{schema}.dim_document WHERE document_pk = -1 AND source_system_fk = -1)
-""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_document")
+""").write.mode("overwrite").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_document")

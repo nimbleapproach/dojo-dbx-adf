@@ -59,6 +59,10 @@ TBLPROPERTIES (
   'delta.feature.v2Checkpoint' = 'supported')
 """)
 
+
+# COMMAND ----------
+
+
 # Add in the UNKNOWN Member
 sqldf= spark.sql(f"""
 SELECT CAST(-1 AS BIGINT) AS source_system_pk,
@@ -73,5 +77,5 @@ SELECT CAST(-1 AS BIGINT) AS source_system_pk,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_source_system WHERE source_system_pk = -1)
-""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_source_system")
+""").write.mode("overwrite").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_source_system")
 
