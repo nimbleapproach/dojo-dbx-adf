@@ -250,7 +250,7 @@ def check_duplicate_keys(df, key_cols=["Manufacturer Item No_", "Consolidated Ve
         
         # Show the actual duplicate records
         print("\nDetailed Duplicate Records:")
-        dupes_with_details.display()
+        # dupes_with_details.display()
         
         # Optional: Save to a table
         # dupes_with_details.write.mode("overwrite").saveAsTable("duplicate_records")
@@ -287,9 +287,9 @@ df_oct_2024 = get_sales_analysis_v2("2024-10")
 
 # COMMAND ----------
 
-display(df_oct_2024.filter(F.col("ManufacturerItemNo_") == '5414602190420').select("*")\
-    #.distinct()
-    )
+# display(df_oct_2024.filter(F.col("ManufacturerItemNo_") == '5414602190420').select("*")\
+#     #.distinct()
+#     )
 
 # COMMAND ----------
 
@@ -359,9 +359,9 @@ df_sku_vendor_dq = df_sku_vendor_dq.replace({'NaN': None})
 
 # COMMAND ----------
 
-display(df_sku_vendor_database_dq.filter((F.col('ManufacturerItemNo_')=='LM-VA-500-EN') & (F.col('VendorCodeItem')=='PRO')))
+# display(df_sku_vendor_database_dq.filter((F.col('ManufacturerItemNo_')=='LM-VA-500-EN') & (F.col('VendorCodeItem')=='PRO')))
 
-display(df_sku_vendor_dq.filter((F.col('ManufacturerItemNo_')=='LM-VA-500-EN') & (F.col('VendorCodeItem')=='PRO')))
+# display(df_sku_vendor_dq.filter((F.col('ManufacturerItemNo_')=='LM-VA-500-EN') & (F.col('VendorCodeItem')=='PRO')))
 
 
 # COMMAND ----------
@@ -485,7 +485,7 @@ df_vendor_master_unique  =spark.table(f"{catalog}.{schema}.arr_vendor_group").al
 
 # COMMAND ----------
 
-display(df_vendor_master_unique)
+# display(df_vendor_master_unique)
 
 # COMMAND ----------
 
@@ -507,11 +507,11 @@ result = (
    )
 )
 
-display(result)
+# display(result)
 
 # COMMAND ----------
 
-display(df_sku_vendor_dq.select('VendorCodeItem').distinct())
+# display(df_sku_vendor_dq.select('VendorCodeItem').distinct())
 
 # COMMAND ----------
 
@@ -530,7 +530,7 @@ result = (
     .orderBy(F.desc('occurrence'))
 )
 
-display(result)
+# display(result)
 
 # COMMAND ----------
 
@@ -655,7 +655,7 @@ df_auto_unique = df_auto_unique.select(desired_order)
 
 df_source = spark.table(f"{catalog}.{schema}.arr_auto_0")
 
-display(df_source)
+# display(df_source)
 
 # COMMAND ----------
 
@@ -698,7 +698,7 @@ result = df_source.join(skus_with_diff_descriptions, "sku")
 result = result.orderBy("sku", "Description")
 
 # Show the results
-result.display()
+# result.display()
 
 # COMMAND ----------
 
@@ -3515,7 +3515,7 @@ df_source = spark.table(f"{catalog}.{schema}.arr_auto_0")
 
 # DBTITLE 1,levenshtein value for sku and local_sku
 df_source_lev=df_source.filter(col('local_sku')!=col('sku')).withColumn("levenshtein", levenshtein(col(f'local_sku'), col(f'sku')) )
-display(df_source_lev.select('levenshtein','local_sku','*'))
+# display(df_source_lev.select('levenshtein','local_sku','*'))
 
 
 # COMMAND ----------
@@ -3546,7 +3546,7 @@ df_1 = df_1.withColumn(
             (F.col("itemtrackingcode").rlike(r'(?i).*FMO-SS500-OFS-1Y.*')), "1 YR")
         .otherwise(F.col("duration")))
 
-display(df_1)
+# display(df_1)
 
 
 # COMMAND ----------
@@ -3593,7 +3593,7 @@ df_arr_auto_1.write \
 
 # COMMAND ----------
 
-display(df_arr_auto_1)
+# 35display(df_arr_auto_1)
 
 # COMMAND ----------
 
