@@ -24,7 +24,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC   , CONTACT_NAME STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC   , OPPORTUNITYID FLOAT
+# MAGIC   , OPPORTUNITYID LONG
 # MAGIC       COMMENT 'TODO'
 # MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
