@@ -110,6 +110,17 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging WHERE Sys_Silver_IsCurrent = 1) pli
 # MAGIC     ON sli.inventreftransid = pli.inventtransid
 # MAGIC     AND sli.dataareaid = pli.dataareaid
+# MAGIC ),
+# MAGIC exchangerates AS
+# MAGIC (
+# MAGIC   SELECT 
+# MAGIC     TO_DATE(startdate) AS startdate
+# MAGIC     ,tocurrency
+# MAGIC     ,fromcurrency
+# MAGIC     ,rate
+# MAGIC   FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_exchangerateentitystaging WHERE Sys_Silver_IsCurrent = 1)
+# MAGIC     WHERE (fromcurrency = 'USD')
+# MAGIC     OR (fromcurrency = 'GBP' AND tocurrency = 'USD')
 # MAGIC )
 # MAGIC SELECT DISTINCT
 # MAGIC   (CASE
@@ -232,7 +243,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_name
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN b.ISOCODE -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'   -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn 
+# MAGIC           THEN b.ISOCODE
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_country
 # MAGIC , (CASE
@@ -275,30 +288,60 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_email
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.inventserialid -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC           THEN it.inventserialid 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS serial_number
 # MAGIC , sl.salesid                                                          AS d365_sales_order_number
 # MAGIC , 'Infinigate Global Services Ltd'                                    AS distributor_name
-# MAGIC --, it.invoiceid                                                        AS invoice_number
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sh.customerref -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN it.invoiceid  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                        AS invoice_number
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC           THEN sh.customerref
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_po_to_infinigate
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sp.purchtableid_intercomp -- WatchGuard
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS infinigate_po_to_vendor
-# MAGIC , sl.currencycode                                                     AS sell_currency
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_purchprice -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.currencycode -- Sophos
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sl.currencycode  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                     AS sell_currency
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+# MAGIC           THEN sl.sag_purchprice
 # MAGIC     ELSE 0
 # MAGIC     END)                                                              AS final_vendor_unit_buy_price
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_purchprice * (-1 * it.qty)  -- WatchGuard
 # MAGIC     ELSE 0
 # MAGIC     END)                                                              AS final_vendor_total_buy_price
-# MAGIC --, 0                                                                   AS claim_amount        --tbd
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE 
+# MAGIC                                                       WHEN pl.lineamount = 0 AND pl.purchqty = 0 THEN sl.sag_purchprice
+# MAGIC                                                       ELSE pl.lineamount / pl.purchqty
+# MAGIC                                                     END) -- AddOn
+# MAGIC     ELSE 0
+# MAGIC     END)                                                              AS po_buy_price
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE 
+# MAGIC                                                       WHEN pl.lineamount = 0 AND pl.purchqty = 0 THEN (-1 * it.qty) * sl.sag_purchprice
+# MAGIC                                                       ELSE (-1 * it.qty) * (pl.lineamount / pl.purchqty)
+# MAGIC                                                     END) -- AddOn
+# MAGIC     ELSE 0
+# MAGIC     END)                                                              AS po_total_buy_price
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN (pl.purchprice - sl.sag_purchprice) * (-1 * it.qty)  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS claim_amount
 # MAGIC , di.primaryvendorid                                                  AS vendor_id
 # MAGIC , di.primaryvendorname                                                AS vendor_name
 # MAGIC , (CASE
@@ -341,6 +384,37 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorID NOT IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN it.recid -- any vendor except for Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS transaction_record_id
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sh.custaccount  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS customer_account
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN pl.lineamount  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS line_amount
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN pl.purchqty  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS purch_quantity
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
+# MAGIC                                                     WHEN pl.lineamount=0 AND pl.purchqty=0 THEN 'PO QTY Zero'
+# MAGIC                                                     ELSE ''
+# MAGIC                                                     END) -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS check
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE 
+# MAGIC                                                     WHEN sl.currencycode = 'USD' THEN sl.salesprice
+# MAGIC                                                     WHEN sl.currencycode = 'GBP' THEN sl.salesprice * ex2.rate
+# MAGIC                                                     ELSE sl.salesprice / ex.rate
+# MAGIC                                                     END)  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS sales_price
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sp.purchtableid_intercomp  -- AddOn
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS distributer_purchase_order
 # MAGIC   FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl
 # MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC     ON it.inventtransid = sl.inventtransid
@@ -374,6 +448,12 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     AND it.ItemID = snc.ItemID
 # MAGIC     AND it.INVENTTRANSID = snc.INVENTTRANSID
 # MAGIC     AND sl.DATAAREAID = snc.DATAAREAID
+# MAGIC   LEFT JOIN exchangerates ex
+# MAGIC     ON ex.startdate = TO_DATE(it.datephysical)
+# MAGIC     AND ex.tocurrency = sl.currencycode
+# MAGIC   LEFT JOIN exchangerates ex2
+# MAGIC     ON ex2.startdate = TO_DATE(it.datephysical)
+# MAGIC     AND ex2.fromcurrency = sl.currencycode
 # MAGIC  WHERE 1 = 1 
 # MAGIC   AND sl.DATAAREAID NOT IN ('NGS1','NNL2')
 # MAGIC   AND pa.ISPRIMARY = 1
@@ -391,6 +471,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             (  it.STATUSISSUE IN ('1', '3') OR (it.STATUSRECEIPT LIKE '1' AND it.INVOICERETURNED = 1))
 # MAGIC             AND di.PrimaryVendorName LIKE 'WatchGuard%'
 # MAGIC             AND it.PACKINGSLIPRETURNED <> 1
+# MAGIC         )
+# MAGIC         OR
+# MAGIC         -- AddON
+# MAGIC         (
+# MAGIC             di.PrimaryVendorName LIKE 'Prolabs%'
 # MAGIC         )
 # MAGIC     )
 
