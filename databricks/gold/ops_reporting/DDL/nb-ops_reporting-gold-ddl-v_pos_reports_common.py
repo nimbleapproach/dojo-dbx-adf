@@ -138,7 +138,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , sl.dataareaid                                                       AS entity
 # MAGIC , di.itemname                                                         AS part_code
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN di.itemdescription -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN di.itemdescription 
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                AS part_code_description
 # MAGIC , (CASE
@@ -169,8 +171,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS special_pricing_identifier
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
-# MAGIC     ELSE sl.sag_vendorreferencenumber
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sl.sag_vendorreferencenumber
+# MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS vendor_promotion
 # MAGIC , (CASE 
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN sl.sag_vendorstandardcost -- WatchGuard
@@ -181,7 +186,13 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE 0
 # MAGIC     END)                                                              AS mspunit_total_cost
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sh.salesname -- AddOn
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_number
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.salesname
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS sales_name
 # MAGIC , (CASE 
@@ -194,19 +205,19 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     END)                                                              AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1')  THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1],SPLIT(pa.ADDRESSSTREET,'\n')[2]) --  Extreme
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[0]                                     AS reseller_address1
-# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[1]                                     AS reseller_address2
-# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[2]                                     AS reseller_address3
-# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[3]                                     AS reseller_address4
-# MAGIC --, SPLIT(pa.ADDRESSSTREET,'\n')[4]                                     AS reseller_address5
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSCITY -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN pa.ADDRESSCITY 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_city
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN ''  -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN ''
 # MAGIC     ELSE NULL /*pa.ADDRESSSTATE*/
 # MAGIC     END)                                                              AS reseller_state
 # MAGIC , (CASE 
@@ -214,7 +225,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS bill_to_postal_code
 # MAGIC , (CASE 
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSZIPCODE -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') 
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN pa.ADDRESSZIPCODE -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_postal_code
 # MAGIC , (CASE
@@ -222,17 +235,24 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS bill_to_country
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSCOUNTRYREGIONISOCODE -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') 
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN pa.ADDRESSCOUNTRYREGIONISOCODE -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_country
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(op.contact_name, ' +')[0] -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_contact_first_name
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(op.contact_name, ' +')[1] -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_contact_last_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS reseller_contact_phone_number
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN co.emailaddress -- Sophos
 # MAGIC     ELSE NULL
@@ -252,29 +272,55 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN ad.ZIPCODE -- WatchGuard
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_postal_code
-# MAGIC --, SPLIT(ad.STREET,'\n')[0]                                            AS ship_to_address1
-# MAGIC --, SPLIT(ad.STREET,'\n')[1]                                            AS ship_to_address2
-# MAGIC --, SPLIT(ad.STREET,'\n')[2]                                            AS ship_to_address3
-# MAGIC --, SPLIT(ad.STREET,'\n')[3]                                            AS ship_to_address4
-# MAGIC --, SPLIT(ad.STREET,'\n')[4]                                            AS ship_to_address5
-# MAGIC , sh.sag_euaddress_name                                               AS end_customer_name
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN CONCAT_WS(',',sh.sag_euaddress_street1, sh.sag_euaddress_street2) -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN ''
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_number
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.sag_euaddress_name
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_name
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN CONCAT_WS(',',sh.sag_euaddress_street1, sh.sag_euaddress_street2) 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_address
 # MAGIC --, sh.sag_euaddress_street1                                            AS end_customer_address1
 # MAGIC --, sh.sag_euaddress_street2                                            AS end_customer_address2
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.sag_euaddress_city -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.sag_euaddress_city 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_city
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.sag_euaddress_county -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.sag_euaddress_county 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_state
-# MAGIC , sh.sag_euaddress_postcode                                           AS end_customer_postal_code
-# MAGIC , sh.sag_euaddress_country                                            AS end_customer_country
-# MAGIC --, sh.sag_euaddress_contact                                            AS end_customer_contact
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.sag_euaddress_postcode
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_postal_code
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.sag_euaddress_country
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_country
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN sh.sag_euaddress_contact -- Extreme
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_contact
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(sh.sag_euaddress_contact,' ')[0] -- Sophos
 # MAGIC     ELSE NULL
@@ -284,24 +330,41 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_contact_last_name
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.sag_euaddress_email -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') 
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.sag_euaddress_email -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_email
 # MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS end_customer_phone_number
+# MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           THEN it.inventserialid 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS serial_number
-# MAGIC , sl.salesid                                                          AS d365_sales_order_number
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           THEN sl.salesid
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS d365_sales_order_number
 # MAGIC , 'Infinigate Global Services Ltd'                                    AS distributor_name
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN it.invoiceid  -- AddOn
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN it.invoiceid
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                        AS invoice_number
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           THEN sh.customerref
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_po_to_infinigate
@@ -310,7 +373,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS infinigate_po_to_vendor
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN sh.currencycode -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN sh.currencycode 
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sl.currencycode  -- AddOn
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                     AS sell_currency
@@ -340,6 +405,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     END)                                                              AS po_total_buy_price
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN (pl.purchprice - sl.sag_purchprice) * (-1 * it.qty)  -- AddOn
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS claim_amount
 # MAGIC , di.primaryvendorid                                                  AS vendor_id
@@ -415,6 +481,21 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sp.purchtableid_intercomp  -- AddOn
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS distributer_purchase_order
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS country_of_purchase
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS custom1
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS custom2
 # MAGIC   FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl
 # MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC     ON it.inventtransid = sl.inventtransid
@@ -476,6 +557,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         -- AddON
 # MAGIC         (
 # MAGIC             di.PrimaryVendorName LIKE 'Prolabs%'
+# MAGIC         )
+# MAGIC         OR
+# MAGIC         -- Extreme
+# MAGIC         (
+# MAGIC           di.PrimaryVendorID IN ('VAC001044_NGS1')
 # MAGIC         )
 # MAGIC     )
 
