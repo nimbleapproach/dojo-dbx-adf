@@ -129,14 +129,23 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     END)                                                              AS report_date
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN NULL -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN ct.invoicedate -- Cambium 
 # MAGIC     ELSE it.datephysical
 # MAGIC     END)                                                              AS invoice_date
 # MAGIC , (CASE 
-# MAGIC      WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
-# MAGIC      ELSE NULL
-# MAGIC      END)                                                             AS financial_date
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                             AS financial_date
 # MAGIC , sl.dataareaid                                                       AS entity
-# MAGIC , di.itemname                                                         AS part_code
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC             OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC             OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC             OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC             OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN di.itemname
+# MAGIC     ELSE NULL
+# MAGIC     END)                                         AS part_code
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
@@ -160,6 +169,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       co.emailaddress, sh.sag_euaddress_name, CONCAT_WS(', ', sh.sag_euaddress_street1, sh.sag_euaddress_street2),
 # MAGIC       sh.sag_euaddress_city, sh.sag_euaddress_county, sh.sag_euaddress_postcode, sh.sag_euaddress_country, sh.sag_euaddress_contact, sh.sag_euaddress_email,
 # MAGIC       co.contactisprimaryforaccount, co.creationdate) -- Sophos 
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN ct.qty
 # MAGIC     ELSE (-1* it.qty) 
 # MAGIC     END)                                                              AS quantity 
 # MAGIC , (CASE 
@@ -174,6 +185,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN sl.sag_vendorreferencenumber
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS vendor_promotion
@@ -200,17 +212,24 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS bill_to_name
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN pa.ADDRESSDESCRIPTION -- Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC             or di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN pa.ADDRESSDESCRIPTION
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1')  THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1],SPLIT(pa.ADDRESSSTREET,'\n')[2]) --  Extreme
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') 
+# MAGIC             THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1')  
+# MAGIC             THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1],SPLIT(pa.ADDRESSSTREET,'\n')[2]) --  Extreme
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN pa.ADDRESSSTREET
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN pa.ADDRESSCITY 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_city
@@ -218,6 +237,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           THEN ''
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC           THEN 'NA'
 # MAGIC     ELSE NULL /*pa.ADDRESSSTATE*/
 # MAGIC     END)                                                              AS reseller_state
 # MAGIC , (CASE 
@@ -225,9 +246,10 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS bill_to_postal_code
 # MAGIC , (CASE 
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') 
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           THEN pa.ADDRESSZIPCODE -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC           THEN pa.ADDRESSZIPCODE
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_postal_code
 # MAGIC , (CASE
@@ -237,6 +259,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') 
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN pa.ADDRESSCOUNTRYREGIONISOCODE -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_country
@@ -280,6 +303,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN sh.sag_euaddress_name
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_name
@@ -287,6 +311,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           THEN CONCAT_WS(',',sh.sag_euaddress_street1, sh.sag_euaddress_street2) 
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC           THEN CONCAT_WS(' ',sh.sag_euaddress_street1, sh.sag_euaddress_street2)
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_address
 # MAGIC --, sh.sag_euaddress_street1                                            AS end_customer_address1
@@ -294,6 +320,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN sh.sag_euaddress_city 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_city
@@ -301,6 +328,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           THEN sh.sag_euaddress_county 
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC           THEN 'NA'
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_state
 # MAGIC , (CASE
@@ -314,6 +343,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN sh.sag_euaddress_country
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_country
@@ -351,6 +381,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN sl.salesid
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS d365_sales_order_number
@@ -359,6 +390,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           THEN it.invoiceid
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC           THEN ct.invoiceid 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                        AS invoice_number
 # MAGIC , (CASE
@@ -377,12 +410,16 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           THEN sh.currencycode 
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sl.currencycode  -- AddOn
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN ct.currencycode
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                     AS sell_currency
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           THEN sl.sag_purchprice
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN pl.purchprice
 # MAGIC     ELSE 0
 # MAGIC     END)                                                              AS final_vendor_unit_buy_price
 # MAGIC , (CASE
@@ -406,6 +443,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN (pl.purchprice - sl.sag_purchprice) * (-1 * it.qty)  -- AddOn
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC            THEN (CASE 
+# MAGIC                     WHEN di.PrimaryVendorID LIKE 'VAC001014%' THEN (sl.sag_vendorstandardcost - sl.sag_purchprice) * ct.qty
+# MAGIC                     ELSE 0 
+# MAGIC                 END)
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS claim_amount
 # MAGIC , di.primaryvendorid                                                  AS vendor_id
@@ -475,10 +517,23 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC                                                     WHEN sl.currencycode = 'GBP' THEN sl.salesprice * ex2.rate
 # MAGIC                                                     ELSE sl.salesprice / ex.rate
 # MAGIC                                                     END)  -- AddOn
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN (CASE 
+# MAGIC                     WHEN ct.currencycode = 'USD' THEN ct.salesprice
+# MAGIC                     WHEN ct.currencycode = 'GBP' THEN ct.salesprice * ex2.rate
+# MAGIC                     ELSE ct.salesprice / ex.rate
+# MAGIC                  END)
 # MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sales_price
+# MAGIC     END)                                                              AS sales_price_usd
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' THEN sp.purchtableid_intercomp  -- AddOn
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN ct.salesprice
+# MAGIC     ELSE 0
+# MAGIC     END)
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+# MAGIC             OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN sp.purchtableid_intercomp  
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS distributer_purchase_order
 # MAGIC , (CASE
@@ -496,6 +551,10 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           THEN ''
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS custom2
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+# MAGIC             THEN (CASE WHEN ct.currencycode = 'USD' THEN 1 ELSE IFNULL(ex.rate, ex2.rate) END)
+# MAGIC     END)                                                              AS exchange_rate
 # MAGIC   FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl
 # MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC     ON it.inventtransid = sl.inventtransid
@@ -535,6 +594,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   LEFT JOIN exchangerates ex2
 # MAGIC     ON ex2.startdate = TO_DATE(it.datephysical)
 # MAGIC     AND ex2.fromcurrency = sl.currencycode
+# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_custinvoicetransstaging WHERE Sys_Silver_IsCurrent = 1) ct
+# MAGIC     ON ct.inventtransid = sl.inventtransid
+# MAGIC     AND ct.dataareaid NOT IN ('NGS1' ,'NNL2')
 # MAGIC  WHERE 1 = 1 
 # MAGIC   AND sl.DATAAREAID NOT IN ('NGS1','NNL2')
 # MAGIC   AND pa.ISPRIMARY = 1
@@ -562,6 +624,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         -- Extreme
 # MAGIC         (
 # MAGIC           di.PrimaryVendorID IN ('VAC001044_NGS1')
+# MAGIC         )
+# MAGIC         OR
+# MAGIC         -- Cambium
+# MAGIC         (
+# MAGIC           di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2')
 # MAGIC         )
 # MAGIC     )
 
