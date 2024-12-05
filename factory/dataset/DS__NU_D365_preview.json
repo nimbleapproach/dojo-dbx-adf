@@ -22,7 +22,7 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "SalesInvoiceHeadersV2?%24top=10&$InvoiceDate ge 2018-01-01"
+			"path": "GeneralJournalEntryBiEntities?cross-company=true"
 		}
 	}
 }
