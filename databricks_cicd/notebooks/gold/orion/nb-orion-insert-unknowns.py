@@ -19,7 +19,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
-schema = 'phil_orion_testing'
+schema = 'orion'
 
 
 # COMMAND ----------
