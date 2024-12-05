@@ -78,7 +78,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     pt.purchid AS purchtableid_local,
 # MAGIC     pl.inventtransid AS purchlineid_local,
 # MAGIC     '>> Inter Joins >>' AS hdr,
-# MAGIC     pt.intercompanycompanyid,
+# MAGIC     upper(pt.intercompanycompanyid) as intercompanycompanyid,
 # MAGIC     pl.intercompanyinventtransid
 # MAGIC   FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging WHERE Sys_Silver_IsCurrent = 1) st
 # MAGIC   INNER JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl
