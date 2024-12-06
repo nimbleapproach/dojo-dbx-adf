@@ -85,7 +85,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   ON LOWER(dsl.COD_AZIENDA) = LOWER(e.entity_code)
 # MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
 # MAGIC WHERE (COD_SCENARIO NOT LIKE '%OB%')
-# MAGIC   AND (LEFT(dsl.COD_CONTO, 1) IN ('3', '4', '5', '6'))
+# MAGIC   AND (LEFT(dsl.COD_CONTO, 1) IN ('1','2','3', '4', '5', '6'))
 # MAGIC   AND ( dsl.COD_CATEGORIA LIKE "%AMOUNT"
 # MAGIC       OR dsl.COD_CATEGORIA IN ( 'ADJ01',
 # MAGIC                             'ADJ02',
