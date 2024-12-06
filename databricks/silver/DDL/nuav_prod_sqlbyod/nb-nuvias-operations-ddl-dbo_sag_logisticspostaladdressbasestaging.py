@@ -31,6 +31,12 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,ADDRESSRECID BIGINT
 # MAGIC       COMMENT 'TODO'
+# MAGIC     ,STREET STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,CITY STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC     ,COUNTY STRING
+# MAGIC       COMMENT 'TODO'
 # MAGIC     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
 # MAGIC     ,Sys_Silver_InsertDateTime_UTC TIMESTAMP
