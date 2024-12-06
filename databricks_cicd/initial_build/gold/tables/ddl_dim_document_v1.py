@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_document (
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',
   Sys_Gold_InsertedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was inserted into gold',
   Sys_Gold_ModifiedDateTime_UTC TIMESTAMP COMMENT 'The timestamp when this record was last updated in gold',
-  CONSTRAINT `document_primary_key` PRIMARY KEY (`document_pk`))
+  CONSTRAINT `dim_document_primary_key` PRIMARY KEY (`document_pk`))
 USING delta
 CLUSTER BY (source_system_fk,document_source)
 TBLPROPERTIES (
@@ -100,10 +100,9 @@ SELECT CAST(-1 AS BIGINT) AS document_pk,
        CAST(NULL AS STRING) AS country_code,
        CAST(-1 AS BIGINT) AS source_system_fk,
        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
-       CAST(NULL AS TIMESTAMP) AS end_datetime,
+       CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
        CAST(1 AS INTEGER) AS is_current,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
-FROM {catalog}.{schema}.dim_document 
 WHERE NOT EXISTS ( SELECT 1 FROM {catalog}.{schema}.dim_document WHERE document_pk = -1 AND source_system_fk = -1)
-""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_document")
+""").write.mode("overwrite").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_document")

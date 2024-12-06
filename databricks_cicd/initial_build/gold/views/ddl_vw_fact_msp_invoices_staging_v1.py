@@ -20,7 +20,6 @@ catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
-
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -70,6 +69,7 @@ SELECT
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' THEN 'N/A'
     ELSE msp_l.PurchaseCurrencyCode
   END AS currency_code,  
   coalesce(

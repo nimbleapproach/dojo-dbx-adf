@@ -10,14 +10,6 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 try:
-    FULL_LOAD = dbutils.widgets.get("wg_fullload") == 'true'
-except:
-    dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
-    FULL_LOAD = dbutils.widgets.get("wg_fullload")== 'true'
-
-# COMMAND ----------
-
-try:
     TRUNCATE = dbutils.widgets.get("wg_truncate") == 'true'
 except:
     dbutils.widgets.dropdown(name = "wg_truncate", defaultValue = 'false', choices =   ['false','true'])
@@ -55,6 +47,5 @@ for table in tableNames:
         "wg_tableName": table['table_name'],
         "wg_tableSchema": f"{TABLE_SCHEMA}",
         "wg_watermarkColumn": f"{WATERMARK_COLUMN}",
-        "wg_fullload": FULL_LOAD,
         "wg_truncate": TRUNCATE
      })

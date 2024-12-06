@@ -55,7 +55,6 @@ min_fx_rate AS
   sih.CurrencyFactor AS currency_factor,
   TO_DATE(sih.PostingDate) AS document_date, --JOIN to dim_date
   'credit memo' AS document_source, 
-  --concat(right(sih.Sys_DatabaseName, 2), '1') as EntityCode,
   COALESCE(it.No_, sil.No_, 'N/A') AS product_code, -- JOIN to dim_product
   CASE WHEN it.No_ IS NOT NULL THEN 'item' ELSE 'Credit Memo Line Item' END AS line_item_type,
   COALESCE(it.ProductType, 'N/A') AS product_type,
@@ -69,6 +68,7 @@ min_fx_rate AS
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+      WHEN sih.CurrencyCode = 'NaN' THEN 'N/A'
       ELSE sih.CurrencyCode
   END AS currency_code,  
   coalesce(
@@ -152,5 +152,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
 WHERE sih.Sys_Silver_IsCurrent = true 
 AND sil.Sys_Silver_IsCurrent = true
 AND sil.sid IS NOT NULL
+--limit(100)
 """
 )

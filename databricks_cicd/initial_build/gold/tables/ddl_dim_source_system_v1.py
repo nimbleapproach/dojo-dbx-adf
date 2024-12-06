@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_source_system (
   source_system STRING NOT NULL COMMENT 'Source System Name, eg IG Cloud, ERP Infinigate',
   source_entity STRING NOT NULL COMMENT 'breaking down system if they are braught through different source streams, eg UK, BE,NL',
   reporting_source_database STRING COMMENT 'sys_databasename fropm the various tables',
+  data_area_id STRING COMMENT 'Nuvias dataareaid used for joining to vendor and products',
   start_datetime TIMESTAMP NOT NULL COMMENT 'The dimensional start date of the record',
   end_datetime TIMESTAMP COMMENT 'The dimensional end date of the record, those records with a NULL value are current',
   is_current INT COMMENT 'Flag to indicate if this is the active dimension record per code',
@@ -58,6 +59,10 @@ TBLPROPERTIES (
   'delta.feature.v2Checkpoint' = 'supported')
 """)
 
+
+# COMMAND ----------
+
+
 # Add in the UNKNOWN Member
 sqldf= spark.sql(f"""
 SELECT CAST(-1 AS BIGINT) AS source_system_pk,
@@ -65,14 +70,12 @@ SELECT CAST(-1 AS BIGINT) AS source_system_pk,
        CAST('N/A' AS STRING) AS source_database,
        CAST('N/A' AS STRING) AS source_entity,
        CAST('N/A' AS STRING) AS reporting_source_database,
+       CAST('N/A' AS STRING) AS data_area_id,
        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
-       CAST(NULL AS TIMESTAMP) AS end_datetime,
+       CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
        CAST(1 AS INTEGER) AS is_current,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
-FROM {catalog}.{schema}.dim_source_system p
 WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_source_system WHERE source_system_pk = -1)
-""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_source_system")
-
-
+""").write.mode("overwrite").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_source_system")
 

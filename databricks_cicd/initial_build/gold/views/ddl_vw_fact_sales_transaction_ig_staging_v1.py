@@ -45,7 +45,7 @@ AND (
     OR
       sil.Sys_Gold_ModifiedDateTime_UTC > fact_delta.max_transaction_line_timestamp
     )
-UNION
+UNION ALL
 SELECT sil.* 
 FROM {catalog}.{schema}.vw_fact_sales_credit_memos_staging sil
 JOIN fact_delta on fact_delta.document_source = sil.document_source
@@ -54,7 +54,7 @@ AND (
     OR
       sil.Sys_Gold_ModifiedDateTime_UTC > fact_delta.max_transaction_line_timestamp
     )
-UNION
+UNION ALL
 SELECT msp_l.* 
 FROM {catalog}.{schema}.vw_fact_msp_invoices_staging msp_l
 JOIN fact_delta on fact_delta.document_source = msp_l.document_source
@@ -63,7 +63,7 @@ AND (
     OR
       msp_l.Sys_Gold_ModifiedDateTime_UTC > fact_delta.max_transaction_line_timestamp
     )
-UNION
+UNION ALL
 SELECT sla.* 
 FROM {catalog}.{schema}.vw_fact_sales_orders_quotes_staging sla
 JOIN fact_delta on fact_delta.document_source = sla.document_source
@@ -72,6 +72,15 @@ AND (
     OR
       sla.Sys_Gold_ModifiedDateTime_UTC > fact_delta.max_transaction_line_timestamp
     )
-
+UNION ALL
+SELECT sin.* 
+FROM {catalog}.{schema}.vw_fact_sales_invoices_nuvias_staging sin
+JOIN fact_delta on fact_delta.document_source = sin.document_source
+AND (
+      sin.Sys_Gold_InsertedDateTime_UTC > fact_delta.max_transaction_line_timestamp
+    OR
+      sin.Sys_Gold_ModifiedDateTime_UTC > fact_delta.max_transaction_line_timestamp
+    )
 """
 )
+

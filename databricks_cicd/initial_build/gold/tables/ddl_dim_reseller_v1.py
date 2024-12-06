@@ -63,6 +63,10 @@ TBLPROPERTIES (
 """)
 
 
+
+# COMMAND ----------
+
+
 sqldf= spark.sql(f"""
 SELECT CAST(-1 AS BIGINT) AS reseller_pk,
        CAST('N/A' AS STRING) AS reseller_code,
@@ -71,11 +75,11 @@ SELECT CAST(-1 AS BIGINT) AS reseller_pk,
        CAST('1900-01-01' AS TIMESTAMP) AS reseller_start_date,
        CAST(-1 AS BIGINT) AS source_system_fk,
        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
-       CAST(NULL AS TIMESTAMP) AS end_datetime,
+       CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
        CAST(1 AS INTEGER) AS is_current,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
-FROM {catalog}.{schema}.dim_reseller p
+--FROM {catalog}.{schema}.dim_reseller p
 WHERE NOT EXISTS ( SELECT 1 FROM {catalog}.{schema}.dim_reseller WHERE reseller_pk = -1)
-""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_reseller")
+""").write.mode("overwrite").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_reseller")
 
