@@ -240,6 +240,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
 # MAGIC             OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
 # MAGIC             OR di.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
+# MAGIC             OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC             THEN di.itemname
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
 # MAGIC             THEN (CASE WHEN di.itemname = 'FORTICARE' THEN 'RENEWAL' ELSE di.itemname END)
@@ -251,6 +252,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN di.itemdescription
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                AS part_code_description
@@ -305,15 +307,20 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
 # MAGIC           OR di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall'
 # MAGIC           THEN s.sag_vendorreferencenumber
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS vendor_promotion
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN s.sag_vendorstandardcost -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+# MAGIC           THEN s.sag_vendorstandardcost 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS mspunit_cost
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN s.sag_vendorstandardcost * (-1 * it.qty)
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' 
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+# MAGIC           THEN s.sag_vendorstandardcost * (-1 * it.qty)
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS mspunit_total_cost
 # MAGIC , (CASE
@@ -326,6 +333,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.salesname
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS sales_name
@@ -357,12 +365,14 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN SPLIT(pa.ADDRESSSTREET,'\n')[0]
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_address1
 # MAGIC , (CASE
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN SPLIT(pa.ADDRESSSTREET,'\n')[1]
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_address2
@@ -378,6 +388,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN pa.ADDRESSCITY
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_city
@@ -389,6 +400,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           THEN 'NA'
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN pa.ADDRESSSTATE
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_state
@@ -403,6 +415,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
 # MAGIC           OR di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN pa.ADDRESSZIPCODE
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_postal_code
@@ -420,6 +433,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN pa.ADDRESSCOUNTRYREGIONISOCODE
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_country
@@ -445,6 +459,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN ad.DESCRIPTION
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_name
@@ -453,6 +468,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN b.ISOCODE
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_country
@@ -460,18 +476,21 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN ad.ZIPCODE
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_postal_code
 # MAGIC , (CASE
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN SPLIT(ad.STREET,'\n')[0]
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_address1
 # MAGIC , (CASE
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN SPLIT(ad.STREET,'\n')[1]
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_address2
@@ -484,12 +503,14 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN ad.CITY
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_city
 # MAGIC , (CASE
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN ad.COUNTY
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_state
@@ -510,6 +531,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_name
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_name
@@ -534,6 +556,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
 # MAGIC             OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC             OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC             OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC             THEN s.sag_euaddress_street1
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC             THEN s.sag_euaddress_street1
@@ -542,6 +565,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_street2
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_address2
@@ -552,6 +576,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_city
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_city
@@ -560,6 +585,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_county
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN 'NA'
@@ -573,6 +599,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
 # MAGIC           OR di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_postcode
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_postal_code
@@ -589,22 +616,27 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_country
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_country
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN s.sag_euaddress_contact -- Extreme
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+# MAGIC           THEN s.sag_euaddress_contact 
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_contact
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC             OR di.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+# MAGIC             OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC             THEN SPLIT(s.sag_euaddress_contact,' ')[0]
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_contact_first_name
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC             OR di.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+# MAGIC             OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC             THEN SPLIT(s.sag_euaddress_contact,' ')[1]
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_contact_last_name
@@ -614,12 +646,14 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_email -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_email
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           OR di.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN ''
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS end_customer_phone_number
@@ -632,6 +666,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN it.inventserialid
 # MAGIC     WHEN ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
@@ -650,6 +685,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.salesid
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS d365_sales_order_number
@@ -660,6 +696,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist 
 # MAGIC           OR di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN it.invoiceid
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN ct.invoiceid
@@ -673,6 +710,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
 # MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.customerref
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_po_to_infinigate
@@ -684,6 +722,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             OR di.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC             OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
 # MAGIC             OR di.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC             OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC             THEN sp.purchtableid_intercomp
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS infinigate_po_to_vendor
@@ -796,6 +835,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'Prolabs%' 
 # MAGIC           OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.custaccount  -- AddOn
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS customer_account
@@ -1007,6 +1047,16 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC                 END)
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS shipping_legal_entity
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+# MAGIC           THEN di.itemname
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS snwl_pn_sku
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+# MAGIC           THEN it.inventtransid
+# MAGIC     ELSE NULL
+# MAGIC     END)                                                              AS invent_trans_id
 # MAGIC   FROM sales_data s
 # MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC     ON it.inventtransid = s.inventtransid
@@ -1139,6 +1189,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         -- SmartOptics
 # MAGIC         (
 # MAGIC             di.PrimaryVendorName LIKE 'Smart Optics%'
+# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
 # MAGIC         )
 # MAGIC         OR
 # MAGIC         -- Versa POS 1.0
@@ -1149,6 +1200,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             AND di.ItemGroupID IN ('Hardware', 'Accessory')
 # MAGIC             AND s.SALESSTATUS = '3'
 # MAGIC             AND s.SALESORDERTYPE LIKE 'New'
+# MAGIC             AND s.DATAAREAID <> 'NGS1'
 # MAGIC         )
 # MAGIC         OR
 # MAGIC         -- Versa POS v1.2 External
@@ -1156,6 +1208,13 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             di.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC             AND it.STATUSISSUE = '1'
 # MAGIC             AND s.SALESSTATUS = '3'
+# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+# MAGIC         )
+# MAGIC         OR
+# MAGIC         -- SonicWall
+# MAGIC         (
+# MAGIC             di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2')
+# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
 # MAGIC         )
 # MAGIC     )
 
