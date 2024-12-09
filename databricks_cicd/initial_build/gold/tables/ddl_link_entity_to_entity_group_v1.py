@@ -58,3 +58,17 @@ TBLPROPERTIES (
   'delta.feature.v2Checkpoint' = 'supported')
 """)
 
+
+# COMMAND ----------
+
+# now add in the default member
+sqldf= spark.sql("""
+SELECT CAST(-1 AS BIGINT) AS entity_to_entity_group_pk,
+       CAST(-1 AS BIGINT) AS entity_group_fk,
+       CAST(-1 AS BIGINT) AS entity_fk,
+       CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
+       CAST(NULL AS TIMESTAMP) AS end_datetime,
+       CAST(1 AS INTEGER) AS is_current,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+       CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+""").write.mode("overwrite").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.link_entity_to_entity_group")

@@ -70,6 +70,7 @@ SELECT
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+      WHEN sih.CurrencyCode = 'NaN' THEN 'N/A'
       ELSE sih.CurrencyCode
   END AS currency_code,  
   coalesce(
@@ -150,5 +151,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
 WHERE sih.Sys_Silver_IsCurrent = true
 AND sil.Sys_Silver_IsCurrent = true
 AND sil.sid IS NOT NULL
+--limit(100)
 """
 )

@@ -4,6 +4,7 @@
 # COMMAND ----------
 
 # Importing Libraries
+# Importing Libraries
 import os
 spark = spark  # noqa
 
@@ -160,8 +161,6 @@ SELECT cte_max_timestamp.document_source, cte_max_timestamp.max_transaction_line
 FROM cte_max_timestamp
 """
 )
-
-
 
 # COMMAND ----------
 

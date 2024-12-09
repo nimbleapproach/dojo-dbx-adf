@@ -7,12 +7,11 @@
 
 # COMMAND ----------
 
-# MAGIC %run  ../../library/nb-silver-library 
+# MAGIC %run  ../../library/nb-silver-library
 
 # COMMAND ----------
 
 import os
-import pyspark.sql.functions as F
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
@@ -45,19 +44,8 @@ except:
 try:
     DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
 except:
-    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full'])
+    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full','most-recent'])
     DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
-
-# COMMAND ----------
-
-# NOTE: (DP 23/10/2024 T22814) (https://dev.azure.com/InfinigateHolding/Group%20IT%20Program/_workitems/edit/22814)
-#       the setting has no bearing but is used by databricks jobs,
-#       it should be removed from jobs first, then from here
-try:
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true' )
-except:
-    dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true')
 
 # COMMAND ----------
 
@@ -167,6 +155,13 @@ if DELTA_LOAD == 'delta':
   source_df = spark.sql(f"""
                       Select *,
                       max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
+                      {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
+elif DELTA_LOAD == 'most-recent':
+  print('Most Recent Loading')
+  source_df = spark.sql(f"""
+                      Select *,
+                      max({WATERMARK_COLUMN})  OVER () AS Current_Version,
                       {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
                       from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
 else:

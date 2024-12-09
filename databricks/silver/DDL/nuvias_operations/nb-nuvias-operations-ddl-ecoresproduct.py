@@ -27,8 +27,6 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'Business key'
 # MAGIC     ,DisplayProductNumber STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC     ,RECVERSION INT
-# MAGIC       COMMENT 'TODO'
 # MAGIC     ,SAG_NGS1VendorID STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,LastProcessedChange_DateTime	TIMESTAMP	

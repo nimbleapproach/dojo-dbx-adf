@@ -55,6 +55,36 @@ CREATE OR REPLACE TABLE item
     COMMENT 'TODO'
   ,ManufacturerItemNo_ STRING
     COMMENT 'The key linking to the item_dds'
+  ,InventoryPostingGroup STRING  
+          COMMENT 'TODO'
+  ,itemdisc_group STRING
+          COMMENT 'TODO'
+  ,VendorNo_ STRING
+          COMMENT 'TODO'
+  ,VendorItemNo_ STRING
+          COMMENT 'TODO'
+  ,No_Series STRING
+          COMMENT 'TODO'
+  ,ManufacturerCode STRING
+          COMMENT 'TODO'
+  ,ItemTrackingCode STRING
+          COMMENT 'TODO'
+  ,LifeCycleFormula STRING
+          COMMENT 'TODO'
+  ,Inactive INT
+          COMMENT 'TODO'
+  ,EndUserType STRING
+          COMMENT 'TODO'
+  ,LicenseType STRING
+          COMMENT 'TODO'
+  ,Status STRING
+          COMMENT 'TODO'
+  ,ProductGroupCode STRING
+          COMMENT 'TODO'
+  ,Subscription STRING
+          COMMENT 'TODO'
+  ,Createdon DATE
+          COMMENT 'TODO'
   ,Sys_RowNumber BIGINT NOT NULL
     COMMENT 'Globally unqiue Number in the source database to capture changes. Was calculated by casting the "timestamp" column to integer.'
   ,Sys_DatabaseName STRING NOT NULL

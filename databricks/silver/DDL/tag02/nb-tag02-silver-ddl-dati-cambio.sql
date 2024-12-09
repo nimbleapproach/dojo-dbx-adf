@@ -51,6 +51,7 @@ CREATE OR REPLACE TABLE dati_cambio
     ,Sys_Silver_HashKey BIGINT NOT NULL
       COMMENT 'HashKey over all but Sys and DATEUPD columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
+    ,Sys_Silver_IsDeleted BOOLEAN
 ,CONSTRAINT dati_cambio_pk PRIMARY KEY(COD_SCENARIO,COD_PERIODO,COD_VALUTA, DATEUPD)
   )
 COMMENT 'Thi is table for FX rate'

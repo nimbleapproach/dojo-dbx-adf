@@ -74,4 +74,4 @@ SELECT CAST(-1 AS BIGINT) AS reseller_group_pk,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM {catalog}.{schema}.dim_reseller_group p
 WHERE NOT EXISTS ( SELECT 1 FROM {catalog}.{schema}.dim_reseller_group WHERE reseller_group_pk = -1)
-""").write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_reseller_group")
+""").write.mode("overwrite").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_reseller_group")

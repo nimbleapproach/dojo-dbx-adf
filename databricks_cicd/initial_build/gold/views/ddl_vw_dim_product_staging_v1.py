@@ -36,11 +36,18 @@ with cte_sources as
   where s.source_system = 'Infinigate ERP' 
   and s.is_current = 1
 ),
-cte_product_source as 
+cte_nuvias_sources as 
+(
+  select distinct source_system_pk, data_area_id 
+  from {catalog}.{schema}.dim_source_system s 
+  where s.source_system = 'Nuvias ERP' 
+  and s.is_current = 1
+),
+cte_source_data as 
 (
 -- Items
 select distinct
-    coalesce(it.No_, 'N/A') as product_code,
+    it.No_ as product_code,
     trim(
       (
         concat(
@@ -65,7 +72,7 @@ FROM silver_{ENVIRONMENT}.igsql03.item it
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(it.Sys_DatabaseName,2))
 Where it.Sys_Silver_IsCurrent = true
 group by
-    coalesce(it.No_, 'N/A'),
+    it.No_,
     --coalesce(it.manufacturerItemNo_, 'N/A'),
     trim(
       (
@@ -82,7 +89,7 @@ group by
     coalesce(s.source_system_pk,-1)
 union -- credit notes
 select distinct
-    coalesce(sil.No_,'N/A') as product_code,
+    sil.No_ as product_code,
     'Credit Memo Line Item' as product_description,
     coalesce(sil.No_,'N/A') as local_product_id ,
     'N/A' as product_type,
@@ -101,12 +108,12 @@ AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i
                 and i.Sys_Silver_IsCurrent = true 
                 and i.Sys_DatabaseName = sil.Sys_DatabaseName)
 group by
-    coalesce(sil.No_,'N/A'),
+    sil.No_,
     --coalesce(sil.manufacturerItemNo_, 'N/A'),
     coalesce(s.source_system_pk,-1)
 union -- sales orders & quotes
 select distinct
-    coalesce(sil.No_,'N/A') as product_code,
+    sil.No_ as product_code,
     'Sales Archive Line Item' AS product_description,
     coalesce(sil.No_,'N/A') as local_product_id,
     'N/A' as product_type,
@@ -143,11 +150,11 @@ AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i
                 and i.Sys_Silver_IsCurrent = true 
                 and i.Sys_DatabaseName = sil.Sys_DatabaseName)
 group by
-    coalesce(sil.No_,'N/A'),
+    sil.No_,
     coalesce(s.source_system_pk,-1)
 union -- sales invoices
 select distinct
-    coalesce(sil.No_,'N/A') as product_code,
+    sil.No_ as product_code,
     'Sales Invoice Line Item' as product_description,
     coalesce(sil.No_,'N/A') as local_product_id ,
     'N/A' as product_type,
@@ -166,12 +173,12 @@ AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i
                 and i.Sys_DatabaseName = sil.Sys_DatabaseName)
 WHERE sil.Sys_Silver_IsCurrent = true
 group by 
-    coalesce(sil.No_,'N/A'),
+    sil.No_,
     --coalesce(sil.manufacturerItemNo_, 'N/A'),
     coalesce(s.source_system_pk,-1)
 union -- msp
 select distinct
-    coalesce(sil.ItemNo_,'N/A') as product_code,
+    sil.ItemNo_ as product_code,
     'MSP Line Item' as product_description,
     coalesce(sil.ItemNo_,'N/A') as local_product_id ,
     'N/A' as product_type,
@@ -190,30 +197,51 @@ AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i
                 and i.Sys_Silver_IsCurrent = true 
                 and i.Sys_DatabaseName = sil.Sys_DatabaseName)
 group by 
-  coalesce(sil.ItemNo_,'N/A'),
+  sil.ItemNo_,
   coalesce(s.source_system_pk,-1)
+UNION
+--Nuvias
+SELECT
+    it.Description AS product_code,
+    COALESCE(itdesc.Description, 'N/A') AS product_description,
+    MAX(COALESCE(it.itemid,'N/A')) AS local_product_id ,
+    COALESCE(datanowarr.Product_Type, 'N/A') AS product_type,
+    CONCAT(it.DataAreaId,' Line Item') as line_item_type,
+    --coalesce(it.manufacturerItemNo_, 'N/A') as manufacturer_item_number,
+    coalesce(s.source_system_pk,-1) AS source_system_fk,
+    CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+    CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+    1 AS is_current,
+    MAX(it.Sys_Silver_InsertDateTime_UTC) AS Sys_Gold_InsertedDateTime_UTC,
+    MAX(it.Sys_Silver_ModifedDateTime_UTC) AS Sys_Gold_ModifiedDateTime_UTC
+FROM silver_{ENVIRONMENT}.nuvias_operations.custvendexternalitem AS it 
+
+LEFT JOIN cte_nuvias_sources s on it.dataareaid = s.data_area_id
+
+LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.ecoresproducttranslation AS itdesc ON it.Description = itdesc.Name
+AND itdesc.Sys_Silver_IsCurrent = 1
+
+LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = it.Description
+
+WHERE it.Sys_Silver_IsCurrent = 1
+GROUP BY all
 )
 SELECT
-    product_code,
-    product_description,
-    local_product_id ,
-    product_type,
-    line_item_type,
-    source_system_fk,
-    start_datetime,
-    end_datetime,
-    is_current,
-    MAX(Sys_Gold_InsertedDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
-    MAX(Sys_Gold_ModifiedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
-FROM cte_product_source
-GROUP BY 
-    product_code,
-    product_description,
-    local_product_id ,
-    product_type,
-    line_item_type,
-    source_system_fk,
-    start_datetime,
-    end_datetime,
-    is_current
+    csd.product_code,
+    csd.product_description,
+    csd.local_product_id ,
+    csd.product_type,
+    csd.line_item_type,
+    csd.source_system_fk,
+    case when d.is_current is null THEN csd.start_datetime ELSE CAST(NOW() as TIMESTAMP) END AS start_datetime,
+    csd.end_datetime,
+    csd.is_current,
+    MAX(csd.Sys_Gold_InsertedDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
+    MAX(csd.Sys_Gold_ModifiedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
+FROM cte_source_data csd
+LEFT JOIN {catalog}.{schema}.dim_product d ON d.local_product_id = csd.local_product_id 
+  AND d.line_item_type = csd.line_item_type 
+  AND d.source_system_fk = d.source_system_fk
+WHERE csd.product_code IS NOT NULL
+GROUP BY ALL
 """)
