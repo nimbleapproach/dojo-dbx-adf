@@ -2,35 +2,6 @@
 # MAGIC %run ./nb-orion-meta
 
 # COMMAND ----------
-
-# 
-# Notebook to process a single dimension based on the name being passed via widgets
-#
-dbutils.widgets.text("dimension_name", "", "Dimension Name")
-dimension_name = dbutils.widgets.get("dimension_name")
-#DEBUG dimension_name = 'entity_to_entity_group_link'
-#dimension_name = 'product'
-#dimension_name = 'reseller_group'
-
-
-dbutils.widgets.text("delta", "0", "load delta records")  # Convert True to "True"
-delta = dbutils.widgets.get("delta")
-
-
-# COMMAND ----------
-
-spark = spark  # noqa
-
-# file_path = 'meta.json'
-# replacements = {
-#     "processing_notebook": processing_notebook,
-#     "ENVIRONMENT": ENVIRONMENT,
-#     "orion_schema": orion_schema
-# }
-# data = read_and_replace_json(file_path, replacements)
-
-# COMMAND ----------
-
 # 
 # Notebook to process a single dimension based on the name being passed via widgets
 #
@@ -38,14 +9,13 @@ from datetime import datetime
 dbutils.widgets.text("dimension_name", "", "Dimension Name")
 dimension_name = dbutils.widgets.get("dimension_name")
 #DEBUG dimension_name = 'entity_to_entity_group_link'
-# dimension_name = 'source_system'
+#dimension_name = 'reseller'
 #dimension_name = 'reseller_group'
 
 # needed for ending a dimension = end_datetime
 run_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # COMMAND ----------
-
 spark = spark  # noqa
 
 # file_path = 'meta.json'
@@ -61,7 +31,6 @@ spark = spark  # noqa
 source_system_config = get_object_detail(data, 'source_system')
 source_system_table_name = source_system_config['destination_table_name'] # string
    
-
 # COMMAND ----------
 
 def merge_dimension(dimension_name):
@@ -77,8 +46,7 @@ def merge_dimension(dimension_name):
     
     # Get the last part of the string after the period, then split at the first underscore
     table_pk = destination_table_name_only.split('.')[-1].split('_', 1)[1] + "_pk"
-    # print('table_pk', table_pk)
-    
+
     # source of data config
     updates_dimension_table = dimension_config['source_table_name'] # string
     source_key_columns = dimension_config['source_key_columns'] # string
@@ -101,10 +69,6 @@ def merge_dimension(dimension_name):
     insert_columns_sql = ""
     select_columns_sql = ""
     destination_columns_list = spark.table(f"{destination_dimension_table_name}").columns
-    
-    #print('column_list')
-    #print(destination_columns_list)
-
     source_columns_list = spark.table(f"{updates_dimension_table}").columns
     destination_columns_lower = [destination_col.lower() for destination_col in destination_columns_list]
     destination_columns_lower.remove(table_pk)
@@ -141,7 +105,7 @@ def merge_dimension(dimension_name):
                                     coalesce(case when max(d.Sys_Gold_InsertedDateTime_UTC) > max(d.Sys_Gold_ModifiedDateTime_UTC)
                                     then max(d.Sys_Gold_InsertedDateTime_UTC)
                                     else max(d.Sys_Gold_ModifiedDateTime_UTC)
-                                    end, CAST('1900-01-01' AS TIMESTAMP)) as delta_timestamp
+                                    end, CAST('1990-12-31' AS TIMESTAMP)) as delta_timestamp
                                 from {destination_dimension_table_name} d
                                 cross join {source_system_table_name} src
                                 group by src.source_system_pk
@@ -165,13 +129,13 @@ def merge_dimension(dimension_name):
                                         coalesce(case when max(Sys_Gold_InsertedDateTime_UTC) > max(Sys_Gold_ModifiedDateTime_UTC)
                                         then max(Sys_Gold_InsertedDateTime_UTC)
                                         else max(Sys_Gold_ModifiedDateTime_UTC)
-                                        end, CAST('1900-01-01' AS TIMESTAMP)) as delta_timestamp
+                                        end, CAST('1990-12-31' AS TIMESTAMP)) as delta_timestamp
                                     from {destination_dimension_table_name}
                                     """)
         # pull into a string for extracting the delta
         delta_timestamp = delta_df.first()['delta_timestamp']
+        #print('delta_timestamp',delta_timestamp)
 
-        #print('delta_timestamp', delta_timestamp)
         # the updates_dimension_table will contain all the changed and new records for a dim, not the entire dim
         # The first part will identify the updates
         updates_df = spark.sql(f"""SELECT 
@@ -181,7 +145,7 @@ def merge_dimension(dimension_name):
                             dateadd(second,-1,CAST('{run_date_time}' AS TIMESTAMP)) AS existing_dim_end_datetime
                             FROM {updates_dimension_table} 
                             WHERE Sys_Gold_InsertedDateTime_UTC > '{delta_timestamp}' 
-                            OR coalesce(Sys_Gold_ModifiedDateTime_UTC, CAST('1900-01-01' AS TIMESTAMP)) > '{delta_timestamp}' 
+                            OR coalesce(Sys_Gold_ModifiedDateTime_UTC, CAST('1990-12-31' AS TIMESTAMP)) > '{delta_timestamp}' 
                             GROUP BY {', '.join(source_key_columns)}""")
         
     #updates_df.show()
@@ -222,9 +186,10 @@ def merge_dimension(dimension_name):
             FROM {updates_dimension_table} 
             WHERE Sys_Gold_InsertedDateTime_UTC > '{delta_timestamp}'
             OR coalesce(Sys_Gold_ModifiedDateTime_UTC, CAST('1990-12-31' AS TIMESTAMP)) > '{delta_timestamp}' """
-    # print(insert_sql)
+    #print(insert_sql)
 
     sqldf= spark.sql(insert_sql)
+
 
 
 # COMMAND ----------

@@ -59,7 +59,7 @@ SELECT DISTINCT
   'BE1',
   'BE1 + NL1',
   'BENELUX',
-  1,
+  1 as entity_type,
   'N/A' as legal_headquarters,
   'N/A' as administrative_city,
   'N/A' as date_established,
@@ -89,3 +89,4 @@ SELECT DISTINCT
 FROM cte_source_data csd
 LEFT JOIN {catalog}.{schema}.dim_entity d on d.entity_code = csd.entity_code
   """)
+

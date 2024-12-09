@@ -63,10 +63,6 @@ TBLPROPERTIES (
 """)
 
 
-
-# COMMAND ----------
-
-
 sqldf= spark.sql(f"""
 SELECT CAST(-1 AS BIGINT) AS reseller_pk,
        CAST('N/A' AS STRING) AS reseller_code,

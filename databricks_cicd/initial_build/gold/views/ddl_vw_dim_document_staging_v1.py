@@ -33,18 +33,18 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_document_staging
 AS 
 with cte_sources as 
 (
-  select distinct source_system_pk, source_entity 
+  select distinct s.source_system, source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
-  where s.source_system = 'Infinigate ERP' 
-  and s.is_current = 1
+  --where s.source_system = 'Infinigate ERP' 
+  where s.is_current = 1
 ),
-cte_nuvias_sources as 
-(
-  select distinct source_system_pk, data_area_id
-  from {catalog}.{schema}.dim_source_system s 
-  where s.source_system = 'Nuvias ERP' 
-  and s.is_current = 1
-),
+--cte_nuvias_sources as 
+--(
+-- select distinct source_system_pk, data_area_id
+--  from {catalog}.{schema}.dim_source_system s 
+--  where s.source_system = 'Nuvias ERP' 
+--  and s.is_current = 1
+--),
 cte_source_data as 
 (
 --orders & quotes
@@ -76,6 +76,7 @@ FROM
   and sla.Sys_DatabaseName = sha.Sys_DatabaseName
   and sla.Sys_Silver_IsCurrent = 1
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sha.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 GROUP BY ALL
 union
 --msp
@@ -96,6 +97,7 @@ select distinct
   MAX(CAST(msp_h.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
 from silver_{ENVIRONMENT}.igsql03.inf_msp_usage_header as msp_h
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(msp_h.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 where  msp_h.Sys_Silver_IsCurrent = true
 GROUP BY ALL
 union
@@ -121,6 +123,7 @@ ON sih.No_ = sil.DocumentNo_
     AND sil.Sys_Silver_IsCurrent = true
 LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 GROUP BY ALL
 union
 --credit memos
@@ -143,6 +146,7 @@ INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.
     AND sih.Sys_Silver_IsCurrent = true
     AND sil.Sys_Silver_IsCurrent = true
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 GROUP BY ALL
 UNION
 --Nuvias data
@@ -168,8 +172,53 @@ LEFT JOIN silver_dev.nuvias_operations.salesline AS salestrans ON trans.SalesId 
   AND trans.ItemId = salestrans.ItemId
   and trans.InventTransId = salestrans.InventTransId 
   AND salestrans.Sys_Silver_IsCurrent = 1
-LEFT JOIN cte_nuvias_sources s on trans.dataareaid = s.data_area_id
+LEFT JOIN cte_sources s on trans.dataareaid = s.source_entity
+AND s.source_system = 'Nuvias ERP'
 WHERE trans.Sys_Silver_IsCurrent = 1
+GROUP BY ALL
+UNION
+--Netsafe data
+SELECT 
+  invoice.Invoice_Number As local_document_id,
+  'N/A' AS associated_document_id,
+  MAX(to_date(invoice.Invoice_Date)) AS document_date,
+  'netsafe sales invoice' AS document_source,
+  'N/A' AS country_code,
+  coalesce(s.source_system_pk,-1) AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  MAX(CAST(invoice.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(invoice.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
+FROM  
+  silver_{ENVIRONMENT}.netsafe.invoicedata AS invoice
+LEFT JOIN cte_sources s on CASE
+    WHEN lower(invoice.Sys_Country) like '%romania%' THEN 'RO2'
+    WHEN lower(invoice.Sys_Country) like '%croatia%' THEN 'HR2'
+    WHEN lower(invoice.Sys_Country) like '%slovenia%' THEN 'SI1'
+    WHEN lower(invoice.Sys_Country) like '%bulgaria%' THEN 'BG1'
+    END = s.source_entity
+AND s.source_system = 'Netsafe ERP'
+WHERE invoice.sys_silver_iscurrent = true
+GROUP BY ALL
+UNION 
+--Netsuite data
+SELECT 
+  RIGHT(si.Sales_Order_Number,9) As local_document_id,
+  'N/A' AS associated_document_id,
+  TO_DATE(si.Sales_Order_Date) AS document_date,
+  'starlink (netsuite) sales invoice' AS document_source,
+  'N/A' AS country_code,
+  coalesce(s.source_system_pk,-1) AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  MAX(CAST(si.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(si.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
+FROM
+  silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si
+LEFT JOIN cte_sources s on 'AE1' = s.source_entity AND s.source_system = 'Starlink (Netsuite) ERP'
+WHERE si.sys_silver_iscurrent = true
 GROUP BY ALL
 )
 SELECT

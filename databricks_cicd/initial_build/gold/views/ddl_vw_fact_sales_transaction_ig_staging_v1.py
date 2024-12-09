@@ -72,15 +72,6 @@ AND (
     OR
       sla.Sys_Gold_ModifiedDateTime_UTC > fact_delta.max_transaction_line_timestamp
     )
-UNION ALL
-SELECT sin.* 
-FROM {catalog}.{schema}.vw_fact_sales_invoices_nuvias_staging sin
-JOIN fact_delta on fact_delta.document_source = sin.document_source
-AND (
-      sin.Sys_Gold_InsertedDateTime_UTC > fact_delta.max_transaction_line_timestamp
-    OR
-      sin.Sys_Gold_ModifiedDateTime_UTC > fact_delta.max_transaction_line_timestamp
-    )
 """
 )
 

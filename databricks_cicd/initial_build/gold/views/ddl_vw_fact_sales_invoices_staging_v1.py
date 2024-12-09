@@ -138,6 +138,15 @@ AND CASE WHEN
         CASE WHEN sih.Sys_DatabaseName ='ReportsBE' AND TO_DATE(sih.PostingDate) >='2024-07-01' THEN 'BE4' ELSE CONCAT(RIGHT(sih.Sys_DatabaseName,2 ),'1') END  
 END = e.COD_AZIENDA 
 AND lower(e.ScenarioGroup) = 'actual'
+AND e.currency =  CASE
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT','BE')  THEN 'EUR'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+      ELSE sih.CurrencyCode
+END
 
 LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
