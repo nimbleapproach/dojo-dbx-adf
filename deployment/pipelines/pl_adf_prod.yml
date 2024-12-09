@@ -36,11 +36,11 @@ variables:
   - name: location
     value: "westeurope"
   - name: subscriptionId
-    value: "bf75b24f-2b10-4ada-a25a-b5bec3311486"
+    value: "5c771a6b-7686-4067-a58d-95551c37bf46"
   - name: resourceGroupName
-    value: "rg-ig-lakehouse-uat-westeurope"
+    value: "rg-ig-lakehouse-dev-westeurope"
   - name: dataFactoryName
-    value: "adf-ig-uat-westeurope"
+    value: "adf-ig-dev-westeurope"
   - name: DataFactoryResourceId
     value: /subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupName)/providers/Microsoft.DataFactory/factories/$(dataFactoryName)
   - name: projectName
