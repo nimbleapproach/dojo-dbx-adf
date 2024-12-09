@@ -16,25 +16,15 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE dbo_sag_purchlinestaging
+# MAGIC CREATE OR REPLACE TABLE dbo_sag_custpackingsliptransstaging
 # MAGIC   (
 # MAGIC     SID BIGINT GENERATED ALWAYS AS IDENTITY
 # MAGIC       COMMENT 'Surrogate Key'
+# MAGIC   , RECID BIGINT
+# MAGIC       COMMENT 'TODO'
 # MAGIC   , INVENTTRANSID STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC   , DATAAREAID STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , INTERCOMPANYINVENTTRANSID STRING
-# MAGIC       COMMENT 'TODO'  
-# MAGIC   , PURCHID STRING
-# MAGIC       COMMENT 'TODO'  
-# MAGIC   , LINEAMOUNT DECIMAL(32,6)
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , PURCHQTY DECIMAL(32,6)
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , PURCHPRICE DECIMAL(32,6)
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , CURRENCYCODE STRING
+# MAGIC   , PACKINGSLIPID STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -47,21 +37,21 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC   , Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC   , Sys_Silver_IsCurrent BOOLEAN
-# MAGIC   , CONSTRAINT dbo_sag_purchlinestaging_pk PRIMARY KEY(INVENTTRANSID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC   , CONSTRAINT dbo_sag_custpackingsliptransstaging_pk PRIMARY KEY(RECID, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the data from dbo_sag_purchlinestaging. \n'
+# MAGIC COMMENT 'This table contains the data from dbo_sag_custpackingsliptransstaging. \n'
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE dbo_sag_purchlinestaging ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE dbo_sag_purchlinestaging ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE dbo_sag_purchlinestaging ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_sag_custpackingsliptransstaging ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_sag_custpackingsliptransstaging ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_sag_custpackingsliptransstaging ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE silver_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE silver_dev.nuav_prod_sqlbyod.dbo_sag_custpackingsliptransstaging OWNER TO `az_edw_data_engineers_ext_db`
