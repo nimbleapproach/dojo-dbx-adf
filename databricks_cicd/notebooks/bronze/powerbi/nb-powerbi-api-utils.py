@@ -48,6 +48,14 @@ class PowerBIHandler():
         else:
             metaData = self.session.get(continuation_uri , auth=InfinigateAuth(self.client_id, self.client_secret))
         return metaData.json()
+    
+    def getWorkspaces(self):
+        group_call = self.session.get(f"{self.baseURL}groups", auth=InfinigateAuth(self.client_id, self.client_secret))
+        return group_call.json()
+    
+    def getDatasets(self, workspace_id : str):
+        dataset_call = self.session.get(f"{self.baseURL}groups/{workspace_id}/datasets", auth=InfinigateAuth(self.client_id, self.client_secret))
+        return dataset_call.json()
 
     def getRefreshDataset(self, datasetId : int , workspaceId : str):
         metaData = self.session.get(f'{self.baseURL}groups/{workspaceId}/datasets/{datasetId}/refreshes' , auth=InfinigateAuth(self.client_id, self.client_secret))
