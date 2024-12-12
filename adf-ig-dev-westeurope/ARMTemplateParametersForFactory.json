@@ -29,6 +29,9 @@
 		"LS_SQL_TEST_connectionString": {
 			"value": ""
 		},
+		"LS_TAG_SAAS_password": {
+			"value": ""
+		},
 		"Afas_properties_typeProperties_url": {
 			"value": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
 		},
@@ -94,6 +97,12 @@
 		},
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"value": "secret-tagetikdbserver01-connectionstring"
+		},
+		"LS_TAG_SAAS_properties_typeProperties_url": {
+			"value": "https://infinigate-prod.api.saastagetik.com/basic/aih/data/v1/PROD_TGK_INFINIGATE_001/001/"
+		},
+		"LS_TAG_SAAS_properties_typeProperties_userName": {
+			"value": "INFINIGATE_PROD-NAV_LOAD"
 		},
 		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
 			"value": "@{linkedService().pm_Service_Uri}"

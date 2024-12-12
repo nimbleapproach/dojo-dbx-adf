@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-ig-dev-westeurope"
 		},
+		"LS_Oracle_CX_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
+		},
 		"LS_SQLDB_METADATA_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQLDB_METADATA'",
@@ -15,6 +19,22 @@
 		"LS_SQL_TEST_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQL_TEST'"
+		},
+		"LS_Oracle_CX_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "https://nuviastest1.bigmachines.com/"
+		},
+		"LS_Oracle_CX_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "CRM.Admin"
+		},
+		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
+		},
+		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
 		},
 		"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
@@ -53,6 +73,91 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_Oracle_CX')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "OracleServiceCloud",
+				"typeProperties": {
+					"host": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]",
+					"username": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_Oracle_CX_password')]"
+					},
+					"useEncryptedEndpoints": true,
+					"useHostVerification": true,
+					"usePeerVerification": true
+				},
+				"connectVia": {
+					"referenceName": "ir-ig-managed-dev-westeurope",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_OSS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "PostgreSql",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {}
+						},
+						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-jumpbi01-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_PBA')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_Environment": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "PostgreSql",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference",
+							"parameters": {}
+						},
+						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "shir-jumpbi01-shared",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/LS_SQLDB_CRM_DYNAMIC')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -1255,324 +1360,6 @@
 					"firstRowAsHeader": true
 				},
 				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_DATANOW_ARR_LATEST_EXCEL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_ADLS_DV",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/DATANOW"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": {
-						"value": "database",
-						"type": "Expression"
-					},
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "datanow/arr/latest",
-						"fileSystem": "external"
-					},
-					"firstRowAsHeader": true
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_DCB_EXCEL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_ADLS_DV",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string",
-						"defaultValue": "dev"
-					},
-					"pm_SheetName": {
-						"type": "string",
-						"defaultValue": "DCB_Margin"
-					}
-				},
-				"folder": {
-					"name": "Sources/DCB"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": {
-						"value": "@dataset().pm_SheetName",
-						"type": "Expression"
-					},
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "dcb/pending",
-						"fileSystem": "external"
-					},
-					"firstRowAsHeader": true
-				},
-				"schema": [
-					{
-						"name": "Invoice",
-						"type": "String"
-					},
-					{
-						"name": "Vlgnr.",
-						"type": "String"
-					},
-					{
-						"name": "Invoice date",
-						"type": "String"
-					},
-					{
-						"name": "Invoice month",
-						"type": "String"
-					},
-					{
-						"name": "Invoice year",
-						"type": "String"
-					},
-					{
-						"name": "SO",
-						"type": "String"
-					},
-					{
-						"name": "SO date",
-						"type": "String"
-					},
-					{
-						"name": "Reseller ID",
-						"type": "String"
-					},
-					{
-						"name": "Reseller name",
-						"type": "String"
-					},
-					{
-						"name": "VAT number",
-						"type": "String"
-					},
-					{
-						"name": "SKU",
-						"type": "String"
-					},
-					{
-						"name": "Description",
-						"type": "String"
-					},
-					{
-						"name": "Remark",
-						"type": "String"
-					},
-					{
-						"name": "Qty",
-						"type": "String"
-					},
-					{
-						"name": "Price/unit",
-						"type": "String"
-					},
-					{
-						"name": "% line discount",
-						"type": "String"
-					},
-					{
-						"name": "Amount line discount",
-						"type": "String"
-					},
-					{
-						"name": "Net price",
-						"type": "String"
-					},
-					{
-						"name": "Total invoice",
-						"type": "String"
-					},
-					{
-						"name": "Entity",
-						"type": "String"
-					},
-					{
-						"name": "Article group",
-						"type": "String"
-					},
-					{
-						"name": "Product Type",
-						"type": "String"
-					},
-					{
-						"name": "Vendor number",
-						"type": "String"
-					},
-					{
-						"name": "Vendor ID",
-						"type": "String"
-					},
-					{
-						"name": "Vendor",
-						"type": "String"
-					},
-					{
-						"name": "Cred.order",
-						"type": "String"
-					},
-					{
-						"name": "Margin",
-						"type": "String"
-					},
-					{
-						"name": "margin in %",
-						"type": "String"
-					},
-					{
-						"name": "Invoice_linenumber",
-						"type": "String"
-					},
-					{
-						"name": "line_verkoopfactuurregels",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_ADLS_DV_DELTALINK_EXCEL')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_ADLS_DV",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_environment": {
-							"value": "@dataset().pm_Environment",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/DELTALINK"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "deltalink/pending",
-							"type": "Expression"
-						},
-						"fileSystem": "external"
-					},
-					"sheetIndex": 0,
-					"firstRowAsHeader": true
-				},
-				"schema": [
-					{
-						"name": "Invoice Date",
-						"type": "String"
-					},
-					{
-						"name": "Order Type",
-						"type": "String"
-					},
-					{
-						"name": "Order Number",
-						"type": "String"
-					},
-					{
-						"name": "Invoice Number",
-						"type": "String"
-					},
-					{
-						"name": "Client Number",
-						"type": "String"
-					},
-					{
-						"name": "Company",
-						"type": "String"
-					},
-					{
-						"name": "Artcode",
-						"type": "String"
-					},
-					{
-						"name": "Supplier_ID",
-						"type": "String"
-					},
-					{
-						"name": "Supplier",
-						"type": "String"
-					},
-					{
-						"name": "Art Sup Code",
-						"type": "String"
-					},
-					{
-						"name": "Description",
-						"type": "String"
-					},
-					{
-						"name": "Quantity",
-						"type": "String"
-					},
-					{
-						"name": "Article Product Type",
-						"type": "String"
-					},
-					{
-						"name": "Currency",
-						"type": "String"
-					},
-					{
-						"name": "Revenue Transaction",
-						"type": "String"
-					},
-					{
-						"name": "Cost Transaction",
-						"type": "String"
-					},
-					{
-						"name": "Margin Transaction",
-						"type": "String"
-					}
-				]
 			},
 			"dependsOn": []
 		}

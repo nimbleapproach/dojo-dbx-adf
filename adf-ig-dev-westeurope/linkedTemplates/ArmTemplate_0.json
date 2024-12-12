@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'Afas_test'"
 		},
+		"LS_TAG_SAAS_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_TAG_SAAS'"
+		},
 		"CLOUDBLUE_PBA_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'CLOUDBLUE_PBA'"
@@ -26,10 +30,6 @@
 		"DS_VUZION_CRM_DYNAMICS_servicePrincipalCredential": {
 			"type": "secureString",
 			"metadata": "Secure string for 'servicePrincipalCredential' of 'DS_VUZION_CRM_DYNAMICS'"
-		},
-		"LS_Oracle_CX_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'LS_Oracle_CX'"
 		},
 		"Afas_properties_typeProperties_url": {
 			"type": "string",
@@ -50,6 +50,14 @@
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"metadata": "Secure string for 'baseUrl' of 'LS_KV'"
+		},
+		"LS_TAG_SAAS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://infinigate-prod.api.saastagetik.com/basic/aih/data/v1/PROD_TGK_INFINIGATE_001/001/"
+		},
+		"LS_TAG_SAAS_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "INFINIGATE_PROD-NAV_LOAD"
 		},
 		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
 			"type": "string",
@@ -108,22 +116,6 @@
 		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
-		},
-		"LS_Oracle_CX_properties_typeProperties_host": {
-			"type": "string",
-			"defaultValue": "https://nuviastest1.bigmachines.com/"
-		},
-		"LS_Oracle_CX_properties_typeProperties_username": {
-			"type": "string",
-			"defaultValue": "CRM.Admin"
-		},
-		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
-		},
-		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
 		}
 	},
 	"variables": {
@@ -223,6 +215,25 @@
 				"type": "AzureKeyVault",
 				"typeProperties": {
 					"baseUrl": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_TAG_SAAS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "OData",
+				"typeProperties": {
+					"url": "[parameters('LS_TAG_SAAS_properties_typeProperties_url')]",
+					"authenticationType": "Basic",
+					"userName": "[parameters('LS_TAG_SAAS_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_TAG_SAAS_password')]"
+					}
 				}
 			},
 			"dependsOn": []
@@ -534,6 +545,68 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"pm_entity": {
+						"type": "string",
+						"defaultValue": "AT2"
+					},
+					"pm_period": {
+						"type": "string",
+						"defaultValue": "08"
+					},
+					"pm_scenario": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": {
+						"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}',Entity='@{dataset().pm_entity}')",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DIM')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": "Datasource_000003"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/CLOUDBLUE_PBA')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -731,99 +804,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_Oracle_CX')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "OracleServiceCloud",
-				"typeProperties": {
-					"host": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]",
-					"username": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('LS_Oracle_CX_password')]"
-					},
-					"useEncryptedEndpoints": true,
-					"useHostVerification": true,
-					"usePeerVerification": true
-				},
-				"connectVia": {
-					"referenceName": "ir-ig-managed-dev-westeurope",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_OSS')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "PostgreSql",
-				"typeProperties": {
-					"connectionString": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {}
-						},
-						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
-					}
-				},
-				"connectVia": {
-					"referenceName": "shir-jumpbi01-shared",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_PBA')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "PostgreSql",
-				"typeProperties": {
-					"connectionString": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {}
-						},
-						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
-					}
-				},
-				"connectVia": {
-					"referenceName": "shir-jumpbi01-shared",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]",
 				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
 			]
 		}

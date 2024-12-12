@@ -40,6 +40,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQL_TEST'"
 		},
+		"LS_TAG_SAAS_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_TAG_SAAS'"
+		},
 		"Afas_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
@@ -127,6 +131,14 @@
 		"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "secret-tagetikdbserver01-connectionstring"
+		},
+		"LS_TAG_SAAS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://infinigate-prod.api.saastagetik.com/basic/aih/data/v1/PROD_TGK_INFINIGATE_001/001/"
+		},
+		"LS_TAG_SAAS_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "INFINIGATE_PROD-NAV_LOAD"
 		},
 		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
 			"type": "string",
@@ -16443,6 +16455,562 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/TAG_SaaS_LoadTable')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Entities",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Entities').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 8,
+							"activities": [
+								{
+									"name": "Load Tagetik View",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Load Tagetik Dimension",
+											"dependencyConditions": [
+												"Skipped"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ODataSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "PROVENIENZA",
+													"value": ""
+												}
+											],
+											"httpRequestTimeout": "00:05:00"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings",
+												"maxRowsPerFile": 1000000,
+												"fileNamePrefix": {
+													"value": "bronze-tag02-dati_saldi_lordi-@{item().Entity}-@{item().Period}-@{utcNow()}",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableStaging": false,
+										"validateDataConsistency": true,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"name": "OID_DATI_SALDI_LORDI",
+														"type": "String"
+													},
+													"sink": {
+														"name": "OID_DATI_SALDI_LORDI",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_SCENARIO",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_SCENARIO",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_PERIODO",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_PERIODO",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_AZIENDA",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_AZIENDA",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_CONTO",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_CONTO",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_DEST1",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_DEST1",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_DEST2",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_DEST2",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_DEST3",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_DEST3",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_DEST4",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_DEST4",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_DEST5",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_DEST5",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_CATEGORIA",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_CATEGORIA",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "IMPORTO",
+														"type": "Double"
+													},
+													"sink": {
+														"name": "IMPORTO",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_VALUTA",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_VALUTA",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "IMPORTO_VALUTA_ORIGINARIA",
+														"type": "Double"
+													},
+													"sink": {
+														"name": "IMPORTO_VALUTA_ORIGINARIA",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_VALUTA_ORIGINARIA",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_VALUTA_ORIGINARIA",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "PROVENIENZA",
+														"type": "String"
+													},
+													"sink": {
+														"name": "PROVENIENZA",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "USER_UPD",
+														"type": "String"
+													},
+													"sink": {
+														"name": "USERUPD"
+													}
+												},
+												{
+													"source": {
+														"name": "DATE_UPD",
+														"type": "DateTimeOffset"
+													},
+													"sink": {
+														"name": "DATEUPD"
+													}
+												},
+												{
+													"source": {
+														"name": "NOTE",
+														"type": "String"
+													},
+													"sink": {
+														"name": "NOTE",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "Sys_Bronze_InsertDateTime_UTC",
+														"type": "String"
+													},
+													"sink": {
+														"name": "Sys_Bronze_InsertDateTime_UTC",
+														"type": "String"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_TAGETIK_SAAS",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_entity": {
+													"value": "@item().Entity",
+													"type": "Expression"
+												},
+												"pm_period": {
+													"value": "@item().Period",
+													"type": "Expression"
+												},
+												"pm_scenario": "2025ACT-PFA-01"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_FileSystem": "bronze",
+												"pm_Directory": {
+													"value": "tag02/DATI_SALDI_LORDI",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Load Tagetik Dimension",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ODataSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"httpRequestTimeout": "00:05:00"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings",
+												"maxRowsPerFile": 1000000,
+												"fileNamePrefix": {
+													"value": "bronze-tag02-dati_cambio-@{utcNow()}",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableStaging": false,
+										"validateDataConsistency": true,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"name": "COD_SCENARIO",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_SCENARIO",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_PERIODO",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_PERIODO",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "COD_VALUTA",
+														"type": "String"
+													},
+													"sink": {
+														"name": "COD_VALUTA",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "CAMBIO_MEDIO",
+														"type": "Double"
+													},
+													"sink": {
+														"name": "CAMBIO_MEDIO",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "CAMBIO_PERIODO",
+														"type": "Double"
+													},
+													"sink": {
+														"name": "CAMBIO_PERIODO",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "CAMBIO_FINALE",
+														"type": "Double"
+													},
+													"sink": {
+														"name": "CAMBIO_FINALE",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "ORIGIN",
+														"type": "String"
+													},
+													"sink": {
+														"name": "PROVENIENZA "
+													}
+												},
+												{
+													"source": {
+														"name": "USER_UPD",
+														"type": "String"
+													},
+													"sink": {
+														"name": "USERUPD"
+													}
+												},
+												{
+													"source": {
+														"name": "DATE_UPD",
+														"type": "DateTimeOffset"
+													},
+													"sink": {
+														"name": "DATEUPD"
+													}
+												},
+												{
+													"source": {
+														"name": "Sys_Bronze_InsertDateTime_UTC",
+														"type": "String"
+													},
+													"sink": {
+														"name": "Sys_Bronze_InsertDateTime_UTC",
+														"type": "String"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_TAGETIK_SAAS_DIM",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_FileSystem": "bronze",
+												"pm_Directory": {
+													"value": "tag02/DATI_SALDI_LORDI",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get Entities",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT\ndistinct COD_AZIENDA as Entity,\nCOD_PERIODO as Period\nFROM\ndbo.DATI_SALDI_LORDI\nwhere COD_PERIODO in(@{variables('PeriodArry')})\norder by COD_AZIENDA",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_TAGETIK_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": {
+										"value": "INFORMATION_SCHEMA",
+										"type": "Expression"
+									},
+									"pm_TableName": {
+										"value": "VIEWS",
+										"type": "Expression"
+									},
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"PeriodArry": {
+						"type": "String",
+						"defaultValue": "'08'"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_TAGETIK_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]",
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_DIM')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_ADLS_CSV')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -18629,6 +19197,68 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"pm_entity": {
+						"type": "string",
+						"defaultValue": "AT2"
+					},
+					"pm_period": {
+						"type": "string",
+						"defaultValue": "08"
+					},
+					"pm_scenario": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": {
+						"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}',Entity='@{dataset().pm_entity}')",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DIM')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": "Datasource_000003"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_VUZION_CRM_DYNAMICS')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -19294,6 +19924,25 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_TAG_SAAS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "OData",
+				"typeProperties": {
+					"url": "[parameters('LS_TAG_SAAS_properties_typeProperties_url')]",
+					"authenticationType": "Basic",
+					"userName": "[parameters('LS_TAG_SAAS_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_TAG_SAAS_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_VUZION_CRM_DYNAMICS')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -19353,6 +20002,13 @@
 						"parameters": {
 							"pm_FullLoad": "[parameters('TR_SCHEDULE_DAILY_properties_PL_00_MASTER_parameters_pm_FullLoad')]"
 						}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "TAG_SaaS_LoadTable",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -19372,7 +20028,8 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/TAG_SaaS_LoadTable')]"
 			]
 		},
 		{
