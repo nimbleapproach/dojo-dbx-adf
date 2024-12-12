@@ -12,6 +12,12 @@
 				"parameters": {
 					"pm_FullLoad": false
 				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "TAG_SaaS_LoadTable",
+					"type": "PipelineReference"
+				}
 			}
 		],
 		"type": "ScheduleTrigger",
