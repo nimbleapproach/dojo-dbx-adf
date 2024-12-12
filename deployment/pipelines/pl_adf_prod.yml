@@ -1,0 +1,83 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - production
+  paths:
+    include:
+      - factory
+      - deployment
+    exclude:
+      - README.md
+      - deployment/images
+      - deployment/pipelines/pl_build_db_dev.yml
+      - deployment/pipelines/pl_build_db_uat.yml
+      - deployment/pipelines/pl_build_db_prod.yml
+      - deployment/pipelines/ci.yml
+
+parameters:
+  - name: deploymentMode
+    displayName: Deploy Changes (incremental) or All, including Deletions (complete)
+    type: string
+    values:
+      - incremental
+      - complete
+    default: incremental
+  - name: isEnvTrigger
+    displayName: Apply ADF Triggers
+    type: boolean
+    default: true
+
+pool:
+  vmImage: "windows-latest"
+
+variables:
+  - group: vg-inf-edw-deployment
+  - name: location
+    value: "westeurope"
+  - name: subscriptionId
+    value: "5c771a6b-7686-4067-a58d-95551c37bf46"
+  - name: resourceGroupName
+    value: "rg-ig-lakehouse-dev-westeurope"
+  - name: dataFactoryName
+    value: "adf-ig-dev-westeurope"
+  - name: DataFactoryResourceId
+    value: /subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroupName)/providers/Microsoft.DataFactory/factories/$(dataFactoryName)
+  - name: projectName
+    value: "Group IT Program"
+  - name: repositoryName
+    value: inf-edw
+
+stages:
+  - stage: Build
+    jobs:
+      - template: templates/adf_build.yml
+        parameters:
+          Stage: build
+          subscriptionIdDev: $(subscriptionId)
+          azureSubscriptionSPN: $(v-dev-azure-subscription-spn)
+          environment: dev
+          workingDir: $(Build.Repository.LocalPath)/factory
+          DataFactoryResourceId: $(DataFactoryResourceId)
+          dataFactoryName: $(dataFactoryName)
+          location: $(location)
+  - stage: Prod
+    displayName: Prod
+    dependsOn: Build
+    variables:
+      dataFactoryName: "adf-ig-prod-westeurope"
+    jobs:
+      - template: templates/adf_deploy.yml
+        parameters:
+          Stage: Prod
+          Environment: Prod
+          azureSubscriptionSPN: $(v-prod-azure-subscription-spn)
+          azureSubscriptionId: $(v-prod-subscription-Id)
+          location: $(location)
+          resourceGroupName: $(v-prod-dl-rg-name)
+          dataFactoryName: $(dataFactoryName)
+          projectName: $(projectName)
+          repositoryName: $(repositoryName)
+          keyVaultName: 'kv-ig-prod-westeurope'
+          deploymentMode: $(deploymentMode)
+          isEnvTrigger: ${{parameters.isEnvTrigger}}

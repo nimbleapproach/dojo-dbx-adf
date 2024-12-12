@@ -70,7 +70,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC        COMMENT 'The source of the fact data, 1 for dati_saldi_lordi, 2 for dati_rett_riga'
 # MAGIC     ,silver_SID INTEGER
 # MAGIC        COMMENT 'The SID from the relevant silver source table'
-# MAGIC     ,tagetik_date_updated TIMESTAMP
+# MAGIC     ,source_date_updated TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry was last updated in Tagetik'    
 # MAGIC     ,Sys_Gold_InsertedDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this record was inserted into gold'

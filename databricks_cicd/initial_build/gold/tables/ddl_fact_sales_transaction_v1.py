@@ -43,11 +43,11 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.fact_sales_transaction_ig (
   document_source STRING,
   product_type STRING,
   manufacturer_item_number STRING,
-  amount_local_currency DECIMAL(10,2),
+  amount_local_currency DECIMAL(38,20),
   amount_EUR DECIMAL(10,2),
   amount_including_vat_local_currency STRING,
   amount_including_vat_EUR STRING,
-  cost_amount_local_currency DECIMAL(10,2),
+  cost_amount_local_currency DECIMAL(38,20),
   cost_amount_EUR DECIMAL(10,2),
   quantity DECIMAL(10,2),
   total_cost_purchase_currency DECIMAL(10,2),
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.fact_sales_transaction_ig (
   currency_fk BIGINT,
   reseller_fk BIGINT,
   vendor_fk BIGINT,
-  entity_fk BIGINT,
+  --entity_fk BIGINT,
   Sys_Gold_FactProcessedDateTime_UTC TIMESTAMP
   )
 USING delta
@@ -74,25 +74,3 @@ TBLPROPERTIES (
   'delta.minReaderVersion' = '3',
   'delta.minWriterVersion' = '7')
 """)
-
-# COMMAND ----------
-
-spark.sql(f"""
-truncate table  {catalog}.{schema}.fact_delta_timestamp
-""")
-
-# COMMAND ----------
-
-
-# Now populate with a default value - initial values to prevent an empty join
-spark.sql(f"""
-INSERT INTO {catalog}.{schema}.fact_delta_timestamp (document_source,max_transaction_line_timestamp,Sys_Gold_FactProcessedDateTime_UTC)
-VALUES
-  ('sales invoice', '2000-01-01', current_timestamp()),
-  ('credit memo', '2000-01-01', current_timestamp()),
-  ('msp sales credit memo', '2000-01-01', current_timestamp()),
-  ('msp sales invoice', '2000-01-01', current_timestamp()),
-  ('sales quote', '2000-01-01', current_timestamp()),
-  ('sales order', '2000-01-01', current_timestamp())
-"""
-)

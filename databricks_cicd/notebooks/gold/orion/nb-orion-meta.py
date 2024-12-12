@@ -18,7 +18,7 @@ ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 catalog = f"gold_{ENVIRONMENT}"
 orion_schema = "orion"
 # this is number of notebooks to run in parallel
-parallel_max = 3
+parallel_max = 4
 processing_notebook = "nb-orion-process-dimension-v2"
 
 

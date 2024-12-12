@@ -20,7 +20,6 @@ catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
-
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -70,6 +69,7 @@ SELECT
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' THEN 'N/A'
     ELSE msp_l.PurchaseCurrencyCode
   END AS currency_code,  
   coalesce(
@@ -139,7 +139,7 @@ LEFT JOIN (SELECT DISTINCT Calendar_Year,Month,Currency,Period_FX_rate FROM gold
 AND YEAR(msp_h.DocumentDate) = fx2.Calendar_Year
 AND MONTH(msp_h.DocumentDate) = fx2.Month
 
-LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(msp_h.Sys_DatabaseName)
+LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(right(msp_h.Sys_DatabaseName,2))
 
 LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON msp_l.ItemNo_ = it.No_
 AND msp_l.Sys_DatabaseName = it.Sys_DatabaseName
@@ -159,6 +159,15 @@ AND CASE WHEN
         CASE WHEN msp_h.Sys_DatabaseName ='ReportsBE' AND TO_DATE(msp_h.PostingDate) >='2024-07-01' THEN 'BE4' ELSE CONCAT(RIGHT(msp_h.Sys_DatabaseName,2 ),'1') END  
 END = e.COD_AZIENDA 
 AND lower(e.ScenarioGroup) = 'actual'
+AND e.currency =  CASE
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT') THEN 'EUR'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+    ELSE msp_l.PurchaseCurrencyCode
+END
 
 LEFT JOIN min_fx_rate mfx ON mfx.currency =  CASE
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
@@ -171,6 +180,6 @@ LEFT JOIN min_fx_rate mfx ON mfx.currency =  CASE
 END
 WHERE msp_l.Sys_Silver_IsCurrent = true
 AND msp_l.sid IS NOT NULL
-LIMIT(100)
+--limit(100)
 """
 )

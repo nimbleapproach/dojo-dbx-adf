@@ -7,7 +7,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run  ../../library/nb-silver-library 
+# MAGIC %run  ../../library/nb-silver-library
 
 # COMMAND ----------
 
@@ -44,19 +44,8 @@ except:
 try:
     DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
 except:
-    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full'])
+    dbutils.widgets.dropdown(name = "wg_DeltaLoadTable", defaultValue = 'delta', choices =  ['delta','full','most-recent'])
     DELTA_LOAD = (dbutils.widgets.get("wg_DeltaLoadTable"))
-
-# COMMAND ----------
-
-# NOTE: (DP 23/10/2024 T22814) (https://dev.azure.com/InfinigateHolding/Group%20IT%20Program/_workitems/edit/22814)
-#       the setting has no bearing but is used by databricks jobs,
-#       it should be removed from jobs first, then from here
-try:
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true' )
-except:
-    dbutils.widgets.dropdown(name = "wg_fullload", defaultValue = 'false', choices =  ['false','true'])
-    FULL_LOAD = bool(dbutils.widgets.get("wg_fullload") == 'true')
 
 # COMMAND ----------
 
@@ -168,6 +157,13 @@ if DELTA_LOAD == 'delta':
                       max({WATERMARK_COLUMN})  OVER (PARTITION BY {','.join(BUSINESS_KEYS)}) AS Current_Version,
                       {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
                       from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
+elif DELTA_LOAD == 'most-recent':
+  print('Most Recent Loading')
+  source_df = spark.sql(f"""
+                      Select *,
+                      max({WATERMARK_COLUMN})  OVER () AS Current_Version,
+                      {WATERMARK_COLUMN} = Current_Version as Sys_Silver_IsCurrent
+                      from bronze_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}""")
 else:
   print('Full Loading')
   source_df = spark.sql(f"""
@@ -236,14 +232,18 @@ deltaTable = DeltaTable.forName(spark,tableOrViewName=f"silver_{ENVIRONMENT}.{TA
 
 # COMMAND ----------
 
+## Cast source data to desired types
+
+source_columns = deduped_df.columns
+for column in source_columns:
+        target_datatype = [pair[1] for pair in target_datatypes if pair[0] == column][0]
+        deduped_df = deduped_df.withColumn(column, col(column).cast(target_datatype))
+
+# COMMAND ----------
+
 if INIT_LOAD:
     print('We are initial loading...')
-    casted_df = deduped_df
-    for column in deduped_df.columns:
-            target_datatype = [pair[1] for pair in target_datatypes if pair[0] == column][0]
-            casted_df = casted_df.withColumn(column, col(column).cast(target_datatype))
-
-    casted_df.writeTo(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}').append()
+    deduped_df.writeTo(f'silver_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME}').append()
 else:
     print('We are merging...')
     condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[i]}' for i in range(len(SILVER_PRIMARY_KEYS))])

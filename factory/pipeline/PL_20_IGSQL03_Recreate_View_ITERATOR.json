@@ -93,7 +93,7 @@
 			}
 		},
 		"folder": {
-			"name": "00 Setup/IGSQL03 [Navision]/Recreate View"
+			"name": "00 Setup/[DEPRECATED] IGSQL03 [Navision]/Recreate View"
 		},
 		"annotations": [],
 		"lastPublishTime": "2023-09-25T15:09:24Z"

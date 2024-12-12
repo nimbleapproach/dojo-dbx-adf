@@ -20,8 +20,6 @@ catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
-
-
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -35,12 +33,19 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_document_staging
 AS 
 with cte_sources as 
 (
-  select distinct source_system_pk, source_entity 
+  select distinct s.source_system, source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
-  where s.source_system = 'Infinigate ERP' 
-  and s.is_current = 1
+  --where s.source_system = 'Infinigate ERP' 
+  where s.is_current = 1
 ),
-cte_document_source as 
+--cte_nuvias_sources as 
+--(
+-- select distinct source_system_pk, data_area_id
+--  from {catalog}.{schema}.dim_source_system s 
+--  where s.source_system = 'Nuvias ERP' 
+--  and s.is_current = 1
+--),
+cte_source_data as 
 (
 --orders & quotes
 select distinct
@@ -57,8 +62,8 @@ select distinct
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
-  CAST(sla.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
-  CAST(sla.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+  MAX(CAST(sla.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(sla.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
 FROM 
   silver_{ENVIRONMENT}.igsql03.sales_line_archive as sla
   inner join (
@@ -71,6 +76,8 @@ FROM
   and sla.Sys_DatabaseName = sha.Sys_DatabaseName
   and sla.Sys_Silver_IsCurrent = 1
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sha.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
+GROUP BY ALL
 union
 --msp
 select distinct
@@ -86,11 +93,13 @@ select distinct
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
-  CAST(msp_h.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
-  CAST(msp_h.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+  MAX(CAST(msp_h.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(msp_h.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
 from silver_{ENVIRONMENT}.igsql03.inf_msp_usage_header as msp_h
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(msp_h.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 where  msp_h.Sys_Silver_IsCurrent = true
+GROUP BY ALL
 union
 --invoices
 select distinct
@@ -103,8 +112,8 @@ select distinct
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
-  CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
-  CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+  MAX(CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
 FROM
     silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
 INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil 
@@ -114,6 +123,8 @@ ON sih.No_ = sil.DocumentNo_
     AND sil.Sys_Silver_IsCurrent = true
 LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_DatabaseName, 2) = entity.SourceEntityCode
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
+GROUP BY ALL
 union
 --credit memos
 select distinct
@@ -126,8 +137,8 @@ select distinct
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
-  CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
-  CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+  MAX(CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(sil.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
 FROM
     silver_{ENVIRONMENT}.igsql03.sales_cr_memo_header sih
 INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.DocumentNo_
@@ -135,29 +146,96 @@ INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.
     AND sih.Sys_Silver_IsCurrent = true
     AND sil.Sys_Silver_IsCurrent = true
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
+GROUP BY ALL
+UNION
+--Nuvias data
+SELECT 
+  trans.SalesId As local_document_id,
+  'N/A' AS associated_document_id,
+  MAX(to_date(trans.invoicedate)) AS document_date,
+  'nuvias sales invoice' AS document_source,
+  'N/A' AS country_code,
+  coalesce(s.source_system_pk,-1) AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  MAX(CAST(trans.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(trans.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
+FROM silver_DEV.nuvias_operations.custinvoicetrans AS trans
+LEFT JOIN silver_dev.nuvias_operations.salesline AS salestrans ON trans.SalesId = salestrans.Salesid
+  AND salestrans.Sys_Silver_IsCurrent = 1
+  AND salestrans.SalesStatus <> '4' --This is removed as it identifies cancelled lines on the sales order
+  --AND salestrans.itemid NOT IN ('Delivery_Out', '6550896')
+  -- This removes the Delivery_Out and Swedish Chemical Tax lines that are on some orders which is never included in the Revenue Number
+  AND trans.DataAreaId = salestrans.DataAreaId
+  AND trans.ItemId = salestrans.ItemId
+  and trans.InventTransId = salestrans.InventTransId 
+  AND salestrans.Sys_Silver_IsCurrent = 1
+LEFT JOIN cte_sources s on trans.dataareaid = s.source_entity
+AND s.source_system = 'Nuvias ERP'
+WHERE trans.Sys_Silver_IsCurrent = 1
+GROUP BY ALL
+UNION
+--Netsafe data
+SELECT 
+  invoice.Invoice_Number As local_document_id,
+  'N/A' AS associated_document_id,
+  MAX(to_date(invoice.Invoice_Date)) AS document_date,
+  'netsafe sales invoice' AS document_source,
+  'N/A' AS country_code,
+  coalesce(s.source_system_pk,-1) AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  MAX(CAST(invoice.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(invoice.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
+FROM  
+  silver_{ENVIRONMENT}.netsafe.invoicedata AS invoice
+LEFT JOIN cte_sources s on CASE
+    WHEN lower(invoice.Sys_Country) like '%romania%' THEN 'RO2'
+    WHEN lower(invoice.Sys_Country) like '%croatia%' THEN 'HR2'
+    WHEN lower(invoice.Sys_Country) like '%slovenia%' THEN 'SI1'
+    WHEN lower(invoice.Sys_Country) like '%bulgaria%' THEN 'BG1'
+    END = s.source_entity
+AND s.source_system = 'Netsafe ERP'
+WHERE invoice.sys_silver_iscurrent = true
+GROUP BY ALL
+UNION 
+--Netsuite data
+SELECT 
+  RIGHT(si.Sales_Order_Number,9) As local_document_id,
+  'N/A' AS associated_document_id,
+  TO_DATE(si.Sales_Order_Date) AS document_date,
+  'starlink (netsuite) sales invoice' AS document_source,
+  'N/A' AS country_code,
+  coalesce(s.source_system_pk,-1) AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  MAX(CAST(si.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(CAST(si.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
+FROM
+  silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si
+LEFT JOIN cte_sources s on 'AE1' = s.source_entity AND s.source_system = 'Starlink (Netsuite) ERP'
+WHERE si.sys_silver_iscurrent = true
+GROUP BY ALL
 )
 SELECT
-  local_document_id,
-  associated_document_id,
-  document_date,
-  document_source,
-  country_code,
-  source_system_fk,
-  start_datetime,
-  end_datetime,
-  is_current,
-  MAX(Sys_Gold_InsertedDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
-  MAX(Sys_Gold_ModifiedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
-FROM cte_document_source
-GROUP BY 
-  local_document_id,
-  associated_document_id,
-  document_date,
-  document_source,
-  country_code,
-  source_system_fk,
-  start_datetime,
-  end_datetime,
-  is_current
+  csd.local_document_id,
+  csd.associated_document_id,
+  csd.document_date,
+  csd.document_source,
+  csd.country_code,
+  csd.source_system_fk,
+  case when d.is_current is null THEN csd.start_datetime ELSE CAST(NOW() as TIMESTAMP) END AS start_datetime,
+  csd.end_datetime,
+  csd.is_current,
+  MAX(csd.Sys_Gold_InsertedDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
+  MAX(csd.Sys_Gold_ModifiedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
+FROM cte_source_data csd
+LEFT JOIN {catalog}.{schema}.dim_document d ON csd.local_document_id = d.local_document_id and csd.source_system_fk = d.source_system_fk and csd.document_source = d.document_source
+WHERE csd.local_document_id IS NOT NULL
+GROUP BY ALL
 """)
 

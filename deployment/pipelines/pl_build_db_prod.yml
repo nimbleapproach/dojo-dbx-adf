@@ -1,12 +1,22 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+trigger:
+  batch: true
+  branches:
+    include:
+      - production
+  paths:
+    include:
+      - databricks
+      - deployment
+    exclude:
+      - README.md
+      - deployment/images
+      - deployment/pipelines/templates
+      - deployment/pipelines/pl_adf_uat.yml
+      - deployment/pipelines/pl_adf_prod.yml
+      - deployment/pipelines/ci.yml
 
 variables:
 - group: vg-inf-edw-deployment
-trigger:
-- production
 
 pool:
   vmImage: ubuntu-latest

@@ -1,0 +1,95 @@
+{
+	"name": "PL_10_IGSQL03_DB_ITERATOR",
+	"properties": {
+		"activities": [
+			{
+				"name": "For Each Database",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Databases",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Databases').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 2,
+					"activities": [
+						{
+							"name": "Run Table Runner",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_IGSQL03_Table_ITERATOR",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_DatabaseName": {
+										"value": "@item().DATABASE_NAME",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Get Databases",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT DISTINCT DATABASE_NAME\n  FROM [adf].[CT_IGSQL03_TABLES]",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_IGSQL03_TABLES",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/IGSQL03 [Navision]"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-08-16T10:41:06Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

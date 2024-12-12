@@ -70,6 +70,7 @@ SELECT
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+      WHEN sih.CurrencyCode = 'NaN' THEN 'N/A'
       ELSE sih.CurrencyCode
   END AS currency_code,  
   coalesce(
@@ -110,7 +111,7 @@ LEFT JOIN silver_{ENVIRONMENT}.igsql03.item it ON sil.No_ = it.No_
 AND sil.Sys_DatabaseName = it.Sys_DatabaseName
 AND it.Sys_Silver_IsCurrent = true
 
-LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(sih.Sys_DatabaseName)
+LEFT JOIN cte_sources s on LOWER(s.source_entity) = LOWER(right(sih.Sys_DatabaseName,2))
 
 LEFT JOIN 
 (
@@ -137,6 +138,15 @@ AND CASE WHEN
         CASE WHEN sih.Sys_DatabaseName ='ReportsBE' AND TO_DATE(sih.PostingDate) >='2024-07-01' THEN 'BE4' ELSE CONCAT(RIGHT(sih.Sys_DatabaseName,2 ),'1') END  
 END = e.COD_AZIENDA 
 AND lower(e.ScenarioGroup) = 'actual'
+AND e.currency =  CASE
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT','BE')  THEN 'EUR'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+      WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+      ELSE sih.CurrencyCode
+END
 
 LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
       WHEN sih.CurrencyCode = 'NaN' AND RIGHT(sih.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
@@ -150,6 +160,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
 WHERE sih.Sys_Silver_IsCurrent = true
 AND sil.Sys_Silver_IsCurrent = true
 AND sil.sid IS NOT NULL
-limit(100)
+--limit(100)
 """
 )

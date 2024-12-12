@@ -62,6 +62,7 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC     ,Sys_Silver_IsCurrent BOOLEAN
 # MAGIC       COMMENT 'Flag if this is the current version.'
+# MAGIC     ,Sys_Silver_IsDeleted BOOLEAN
 # MAGIC ,CONSTRAINT datanowarr_pk PRIMARY KEY(Vendor_Name,SKU,Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
 # MAGIC COMMENT 'This table contains the line data for account. \n' 

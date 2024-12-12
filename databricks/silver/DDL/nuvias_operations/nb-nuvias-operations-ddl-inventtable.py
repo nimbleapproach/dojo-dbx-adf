@@ -23,8 +23,6 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC         COMMENT 'Surrogate Key'
 # MAGIC     ,_SysRowId STRING NOT NULL
 # MAGIC       COMMENT 'Technical Key'
-# MAGIC     ,RECID	LONG	NOT NULL
-# MAGIC       COMMENT 'TODO'
 # MAGIC     ,ItemId	STRING	NOT NULL
 # MAGIC       COMMENT 'TODO'
 # MAGIC     ,DataAreaId	STRING	
