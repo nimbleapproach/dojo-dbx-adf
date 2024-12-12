@@ -34,6 +34,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   , sl.currencycode
 # MAGIC   , sl.salesprice
 # MAGIC   , sl.itemid
+# MAGIC   , sl.sag_ngs1pobuyprice
+# MAGIC   , sl.linenum
 # MAGIC   , st.purchorderformnum
 # MAGIC   , st.sag_euaddress_name
 # MAGIC   , st.sag_euaddress_street1
@@ -50,6 +52,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   , st.salesordertype
 # MAGIC   , st.INVOICEACCOUNT
 # MAGIC   , st.DELIVERYPOSTALADDRESS
+# MAGIC   , st.sag_reselleremailaddress
+# MAGIC   , st.sag_createddatetime
 # MAGIC     FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl
 # MAGIC     JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging WHERE Sys_Silver_IsCurrent = 1) st
 # MAGIC       ON st.salesid    = sl.salesid								--Sales Line Local
@@ -153,6 +157,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_exchangerateentitystaging WHERE Sys_Silver_IsCurrent = 1)
 # MAGIC     WHERE (fromcurrency = 'USD')
 # MAGIC     OR (fromcurrency = 'GBP' AND tocurrency = 'USD')
+# MAGIC     OR (fromcurrency = 'GBP' AND tocurrency = 'EUR')
 # MAGIC ),
 # MAGIC row_gen_ AS
 # MAGIC (
@@ -1088,6 +1093,88 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           THEN it.inventtransid
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS invent_trans_id
+# MAGIC , (CASE
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC             THEN 'Zycko Ltd'
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+# MAGIC             THEN 'Nuvias Global Services Ltd'
+# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC             THEN 'Infinigate UK Ltd'
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS distributor_account_name
+# MAGIC , (CASE
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC             THEN s.SAG_CREATEDDATETIME
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS sales_order_date
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           THEN DATE_FORMAT(s.SAG_CREATEDDATETIME, 'dd-MM-yyyy')
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS order_date
+# MAGIC , (CASE
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           THEN s.SAG_NGS1POBUYPRICE * ex3.RATE
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS product_cost_eur
+# MAGIC , (CASE
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           THEN (s.SAG_NGS1POBUYPRICE * ex3.RATE) * (-1 * it.qty)
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS product_cost_eur_total
+# MAGIC , (CASE
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS blank3
+# MAGIC , (CASE
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS blank4
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+# MAGIC           THEN 'www.nuvias.com'
+# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           THEN 'infinigate.co.uk'
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS distributor_domain
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           THEN 'GB'
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS distributor_country
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
+# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC           THEN s.SAG_RESELLEREMAILADDRESS
+# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS reseller_email
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS end_customer_domain
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+# MAGIC           THEN s.LINENUM
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS line_item
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS ship_to_state_jabil
+# MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+# MAGIC           THEN ''
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS end_customer_state_jabil
 # MAGIC   FROM sales_data s
 # MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC     ON it.inventtransid = s.inventtransid
@@ -1130,6 +1217,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ON ex2.startdate = TO_DATE(it.datephysical)
 # MAGIC    AND ex2.fromcurrency = s.currencycode
 # MAGIC    AND ex2.fromcurrency = 'GBP'
+# MAGIC    AND ex2.tocurrency = 'USD'
+# MAGIC   LEFT JOIN exchangerates ex3
+# MAGIC     ON ex3.startdate = TO_DATE(it.datephysical)
+# MAGIC    AND ex3.fromcurrency = 'GBP'
+# MAGIC    AND ex3.tocurrency = 'EUR'
 # MAGIC   LEFT JOIN support_items su
 # MAGIC     ON su.serialnumber = it.inventserialid
 # MAGIC   LEFT JOIN row_gen_ rwg
