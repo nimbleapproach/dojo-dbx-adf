@@ -6,10 +6,6 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"pm_entity": {
-				"type": "string",
-				"defaultValue": "AT2"
-			},
 			"pm_period": {
 				"type": "string",
 				"defaultValue": "08"
@@ -26,7 +22,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}',Entity='@{dataset().pm_entity}')",
+				"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}')",
 				"type": "Expression"
 			}
 		}
