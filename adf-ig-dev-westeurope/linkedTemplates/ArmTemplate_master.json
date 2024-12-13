@@ -305,9 +305,6 @@
 					},
 					"LS_ADLS_DV_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_DV_properties_typeProperties_url')]"
-					},
-					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
-						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
 					}
 				}
 			},
@@ -335,6 +332,9 @@
 					},
 					"LS_SQL_TEST_connectionString": {
 						"value": "[parameters('LS_SQL_TEST_connectionString')]"
+					},
+					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
 					},
 					"LS_Oracle_CX_properties_typeProperties_host": {
 						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]"

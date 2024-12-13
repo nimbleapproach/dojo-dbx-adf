@@ -112,10 +112,6 @@
 		"LS_ADLS_DV_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dv0ig0@{linkedService().pm_environment}0westeurope.dfs.core.windows.net/"
-		},
-		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		}
 	},
 	"variables": {
@@ -554,10 +550,6 @@
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
-					"pm_entity": {
-						"type": "string",
-						"defaultValue": "AT2"
-					},
 					"pm_period": {
 						"type": "string",
 						"defaultValue": "08"
@@ -574,7 +566,7 @@
 				"schema": [],
 				"typeProperties": {
 					"path": {
-						"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}',Entity='@{dataset().pm_entity}')",
+						"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}')",
 						"type": "Expression"
 					}
 				}
@@ -600,6 +592,29 @@
 				"schema": [],
 				"typeProperties": {
 					"path": "Datasource_000003"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_KEY')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": "Datasource_000004"
 				}
 			},
 			"dependsOn": [
@@ -771,40 +786,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_ADLS_NUVIAS_DYNAMICS')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "AzureBlobFS",
-				"typeProperties": {
-					"url": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]",
-					"accountKey": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {}
-						},
-						"secretName": "secret-adls-nuvias-dynamics-key"
-					}
-				},
-				"connectVia": {
-					"referenceName": "ir-ig-managed-dev-westeurope",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
 			]
 		}
 	]
