@@ -132,9 +132,9 @@
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"pm_ViewName": "v_igt_Tagetik_GLE_Sum_Live_Total_ALL_Current",
-						"pm_SelectString": "CAST(timestamp AS BIGINT) AS timestamp, No_, Entity, [Contact No_] AS Contact_No_, Name, [Name 2] AS Name_2, [Post Code] AS PostCode, City, [Country_Region Code] AS Country_Region_Code, [NACE 2 Code] AS NACE_2_Code, Description, [Max Quantity (Long-Term License)] AS Max_Quantity_Long_Term_License",
-						"pm_TargetTable": "end_customer"
+						"pm_ViewName": "igv_Azure_General_Tagetik_GLE_Sum_Live_Total_ALL",
+						"pm_SelectString": "*",
+						"pm_TargetTable": "igv_Azure_General_Tagetik_GLE_Sum_Live_Total_ALL"
 					}
 				}
 			}
