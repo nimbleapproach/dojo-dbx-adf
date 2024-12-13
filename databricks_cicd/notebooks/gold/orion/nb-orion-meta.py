@@ -316,4 +316,20 @@ def match_dimensions(df_data_to_match, df_shared_dimension_data):
     output_df = df_shared_dimension_data.join(df_data_to_match, df_data_to_match.name == df_shared_dimension_data.name, how="inner").drop(df_data_to_match.id)
     return output_df
 
-
+# COMMAND ----------
+def clear_tables(type,data):
+    processed_tables=[] # a list to hold the table names of the ones processed already within this type - avoids doing the same table twice
+    active_objects = {key: value for key, value in data.items() if value.get("active") == 1 and value.get("type") == type}
+    for key, value in active_objects.items():
+        if value["destination_table_name"] not in processed_tables: # if logic to only process tables not seen before
+            processed_tables.append(value["destination_table_name"])
+            table_name = value["destination_table_name"]
+            print(f"clearing down {type} : {table_name}")
+            if type != 'dim':
+                spark.sql(f"Delete From {table_name}")
+                # Disable the retention duration check
+            else:
+                spark.sql(f"Delete From {table_name} where {key}_pk > 0")
+            spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = false")
+            spark.sql(f"VACUUM {table_name} RETAIN 0 HOURS")
+            spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = true")
