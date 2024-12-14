@@ -115,7 +115,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC 	sl.salesid
 # MAGIC 	,(CASE
 # MAGIC       WHEN di.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC             THEN SUM(-1 * it.qty) OVER (PARTITION BY sl.SALESID, sh.CUSTOMERREF, sl.ITEMID, sh.CUSTACCOUNT, di.ItemName, sl.SAG_RESELLERVENDORID
+# MAGIC             THEN SUM(it.qty) OVER (PARTITION BY sl.SALESID, sh.CUSTOMERREF, sl.ITEMID, sh.CUSTACCOUNT, di.ItemName, sl.SAG_RESELLERVENDORID
 # MAGIC 	                                      , it.INVENTTRANSID, sh.SAG_NAVSONUMBER, it.DATEPHYSICAL, it.INVENTSERIALID, di.PrimaryVendorName, sl.LINEAMOUNT
 # MAGIC 	                                      , sh.SAG_NAVPONUMBER, sh.SAG_NAVSONUMBER, it.INVOICEID, it.STATUSISSUE, psh.PACKINGSLIPID, id.INVENTLOCATIONID
 # MAGIC 	                                      , di.ItemGroupName, sl.SAG_SHIPANDDEBIT, pul.PURCHID, sl.SAG_PURCHPRICE, li.PurchTableID_Local, sh.DATAAREAID
@@ -950,7 +950,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         (UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' AND UPPER(ncsc.PrimaryVendorName) LIKE 'SONICWALL%')
 # MAGIC         AND ncsc.SAG_NAVSONUMBER = ifg.SALESORDERNUMBER
 # MAGIC         AND ncsc.SAG_NAVLINENUM = ifg.SALESORDERLINENO
-# MAGIC         AND (ncsc.DATEPHYSICAL BETWEEN DATEADD(day, -31, ifg.CUSTOMERINVOICEDATE) AND DATEADD(day, +1, ifg.CUSTOMERINVOICEDATE))
+# MAGIC         -- AND (ncsc.DATEPHYSICAL BETWEEN DATEADD(day, -31, ifg.CUSTOMERINVOICEDATE) AND DATEADD(day, +1, ifg.CUSTOMERINVOICEDATE))
 # MAGIC       )
 # MAGIC   OR  (
 # MAGIC         (ncsc.PrimaryVendorName LIKE 'WatchGuard%') -- WatchGuard

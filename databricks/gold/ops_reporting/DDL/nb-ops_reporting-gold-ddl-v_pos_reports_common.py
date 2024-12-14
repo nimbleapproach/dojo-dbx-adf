@@ -357,6 +357,14 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
 # MAGIC             OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
 # MAGIC             THEN pa.ADDRESSDESCRIPTION
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+# MAGIC           THEN s.salesname
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
 # MAGIC , (CASE
