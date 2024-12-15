@@ -174,6 +174,16 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC 	,sh.sag_euaddress_email
 # MAGIC 	,sh.nuv_rsaddress_contact
 # MAGIC   ,it.recid
+# MAGIC   ,(CASE 
+# MAGIC       WHEN di.PrimaryVendorName LIKE 'WatchGuard%'
+# MAGIC             THEN ROW_NUMBER() OVER(PARTITION BY sl.SALESID,sh.CUSTOMERREF,sl.ITEMID	,sh.CUSTACCOUNT,di.ItemName,di.ItemDescription,sl.SAG_RESELLERVENDORID
+# MAGIC                                                   ,it.INVENTTRANSID,sh.SAG_NAVSONUMBER,it.DATEPHYSICAL,it.INVENTSERIALID,di.PrimaryVendorName,it.QTY,sl.LINEAMOUNT
+# MAGIC                                                   ,sh.SAG_NAVPONUMBER,sh.SAG_NAVSONUMBER,it.INVOICEID,it.STATUSISSUE,psh.PACKINGSLIPID,id.INVENTLOCATIONID,di.ItemGroupName
+# MAGIC 	                                                ,sl.SAG_SHIPANDDEBIT,pul.PURCHID,sl.SAG_PURCHPRICE,li.PurchTableID_Local,sh.DATAAREAID,id.INVENTLOCATIONID,psh.PACKINGSLIPID
+# MAGIC 	                                                ,pul.PURCHID	,pul.PURCHPRICE	,sl.SAG_VENDORREFERENCENUMBER	,sl.SAG_PURCHPRICE	,sl.SAG_NAVLINENUM,sl.SAG_VENDORSTANDARDCOST
+# MAGIC 	                                                ,sl.SAG_NGS1STANDARDBUYPRICE,sl.SAG_NGS1POBUYPRICE,sl.SAG_UNITCOSTINQUOTECURRENCY ORDER BY sl.SALESID)
+# MAGIC       ELSE NULL
+# MAGIC     END)      AS  row_number
 # MAGIC FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC 	LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl 
 # MAGIC     ON sl.INVENTTRANSID = it.INVENTTRANSID
@@ -204,6 +214,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE 
 # MAGIC     WHEN UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%'
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%'
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%'
 # MAGIC           THEN di.PrimaryVendorName
 # MAGIC           ELSE ncsc.PrimaryVendorName
 # MAGIC   END)                                                                                  AS nuvias_vendor_name
@@ -213,7 +224,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           OR ncsc.PrimaryVendorName  LIKE 'Smart Optics%' -- SmartOptics
@@ -226,7 +237,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ncsc.PURCHID
@@ -237,7 +248,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ifg.SALESORDERNUMBER
@@ -245,6 +256,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   END)                                                                                  AS navision_sales_order_number
 # MAGIC , (CASE
 # MAGIC     WHEN UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ncsc.DATEPHYSICAL
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS nuvias_invoice_date
@@ -254,7 +266,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           OR ncsc.PrimaryVendorName  LIKE 'Smart Optics%' -- SmartOptics
@@ -282,7 +294,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ifg.MANUFACTURERITEMNUMBER
 # MAGIC     ELSE NULL
@@ -298,14 +310,14 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           THEN ''
 # MAGIC     WHEN UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ncsc.ItemDescription
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS nuvias_part_code_description
 # MAGIC , (CASE
 # MAGIC     WHEN ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ncsc.ItemGroupName
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS nuvias_part_code_category
@@ -318,7 +330,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ncsc.SAG_RESELLERVENDORID
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS nuvias_partner_id
@@ -342,8 +354,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           OR ncsc.PrimaryVendorName  LIKE 'Smart Optics%' -- SmartOptics
 # MAGIC           THEN ifg.QUANTITY
-# MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC           THEN (CASE WHEN (ifg.SERIALNUMBER IS NULL) OR (ifg.SERIALNUMBER = 'NaN')
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           THEN (CASE WHEN (ifg.SERIALNUMBER IS NULL) OR (ifg.SERIALNUMBER = '')
 # MAGIC                       THEN SUM(ifg.QUANTITY) OVER(PARTITION BY ncsc.CUSTACCOUNT, ifg.CUSTOMERINVOICEDATE, ifg.MANUFACTURERITEMNUMBER, ncsc.ItemDescription, ncsc.ItemGroupName,
 # MAGIC                                                     ifg.QUANTITY, ncsc.SAG_RESELLERVENDORID, ifg.RESELLERNAME, ifg.RESELLERCOUNTRYCODE, ifg.RESELLERZIPCODE, ifg.SHIPTONAME,
 # MAGIC                                                     ifg.SHIPTOCOUNTRYCODE, ifg.SHIPTOZIPCODE, ifg.SERIALNUMBER, ncsc.SAG_VENDORSTANDARDCOST, ncsc.SAG_VENDORREFERENCENUMBER,
@@ -366,7 +378,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           THEN UPPER(ifg.SERIALNUMBER)
 # MAGIC     WHEN UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ifg.SERIALNUMBER
 # MAGIC     ELSE NULL
@@ -376,7 +388,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           OR ncsc.PrimaryVendorName  LIKE 'Smart Optics%' -- SmartOptics
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%'
@@ -384,7 +396,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS nuvias_vendor_promotion
 # MAGIC , (CASE
-# MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           THEN ncsc.SAG_VENDORREFERENCENUMBER
 # MAGIC     ELSE NULL
@@ -396,7 +408,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   END)                                                                                  AS navision_vendor_additional_discount1
 # MAGIC , (CASE
 # MAGIC     WHEN UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ncsc.SAG_VENDORSTANDARDCOST
 # MAGIC     ELSE NULL
@@ -410,12 +422,12 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   END)                                                                                  AS navision_sell_currency
 # MAGIC , (CASE
 # MAGIC     WHEN ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ncsc.SAG_UNITCOSTINQUOTECURRENCY
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS nuvias_unit_cost_in_quote_currency
 # MAGIC , (CASE
-# MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ncsc.SAG_UNITCOSTINQUOTECURRENCY * ncsc.QTY
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS nuvias_unit_cost_in_quote_currency_total
@@ -423,7 +435,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ncsc.SAG_VENDORSTANDARDCOST * ifg.QUANTITY
-# MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ncsc.SAG_VENDORSTANDARDCOST * ncsc.QTY
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS mspunit_total_cost
@@ -467,7 +479,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           OR ncsc.PrimaryVendorName  LIKE 'Smart Optics%' -- SmartOptics
@@ -526,7 +538,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ifg.RESELLERZIPCODE
 # MAGIC     ELSE NULL
@@ -537,7 +549,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR di.PrimaryVendorName LIKE 'Zyxel%' -- Zyxel
 # MAGIC           THEN ifg.RESELLERCOUNTRYCODE
 # MAGIC     ELSE NULL
@@ -546,7 +558,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ifg.SHIPTONAME
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS navision_ship_to_name
@@ -554,7 +566,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           THEN ifg.SHIPTOCOUNTRYCODE
 # MAGIC     ELSE NULL
@@ -563,7 +575,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ifg.SHIPTOZIPCODE
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS navision_ship_to_postal_code
@@ -607,7 +619,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ifg.ENDUSERNAME
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS navision_end_customer_name
@@ -659,7 +671,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ifg.ENDUSERZIPCODE
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS navision_end_customer_postal_code
@@ -669,7 +681,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           THEN ifg.ENDUSERCOUNTRYCODE
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                                                  AS navision_end_customer_country
@@ -697,7 +709,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
 # MAGIC           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
 # MAGIC           OR UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%' -- SonicWall
-# MAGIC           OR ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC           OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC           OR ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
 # MAGIC           THEN ifg.RESELLERPONUMBER
 # MAGIC     ELSE NULL
@@ -928,6 +940,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             (
 # MAGIC               UPPER(di.PrimaryVendorName) LIKE 'SONICWALL%'
 # MAGIC               OR di.PrimaryVendorName LIKE 'Zyxel%'
+# MAGIC               OR di.PrimaryVendorName LIKE 'WatchGuard%'
 # MAGIC             )
 # MAGIC             AND di.ItemName = ifg.MANUFACTURERITEMNUMBER 
 # MAGIC             AND di.CompanyID = 'NNL2'
@@ -953,11 +966,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         -- AND (ncsc.DATEPHYSICAL BETWEEN DATEADD(day, -31, ifg.CUSTOMERINVOICEDATE) AND DATEADD(day, +1, ifg.CUSTOMERINVOICEDATE))
 # MAGIC       )
 # MAGIC   OR  (
-# MAGIC         (ncsc.PrimaryVendorName LIKE 'WatchGuard%') -- WatchGuard
+# MAGIC         (di.PrimaryVendorName LIKE 'WatchGuard%') -- WatchGuard
 # MAGIC         AND ncsc.SAG_NAVSONUMBER = ifg.SALESORDERNUMBER
 # MAGIC         AND ncsc.SAG_NAVLINENUM = ifg.SALESORDERLINENO
 # MAGIC         AND ncsc.PACKINGSLIPID = ifg.IGSSHIPMENTNO
-# MAGIC         AND (ncsc.DATEPHYSICAL BETWEEN DATEADD(day, -31, ifg.CUSTOMERINVOICEDATE) AND DATEADD(day, +1, ifg.CUSTOMERINVOICEDATE))
+# MAGIC         -- AND (ncsc.DATEPHYSICAL BETWEEN DATEADD(day, -31, ifg.CUSTOMERINVOICEDATE) AND DATEADD(day, +1, ifg.CUSTOMERINVOICEDATE))
 # MAGIC       )
 # MAGIC LEFT JOIN exchangerates ex1
 # MAGIC       ON ex1.fromcurrency = 'GBP'
@@ -999,15 +1012,19 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       OR
 # MAGIC       -- WatchGuard
 # MAGIC       (
-# MAGIC         ncsc.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+# MAGIC         di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
 # MAGIC         AND (
-# MAGIC               ( 
-# MAGIC                 (DATEADD(day, -1, ifg.CUSTOMERINVOICEDATE) >= TO_DATE(ncsc.DATEPHYSICAL))
-# MAGIC 		            OR (DATEADD(day, 0, ifg.CUSTOMERINVOICEDATE) = TO_DATE(ncsc.DATEPHYSICAL))
-# MAGIC 		            OR (DATEADD(day, +1, ifg.CUSTOMERINVOICEDATE) <= TO_DATE(ncsc.DATEPHYSICAL))
+# MAGIC               (ncsc.row_number = 1 OR ncsc.row_number IS NULL)
+# MAGIC               AND
+# MAGIC               (
+# MAGIC                 ( 
+# MAGIC                   (DATEADD(day, -1, TO_DATE(ifg.CUSTOMERINVOICEDATE)) >= TO_DATE(ncsc.DATEPHYSICAL))
+# MAGIC                   OR (DATEADD(day, 0, TO_DATE(ifg.CUSTOMERINVOICEDATE)) = TO_DATE(ncsc.DATEPHYSICAL))
+# MAGIC                   OR (DATEADD(day, +1, TO_DATE(ifg.CUSTOMERINVOICEDATE)) <= TO_DATE(ncsc.DATEPHYSICAL))
+# MAGIC                 )
+# MAGIC                 OR
+# MAGIC                 (ncsc.CUSTACCOUNT IS NULL)
 # MAGIC               )
-# MAGIC               OR
-# MAGIC               ((ncsc.CUSTACCOUNT IS NULL) OR (ncsc.CUSTACCOUNT = 'NaN'))
 # MAGIC             )
 # MAGIC       )
 # MAGIC       OR
