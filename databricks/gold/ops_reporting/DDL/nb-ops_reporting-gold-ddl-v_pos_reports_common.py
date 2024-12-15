@@ -187,7 +187,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC     ON it.inventtransid = s.inventtransid
 # MAGIC    AND it.dataareaid <> 'NGS1'
-# MAGIC    AND it.INVENTSERIALID != 'NaN'
+# MAGIC    AND it.INVENTSERIALID IS NOT NULL
+# MAGIC    AND it.INVENTSERIALID != ''
 # MAGIC   JOIN so_po_id_list sp
 # MAGIC     ON sp.SalesLineID_Local = s.inventtransid
 # MAGIC   JOIN v_distinctitems di
@@ -874,6 +875,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN NULL -- Nokia
+# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') THEN NULL -- Yubico
 # MAGIC     ELSE it.recid
 # MAGIC     END)                                                              AS transaction_record_id
 # MAGIC , (CASE
@@ -1301,7 +1303,8 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         OR
 # MAGIC         -- Yubico POS
 # MAGIC         (
-# MAGIC             di.PrimaryVendorID IN('VAC001388_NGS1')
+# MAGIC             it.STATUSISSUE IN ('1', '3')
+# MAGIC             AND di.PrimaryVendorID IN('VAC001388_NGS1')
 # MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
 # MAGIC         )
 # MAGIC         OR
