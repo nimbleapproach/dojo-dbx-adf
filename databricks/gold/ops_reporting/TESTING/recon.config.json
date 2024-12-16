@@ -1,0 +1,75 @@
+{
+  "AddOn POS v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "AddOnPOSv2.0",
+      "cte-file": "AddOn.Cte.sql",
+      "main-query-file": "AddOn POS v2.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "vendor_name like 'Prolabs%' and report_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "Company": "entity",
+      "InvoiceDate": "invoice_date",
+      "CustomerName": "sales_name",
+      "CustomerAccount": "customer_account",
+      "ShipToCountry": "ship_to_country",
+      "ResellerPONumber": "reseller_po_to_infinigate",
+      "SalesOrderNumber": "d365_sales_order_number",
+      "InvoiceNumber": "invoice_number",
+      "Product": "part_code",
+      "Quantity": "quantity",
+      "CurrencyCode": "sell_currency",
+      "SalesPrice": "sales_price_usd",
+      "NSDAuthorisation": "vendor_promotion",
+      "DistriPurchasOrder": "distributer_purchase_order",
+      "POBuyPrice": "po_buy_price",
+      "POTotalBuyPrice": "po_total_buy_price",
+      "ExpectedVendorBuyPrice": "final_vendor_unit_buy_price",
+      "ClaimAmount": "claim_amount",
+      "SerialNumber": "serial_number",
+      "IntercompanySalesOrder": "intercompany_sales_order",
+      "Check": "check"
+    }
+  },
+  "Sophos POS v1.0": {
+    "report-params": [
+      "from",
+      "to"
+    ],
+    "ssrs-config": {
+      "folder": "SophosPOSv1.0",
+      "cte-file": null,
+      "main-query-file": "Sophos POS v1.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "vendor_id in ('VAC001461_NGS1', 'VAC001461_NNL2') and report_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "Pos Reference Number": "d365_sales_order_number",
+      "Transaction Date": "invoice_date",
+      "Sophos Sku Code": "part_code"
+    }
+  }
+}
