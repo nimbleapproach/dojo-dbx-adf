@@ -40,10 +40,6 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQL_TEST'"
 		},
-		"LS_TAG_SAAS_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'LS_TAG_SAAS'"
-		},
 		"Afas_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
@@ -237,9 +233,6 @@
 					"Afas_test_password": {
 						"value": "[parameters('Afas_test_password')]"
 					},
-					"LS_TAG_SAAS_password": {
-						"value": "[parameters('LS_TAG_SAAS_password')]"
-					},
 					"CLOUDBLUE_PBA_connectionString": {
 						"value": "[parameters('CLOUDBLUE_PBA_connectionString')]"
 					},
@@ -248,6 +241,9 @@
 					},
 					"DS_VUZION_CRM_DYNAMICS_servicePrincipalCredential": {
 						"value": "[parameters('DS_VUZION_CRM_DYNAMICS_servicePrincipalCredential')]"
+					},
+					"LS_Oracle_CX_password": {
+						"value": "[parameters('LS_Oracle_CX_password')]"
 					},
 					"Afas_properties_typeProperties_url": {
 						"value": "[parameters('Afas_properties_typeProperties_url')]"
@@ -263,12 +259,6 @@
 					},
 					"LS_KV_properties_typeProperties_baseUrl": {
 						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
-					},
-					"LS_TAG_SAAS_properties_typeProperties_url": {
-						"value": "[parameters('LS_TAG_SAAS_properties_typeProperties_url')]"
-					},
-					"LS_TAG_SAAS_properties_typeProperties_userName": {
-						"value": "[parameters('LS_TAG_SAAS_properties_typeProperties_userName')]"
 					},
 					"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
 						"value": "[parameters('TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState')]"
@@ -305,6 +295,21 @@
 					},
 					"LS_ADLS_DV_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_DV_properties_typeProperties_url')]"
+					},
+					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
+					},
+					"LS_Oracle_CX_properties_typeProperties_host": {
+						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]"
+					},
+					"LS_Oracle_CX_properties_typeProperties_username": {
+						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]"
+					},
+					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					}
 				}
 			},
@@ -324,29 +329,11 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"LS_Oracle_CX_password": {
-						"value": "[parameters('LS_Oracle_CX_password')]"
-					},
 					"LS_SQLDB_METADATA_connectionString": {
 						"value": "[parameters('LS_SQLDB_METADATA_connectionString')]"
 					},
 					"LS_SQL_TEST_connectionString": {
 						"value": "[parameters('LS_SQL_TEST_connectionString')]"
-					},
-					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
-						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
-					},
-					"LS_Oracle_CX_properties_typeProperties_host": {
-						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]"
-					},
-					"LS_Oracle_CX_properties_typeProperties_username": {
-						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]"
-					},
-					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
-					},
-					"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					},
 					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]"
@@ -365,6 +352,12 @@
 					},
 					"LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_TAGETIK_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_TAG_SAAS_properties_typeProperties_url": {
+						"value": "[parameters('LS_TAG_SAAS_properties_typeProperties_url')]"
+					},
+					"LS_TAG_SAAS_properties_typeProperties_userName": {
+						"value": "[parameters('LS_TAG_SAAS_properties_typeProperties_userName')]"
 					},
 					"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
 						"value": "[parameters('LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri')]"

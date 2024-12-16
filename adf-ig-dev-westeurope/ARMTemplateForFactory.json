@@ -40,10 +40,6 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_SQL_TEST'"
 		},
-		"LS_TAG_SAAS_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'LS_TAG_SAAS'"
-		},
 		"Afas_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
@@ -19884,7 +19880,7 @@
 				"parameters": {
 					"pm_env": {
 						"type": "string",
-						"defaultValue": "DEV"
+						"defaultValue": "PROD"
 					}
 				},
 				"annotations": [],
@@ -19894,12 +19890,18 @@
 					"authenticationType": "Basic",
 					"userName": "[parameters('LS_TAG_SAAS_properties_typeProperties_userName')]",
 					"password": {
-						"type": "SecureString",
-						"value": "[parameters('LS_TAG_SAAS_password')]"
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "secret-tagetik-api-pw"
 					}
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/LS_VUZION_CRM_DYNAMICS')]",

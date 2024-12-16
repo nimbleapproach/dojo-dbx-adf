@@ -29,9 +29,6 @@
 		"LS_SQL_TEST_connectionString": {
 			"value": ""
 		},
-		"LS_TAG_SAAS_password": {
-			"value": ""
-		},
 		"Afas_properties_typeProperties_url": {
 			"value": "https://60201.rest.afas.online/ProfitRestServices/connectors/"
 		},
