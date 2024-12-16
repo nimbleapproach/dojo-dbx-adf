@@ -1287,6 +1287,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             di_ic.PrimaryVendorName LIKE 'Juniper%'
 # MAGIC             AND di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2')
 # MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+# MAGIC             AND ng.INVENTLOCATIONID NOT LIKE 'DD'
 # MAGIC         )
 # MAGIC         OR
 # MAGIC         -- Mist
