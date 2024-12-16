@@ -283,11 +283,12 @@ else:
 if SOFT_DELETE :
     print(f'Soft deleting {TABLE_NAME}...')
     condition = " AND ".join([f'k.{BUSINESS_KEYS[i]} = t.{BUSINESS_KEYS[i]}' for i in range(len(BUSINESS_KEYS))])
+    business_keys_selection = "".join([f'{BUSINESS_KEYS[i]},' for i in range(len(BUSINESS_KEYS))])[:-1]
     spark.sql(f"""
               UPDATE {TABLE_NAME} t
                 SET  Sys_Silver_IsDeleted = True
                 where NOT EXISTS (
-                    Select *
+                    Select distinct {business_keys_selection}
                     from keys_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME} k 
                     where {condition}
                 )
