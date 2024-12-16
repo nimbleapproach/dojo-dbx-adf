@@ -844,6 +844,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN NULL -- Nokia
 # MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') THEN NULL -- Yubico
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN NULL -- Extreme
 # MAGIC     ELSE it.recid
 # MAGIC     END)                                                              AS transaction_record_id
 # MAGIC , (CASE
