@@ -175,32 +175,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC      AND it.DATAAREAID in ('NGS1','NNL2')
 # MAGIC 	 AND (it.STATUSISSUE IN ('1', '3') OR (it.STATUSRECEIPT LIKE '1' AND it.INVOICERETURNED = 1))
 # MAGIC      AND id.inventlocationid NOT LIKE 'DD'
-# MAGIC ),
-# MAGIC support_items AS
-# MAGIC (
-# MAGIC   SELECT
-# MAGIC     it.inventserialid AS serialnumber,
-# MAGIC     s.itemid AS itemid,
-# MAGIC     sp.PurchTableID_InterComp AS ponumber,
-# MAGIC     di.itemname AS sku
-# MAGIC   FROM sales_data s
-# MAGIC   JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
-# MAGIC     ON it.inventtransid = s.inventtransid
-# MAGIC    AND it.dataareaid <> 'NGS1'
-# MAGIC    AND it.INVENTSERIALID IS NOT NULL
-# MAGIC    AND it.INVENTSERIALID != ''
-# MAGIC   JOIN so_po_id_list sp
-# MAGIC     ON sp.SalesLineID_Local = s.inventtransid
-# MAGIC   JOIN v_distinctitems di
-# MAGIC     ON di.itemid = s.itemid
-# MAGIC     AND di.companyid = RIGHT(sp.SalesTableID_InterComp,4)
-# MAGIC   WHERE
-# MAGIC     s.dataareaid <> 'NGS1'
-# MAGIC     AND it.STATUSISSUE = '1'
-# MAGIC     AND di.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC000895_NNL2', 'VAC000850_NGS1') -- Versa
-# MAGIC     AND di.ItemGroupID = 'Support'
-# MAGIC     AND s.SALESSTATUS = '3'
-# MAGIC     AND s.SALESORDERTYPE = 'New'
 # MAGIC )
 # MAGIC SELECT DISTINCT
 # MAGIC   (CASE
@@ -217,8 +191,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                             AS financial_date
 # MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
 # MAGIC     THEN TO_DATE(it.datephysical)
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           THEN it.datephysical
@@ -244,7 +217,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC             OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
 # MAGIC             OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
+# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC             OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
 # MAGIC             THEN di_ic.itemname
 # MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
@@ -483,8 +456,9 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS ship_to_name
 # MAGIC , (CASE
+# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+# MAGIC           THEN ad.COUNTRYREGIONID
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'   -- WatchGuard
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
 # MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
 # MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
@@ -554,7 +528,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
@@ -567,8 +540,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           THEN CONCAT_WS(',',s.sag_euaddress_street1, s.sag_euaddress_street2)
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN CONCAT_WS(' ',s.sag_euaddress_street1, s.sag_euaddress_street2)
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           THEN (CASE
 # MAGIC                 WHEN s.SAG_EUADDRESS_STREET1 = '' AND s.SAG_EUADDRESS_STREET2 = '' AND s.SAG_EUADDRESS_CITY = '' AND s.SAG_EUADDRESS_COUNTY = '' AND s.SAG_EUADDRESS_POSTCODE = ''
 # MAGIC 			          THEN ''
@@ -645,7 +617,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
@@ -676,7 +647,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
 # MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.sag_euaddress_email -- Sophos
@@ -696,7 +666,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
 # MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
@@ -716,7 +685,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia'
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
 # MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
 # MAGIC           THEN s.salesid
@@ -1055,24 +1023,12 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS intercompany_sales_order
 # MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
-# MAGIC           THEN su.sku
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sla
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
-# MAGIC           THEN su.sku
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS rma_support
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           THEN SPLIT(di_ic.PrimaryVendorName,' ')[0]
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS oem_name
 # MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           THEN (CASE
 # MAGIC                 WHEN di_ic.PrimaryVendorName	LIKE 'Advantech%'
 # MAGIC 		            THEN di_ic.ItemDescription
@@ -1080,11 +1036,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC                 END)
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS oem_part_number
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
-# MAGIC           THEN CONCAT(sp.PurchTableID_InterComp, '/', su.ponumber)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS po_number_hardware_support
 # MAGIC , (CASE
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           THEN (CASE
@@ -1157,7 +1108,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   END)                                                              AS distributor_country
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2') -- Versa POS 1.0
 # MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
 # MAGIC           THEN s.SAG_RESELLEREMAILADDRESS
 # MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
@@ -1232,8 +1182,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ON ex3.startdate = TO_DATE(it.datephysical)
 # MAGIC    AND ex3.fromcurrency = 'GBP'
 # MAGIC    AND ex3.tocurrency = 'EUR'
-# MAGIC   LEFT JOIN support_items su
-# MAGIC     ON su.serialnumber = it.inventserialid
 # MAGIC   LEFT JOIN row_gen_ rwg
 # MAGIC     ON (-1 * it.qty) >= rwg.row_id
 # MAGIC    AND di_ic.PrimaryVendorName LIKE 'Fortinet%'
@@ -1319,17 +1267,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         (
 # MAGIC             di.PrimaryVendorName LIKE 'Smart Optics%'
 # MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Versa POS 1.0
-# MAGIC         (
-# MAGIC             di_ic.PrimaryVendorID IN ('VAC000895_NGS1', 'VAC000850_NGS1', 'VAC001068_NGS1', 'VAC000895_NNL2', 'VAC000850_NNL2', 'VAC001068_NNL2')
-# MAGIC             AND it.STATUSISSUE = '1'
-# MAGIC             AND s.DATAAREAID <> 'NGS1'
-# MAGIC             AND di.ItemGroupID IN ('Hardware', 'Accessory')
-# MAGIC             AND s.SALESSTATUS = '3'
-# MAGIC             AND s.SALESORDERTYPE LIKE 'New'
-# MAGIC             AND s.DATAAREAID <> 'NGS1'
 # MAGIC         )
 # MAGIC         OR
 # MAGIC         -- Versa POS v1.2 External
