@@ -99,10 +99,10 @@
 			"value": "secret-tagetikdbserver01-connectionstring"
 		},
 		"LS_TAG_SAAS_properties_typeProperties_url": {
-			"value": "https://infinigate-prod.api.saastagetik.com/basic/aih/data/v1/PROD_TGK_INFINIGATE_001/001/"
+			"value": "https://infinigate-@{linkedService().pm_env}.api.saastagetik.com/basic/aih/data/v1/@{linkedService().pm_env}_TGK_INFINIGATE_001/001/"
 		},
 		"LS_TAG_SAAS_properties_typeProperties_userName": {
-			"value": "INFINIGATE_PROD-NAV_LOAD"
+			"value": "INFINIGATE_@{linkedService().pm_env}-NAV_LOAD"
 		},
 		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
 			"value": "@{linkedService().pm_Service_Uri}"

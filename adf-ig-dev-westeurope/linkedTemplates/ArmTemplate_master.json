@@ -134,11 +134,11 @@
 		},
 		"LS_TAG_SAAS_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://infinigate-prod.api.saastagetik.com/basic/aih/data/v1/PROD_TGK_INFINIGATE_001/001/"
+			"defaultValue": "https://infinigate-@{linkedService().pm_env}.api.saastagetik.com/basic/aih/data/v1/@{linkedService().pm_env}_TGK_INFINIGATE_001/001/"
 		},
 		"LS_TAG_SAAS_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "INFINIGATE_PROD-NAV_LOAD"
+			"defaultValue": "INFINIGATE_@{linkedService().pm_env}-NAV_LOAD"
 		},
 		"LS_VUZION_CRM_DYNAMICS_properties_typeProperties_serviceUri": {
 			"type": "string",

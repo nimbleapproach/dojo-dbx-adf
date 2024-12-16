@@ -53,11 +53,11 @@
 		},
 		"LS_TAG_SAAS_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://infinigate-prod.api.saastagetik.com/basic/aih/data/v1/PROD_TGK_INFINIGATE_001/001/"
+			"defaultValue": "https://infinigate-@{linkedService().pm_env}.api.saastagetik.com/basic/aih/data/v1/@{linkedService().pm_env}_TGK_INFINIGATE_001/001/"
 		},
 		"LS_TAG_SAAS_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "INFINIGATE_PROD-NAV_LOAD"
+			"defaultValue": "INFINIGATE_@{linkedService().pm_env}-NAV_LOAD"
 		},
 		"TR_SCHEDULE_DAILY_SUPPLEMENTARY_DEV_properties_runtimeState": {
 			"type": "string",
@@ -220,6 +220,12 @@
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"parameters": {
+					"pm_env": {
+						"type": "string",
+						"defaultValue": "DEV"
+					}
+				},
 				"annotations": [],
 				"type": "OData",
 				"typeProperties": {
@@ -547,14 +553,17 @@
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "LS_TAG_SAAS",
-					"type": "LinkedServiceReference"
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_env": "PROD"
+					}
 				},
 				"parameters": {
-					"pm_period": {
-						"type": "string",
-						"defaultValue": "08"
-					},
 					"pm_scenario": {
+						"type": "string",
+						"defaultValue": "2025ACT-PFA-01"
+					},
+					"pm_Code": {
 						"type": "string"
 					}
 				},
@@ -566,7 +575,7 @@
 				"schema": [],
 				"typeProperties": {
 					"path": {
-						"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}')",
+						"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')",
 						"type": "Expression"
 					}
 				}
@@ -582,7 +591,15 @@
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "LS_TAG_SAAS",
-					"type": "LinkedServiceReference"
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_env": "PROD"
+					}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					}
 				},
 				"folder": {
 					"name": "Sources/TAG02 [Tagetik]"
@@ -591,7 +608,10 @@
 				"type": "ODataResource",
 				"schema": [],
 				"typeProperties": {
-					"path": "Datasource_000003"
+					"path": {
+						"value": "ES_Datasource_@{dataset().pm_Code}",
+						"type": "Expression"
+					}
 				}
 			},
 			"dependsOn": [
@@ -605,7 +625,15 @@
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "LS_TAG_SAAS",
-					"type": "LinkedServiceReference"
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_env": "PROD"
+					}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					}
 				},
 				"folder": {
 					"name": "Sources/TAG02 [Tagetik]"
@@ -614,7 +642,10 @@
 				"type": "ODataResource",
 				"schema": [],
 				"typeProperties": {
-					"path": "Datasource_000004"
+					"path": {
+						"value": "ES_Datasource_@{dataset().pm_Code}K",
+						"type": "Expression"
+					}
 				}
 			},
 			"dependsOn": [
