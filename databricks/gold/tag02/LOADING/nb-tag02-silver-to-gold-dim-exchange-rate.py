@@ -40,7 +40,7 @@ FROM ( SELECT DISTINCT UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO)
                        CAST(TRIM(a.COD_VALUTA) AS STRING) AS currency_code,
                        CAST(a.CAMBIO_PERIODO as decimal(18, 4)) AS exchange_rate,
                        SHA2(COALESCE(TRIM(cast(a.CAMBIO_PERIODO as decimal(18, 4))),''), 256) AS exchange_rate_hash_key,
-                       CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
+                       CAST(a.DATE_UPD AS TIMESTAMP) AS date_updated
 FROM silver_{ENVIRONMENT}.tag02.dati_cambio a
 LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_exchange_rate b
   ON UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = b.exchange_rate_code
@@ -54,7 +54,7 @@ SELECT DISTINCT UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TR
                 CAST(TRIM(a.COD_VALUTA) AS STRING) AS currency_code,
                 CAST(a.CAMBIO_PERIODO as decimal(18, 4)) AS exchange_rate,
                 SHA2(COALESCE(TRIM(cast(a.CAMBIO_PERIODO as decimal(18, 4))),''), 256) AS exchange_rate_hash_key,
-                CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
+                CAST(a.DATE_UPD AS TIMESTAMP) AS date_updated
 FROM silver_{ENVIRONMENT}.tag02.dati_cambio a
 INNER JOIN gold_{ENVIRONMENT}.tag02.dim_exchange_rate b
   ON UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = b.exchange_rate_code
