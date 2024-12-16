@@ -1,0 +1,29 @@
+{
+	"name": "DS_TAGETIK_SAAS_KEY",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_TAG_SAAS",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_env": "PROD"
+			}
+		},
+		"parameters": {
+			"pm_Code": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/TAG02 [Tagetik]"
+		},
+		"annotations": [],
+		"type": "ODataResource",
+		"schema": [],
+		"typeProperties": {
+			"path": {
+				"value": "ES_Datasource_@{dataset().pm_Code}K",
+				"type": "Expression"
+			}
+		}
+	}
+}

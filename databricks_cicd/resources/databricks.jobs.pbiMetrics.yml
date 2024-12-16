@@ -5,7 +5,7 @@
 resources:
   jobs:
     inf_edw_pbi_metrics: # Provide a unique name for this bundle. This name should differentiate it from other projects.
-      name: inf_edw_pbi_metrics # Provide a unique name for this job. This name should differentiate it from other projects.
+      name: inf_edw_pbi_metrics # Provide a unique name for this job. This name should differentiate it from other jobs.
       schedule:
         quartz_cron_expression: '0 0 4 ? * * *'
         timezone_id: Europe/Amsterdam
@@ -40,12 +40,23 @@ resources:
           min_retry_interval_millis: 100000
           retry_on_timeout: true
 
-        - task_key: load_daily_metrics_to_gold
+        - task_key: load_daily_usage_metrics_to_gold
           depends_on:
             - task_key: load_daily_metrics_to_silver
-          description: task to load metric data from bsilver into gold tables
+          description: task to load metric data from silver into gold tables
           notebook_task:
-            notebook_path: ../notebooks/gold/powerbi/nb-powerbi-metrics-gold.py
+            notebook_path: ../notebooks/gold/powerbi/nb-powerbi-usage-metrics-gold.py
+          existing_cluster_id: ${var.existing_cluster_id}
+          max_retries: 1
+          min_retry_interval_millis: 100000
+          retry_on_timeout: true
+
+        - task_key: load_daily_refresh_metrics_to_gold
+          depends_on:
+            - task_key: load_daily_metrics_to_silver
+          description: task to load metric data from silver into gold tables
+          notebook_task:
+            notebook_path: ../notebooks/gold/powerbi/nb-powerbi-refresh-metrics-gold.py
           existing_cluster_id: ${var.existing_cluster_id}
           max_retries: 1
           min_retry_interval_millis: 100000

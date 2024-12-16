@@ -65,6 +65,22 @@ except:
 
 # COMMAND ----------
 
+try:
+    REPLACE_NULLS = bool(dbutils.widgets.get("wg_replaceNulls") == 'true')
+except:
+    dbutils.widgets.dropdown(name = "wg_replaceNulls", defaultValue = 'true', choices =   ['false','true'])
+    REPLACE_NULLS = bool(dbutils.widgets.get("wg_replaceNulls") == 'true')
+
+# COMMAND ----------
+
+try:
+    FORCE_MERGE= bool(dbutils.widgets.get("wg_forceMerge") == 'true')
+except:
+    dbutils.widgets.dropdown(name = "wg_forceMerge", defaultValue = 'false', choices =   ['false','true'])
+    FORCE_MERGE = bool(dbutils.widgets.get("wg_forceMerge") == 'true')
+
+# COMMAND ----------
+
 TABLE_NAME = TABLE_NAME.lower()
 TABLE_SCHEMA = TABLE_SCHEMA.lower()
 
@@ -193,8 +209,11 @@ else:
 # MAGIC %md Based now on the business keys as well as the watermark column we are again dropping duplicates.
 
 # COMMAND ----------
+deduped_df = source_df
 
-deduped_df = fillnas(source_df)
+if REPLACE_NULLS:
+  print("replacing NULLs")
+  deduped_df = fillnas(deduped_df)
 
 if BUSINESS_KEYS:
   deduped_df = deduped_df.na.drop(subset= BUSINESS_KEYS)
@@ -247,11 +266,12 @@ if INIT_LOAD:
 else:
     print('We are merging...')
     condition = " AND ".join([f's.{SILVER_PRIMARY_KEYS[i]} = t.{SILVER_PRIMARY_KEYS[i]}' for i in range(len(SILVER_PRIMARY_KEYS))])
+    merge_update_hash_check = 't.Sys_Silver_HashKey <> s.Sys_Silver_HashKey' if not FORCE_MERGE else 'true'
 
     (deltaTable.alias("t").merge(
     deduped_df.alias("s"),
     condition)
-    .whenMatchedUpdate('t.Sys_Silver_HashKey <> s.Sys_Silver_HashKey',set = updateDict)
+    .whenMatchedUpdate(merge_update_hash_check,set = updateDict)
     .whenMatchedUpdate('t.Sys_Silver_IsCurrent != s.Sys_Silver_IsCurrent', set = {'t.Sys_Silver_IsCurrent' : 's.Sys_Silver_IsCurrent'})
     .whenNotMatchedBySourceUpdate(set = {'t.Sys_Silver_IsCurrent' : lit(False)})
     .whenNotMatchedInsert(values  = insertDict)
@@ -263,11 +283,12 @@ else:
 if SOFT_DELETE :
     print(f'Soft deleting {TABLE_NAME}...')
     condition = " AND ".join([f'k.{BUSINESS_KEYS[i]} = t.{BUSINESS_KEYS[i]}' for i in range(len(BUSINESS_KEYS))])
+    business_keys_selection = "".join([f'{BUSINESS_KEYS[i]},' for i in range(len(BUSINESS_KEYS))])[:-1]
     spark.sql(f"""
               UPDATE {TABLE_NAME} t
                 SET  Sys_Silver_IsDeleted = True
                 where NOT EXISTS (
-                    Select *
+                    Select distinct {business_keys_selection}
                     from keys_{ENVIRONMENT}.{TABLE_SCHEMA}.{TABLE_NAME} k 
                     where {condition}
                 )

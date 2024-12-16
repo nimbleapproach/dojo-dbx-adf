@@ -31,22 +31,30 @@ spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_product_staging as
 with cte_sources as 
 (
-  select distinct source_system_pk, source_entity 
+  select distinct s.source_system, source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
-  where s.source_system = 'Infinigate ERP' 
-  and s.is_current = 1
+  --where s.source_system = 'Infinigate ERP' 
+  where s.is_current = 1
 ),
-cte_nuvias_sources as 
+cte_duplicate_netsafe_sku as 
 (
-  select distinct source_system_pk, data_area_id 
-  from {catalog}.{schema}.dim_source_system s 
-  where s.source_system = 'Nuvias ERP' 
-  and s.is_current = 1
+  select trim(sku) as sku,Sys_Country,MAX(SKU_Description) as product_description, count(*) as Sku_Count
+  from silver_dev.netsafe.invoicedata AS 
+  where sys_silver_iscurrent = true 
+  group by all
+  having count(*) > 1
 ),
+--cte_nuvias_sources as 
+--(
+-- select distinct source_system_pk, data_area_id
+--  from {catalog}.{schema}.dim_source_system s 
+--  where s.source_system = 'Nuvias ERP' 
+--  and s.is_current = 1
+--),,
 cte_source_data as 
 (
 -- Items
-select distinct
+select 
     it.No_ as product_code,
     trim(
       (
@@ -70,6 +78,7 @@ select distinct
     MAX(it.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.item it 
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(it.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 Where it.Sys_Silver_IsCurrent = true
 group by
     it.No_,
@@ -88,7 +97,7 @@ group by
     coalesce(it.ProductType,'N/A'),
     coalesce(s.source_system_pk,-1)
 union -- credit notes
-select distinct
+select 
     sil.No_ as product_code,
     'Credit Memo Line Item' as product_description,
     coalesce(sil.No_,'N/A') as local_product_id ,
@@ -102,6 +111,7 @@ select distinct
     MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil 
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 WHERE sil.Sys_Silver_IsCurrent = true
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.No_ 
@@ -112,7 +122,7 @@ group by
     --coalesce(sil.manufacturerItemNo_, 'N/A'),
     coalesce(s.source_system_pk,-1)
 union -- sales orders & quotes
-select distinct
+select 
     sil.No_ as product_code,
     'Sales Archive Line Item' AS product_description,
     coalesce(sil.No_,'N/A') as local_product_id,
@@ -144,6 +154,7 @@ and sil.VersionNo_ = sha.VersionNo_
 and sil.Sys_DatabaseName = sha.Sys_DatabaseName
 and sil.Sys_Silver_IsCurrent = 1
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 WHERE sil.Sys_Silver_IsCurrent = true
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.No_ 
@@ -153,7 +164,7 @@ group by
     sil.No_,
     coalesce(s.source_system_pk,-1)
 union -- sales invoices
-select distinct
+select 
     sil.No_ as product_code,
     'Sales Invoice Line Item' as product_description,
     coalesce(sil.No_,'N/A') as local_product_id ,
@@ -167,6 +178,7 @@ select distinct
     MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.sales_invoice_line sil 
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.No_ 
                 and i.Sys_Silver_IsCurrent = true 
@@ -177,7 +189,7 @@ group by
     --coalesce(sil.manufacturerItemNo_, 'N/A'),
     coalesce(s.source_system_pk,-1)
 union -- msp
-select distinct
+select 
     sil.ItemNo_ as product_code,
     'MSP Line Item' as product_description,
     coalesce(sil.ItemNo_,'N/A') as local_product_id ,
@@ -191,6 +203,7 @@ select distinct
     MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.igsql03.inf_msp_usage_line sil 
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sil.Sys_DatabaseName,2))
+AND s.source_system = 'Infinigate ERP'
 WHERE sil.Sys_Silver_IsCurrent = true
 AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i 
                 where i.No_ = sil.ItemNo_ 
@@ -216,15 +229,61 @@ SELECT
     MAX(it.Sys_Silver_ModifedDateTime_UTC) AS Sys_Gold_ModifiedDateTime_UTC
 FROM silver_{ENVIRONMENT}.nuvias_operations.custvendexternalitem AS it 
 
-LEFT JOIN cte_nuvias_sources s on it.dataareaid = s.data_area_id
-
 LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.ecoresproducttranslation AS itdesc ON it.Description = itdesc.Name
 AND itdesc.Sys_Silver_IsCurrent = 1
 
 LEFT JOIN gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr ON datanowarr.SKU = it.Description
 
+LEFT JOIN cte_sources s on it.dataareaid = s.source_entity AND s.source_system = 'Nuvias ERP'
+
 WHERE it.Sys_Silver_IsCurrent = 1
 GROUP BY all
+UNION
+--Netsuite
+SELECT
+  COALESCE(it.SKU_ID,si.SKU_ID) AS product_code,
+  COALESCE(it.Description,'N/A') AS product_description,
+  MAX(COALESCE(it.SID,si.SID)) AS local_product_id ,
+  COALESCE(it.Item_Category,'N/A') AS product_type,
+  'Starlink (Netsuite) Line Item' as line_item_type,
+  coalesce(s.source_system_pk,-1) AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  MAX(si.Sys_Silver_InsertDateTime_UTC) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(si.Sys_Silver_ModifedDateTime_UTC) AS Sys_Gold_ModifiedDateTime_UTC
+FROM silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si
+LEFT JOIN silver_{ENVIRONMENT}.netsuite.masterdataSku AS it ON si.SKU_ID = it.SKU_ID
+AND it.Sys_Silver_IsCurrent = 1
+LEFT JOIN cte_sources s on 'AE1' = s.source_entity AND s.source_system = 'Starlink (Netsuite) ERP'
+WHERE si.sys_silver_iscurrent = true
+GROUP BY ALL
+UNION
+--Netsafe
+SELECT
+  trim(invoice.SKU) AS product_code,
+  CASE WHEN d.Sku_Count > 1 THEN d.product_description ELSE COALESCE(invoice.SKU_Description, 'N/A') END AS product_description,
+  COALESCE(trim(invoice.SKU), 'N/A') AS local_product_id,
+  'N/A' AS product_type,
+  'Netsafe Line Item' as line_item_type,
+  coalesce(s.source_system_pk,-1) AS source_system_fk,
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  MAX(invoice.Sys_Silver_InsertDateTime_UTC) AS Sys_Gold_InsertedDateTime_UTC,
+  MAX(invoice.Sys_Silver_ModifedDateTime_UTC) AS Sys_Gold_ModifiedDateTime_UTC
+FROM  
+  silver_{ENVIRONMENT}.netsafe.invoicedata AS invoice
+LEFT JOIN cte_sources s on CASE
+    WHEN lower(invoice.Sys_Country) like '%romania%' THEN 'RO2'
+    WHEN lower(invoice.Sys_Country) like '%croatia%' THEN 'HR2'
+    WHEN lower(invoice.Sys_Country) like '%slovenia%' THEN 'SI1'
+    WHEN lower(invoice.Sys_Country) like '%bulgaria%' THEN 'BG1'
+    END = s.source_entity
+AND s.source_system = 'Netsafe ERP'
+LEFT JOIN cte_duplicate_netsafe_sku d ON d.sku = trim(invoice.SKU) and d.Sys_Country = invoice.Sys_Country
+WHERE invoice.sys_silver_iscurrent = true
+GROUP BY ALL
 )
 SELECT
     csd.product_code,

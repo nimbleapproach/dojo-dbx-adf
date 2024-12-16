@@ -21,6 +21,18 @@ catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
+# Importing Libraries
+import os
+spark = spark  # noqa
+
+
+# COMMAND ----------
+
+ENVIRONMENT = os.environ["__ENVIRONMENT__"]
+ENVIRONMENT
+spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
+
+# COMMAND ----------
 
 # Example usage
 file_path = './meta.json'
@@ -37,7 +49,7 @@ data = read_and_replace_json(file_path, replacements)
 dbutils.widgets.text("dimension_name", "", "Dimension Name")
 dimension_name = dbutils.widgets.get("dimension_name")
 #DEBUG dimension_name = 'entity_to_entity_group_link'
-dimension_name = 'fact_sales_transaction_ig' # only called dimension name because the parent notebook uses it
+#dimension_name = 'fact_sales_transaction_ig' # only called dimension name because the parent notebook uses it
 
 #grab the config items fopr the fgact tables
 fact_table_name_only = dimension_name
@@ -99,8 +111,8 @@ for dim_name in dimension_names:
     if dim_name not in fact_direct_dimensions:
         continue
     df_dim, bus_keys = get_dimension_keys(dim_name.lower()) #bus_keys should all be LOWER CASE now
-    #print("processing" , dim_name, "using", bus_keys)
-    print(df_fact_staging.count(),dim_name)
+    # print("processing" , dim_name, "using", bus_keys)
+    # print(df_fact_staging.count(),dim_name)
     
     # Future - might need to incorporate the fact staging document_date as a filter to the dimension join
     # Future - the is_current might need to be removed from the above get_dimension_keys function
@@ -156,11 +168,12 @@ with cte_max_timestamp
         FROM {source_fact_table_name}
         GROUP BY document_source
 )
-INSERT INTO {catalog}.{schema}.fact_delta_timestamp (document_source,max_transaction_line_timestamp, Sys_Gold_FactProcessedDateTime_UTC)
+INSERT INTO {catalog}.{orion_schema}.fact_delta_timestamp (document_source,max_transaction_line_timestamp, Sys_Gold_FactProcessedDateTime_UTC)
 SELECT cte_max_timestamp.document_source, cte_max_timestamp.max_transaction_line_timestamp, current_timestamp()
 FROM cte_max_timestamp
 """
 )
+
 
 # COMMAND ----------
 

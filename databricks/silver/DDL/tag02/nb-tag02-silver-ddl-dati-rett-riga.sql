@@ -54,10 +54,10 @@ CREATE OR REPLACE TABLE dati_rett_riga
       COMMENT 'Amount in entity curreny.'
     ,COD_VALUTA   STRING
       COMMENT 'Entity currency code.'
-    ,PROVENIENZA    STRING
+    ,ORIGIN    STRING
       COMMENT 'TODO'
 
-    ,DATEUPD TIMESTAMP
+    ,DATE_UPD TIMESTAMP
       COMMENT 'Last Update Timestamp'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -71,7 +71,7 @@ CREATE OR REPLACE TABLE dati_rett_riga
       COMMENT 'HashKey over all but Sys and DATEUPD columns.'
       ,Sys_Silver_IsCurrent BOOLEAN
       ,Sys_Silver_IsDeleted BOOLEAN
-,CONSTRAINT dati_rett_riga_pk PRIMARY KEY(COD_PERIODO,COD_SCENARIO,OID_DATI_RETT_RIGA,DATEUPD)
+,CONSTRAINT dati_rett_riga_pk PRIMARY KEY(COD_PERIODO,COD_SCENARIO,OID_DATI_RETT_RIGA,DATE_UPD)
   ) /**OID_DATI_SALDI_LORDI is not primary key **/
 COMMENT 'This table contains the "fact information".'
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')
