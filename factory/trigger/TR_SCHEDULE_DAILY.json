@@ -15,7 +15,7 @@
 			},
 			{
 				"pipelineReference": {
-					"referenceName": "TAG_SaaS_LoadTable",
+					"referenceName": "PL_30_TAG_SaaS_Load",
 					"type": "PipelineReference"
 				}
 			}

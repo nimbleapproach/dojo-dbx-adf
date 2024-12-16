@@ -3,14 +3,17 @@
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_TAG_SAAS",
-			"type": "LinkedServiceReference"
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_env": "PROD"
+			}
 		},
 		"parameters": {
-			"pm_period": {
-				"type": "string",
-				"defaultValue": "08"
-			},
 			"pm_scenario": {
+				"type": "string",
+				"defaultValue": "2025ACT-PFA-01"
+			},
+			"pm_Code": {
 				"type": "string"
 			}
 		},
@@ -22,7 +25,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "Datasource_000002(Scenario='@{dataset().pm_scenario}',Period='@{dataset().pm_period}')",
+				"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')",
 				"type": "Expression"
 			}
 		}

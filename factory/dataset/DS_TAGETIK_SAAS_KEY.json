@@ -3,7 +3,15 @@
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_TAG_SAAS",
-			"type": "LinkedServiceReference"
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_env": "PROD"
+			}
+		},
+		"parameters": {
+			"pm_Code": {
+				"type": "string"
+			}
 		},
 		"folder": {
 			"name": "Sources/TAG02 [Tagetik]"
@@ -12,7 +20,10 @@
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "Datasource_000004"
+			"path": {
+				"value": "ES_Datasource_@{dataset().pm_Code}K",
+				"type": "Expression"
+			}
 		}
 	}
 }
