@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.refreshes (
   WorkspaceName STRING COMMENT 'The workspace in which the dataset resides',
   WorkspaceId STRING COMMENT 'The id of the workspace in which the dataset resides',
   DatasetName STRING COMMENT 'The name of the dataset being refreshed',
-  DatasetId TIMESTAMP COMMENT 'The id of the dataset being refreshed',
+  DatasetId STRING COMMENT 'The id of the dataset being refreshed',
   SysSilverInsertedDateTimeUTC TIMESTAMP COMMENT 'The datetime the data was added to the silver layer',
   CONSTRAINT `RequestId` PRIMARY KEY (`RequestId`))
 USING delta
