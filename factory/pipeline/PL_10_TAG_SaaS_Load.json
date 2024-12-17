@@ -83,7 +83,10 @@
 										"value": "@item().TABLE_NAME",
 										"type": "Expression"
 									},
-									"pm_FactLoadFull": "false"
+									"pm_FactLoadFull": {
+										"value": "@pipeline().parameters.pm_FactFullLoad",
+										"type": "Expression"
+									}
 								}
 							}
 						}
@@ -91,6 +94,11 @@
 				}
 			}
 		],
+		"parameters": {
+			"pm_FactFullLoad": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
 		},
