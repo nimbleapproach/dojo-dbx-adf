@@ -3,13 +3,24 @@
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_TAG_SAAS",
-			"type": "LinkedServiceReference"
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_env": "PROD"
+			}
+		},
+		"parameters": {
+			"pm_Code": {
+				"type": "string"
+			}
 		},
 		"annotations": [],
 		"type": "ODataResource",
 		"schema": [],
 		"typeProperties": {
-			"path": "ES_Datasource_DSL_SC"
+			"path": {
+				"value": "ES_Datasource_@{dataset().pm_Code}_SC",
+				"type": "Expression"
+			}
 		}
 	}
 }
