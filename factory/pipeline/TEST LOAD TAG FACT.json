@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('List Scenarios').output",
+						"value": "@activity('List Scenarios').output.value",
 						"type": "Expression"
 					},
 					"isSequential": false,
@@ -57,7 +57,7 @@
 										"type": "ParquetWriteSettings",
 										"maxRowsPerFile": 1000000,
 										"fileNamePrefix": {
-											"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{item()}-@{utcNow()}",
+											"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{item().SCENARIO}-@{utcNow()}",
 											"type": "Expression"
 										}
 									}
@@ -71,7 +71,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"pm_scenario": {
-											"value": "@item()",
+											"value": "@item().SCENARIO",
 											"type": "Expression"
 										},
 										"pm_Code": {
