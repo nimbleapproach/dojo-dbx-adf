@@ -82,7 +82,8 @@
 									"pm_Table": {
 										"value": "@item().TABLE_NAME",
 										"type": "Expression"
-									}
+									},
+									"pm_FactLoadFull": "false"
 								}
 							}
 						}

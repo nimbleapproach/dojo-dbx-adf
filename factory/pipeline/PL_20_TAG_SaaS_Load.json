@@ -26,7 +26,21 @@
 									"referenceName": "PL_30_TAG_SaaS_Load",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_Table": {
+										"value": "@pipeline().parameters.pm_Table",
+										"type": "Expression"
+									},
+									"pm_Code": {
+										"value": "@pipeline().parameters.pm_Code",
+										"type": "Expression"
+									},
+									"pm_FactLoad_Full": {
+										"value": "@pipeline().parameters.pm_FactLoadFull",
+										"type": "Expression"
+									}
+								}
 							}
 						}
 					],
@@ -116,6 +130,9 @@
 				"type": "string"
 			},
 			"pm_Table": {
+				"type": "string"
+			},
+			"pm_FactLoadFull": {
 				"type": "string"
 			}
 		},
