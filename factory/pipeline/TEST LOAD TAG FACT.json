@@ -7,7 +7,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "List Scenarios",
+						"activity": "FilterCurrent Year",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('List Scenarios').output.value",
+						"value": "@activity('FilterCurrent Year').output.value",
 						"type": "Expression"
 					},
 					"isSequential": false,
@@ -210,6 +210,29 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "FilterCurrent Year",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "List Scenarios",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('List Scenarios').output.value",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(formatDateTime(utcNow(), 'yyyy'), substring(item().SCENARIO, 0, 4))",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
