@@ -187,7 +187,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE it.datephysical
 # MAGIC     END)                                                              AS invoice_date
 # MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN it.datefinancial -- Sophos
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                             AS financial_date
