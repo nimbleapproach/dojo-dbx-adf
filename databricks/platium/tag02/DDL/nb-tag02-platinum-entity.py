@@ -26,7 +26,6 @@ spark.conf.set("tableObject.environment", ENVIRONMENT)
 # MAGIC        entity_type,
 # MAGIC        legal_headquarters,
 # MAGIC        administrative_city,
-# MAGIC        date_established,
 # MAGIC        entity_local_currency,
 # MAGIC        entity_group,
 # MAGIC        entity_code_legacy 
