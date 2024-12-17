@@ -187,6 +187,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE it.datephysical
 # MAGIC     END)                                                              AS invoice_date
 # MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN it.datefinancial -- Sophos
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                             AS financial_date
@@ -273,7 +274,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     END)                                                              AS quantity
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
-# MAGIC     THEN collect_set(it.INVENTSERIALID) over (partition by s.SALESID, it.ItemID, it.INVENTTRANSID, s.DATAAREAID) -- Sophos
+# MAGIC     THEN array_join(array_sort(collect_set(it.INVENTSERIALID) over (partition by s.SALESID, it.ItemID, it.INVENTTRANSID, s.DATAAREAID)), ' ,') -- Sophos
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                              AS serial_numbers --- TO DO
 # MAGIC , (CASE
@@ -537,7 +538,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC , (CASE
 # MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
 # MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           THEN CONCAT_WS(',',s.sag_euaddress_street1, s.sag_euaddress_street2)
+# MAGIC           THEN CONCAT_WS(', ',s.sag_euaddress_street1, s.sag_euaddress_street2)
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC           THEN CONCAT_WS(' ',s.sag_euaddress_street1, s.sag_euaddress_street2)
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
