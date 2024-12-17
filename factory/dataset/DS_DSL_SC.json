@@ -1,0 +1,15 @@
+{
+	"name": "DS_DSL_SC",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_TAG_SAAS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "ODataResource",
+		"schema": [],
+		"typeProperties": {
+			"path": "ES_Datasource_DSL_SC"
+		}
+	}
+}
