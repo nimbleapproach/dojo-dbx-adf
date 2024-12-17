@@ -53,8 +53,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC       COMMENT 'The address of the legal entity'
 # MAGIC     ,administrative_city STRING
 # MAGIC       COMMENT 'City registered for administration of the entity'
-# MAGIC     ,date_established TIMESTAMP
-# MAGIC       COMMENT 'Date the entity was first established'
 # MAGIC     ,consolidation_type STRING
 # MAGIC       COMMENT 'The type of consolidation on the base entity'
 # MAGIC     ,entity_local_currency STRING
@@ -103,7 +101,6 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC        CAST(NULL AS STRING) AS entity_type,
 # MAGIC        CAST(NULL AS STRING) AS legal_headquarters,
 # MAGIC        CAST(NULL AS STRING) AS administrative_city,
-# MAGIC        CAST(NULL AS TIMESTAMP) AS date_established,
 # MAGIC        CAST(NULL AS STRING) AS consolidation_type,
 # MAGIC        CAST(NULL AS STRING) AS entity_local_currency,
 # MAGIC        CAST(NULL AS STRING) AS entity_group,

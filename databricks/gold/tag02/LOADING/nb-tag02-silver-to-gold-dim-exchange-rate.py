@@ -46,7 +46,6 @@ LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_exchange_rate b
   ON UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = b.exchange_rate_code
 WHERE LOWER(b.exchange_rate_code) IS NULL
   AND a.Sys_Silver_IsCurrent
-  AND (NOT a.Sys_Silver_IsDeleted OR a.Sys_Silver_IsDeleted IS NULL)
 UNION -- We either want to insert all exchange rate codes we haven't seen before or we want to insert only exchange rate codes with changed attributes 
 SELECT DISTINCT UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) AS exchange_rate_code,      
                 CAST(TRIM(a.COD_SCENARIO) AS STRING) AS scenario_code,
@@ -59,7 +58,6 @@ FROM silver_{ENVIRONMENT}.tag02.dati_cambio a
 INNER JOIN gold_{ENVIRONMENT}.tag02.dim_exchange_rate b
   ON UPPER(CONCAT(TRIM(a.COD_SCENARIO),'_',TRIM(a.COD_PERIODO),'_',TRIM(a.COD_VALUTA))) = b.exchange_rate_code
 WHERE a.Sys_Silver_IsCurrent
-  AND (NOT a.Sys_Silver_IsDeleted OR a.Sys_Silver_IsDeleted IS NULL)
   AND SHA2(COALESCE(TRIM(cast(a.CAMBIO_PERIODO as decimal(18, 4))),''), 256) <> b.exchange_rate_hash_key) a
 """)
 
