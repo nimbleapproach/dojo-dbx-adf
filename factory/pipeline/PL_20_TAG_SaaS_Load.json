@@ -14,7 +14,7 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "TAG_SaaS_LoadTable",
+							"name": "PL_30_TAG_SaaS_Load",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -24,32 +24,6 @@
 							"typeProperties": {
 								"pipeline": {
 									"referenceName": "PL_30_TAG_SaaS_Load",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"pm_Code": {
-										"value": "@pipeline().parameters.pm_Code",
-										"type": "Expression"
-									},
-									"pm_Table": {
-										"value": "@pipeline().parameters.pm_Table",
-										"type": "Expression"
-									}
-								}
-							}
-						},
-						{
-							"name": "TEST LOAD TAG FACT",
-							"type": "ExecutePipeline",
-							"dependsOn": [],
-							"policy": {
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "TEST LOAD TAG FACT",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true
