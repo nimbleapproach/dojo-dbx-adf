@@ -17,7 +17,7 @@ with open(f"{working_folder}/recon.config.json", "r") as file:
 try:
     REPORT = dbutils.widgets.get("wg_report")
 except:
-    dbutils.widgets.dropdown(name="wg_report", defaultValue=list(data.keys())[0], choices=data.keys())
+    dbutils.widgets.dropdown(name="wg_report", defaultValue=list(data.keys())[0], choices=sorted(data.keys()))
     REPORT = dbutils.widgets.get("wg_report")
 print("Validating report {}".format(REPORT))
 
@@ -117,7 +117,7 @@ databricks_table = (spark.read
                     # .where("d365_sales_order_number='SO00003879_NES1'")
                     .select(columns_in_scope)
                     # .select(limited_columns_in_scope)
-                    # .fillna(" ").fillna(0).fillna(False)
+                    .fillna("").fillna(0).fillna(False)
                     # .withColumn("hash_", xxhash64(*columns_in_scope))
                     )
 # print(databricks_table.dtypes)
@@ -153,7 +153,7 @@ remote_table = (spark.read
                 # .where("d365_sales_order_number='SO00003879_NES1'")
                 .select(columns_in_scope)
                 # .select(limited_columns_in_scope)
-                # .fillna(" ").fillna(0).fillna(False)
+                .fillna("").fillna(0).fillna(False)
                 # .withColumn("hash_", xxhash64(*columns_in_scope))
                 )
 remote_table = remote_table.withColumns(rounding)
