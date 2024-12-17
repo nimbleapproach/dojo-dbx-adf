@@ -121,7 +121,13 @@
 					},
 					"dataset": {
 						"referenceName": "DS_DSL_SC",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Code": {
+								"value": "@pipeline().parameters.pm_Code",
+								"type": "Expression"
+							}
+						}
 					},
 					"firstRowOnly": false
 				}
