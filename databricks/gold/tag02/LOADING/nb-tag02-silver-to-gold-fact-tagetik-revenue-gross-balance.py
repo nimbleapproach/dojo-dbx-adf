@@ -65,27 +65,27 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC   ON sid.SID = dsl.SID
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_exchange_rate er
 # MAGIC   ON LOWER(CONCAT(TRIM(dsl.COD_SCENARIO),'_',TRIM(dsl.COD_PERIODO),'_',TRIM(dsl.COD_VALUTA))) = LOWER(er.exchange_rate_code)
-# MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN er.start_datetime AND COALESCE(er.end_datetime,'9999-12-31')
+# MAGIC  AND CAST(dsl.DATE_UPD AS TIMESTAMP) BETWEEN er.start_datetime AND COALESCE(er.end_datetime,'9999-12-31')
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_account acc
 # MAGIC   ON LOWER(dsl.COD_CONTO) = LOWER(acc.account_code)
-# MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN acc.start_datetime AND COALESCE(acc.end_datetime,'9999-12-31')
+# MAGIC  AND CAST(dsl.DATE_UPD AS TIMESTAMP) BETWEEN acc.start_datetime AND COALESCE(acc.end_datetime,'9999-12-31')
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_region reg
 # MAGIC   ON LOWER(dsl.COD_DEST2) = LOWER(reg.region_code)
-# MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN reg.start_datetime AND COALESCE(reg.end_datetime,'9999-12-31')
+# MAGIC  AND CAST(dsl.DATE_UPD AS TIMESTAMP) BETWEEN reg.start_datetime AND COALESCE(reg.end_datetime,'9999-12-31')
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_vendor v
 # MAGIC   ON LOWER(dsl.COD_DEST1) = LOWER(v.vendor_code)
-# MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN v.start_datetime AND COALESCE(v.end_datetime,'9999-12-31')
+# MAGIC  AND CAST(dsl.DATE_UPD AS TIMESTAMP) BETWEEN v.start_datetime AND COALESCE(v.end_datetime,'9999-12-31')
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_cost_centre cc
 # MAGIC   ON LOWER(dsl.COD_DEST3) = LOWER(cc.cost_centre_code)
-# MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN cc.start_datetime AND COALESCE(cc.end_datetime,'9999-12-31')
+# MAGIC  AND CAST(dsl.DATE_UPD AS TIMESTAMP) BETWEEN cc.start_datetime AND COALESCE(cc.end_datetime,'9999-12-31')
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_scenario s
 # MAGIC   ON LOWER(dsl.COD_SCENARIO) = LOWER(s.scenario_code)
-# MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN s.start_datetime AND COALESCE(s.end_datetime,'9999-12-31')
+# MAGIC  AND CAST(dsl.DATE_UPD AS TIMESTAMP) BETWEEN s.start_datetime AND COALESCE(s.end_datetime,'9999-12-31')
 # MAGIC LEFT OUTER JOIN gold_${tableObject.environment}.tag02.dim_entity e
 # MAGIC   ON LOWER(dsl.COD_AZIENDA) = LOWER(e.entity_code)
-# MAGIC  AND CAST(dsl.DATEUPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
+# MAGIC  AND CAST(dsl.DATE_UPD AS TIMESTAMP) BETWEEN e.start_datetime AND COALESCE(e.end_datetime,'9999-12-31')
 # MAGIC WHERE (COD_SCENARIO NOT LIKE '%OB%')
-# MAGIC   AND (LEFT(dsl.COD_CONTO, 1) IN ('1','2','3', '4', '5', '6'))
+# MAGIC   AND (LEFT(dsl.COD_CONTO, 1) IN ('1', '2', '3', '4', '5', '6'))
 # MAGIC   AND ( dsl.COD_CATEGORIA LIKE "%AMOUNT"
 # MAGIC       OR dsl.COD_CATEGORIA IN ( 'ADJ01',
 # MAGIC                             'ADJ02',
