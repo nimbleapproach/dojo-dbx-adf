@@ -38,6 +38,22 @@
 									}
 								}
 							}
+						},
+						{
+							"name": "TEST LOAD TAG FACT",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "TEST LOAD TAG FACT",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
 						}
 					],
 					"ifTrueActivities": [

@@ -3,11 +3,121 @@
 	"properties": {
 		"activities": [
 			{
+				"name": "List Scenarios",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ODataSource",
+						"httpRequestTimeout": "00:05:00"
+					},
+					"dataset": {
+						"referenceName": "DS_DSL_SC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_Code": {
+								"value": "@pipeline().parameters.pm_Code",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "If Full Load",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "List Scenarios",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@pipeline().parameters.pm_FactLoad_Full",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "FilterCurrent Year Current",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('List Scenarios').output.value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@equals(formatDateTime(addDays(utcNow(), 365), 'yyyy'), substring(item().SCENARIO, 0, 4))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Scenario Current",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "FilterCurrent Year Current",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "ScenarioArry",
+								"value": {
+									"value": "@activity('FilterCurrent Year Current').output.value",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Set Scenario Full",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "ScenarioArry",
+								"value": {
+									"value": "@activity('List Scenarios').output.value",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
 				"name": "For Each Scenario",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "FilterCurrent Year",
+						"activity": "If Full Load",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -16,14 +126,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('FilterCurrent Year').output.value",
+						"value": "@variables('ScenarioArry')",
 						"type": "Expression"
 					},
 					"isSequential": false,
 					"batchCount": 8,
 					"activities": [
 						{
-							"name": "Load Tagetik View",
+							"name": "Load Tagetik View Current",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -103,37 +213,7 @@
 				}
 			},
 			{
-				"name": "List Scenarios",
-				"type": "Lookup",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "ODataSource",
-						"httpRequestTimeout": "00:05:00"
-					},
-					"dataset": {
-						"referenceName": "DS_DSL_SC",
-						"type": "DatasetReference",
-						"parameters": {
-							"pm_Code": {
-								"value": "@pipeline().parameters.pm_Code",
-								"type": "Expression"
-							}
-						}
-					},
-					"firstRowOnly": false
-				}
-			},
-			{
-				"name": "Extract all current Keys",
+				"name": "Extract all current Keys Current",
 				"type": "Copy",
 				"dependsOn": [
 					{
@@ -210,29 +290,6 @@
 						}
 					}
 				]
-			},
-			{
-				"name": "FilterCurrent Year",
-				"type": "Filter",
-				"dependsOn": [
-					{
-						"activity": "List Scenarios",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('List Scenarios').output.value",
-						"type": "Expression"
-					},
-					"condition": {
-						"value": "@equals(formatDateTime(utcNow(), 'yyyy'), substring(item().SCENARIO, 0, 4))",
-						"type": "Expression"
-					}
-				}
 			}
 		],
 		"parameters": {
@@ -241,6 +298,10 @@
 			},
 			"pm_Code": {
 				"type": "string"
+			},
+			"pm_FactLoad_Full": {
+				"type": "bool",
+				"defaultValue": false
 			}
 		},
 		"variables": {
