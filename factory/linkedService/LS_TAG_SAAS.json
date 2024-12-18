@@ -1,0 +1,27 @@
+{
+	"name": "LS_TAG_SAAS",
+	"properties": {
+		"parameters": {
+			"pm_env": {
+				"type": "string",
+				"defaultValue": "PROD"
+			}
+		},
+		"annotations": [],
+		"type": "OData",
+		"typeProperties": {
+			"url": "https://infinigate-@{linkedService().pm_env}.api.saastagetik.com/basic/aih/data/v1/@{linkedService().pm_env}_TGK_INFINIGATE_001/001/",
+			"authenticationType": "Basic",
+			"userName": "INFINIGATE_@{linkedService().pm_env}-NAV_LOAD",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "secret-tagetik-api-pw"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
+}

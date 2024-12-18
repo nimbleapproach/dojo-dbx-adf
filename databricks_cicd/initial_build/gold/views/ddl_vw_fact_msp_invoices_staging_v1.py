@@ -159,6 +159,15 @@ AND CASE WHEN
         CASE WHEN msp_h.Sys_DatabaseName ='ReportsBE' AND TO_DATE(msp_h.PostingDate) >='2024-07-01' THEN 'BE4' ELSE CONCAT(RIGHT(msp_h.Sys_DatabaseName,2 ),'1') END  
 END = e.COD_AZIENDA 
 AND lower(e.ScenarioGroup) = 'actual'
+AND e.currency =  CASE
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) IN('DE', 'FR', 'NL', 'FI', 'AT') THEN 'EUR'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'UK' THEN 'GBP'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'SE' THEN 'SEK'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'NO' THEN 'NOK'
+    WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'DK' THEN 'DKK'
+    ELSE msp_l.PurchaseCurrencyCode
+END
 
 LEFT JOIN min_fx_rate mfx ON mfx.currency =  CASE
     WHEN msp_l.PurchaseCurrencyCode = 'NaN' AND RIGHT(msp_h.Sys_DatabaseName, 2) = 'CH' THEN 'CHF'
@@ -171,5 +180,6 @@ LEFT JOIN min_fx_rate mfx ON mfx.currency =  CASE
 END
 WHERE msp_l.Sys_Silver_IsCurrent = true
 AND msp_l.sid IS NOT NULL
+--limit(100)
 """
 )

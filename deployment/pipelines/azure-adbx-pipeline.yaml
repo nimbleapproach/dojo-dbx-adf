@@ -16,18 +16,14 @@ trigger:
 pool:
   name: Azure Pipelines
 
-# on PullRequest only validating, on Merge validating an deployinh
 variables:
   - group: vg-inf-edw-deployment
   - name: displayNameValue
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-      value: "Validating"
-    ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
-      value: "Validating and Deploying into $(Build.SourceBranchName)"
+    value: "Validating and Deploying into $(Build.SourceBranchName)"
   - name: deploymentEnvironment
-    ${{ if eq(lower(variables.branchName), 'production') }}:
+    ${{ if eq(lower(variables['Build.SourceBranchName']), 'production') }}:
       value: 'prod'
-    ${{ elseif eq(lower(variables.branchName), 'testing') }}:
+    ${{ elseif eq(lower(variables['Build.SourceBranchName']), 'testing') }}:
       value: 'uat'
     ${{ else }}:
       value: 'dev'
@@ -83,19 +79,10 @@ jobs:
             export ARM_CLIENT_SECRET=$(secret-arm-edw-databricks) 
             export ARM_CLIENT_ID='6aa62720-1b89-4152-bfde-fa64831799ef'  
             
-            if [ "$(Build.Reason)" == "PullRequest" ]; then
-              # Extract target branch name for pull requests
-              BRANCH_NAME=$(System.PullRequest.TargetBranch)
-            else
-              # Use deployment env, which is determined by the branch name, for commits/merges
-              BRANCH_NAME=$(deploymentEnvironment)
-            fi
+            BRANCH_NAME=$(deploymentEnvironment)
             SUFFIX=-$BRANCH_NAME
             export BUNDLE_VAR_suffix=$SUFFIX
           }
-
-          # Print the value of the variable BRANCH_NAME
-          echo $BRANCH_NAME
 
           # Function to validate the Databricks bundle
           databricks_validate() {
@@ -114,19 +101,12 @@ jobs:
 
 
           setup_environment
+          # Print the value of the variable BRANCH_NAME
+          echo $BRANCH_NAME
           databricks_validate
+          databricks_deploy
+          databricks_deploy_ddl
 
-          if [ "$(Build.Reason)" != "PullRequest" ]; then
-            # Only deploy if the pipeline was triggered by a merge (accept pull request), not opening a pull request
-            databricks_deploy
-            databricks_deploy_ddl
-            # temp disabled
-            # run_unit_tests
-          else
-            # Only trigger if the pipeline was triggered by pull request
-            echo "Validation only when you open pull request."
-            exit 0
-          fi
         displayName: $(displayNameValue)
         workingDirectory: databricks_cicd
 

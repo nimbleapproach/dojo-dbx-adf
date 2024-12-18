@@ -28,7 +28,6 @@ SELECT DISTINCT entity_code,
                 entity_type,
                 legal_headquarters,
                 administrative_city,
-                date_established,
                 consolidation_type,
                 entity_local_currency,
                 entity_group,
@@ -45,7 +44,6 @@ SELECT entity_code,
        entity_type,
        legal_headquarters,
        administrative_city,
-       date_established,
        consolidation_type,
        entity_local_currency,
        entity_group,
@@ -62,7 +60,6 @@ SELECT entity_code,
        entity_type,
        legal_headquarters,
        administrative_city,
-       date_established,
        consolidation_type,
        entity_local_currency,
        entity_group,
@@ -79,7 +76,6 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
              a.entity_type,
              a.legal_headquarters,
              a.administrative_city,
-             a.date_established,
              a.consolidation_type,
              a.entity_local_currency,
              a.entity_group,
@@ -91,13 +87,12 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
                              TRIM(a.FLAG_AZIENDA) AS entity_type,
                              TRIM(a.SEDE_LEGALE) AS legal_headquarters,
                              TRIM(a.SEDE_AMMINISTRATIVA) AS administrative_city,
-                             CAST(TRIM(a.DATA_COSTITUZIONE) AS TIMESTAMP) AS date_established,
                              TRIM(a.TIPO_CONSOLIDAMENTO) AS consolidation_type,
                              TRIM(a.COD_VALUTA) AS entity_local_currency,
                              egm.entity_group,
                              egm.entity_code_legacy,
-                             SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_AZIENDA0), ''), COALESCE(TRIM(a.FLAG_AZIENDA), ''), COALESCE(TRIM(a.SEDE_LEGALE), ''), COALESCE(TRIM(a.SEDE_AMMINISTRATIVA), ''), COALESCE(TRIM(a.DATA_COSTITUZIONE), ''), COALESCE(TRIM(a.TIPO_CONSOLIDAMENTO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(egm.entity_group), ''), COALESCE(TRIM(egm.entity_code_legacy), '')), 256) AS entity_hash_key,
-                             CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
+                             SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_AZIENDA0), ''), COALESCE(TRIM(a.FLAG_AZIENDA), ''), COALESCE(TRIM(a.SEDE_LEGALE), ''), COALESCE(TRIM(a.SEDE_AMMINISTRATIVA), ''), COALESCE(TRIM(a.TIPO_CONSOLIDAMENTO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(egm.entity_group), ''), COALESCE(TRIM(egm.entity_code_legacy), '')), 256) AS entity_hash_key,
+                             CAST(a.DATE_UPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.azienda a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.dim_entity b
                 ON UPPER(TRIM(a.COD_AZIENDA)) = b.entity_code
@@ -110,20 +105,19 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
                               TRIM(a.FLAG_AZIENDA) AS entity_type,
                               TRIM(a.SEDE_LEGALE) AS legal_headquarters,
                               TRIM(a.SEDE_AMMINISTRATIVA) AS administrative_city,
-                              CAST(TRIM(a.DATA_COSTITUZIONE) AS TIMESTAMP) AS date_established,
                               TRIM(a.TIPO_CONSOLIDAMENTO) AS consolidation_type,
                               TRIM(a.COD_VALUTA) AS entity_local_currency,
                               egm2.entity_group,
                               egm2.entity_code_legacy,                              
-                              SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_AZIENDA0), ''), COALESCE(TRIM(a.FLAG_AZIENDA), ''), COALESCE(TRIM(a.SEDE_LEGALE), ''), COALESCE(TRIM(a.SEDE_AMMINISTRATIVA), ''), COALESCE(TRIM(a.DATA_COSTITUZIONE), ''), COALESCE(TRIM(a.TIPO_CONSOLIDAMENTO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(egm2.entity_group), ''), COALESCE(TRIM(egm2.entity_code_legacy), '')), 256) AS entity_hash_key,
-                              CAST(a.DATEUPD AS TIMESTAMP) AS date_updated
+                              SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_AZIENDA0), ''), COALESCE(TRIM(a.FLAG_AZIENDA), ''), COALESCE(TRIM(a.SEDE_LEGALE), ''), COALESCE(TRIM(a.SEDE_AMMINISTRATIVA), ''), COALESCE(TRIM(a.TIPO_CONSOLIDAMENTO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(egm2.entity_group), ''), COALESCE(TRIM(egm2.entity_code_legacy), '')), 256) AS entity_hash_key,
+                              CAST(a.DATE_UPD AS TIMESTAMP) AS date_updated
               FROM silver_{ENVIRONMENT}.tag02.azienda a
               LEFT OUTER JOIN gold_{ENVIRONMENT}.tag02.entity_group_mapping egm2
                 ON UPPER(TRIM(a.COD_AZIENDA)) = UPPER(egm2.entity_code)  
               INNER JOIN gold_{ENVIRONMENT}.tag02.dim_entity b
                 ON UPPER(TRIM(a.COD_AZIENDA)) = b.entity_code
-               AND CAST(a.DATEUPD AS TIMESTAMP) > b.start_datetime
-               AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_AZIENDA0), ''), COALESCE(TRIM(a.FLAG_AZIENDA), ''), COALESCE(TRIM(a.SEDE_LEGALE), ''), COALESCE(TRIM(a.SEDE_AMMINISTRATIVA), ''), COALESCE(TRIM(a.DATA_COSTITUZIONE), ''), COALESCE(TRIM(a.TIPO_CONSOLIDAMENTO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(egm2.entity_group), ''), COALESCE(TRIM(egm2.entity_code_legacy), '')), 256) <> b.entity_hash_key
+               AND CAST(a.DATE_UPD AS TIMESTAMP) > b.start_datetime
+               AND SHA2(CONCAT_WS(' ', COALESCE(TRIM(a.DESC_AZIENDA0), ''), COALESCE(TRIM(a.FLAG_AZIENDA), ''), COALESCE(TRIM(a.SEDE_LEGALE), ''), COALESCE(TRIM(a.SEDE_AMMINISTRATIVA), ''), COALESCE(TRIM(a.TIPO_CONSOLIDAMENTO), ''), COALESCE(TRIM(a.COD_VALUTA), ''), COALESCE(TRIM(egm2.entity_group), ''), COALESCE(TRIM(egm2.entity_code_legacy), '')), 256) <> b.entity_hash_key
                AND b.is_current = 1) a) hk) x) y) z
 """)
 
@@ -161,7 +155,6 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
 # MAGIC        entity_type,
 # MAGIC        legal_headquarters,
 # MAGIC        administrative_city,
-# MAGIC        date_established,
 # MAGIC        consolidation_type,
 # MAGIC        entity_local_currency,
 # MAGIC        entity_group,
@@ -186,13 +179,12 @@ FROM (SELECT row_number() OVER(PARTITION BY a.entity_code ORDER BY date_updated)
 
 # MAGIC %sql
 # MAGIC
-# MAGIC INSERT INTO gold_${tableObject.environment}.tag02.dim_entity (entity_code, entity_description, entity_type, legal_headquarters, administrative_city, date_established, consolidation_type, entity_local_currency, entity_group, entity_code_legacy, entity_hash_key, start_datetime, end_datetime, is_current, Sys_Gold_InsertedDateTime_UTC, Sys_Gold_ModifiedDateTime_UTC)
+# MAGIC INSERT INTO gold_${tableObject.environment}.tag02.dim_entity (entity_code, entity_description, entity_type, legal_headquarters, administrative_city, consolidation_type, entity_local_currency, entity_group, entity_code_legacy, entity_hash_key, start_datetime, end_datetime, is_current, Sys_Gold_InsertedDateTime_UTC, Sys_Gold_ModifiedDateTime_UTC)
 # MAGIC SELECT 'VU' AS entity_code, 
 # MAGIC        'Infinigate Cloud' AS entity_description, 
 # MAGIC        1 AS entity_type, 
 # MAGIC        NULL AS legal_headquarters, 
-# MAGIC        NULL AS administrative_city, 
-# MAGIC        NULL AS date_established,
+# MAGIC        NULL AS administrative_city,
 # MAGIC        NULL AS consolidation_type, 
 # MAGIC        NULL AS entity_local_currency,
 # MAGIC        'IG Cloud' AS entity_group, 

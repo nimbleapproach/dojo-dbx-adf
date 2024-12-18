@@ -38,7 +38,7 @@ CREATE OR REPLACE TABLE dati_cambio
       COMMENT 'currency code'
     ,CAMBIO_PERIODO DECIMAL(18,4)
       COMMENT 'period average rate'
-    ,DATEUPD TIMESTAMP
+    ,DATE_UPD TIMESTAMP
       COMMENT 'Last Update Timestamp'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -52,7 +52,7 @@ CREATE OR REPLACE TABLE dati_cambio
       COMMENT 'HashKey over all but Sys and DATEUPD columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
     ,Sys_Silver_IsDeleted BOOLEAN
-,CONSTRAINT dati_cambio_pk PRIMARY KEY(COD_SCENARIO,COD_PERIODO,COD_VALUTA, DATEUPD)
+,CONSTRAINT dati_cambio_pk PRIMARY KEY(COD_SCENARIO,COD_PERIODO,COD_VALUTA, DATE_UPD)
   )
 COMMENT 'Thi is table for FX rate'
 TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported')

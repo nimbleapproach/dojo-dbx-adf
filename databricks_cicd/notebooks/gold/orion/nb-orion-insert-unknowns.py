@@ -24,14 +24,23 @@ schema = 'orion'
 
 # COMMAND ----------
 
+
+# COMMAND ----------
+# 5/12 - commented outreporting_source_database, data_area_id,
 # SOURCE SYSTEM 
 # Now do the insert for DIM source system as the default members need 1 default member per source system
 spark.sql(f"""insert into {catalog}.{schema}.dim_source_system (
-  source_system,source_database,source_entity,reporting_source_database, data_area_id, start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
+  source_system,source_database,source_entity,
+  --reporting_source_database, data_area_id, 
+  start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
 )
-select source_system,source_database,source_entity,reporting_source_database, data_area_id, start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
+select source_system,source_database,source_entity,
+--reporting_source_database, data_area_id, 
+start_datetime,end_datetime,is_current,Sys_Gold_InsertedDateTime_UTC,Sys_Gold_ModifiedDateTime_UTC
 from {catalog}.{schema}.vw_dim_source_system_staging ss
-where not exists (select 1 from {catalog}.{schema}.dim_source_system s where s.source_system = ss.source_system and s.source_entity = ss.source_entity and s.data_area_id = ss.data_area_id)
+where not exists (select 1 from {catalog}.{schema}.dim_source_system s where s.source_system = ss.source_system and s.source_entity = ss.source_entity 
+--and s.data_area_id = ss.data_area_id
+)
 """)
 
 
@@ -64,7 +73,7 @@ SELECT DISTINCT
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM cte_sources s
 CROSS JOIN cte_document_sources ds
-WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_document v WHERE v.document_source = ds.document_source AND v.source_system_fk = s.source_system_pk)
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_document v WHERE v.local_document_id = 'N/A' and v.document_source = ds.document_source AND v.source_system_fk = s.source_system_pk)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_document")
 
 
@@ -82,7 +91,8 @@ cte_line_item_types as
 (
    select 'item' as line_item_type union select 'Credit Memo Line Item' union
    select 'Sales Archive Line Item' union select 'Sales Invoice Line Item' union
-   select 'MSP Line Item' union select 'N/A'
+   select 'MSP Line Item' union select 'N/A' union select 'Netsafe Line Item' union
+   select 'Starlink (Netsuite) Line Item'
    UNION
    SELECT DISTINCT concat(it.DataAreaId + ' Line Item')
    FROM silver_{ENVIRONMENT}.nuvias_operations.custvendexternalitem AS it 
@@ -101,11 +111,7 @@ SELECT DISTINCT
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM cte_sources s
 cross join cte_line_item_types li
-WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_product v 
-WHERE 
-v.product_code = CAST('N/A' AS STRING) 
-AND v.line_item_type = li.line_item_type
-AND v.source_system_fk = s.source_system_pk )
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_product v WHERE v.product_code = 'N/A' and v.source_system_fk = s.source_system_pk and li.line_item_type = v.line_item_type)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_product")
 
 
@@ -130,9 +136,7 @@ SELECT
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM cte_sources s
-WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_reseller v 
-         WHERE v.reseller_code = CAST('N/A' AS STRING) 
-            AND v.source_system_fk = s.source_system_pk)
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_reseller v WHERE v.reseller_code = 'N/A' and v.source_system_fk = s.source_system_pk)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_reseller")
 
 
@@ -157,7 +161,7 @@ SELECT
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
        CAST(NULL AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 FROM cte_sources s
-WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_vendor v WHERE v.vendor_code = CAST('N/A' AS STRING) AND v.source_system_fk = s.source_system_pk)
+WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_vendor v WHERE v.vendor_code = 'N/A' AND v.source_system_fk = s.source_system_pk)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_vendor")
 
 # COMMAND ----------

@@ -87,8 +87,9 @@ COD_CATEGORIA in (
 ,'SYN2'
  ) 
  OR COD_CATEGORIA LIKE 'IFCSYN%')
-    AND Sys_Silver_IsCurrent = 1
-    AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null)
+AND (Sys_Silver_IsCurrent = 1
+AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null))
+
   group by
     COD_PERIODO,
     COD_VALUTA,
@@ -131,8 +132,9 @@ adjustments as(
     AND (LEFT(FB.COD_CONTO, 1) IN ('3', '4'))
 -- [yz] 2024.02.21 include all manual journals categories for finance report 
     AND COD_CATEGORIA like '%ADJ%'
-    AND Sys_Silver_IsCurrent = 1
-    AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null)
+    AND (Sys_Silver_IsCurrent = 1
+    AND ( Sys_Silver_IsDeleted =0 or Sys_Silver_IsDeleted is null))
+
   group by
     COD_PERIODO,
     COD_VALUTA,

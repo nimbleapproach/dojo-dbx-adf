@@ -34,7 +34,7 @@ CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_fact_sales_invoices_nuvias_stagi
 
 WITH cte_sources AS 
 (
-  SELECT DISTINCT source_system_pk, s.data_area_id FROM {catalog}.{schema}.dim_source_system s 
+  SELECT DISTINCT source_system_pk, s.source_entity FROM {catalog}.{schema}.dim_source_system s 
   WHERE s.source_system = 'Nuvias ERP' AND s.is_current = 1
 ) ,
 min_fx_rate AS 
@@ -88,7 +88,7 @@ SELECT
   trans.DataAreaId
 FROM silver_{ENVIRONMENT}.nuvias_operations.custinvoicetrans AS trans
 
-LEFT JOIN cte_sources s on trans.dataareaid = s.data_area_id
+LEFT JOIN cte_sources s on trans.dataareaid = s.source_entity
 
 LEFT JOIN (
   SELECT InvoiceId,DataAreaId,InvoiceAccount,MAX(InvoicingName) AS InvoicingName
@@ -257,5 +257,6 @@ AND i.Currency_Code = cast(e1.Currency as string)
 
 LEFT JOIN min_fx_rate mfx 
 ON i.Currency_Code = cast(mfx.Currency as string)
+--limit(100)
 """
 )

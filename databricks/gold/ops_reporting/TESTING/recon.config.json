@@ -1,0 +1,804 @@
+{
+  "AddOn POS v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "AddOnPOSv2.0",
+      "cte-file": "AddOn.Cte.sql",
+      "main-query-file": "AddOn POS v2.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "vendor_name like 'Prolabs%' and report_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "Company": "entity",
+      "InvoiceDate": "invoice_date",
+      "CustomerName": "sales_name",
+      "CustomerAccount": "customer_account",
+      "ShipToCountry": "ship_to_country",
+      "ResellerPONumber": "reseller_po_to_infinigate",
+      "SalesOrderNumber": "d365_sales_order_number",
+      "InvoiceNumber": "invoice_number",
+      "Product": "part_code",
+      "Quantity": "quantity",
+      "CurrencyCode": "sell_currency",
+      "SalesPrice": "sales_price_usd",
+      "NSDAuthorisation": "vendor_promotion",
+      "DistriPurchasOrder": "distributer_purchase_order",
+      "POBuyPrice": "po_buy_price",
+      "POTotalBuyPrice": "po_total_buy_price",
+      "ExpectedVendorBuyPrice": "final_vendor_unit_buy_price",
+      "ClaimAmount": "claim_amount",
+      "SerialNumber": "serial_number",
+      "IntercompanySalesOrder": "intercompany_sales_order",
+      "Check": "check"
+    }
+  },
+  "Sophos POS v1.0": {
+    "report-params": [
+      "from",
+      "to"
+    ],
+    "ssrs-config": {
+      "folder": "SophosPOSv1.0",
+      "cte-file": null,
+      "main-query-file": "Sophos POS v1.0.sql",
+      "database": "NUAV_ProdTran_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "vendor_id in ('VAC001461_NGS1', 'VAC001461_NNL2') and report_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "Pos Reference Number": "d365_sales_order_number",
+      "Transaction Date": "invoice_date",
+      "Sophos Sku Code": "part_code",
+      "Partner Sku Code": "partner_id",
+      "Sales Quantity": "quantity",
+      "Serial Number(s)": "serial_numbers",
+      "Special Pricing Identifier if applicable": "special_pricing_identifier",
+      "Price Per Unit For This Deal": "price_per_unit_for_this_deal",
+      "Currency": "sell_currency",
+      "Extended Price For This Deal": "extended_price_for_this_deal",
+      "Reseller Name": "reseller_name",
+      "Reseller Address": "reseller_address",
+      "Reseller City": "reseller_city",
+      "Reseller State": "reseller_state",
+      "Reseller Zip Code": "reseller_postal_code",
+      "Reseller Country": "reseller_country",
+      "Reseller Contact - First Name": "reseller_contact_first_name",
+      "Reseller Contact - Last Name": "reseller_contact_last_name",
+      "Reseller Contact - E-mail Address": "reseller_contact_email",
+      "End-Customer Name": "end_customer_name",
+      "End-Customer Address": "end_customer_address",
+      "End-Customer City": "end_customer_city",
+      "End-Customer State": "end_customer_state",
+      "End-Customer ZIP Code": "end_customer_postal_code",
+      "End-Customer Country": "end_customer_country",
+      "End-Customer Contact – First Name ": "end_customer_contact_first_name",
+      "End-Customer Contact – Last Name": "end_customer_contact_last_name",
+      "End-Customer Contact – E-Mail Address": "end_customer_email"
+    }
+  },
+  "WatchGuard POS v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "Entity": "entity",
+      "NuviasSalesOrderNumber": "d365_sales_order_number",
+      "InvoiceDate": "financial_date",
+      "ItemID": "part_code",
+      "PartCodeDescription": "part_code_description",
+      "PartCodeCategory": "part_code_category",
+      "PartnerID": "partner_id",
+      "Qty": "quantity",
+      "SerialNumber": "serial_number",
+      "VendorPromotion": "vendor_promotion",
+      "MSPUnitCost": "mspunit_cost",
+      "MSPTotalCost": "mspunit_total_cost",
+      "NuviasNetUnitBuy": "final_vendor_unit_buy_price",
+      "NuivasNetTotalBuy": "final_vendor_total_buy_price",
+      "BillToName": "bill_to_name",
+      "BillToPostCode": "bill_to_postal_code",
+      "BillToCountry": "bill_to_country",
+      "ShipToName": "ship_to_name",
+      "ShipToCountry": "ship_to_country",
+      "ShipToPostCode": "ship_to_postal_code",
+      "EndCustomerName": "end_customer_name",
+      "EndCustomerPostCode": "end_customer_postal_code",
+      "EndCustomerCountry": "end_customer_country",
+      "CustomerPO": "reseller_po_to_infinigate",
+      "DistiPurchaseOrder": "infinigate_po_to_vendor"
+    }
+  },
+  "Extreme POS v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "InvoiceDate": "invoioce_date",
+      "PartNumber": "part_code",
+      "PartDescription": "part_code_description",
+      "Quantity": "quantity",
+      "SerialNumber": "serial_number",
+      "DANumber": "vendor_promotion",
+      "CurrencyCode": "sell_currency",
+      "ResellerNumber": "reseller_number",
+      "ResellerName": "sales_name",
+      "ResellerAddress": "reseller_address",
+      "ResellerCity": "reseller_city",
+      "ResellerState": "reseller_state",
+      "ResellerPostalCode": "reseller_postal_code",
+      "ResellerCountryCode": "reseller_country",
+      "ResellerContactName": "reseller_contact_first_name",
+      "ResellerPhoneNumber": "reseller_contact_phone_number",
+      "EndUserNumber": "end_customer_number",
+      "EndUserName": "end_customer_name",
+      "EndUserAddress": "end_customer_address",
+      "EndUserCity": "end_customer_city",
+      "EndUserState": "end_customer_state",
+      "EndUserPostalCode": "end_customer_postal_code",
+      "EndUserCountryCode": "end_customer_country",
+      "EndUserContactName": "end_customer_contact",
+      "EnduserEmail": "end_customer_email",
+      "EndUserPhoneNumber": "end_customer_phone_number",
+      "ResellerPONumber": "reseller_po_to_infinigate",
+      "Amount": "claim_amount",
+      "DistributorName": "distributor_name",
+      "CountryOfPurchase": "country_of_purchase",
+      "DistributorInvoiceNumber": "invoice_number",
+      "custom1": "custom1",
+      "custom2": "custom2"
+    }
+  },
+  "Fortinet POS v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "Date": "invoioce_date",
+      "PartNumber": "part_code",
+      "FortinetPOSID": "partner_id",
+      "Qty": "quantity",
+      "SerialNumber": "serial_number",
+      "ResaleCurrency": "sell_currency",
+      "ResellerName": "reseller_name",
+      "ResellerCountry": "reseller_country",
+      "EndUserCompanyName": "end_customer_name",
+      "EndUserAddress": "end_customer_address1",
+      "EndUserCity": "end_customer_city",
+      "EndUserZipCode": "end_customer_postal_code",
+      "EndUserCountry": "end_customer_country",
+      "EndUserFirstName": "end_customer_contact_first_name",
+      "EndUserLastName": "end_customer_contact_last_name",
+      "EndUserEmailAddress": "end_customer_email",
+      "EndUserPhoneNumber": "end_customer_phone_number",
+      "PONumber": "infinigate_po_to_vendor",
+      "USDDistiUnitBuyPrice": "usd_disti_unit_buy_price",
+      "UnitResalePrice": "sales_price",
+      "OrderType": "order_type",
+      "BusinessType": "sales_order_type"
+    }
+  },
+  "Juniper POS v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "ResaleSalesOrderNumber": "d365_sales_order_number",
+      "ResaleInvoiceDate": "invoioce_date",
+      "ProductJuniperPartNumber": "part_code",
+      "ItemGroup": "part_code_category",
+      "JuniperVARID1": "partner_id",
+      "ProductQuantity": "quantity",
+      "ProductSerialNumber": "serial_number",
+      "SpecialPricingAuthorization": "vendor_promotion",
+      "NetPOS(ProductUnitPrice)": "final_vendor_unit_buy_price",
+      "ResellerVARName": "sales_name",
+      "ResellerVARAddress1": "reseller_address1",
+      "ResellerVARAddress2": "reseller_address2",
+      "ResellerVARAddress3": "reseller_address3",
+      "ResellerVARACity": "reseller_city",
+      "ResellerVARStateProvince": "reseller_state",
+      "ResellerVARPostalCode": "reseller_postal_code",
+      "ResellerVARCountryCode": "reseller_country",
+      "ShipToName": "ship_to_name",
+      "ShipToCountryCode": "ship_to_country",
+      "ShipToPostalCode": "ship_to_postal_code",
+      "ShipToAddress1": "ship_to_address1",
+      "ShipToAddress2": "ship_to_address2",
+      "ShipToAddress3": "ship_to_address3",
+      "ShipToCity": "ship_to_city",
+      "ShipToStateProvince": "ship_to_state",
+      "EndUserName": "end_customer_name",
+      "EndUserAddress1": "end_customer_address1",
+      "EndUserAddress2": "end_customer_address2",
+      "EndUserCity": "end_customer_city",
+      "EndUserStateProvince": "end_customer_state",
+      "EndUserPostalCode": "end_customer_postal_code",
+      "EndUserCountryCode": "end_customer_country",
+      "ResellerPONumber": "reseller_po_to_infinigate",
+      "DistributorPurchaseOrder": "infinigate_po_to_vendor",
+      "ResaleInvoiceNumber": "invoice_number",
+      "DistributerIDNumber": "distributer_id_number",
+      "DistributerTransactionType": "distributer_transaction_type",
+      "ExportLicenceNumber": "export_licence_number",
+      "BusinessModel1": "business_model1",
+      "BusinessModel2": "business_model2",
+      "JuniperVARID2": "juniper_var_id2",
+      "Warehouse": "warehouse"
+    }
+  },
+  "Mist POS v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "ResaleSalesOrderNumber": "d365_sales_order_number",
+      "ResaleInvoiceDate": "invoioce_date",
+      "ProductJuniperPartNumber": "part_code",
+      "JuniperVARID1": "partner_id",
+      "ProductQuantity": "quantity",
+      "ProductSerialNumber": "serial_number",
+      "SpecialPricingAuthorization": "vendor_promotion",
+      "CurrencyCode": "sell_currency",
+      "NetPOS(ProductUnitPrice)": "final_vendor_unit_buy_price",
+      "ResellerVARName": "sales_name",
+      "ResellerVARAddress1": "reseller_address1",
+      "ResellerVARAddress2": "reseller_address2",
+      "ResellerVARAddress3": "reseller_address3",
+      "ResellerVARACity": "reseller_city",
+      "ResellerVARStateProvince": "reseller_state",
+      "ResellerVARPostalCode": "reseller_postal_code",
+      "ResellerVARCountryCode": "reseller_country",
+      "ShipToName": "ship_to_name",
+      "ShipToCountryCode": "ship_to_country",
+      "ShipToPostalCode": "ship_to_postal_code",
+      "ShipToAddress1": "ship_to_address1",
+      "ShipToAddress2": "ship_to_address2",
+      "ShipToAddress3": "ship_to_address3",
+      "ShipToCity": "ship_to_city",
+      "ShipToStateProvince": "ship_to_state",
+      "EndUserName": "end_customer_name",
+      "EndUserAddress1": "end_customer_address1",
+      "EndUserAddress2": "end_customer_address2",
+      "EndUserCity": "end_customer_city",
+      "EndUserStateProvince": "end_customer_state",
+      "EndUserPostalCode": "end_customer_postal_code",
+      "EndUserCountryCode": "end_customer_country",
+      "ResellerPONumber": "reseller_po_to_infinigate",
+      "DistributorPurchaseOrder": "infinigate_po_to_vendor",
+      "ShipAndDebit": "ship_and_debit",
+      "ResaleInvoiceNumber": "invoice_number",
+      "UnitPrice": "sales_price",
+      "DistributerIDNumber": "distributer_id_number",
+      "DistributerTransactionType": "distributer_transaction_type",
+      "ExportLicenceNumber": "export_licence_number",
+      "BusinessModel1": "business_model1",
+      "BusinessModel2": "business_model2",
+      "JuniperVARID2": "juniper_var_id2",
+      "Warehouse": "warehouse",
+      "DistributorIDNo2": "distributer_id_no2"
+    }
+  },
+  "Cambium POS v2.1": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "SalesOrder": "d365_sales_order_number",
+      "ReportingCompanyBillDate": "invoioce_date",
+      "CambiumPartNumber": "part_code",
+      "QuantitySold": "quantity",
+      "ClaimID": "vendor_promotion",
+      "InvoiceCurrency": "sell_currency",
+      "PurchasePrice": "final_vendor_unit_buy_price",
+      "BillToName": "reseller_name",
+      "BillToAddress": "reseller_address",
+      "BillToCity": "reseller_city",
+      "BillToState": "reseller_state",
+      "BillToPostalCode": "reseller_postal_code",
+      "BillToCountry": "reseller_country",
+      "EndUserName": "end_customer_name",
+      "EndUserAddress": "end_customer_address",
+      "EndUserCity": "end_customer_city",
+      "EndUserState": "end_customer_state",
+      "EndUserCountry": "end_customer_country",
+      "ClaimAmount": "claim_amount",
+      "ReportingPartnerName": "distributor_name",
+      "ReportingCompanyInvoiceNumber": "invoice_number",
+      "UnitSalesPrice": "sales_price",
+      "UnitSalesPriceUSD": "sales_price_usd",
+      "PurchaseOrder": "distributer_purchase_order",
+      "ExchangeRate": "exchange_rate",
+      "IntercompanySalesOrder": "intercompany_sales_order"
+    }
+  },
+  "Nokia POS v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "SalesOrderNumber": "d365_sales_order_number",
+      "InvoiceDate": "invoioce_date",
+      "PartCode": "part_code",
+      "ProductDescription": "part_code_description",
+      "Quantity": "quantity",
+      "ProductSerial": "serial_number",
+      "SandDRef": "vendor_promotion",
+      "CustomerName": "reseller_name",
+      "CustomerAddress": "reseller_address",
+      "CustomerPostalCode": "reseller_postal_code",
+      "CustomerCountry": "reseller_country",
+      "EndUserName": "end_customer_name",
+      "EndUserStreet1": "end_customer_address1",
+      "EndUserPostalCode": "end_customer_postal_code",
+      "EndUserCountry": "end_customer_country",
+      "DistributorPurchaseOrderNumber": "infinigate_po_to_vendor",
+      "InvoiceNumber": "invoice_number",
+      "Blank1": "custom1",
+      "Blank2": "custom2",
+      "IntercompanySalesOrder": "intercompany_sales_order",
+      "AccountName": "distributor_account_name",
+      "SalesOrderDate": "sales_order_date",
+      "ProductCostEUR": "product_cost_eur",
+      "Blank3": "blank3",
+      "Blank4": "blank4"
+    }
+  },
+  "Yubico POS v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "ORDER": "d365_sales_order_number",
+      "INVOICE DATE": "invoioce_date",
+      "PRODUCT": "part_code",
+      "PRODUCT DESCRIPTION": "part_code_description",
+      "QUANTITY": "quantity",
+      "INVOICE CURRENCY": "sell_currency",
+      "PURCHASE ORDER BUY PRICE - UNIT": "final_vendor_unit_buy_price",
+      "PURCHASE ORDER BUY PRICE - UNIT 2": "final_vendor_unit_buy_price_2",
+      "RESELLER (ACCOUNT NAME)": "reseller_name",
+      "RESELLER (COUNTRY)": "reseller_country",
+      "END CUSTOMER (ACCOUNT NAME)": "end_customer_name",
+      "END CUSTOMER (COUNTRY)": "end_customer_country",
+      "PO": "reseller_po_to_infinigate",
+      "PURCHASE ORDER": "infinigate_po_to_vendor",
+      "UNIT SALE PRICE": "sales_price",
+      "DISTRIBUTOR (ACCOUNT NAME)": "distributor_account_name",
+      "DISTRIBUTOR (DOMAIN)": "distributor_domain",
+      "DISTRIBUTOR (COUNTRY)": "distributor_country",
+      "RESELLER (DOMAIN)": "reseller_email",
+      "END CUSTOMER (DOMAIN)": "end_customer_domain"
+    }
+  },
+  "Yubico POS Report v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "Product": "part_code",
+      "Quantity": "quantity",
+      "Reseller (AccountName)": "sales_name",
+      "Reseller (Country)": "reseller_country",
+      "End Customer (Account Name)": "end_customer_name",
+      "End Customer (Country)": "end_customer_country",
+      "PO": "reseller_po_to_infinigate",
+      "Distributor(Account Name)": "distributor_account_name",
+      "Order Date": "order_date",
+      "Distributor (Domain)": "distributor_domain",
+      "Distribtutor (Country)": "distributor_country",
+      " Reseller (Domain)": "reseller_email",
+      "End Customer (Domain)": "end_customer_domain"
+    }
+  },
+  "SmartOptics POS v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "FinancialDate": "invoioce_date",
+      "CustomerAccount": "customer_account",
+      "ProductName": "part_code",
+      "Quantity": "quantity",
+      "SerialNumber": "serial_number",
+      "SalesOrderCurrency": "sell_currency",
+      "CustomerName": "reseller_name",
+      "SalesInvoiceUnitPrice": "sales_price",
+      "SalesInvoiceUnitPriceUSD": "sales_price_usd",
+      "ProductUnitPriceUSD": "sales_price_total_usd",
+      "ExchangeRate": "exchange_rate"
+    }
+  },
+  "Versa POS v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "SalesOrder": "d365_sales_order_number",
+      "Shipping Date": "shipping_date",
+      "Versa Model#": "part_code",
+      "S/N": "serial_number",
+      "CustomerName": "end_customer_name",
+      "CustomerAddress": "end_customer_address",
+      "Country": "end_customer_country",
+      "CustomerContactEmail": "end_customer_email",
+      "SLA": "sla",
+      "RMA Support": "rma_support",
+      "OEMName": "oem_name",
+      "OEMPartNumber": "oem_part_number",
+      "PO Number (Hardware/Support)": "po_number_hardware_support",
+      "Partner Email ID ": "reseller_email"
+    }
+  },
+  "Versa POS v1.2 Extrenal": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "SalesOrder": "d365_sales_order_number",
+      "ShippingDate": "shipping_date",
+      "ItemId": "part_code_id",
+      "VersaModelNumber": "part_code",
+      "SerialNumber": "serial_number",
+      "CustomerName": "end_customer_name",
+      "Country": "end_customer_country",
+      "CustomerContactEmail": "end_customer_email",
+      "PONumber": "infinigate_po_to_vendor",
+      "OEMName": "oem_name",
+      "OEMPartNumber": "oem_part_number",
+      "ShippingLegalEntity": "shipping_legal_entity",
+      "PartnerEmail": "reseller_email"
+    }
+  },
+  "SonicWall_POS v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "InvoiceDate": "invoioce_date",
+      "BuyingCustomerCustNumber": "customer_account",
+      "VendorPN": "part_code",
+      "ItemDesc": "part_code_description",
+      "BuyingCustomerPartner-Id": "partner_id",
+      "ItemQty": "quantity",
+      "SerialNumber": "serial_number",
+      "SpecialPricingRequest(SPR-XXXXXXX)": "vendor_promotion",
+      "CurrentDistiCost": "mspunit_cost",
+      "ExtDistiCost": "mspunit_total_cost",
+      "BuyingCustomerName": "sales_name",
+      "BuyingCustomerAddress1": "reseller_address1",
+      "BuyingCustomerAddress2": "reseller_address2",
+      "BuyingCustomerCity": "reseller_city",
+      "BuyingCustomerState": "reseller_state",
+      "BuyingCustomerPostalCode": "reseller_postal_code",
+      "BuyingCustomerCountry": "reseller_country",
+      "ShipToCustomerName": "ship_to_name",
+      "ShipToCustomerCountry": "ship_to_country",
+      "ShipToCustomerPostalCode": "ship_to_postal_code",
+      "ShipToCustomerAddress1": "ship_to_address1",
+      "ShipToCustomerAddress2": "ship_to_address2",
+      "ShipToCustomerCity": "ship_to_city",
+      "ShipToCustomerState": "ship_to_state",
+      "EndUserCompanyName": "end_customer_name",
+      "EndUserAddress1": "end_customer_address1",
+      "EndUserAddress2": "end_customer_address2",
+      "EndUserCity": "end_customer_city",
+      "EndUserState": "end_customer_state",
+      "EndUserPostalCode": "end_customer_postal_code",
+      "EndUserCountry": "end_customer_country",
+      "EndUserFirstName": "end_customer_contact_first_name",
+      "EndUserLastName": "end_customer_contact_last_name",
+      "EndUserEmailAddress": "end_customer_email",
+      "EndUserTelephoneNumber": "end_customer_phone_number",
+      "PoNumber": "reseller_po_to_infinigate",
+      "PoToSnwlNumber": "infinigate_po_to_vendor",
+      "InvoiceNumber": "invoice_number",
+      "SnwlPnSku": "snwl_pn_sku",
+      "LineItem": "line_item"
+    }
+  },
+  "Jabil POS v1.2": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "TODO",
+      "cte-file": "TODO",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "TODO"
+    },
+    "column-mapping": {
+      "Ship Date": "shipping_date",
+      "Product # ": "part_code",
+      "Quantity": "quantity",
+      "S/N": "serial_number",
+      "Purchase Price (USD)": "purchase_price_usd",
+      "Purchase Extended Price": "purchase_extended_price",
+      "Bill To Customer Name": "sales_name",
+      "Bill To Country": "reseller_country",
+      "Ship To Customer Name": "ship_to_name",
+      "Ship To Country": "ship_to_country",
+      "Ship To Zip Code": "ship_to_postal_code",
+      "Ship To Address -1": "ship_to_address1",
+      "Ship To Address -2": "ship_to_address2",
+      "Ship To City": "ship_to_city",
+      "Ship To County/Province": "ship_to_state",
+      "End User Name Details": "end_customer_name",
+      "End User Address -1": "end_customer_address1",
+      "End User Address -2": "end_customer_address2",
+      "End User City": "end_customer_city",
+      "End User County/Province": "end_customer_state",
+      "End User Postal Code": "end_customer_postal_code",
+      "End User Country": "end_customer_country",
+      "PO Number": "infinigate_po_to_vendor",
+      "Ship To State": "ship_to_state_jabil",
+      "End User State": "end_customer_state_jabil"
+    }
+  }
+}
