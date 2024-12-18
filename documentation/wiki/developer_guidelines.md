@@ -9,7 +9,7 @@ We will start with general information, proceeding with more tool specific detai
 
 ## General Information
 
-Whenever available we try to follow vendor specific guidelines. So if we have no costum rules then please look up the vendor specific guidelines.
+Whenever available we try to follow vendor specific guidelines. So if we have no custom rules then please look up the vendor specific guidelines.
 
 For Azure Microsoft provides a lot of information on that where the most important ones can be found under [Azure security best practices and patterns](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-areas).
 
