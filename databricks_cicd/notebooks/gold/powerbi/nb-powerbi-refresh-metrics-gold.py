@@ -47,8 +47,8 @@ starting_attempt_cols = attempts_table.columns
 updated_attempt_cols = [x[0].upper() + x[1:] for x in starting_attempt_cols]
 attempts_table_renamed = attempts_table.toDF(*updated_attempt_cols)
 
-attempts_table_renamed = (attempts_table_renamed.withColumn("startTime", F.col("startTime").cast("timestamp"))
-                          .withColumn("endTime", F.col("endTime").cast("timestamp")))
+attempts_table_renamed = (attempts_table_renamed.withColumn("StartTime", F.col("StartTime").cast("timestamp"))
+                          .withColumn("EndTime", F.col("EndTime").cast("timestamp")))
 
 attempts_table_renamed.write.format("delta").mode("append").saveAsTable(f"gold_{ENVIRONMENT}.powerbi.fact_refresh_attempts")
 
