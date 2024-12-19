@@ -1,0 +1,57 @@
+SELECT 
+	'Nuvias Global Services Ltd'					AS [DISTRIBUTOR (ACCOUNT NAME)]
+	,'www.nuvias.com'							AS [DISTRIBUTOR (DOMAIN)]
+	,'GB'										AS [DISTRIBUTOR (COUNTRY)]
+	,ca.CustomerName							AS [RESELLER (ACCOUNT NAME)]
+	,sh.SAG_RESELLEREMAILADDRESS				AS [RESELLER (DOMAIN)]
+	,ca.AddressCountryISO2						AS [RESELLER (COUNTRY)]
+	,sh.SAG_EUADDRESS_NAME						AS [END CUSTOMER (ACCOUNT NAME)]
+	,''											AS [END CUSTOMER (DOMAIN)]
+	,sh.SAG_EUADDRESS_COUNTRY					AS [END CUSTOMER (COUNTRY)]
+	,sh.CUSTOMERREF								AS [PO]
+	,CAST(it.DATEPHYSICAL as date)				AS [INVOICE DATE]
+	,di.ItemName								AS [PRODUCT]
+	,di.ItemDescription							AS [PRODUCT DESCRIPTION]
+	,(-1 * it.QTY)								AS [QUANTITY]
+	--,it.INVENTSERIALID							AS []
+	,sl.CURRENCYCODE							AS [INVOICE CURRENCY]
+	,sl.SALESPRICE								AS [UNIT SALE PRICE]
+	,sp.PurchTableID_InterComp					AS [PURCHASE ORDER]
+	,sl.SALESID									AS [ORDER]
+	,pl.PURCHPRICE								AS [PURCHASE ORDER BUY PRICE - UNIT]
+	,sl.SAG_PURCHPRICE							AS [PURCHASE ORDER BUY PRICE - UNIT 2]
+		--,it.STATUSISSUE
+	--sl.DATAAREAID
+	--,it.DATEPHYSICAL
+FROM SAG_SalesLineV2Staging sl
+	LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID
+	LEFT JOIN SAG_InventTransStaging it ON it.INVENTTRANSID = sl.INVENTTRANSID AND it.DATAAREAID = sl.DATAAREAID AND STATUSISSUE IN ('1', '3')
+	LEFT JOIN ara.SO_PO_ID_List sp ON sp.SalesLineID_Local = sl.INVENTTRANSID
+	LEFT JOIN v_DistinctItems di ON di.ItemID = sl.ITEMID AND di.CompanyID = CASE WHEN sl.DATAAREAID = 'NUK1' THEN 'NGS1' WHEN sl.DATAAREAID != 'NUK1' THEN 'NNL2'  END
+	LEFT JOIN custadd ca ON ca.CustomerAccountNumber = sh.CUSTACCOUNT
+	LEFT JOIN SAG_PurchLineStaging pl ON pl.INVENTTRANSID = sp.PurchLineID_InterComp AND pl.ITEMID = sl.ITEMID
+WHERE 
+	it.DATEPHYSICAL BETWEEN @from and @to
+	AND sl.DATAAREAID NOT IN( 'NGS1','NNL2')
+	AND ((di.PrimaryVendorID = 'VAC001388_NGS1') --Yubico account in D365 for NGS1 and NNL2
+		OR (di.PrimaryVendorID = 'VAC001388_NGS1'))
+GROUP BY
+	ca.CustomerName
+	,sh.SAG_RESELLEREMAILADDRESS
+	,ca.AddressCountryISO2	
+	,sh.SAG_EUADDRESS_NAME
+	,sh.SAG_EUADDRESS_COUNTRY
+	,sh.CUSTOMERREF
+	,it.DATEPHYSICAL
+	,di.ItemName
+	,di.ItemDescription
+	,it.QTY
+	,sl.CURRENCYCODE
+	,sl.SALESPRICE
+	,sp.PurchTableID_InterComp	
+	,sl.SALESID	
+	--,it.STATUSISSUE
+	--sl.DATAAREAID
+	--,it.DATEPHYSICAL
+	,pl.PURCHPRICE
+	,sl.SAG_PURCHPRICE
