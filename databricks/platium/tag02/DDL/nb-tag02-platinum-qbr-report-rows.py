@@ -37,7 +37,7 @@ TableRowConfig = namedtuple(
 actuals_cte = """actuals AS (
   SELECT hier.*, region.Country, trans.Date, trans.monthly_revenue_in_euros
   FROM qbr_account_description_hierarchy hier
-    JOIN tagetik_revenue_actuals trans
+    JOIN tagetik_revenue_actuals_intra_month trans
     ON hier.account_id = trans.account_code
     JOIN region
     ON trans.region_code = region.region_code
