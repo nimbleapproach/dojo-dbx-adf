@@ -104,20 +104,123 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "WatchGuardPOSv2.0",
+      "cte-file": null,
+      "main-query-file": "WatchGuard POS v2.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
-        "to": "cast('@to' as date)"
+        "to": "cast('@to' as date)",
+        "entity": "@entity"
       }
     },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "vendor_name like 'WatchGuard%' and entity in (@entity) and report_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "Entity": "entity",
+      "NuviasSalesOrderNumber": "d365_sales_order_number",
+      "InvoiceDate": "financial_date",
+      "ItemID": "part_code",
+      "PartCodeDescription": "part_code_description",
+      "PartCodeCategory": "part_code_category",
+      "PartnerID": "partner_id",
+      "Qty": "quantity",
+      "SerialNumber": "serial_number",
+      "VendorPromotion": "vendor_promotion",
+      "MSPUnitCost": "mspunit_cost",
+      "MSPTotalCost": "mspunit_total_cost",
+      "NuviasNetUnitBuy": "final_vendor_unit_buy_price",
+      "NuivasNetTotalBuy": "final_vendor_total_buy_price",
+      "BillToName": "bill_to_name",
+      "BillToPostCode": "bill_to_postal_code",
+      "BillToCountry": "bill_to_country",
+      "ShipToName": "ship_to_name",
+      "ShipToCountry": "ship_to_country",
+      "ShipToPostCode": "ship_to_postal_code",
+      "EndCustomerName": "end_customer_name",
+      "EndCustomerPostCode": "end_customer_postal_code",
+      "EndCustomerCountry": "end_customer_country",
+      "CustomerPO": "reseller_po_to_infinigate",
+      "DistiPurchaseOrder": "infinigate_po_to_vendor"
+    }
+  },
+  "WatchGuard POS_Monthly v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "WatchGuardPOS_Monthlyv2.0",
+      "cte-file": null,
+      "main-query-file": "WatchGuard POS_Monthly v2.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)",
+        "entity": "@entity"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "vendor_name like 'WatchGuard%' and entity in (@entity) and report_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "Entity": "entity",
+      "NuviasSalesOrderNumber": "d365_sales_order_number",
+      "InvoiceDate": "financial_date",
+      "ItemID": "part_code",
+      "PartCodeDescription": "part_code_description",
+      "PartCodeCategory": "part_code_category",
+      "PartnerID": "partner_id",
+      "Qty": "quantity",
+      "SerialNumber": "serial_number",
+      "VendorPromotion": "vendor_promotion",
+      "MSPUnitCost": "mspunit_cost",
+      "MSPTotalCost": "mspunit_total_cost",
+      "NuviasNetUnitBuy": "final_vendor_unit_buy_price",
+      "NuivasNetTotalBuy": "final_vendor_total_buy_price",
+      "BillToName": "bill_to_name",
+      "BillToPostCode": "bill_to_postal_code",
+      "BillToCountry": "bill_to_country",
+      "ShipToName": "ship_to_name",
+      "ShipToCountry": "ship_to_country",
+      "ShipToPostCode": "ship_to_postal_code",
+      "EndCustomerName": "end_customer_name",
+      "EndCustomerPostCode": "end_customer_postal_code",
+      "EndCustomerCountry": "end_customer_country",
+      "CustomerPO": "reseller_po_to_infinigate",
+      "DistiPurchaseOrder": "infinigate_po_to_vendor"
+    }
+  },
+  "WatchGuard POS_Weekly v2.0": {
+    "report-params": [
+      "from",
+      "to",
+      "entity"
+    ],
+    "ssrs-config": {
+      "folder": "WatchGuardPOS_Weeklyv2.0",
+      "cte-file": null,
+      "main-query-file": "WatchGuard POS_Weekly v2.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)",
+        "entity": "@entity"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_common",
+      "predicate": "vendor_name like 'WatchGuard%' and entity in (@entity) and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "Entity": "entity",
@@ -150,13 +253,12 @@
   "Extreme POS v1.0": {
     "report-params": [
       "from",
-      "to",
-      "entity"
+      "to"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "ExtremePOSv1.0",
+      "cte-file": "Extreme.Cte.sql",
+      "main-query-file": "Extreme POS v1.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -167,7 +269,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "vendor_id in ('VAC001044_NGS1') and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "InvoiceDate": "invoioce_date",
@@ -212,9 +314,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "FortinetPOSv2.0",
+      "cte-file": "Fortinet.Cte.sql",
+      "main-query-file": "Fortinet POS v2.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -225,7 +327,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "vendor_name like 'Fortinet%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "Date": "invoioce_date",
@@ -259,9 +361,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "JuniperPOSv2.0",
+      "cte-file": "Juniper.Cte.sql",
+      "main-query-file": "Juniper POS v2.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -272,7 +374,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "vendor_name like 'Juniper%' and vendor_id not in ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2') and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "d365_sales_order_number",
@@ -326,9 +428,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "MistPOSv1.0",
+      "cte-file":  "Mist.Cte.sql",
+      "main-query-file": "Mist POS v1.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -339,7 +441,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "(vendor_id like 'VAC000904_%' or vendor_id like 'VAC001110_%') and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "d365_sales_order_number",
@@ -396,9 +498,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "CambiumPOSv2.1",
+      "cte-file": "Cambium.Cte.sql",
+      "main-query-file": "Cambium POS v2.1.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -409,7 +511,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+       "predicate": "vendor_id in ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "SalesOrder": "d365_sales_order_number",
@@ -447,9 +549,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "NokiaPOSv2.0",
+      "cte-file": "Nokia.Cte.sql",
+      "main-query-file": "Nokia POS v2.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -460,7 +562,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "vendor_name like 'Nokia%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "SalesOrderNumber": "d365_sales_order_number",
@@ -497,9 +599,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "YubicoPOSv1.0",
+      "cte-file": "Yubico.Cte.sql",
+      "main-query-file": "Yubico POS v1.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -510,7 +612,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "(vendor_id in ('VAC001388_NGS1') or vendor_id in ('VAC001388_NGS1')) and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "ORDER": "d365_sales_order_number",
@@ -542,9 +644,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "YubicoPOSReportv1.0",
+      "cte-file": null,
+      "main-query-file": "Yubico POS Report v1.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -555,7 +657,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "vendor_id in ('VAC001358_NGS1') and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "Product": "part_code",
@@ -569,7 +671,7 @@
       "Order Date": "order_date",
       "Distributor (Domain)": "distributor_domain",
       "Distribtutor (Country)": "distributor_country",
-      " Reseller (Domain)": "reseller_email",
+      "Reseller (Domain)": "reseller_email",
       "End Customer (Domain)": "end_customer_domain"
     }
   },
@@ -580,9 +682,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "SmartOpticsPOSv2.0",
+      "cte-file": "SmartOptics.Cte.sql",
+      "main-query-file": "SmartOptics POS v2.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -593,7 +695,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "vendor_name like 'Smart Optics%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "FinancialDate": "invoioce_date",
@@ -609,45 +711,6 @@
       "ExchangeRate": "exchange_rate"
     }
   },
-  "Versa POS v1.0": {
-    "report-params": [
-      "from",
-      "to",
-      "entity"
-    ],
-    "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
-      "database": "NUAV_Prod_SQLBYOD",
-      "param-customizations": {
-        "from": "cast('@from' as date)",
-        "to": "cast('@to' as date)"
-      }
-    },
-    "databricks-config": {
-      "object-layer": "gold",
-      "object-schema": "ops_reporting",
-      "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
-    },
-    "column-mapping": {
-      "SalesOrder": "d365_sales_order_number",
-      "Shipping Date": "shipping_date",
-      "Versa Model#": "part_code",
-      "S/N": "serial_number",
-      "CustomerName": "end_customer_name",
-      "CustomerAddress": "end_customer_address",
-      "Country": "end_customer_country",
-      "CustomerContactEmail": "end_customer_email",
-      "SLA": "sla",
-      "RMA Support": "rma_support",
-      "OEMName": "oem_name",
-      "OEMPartNumber": "oem_part_number",
-      "PO Number (Hardware/Support)": "po_number_hardware_support",
-      "Partner Email ID ": "reseller_email"
-    }
-  },
   "Versa POS v1.2 Extrenal": {
     "report-params": [
       "from",
@@ -655,9 +718,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "VersaPOSv1.2External",
+      "cte-file": null,
+      "main-query-file": "Versa POS v1.2 External.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -668,7 +731,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "(vendor_id in ('VAC000850_NGS1') or vendor_id in ('VAC000850_NNL2')) and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "SalesOrder": "d365_sales_order_number",
@@ -693,9 +756,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "SonicWall_POS_V1.0",
+      "cte-file": "SonicWall.Cte.sql",
+      "main-query-file": "SonicWall_POS_V1.0.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -706,7 +769,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "(vendor_id in ('VAC001400_NGS1') or vendor_id in ('VAC001401_NGS1') or vendor_id in ('VAC001443_NGS1') or vendor_id in ('VAC001400_NNL2') or vendor_id in ('VAC001401_NNL2') or vendor_id in ('VAC001443_NNL2')) and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "InvoiceDate": "invoioce_date",
@@ -758,9 +821,9 @@
       "entity"
     ],
     "ssrs-config": {
-      "folder": "TODO",
-      "cte-file": "TODO",
-      "main-query-file": "TODO",
+      "folder": "JabilPOSv1.2",
+      "cte-file": null,
+      "main-query-file": "Jabil POS v1.2.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -771,7 +834,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "TODO"
+      "predicate": "(vendor_id in ('VAC001208_NGS1') or vendor_id in ('VAC001208_NNL2')) and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "Ship Date": "shipping_date",
@@ -799,6 +862,504 @@
       "PO Number": "infinigate_po_to_vendor",
       "Ship To State": "ship_to_state_jabil",
       "End User State": "end_customer_state_jabil"
+    }
+  },
+  "Cambium POS (CSC Data Only) v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "CambiumPOSCSCDataOnlyv1.0",
+      "cte-file": "Cambium.Cte.sql",
+      "main-query-file": "Cambium POS CSC Data Only v1.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_id in ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "SalesOrder": "nuvias_sales_order_number",
+      "PurchaseOrder": "nuvias_purchase_order",
+      "NavisionSalesOrder": "navision_sales_order_number",
+      "ReportingCompanyBillDate": "navision_invoice_date",
+      "CambiumPartNumber": "navision_part_code_id",
+      "QuantitySold": "navision_quantity",
+      "VendorReferenceNumber": "nuvias_vendor_promotion",
+      "InvoiceCurrency": "navision_sell_currency",
+      "PurchasePrice": "nuvias_purchase_price",
+      "BillToName": "navision_reseller_name",
+      "BillToAddress": "navision_reseller_address",
+      "BillToCity": "navision_reseller_city",
+      "BillToState": "navision_reseller_state",
+      "BillToPostalCode": "navision_reseller_postal_code",
+      "BillToCountry": "navision_reseller_country",
+      "EndUserName": "navision_end_customer_name",
+      "EndUserAddress": "navision_end_customer_address",
+      "EndUserCity": "navision_end_customer_city",
+      "EndUserState": "navision_end_customer_state",
+      "EndUserCountry": "navision_end_customer_country",
+      "ClaimAmount": "claim_amount",
+      "ReportingPartnerName": "distributor_name",
+      "ReportingCompanyInvoiceNumber": "navision_invoice_number",
+      "UnitSalesPrice": "navision_sales_price",
+      "UnitSalesPriceUSD": "sales_price_usd",
+      "ExchangeRate": "exchange_rate"
+    }
+  },
+  "Juniper POS (CSC Data Only)": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "JuniperPOSCSCDataOnly",
+      "cte-file": "Juniper.Cte.sql",
+      "main-query-file": "Juniper POS CSC Data Only.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_name LIKE 'Juniper%' and nuvias_vendor_id not in ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "ResaleSalesOrderNumber": "nuvias_sales_order_number",
+      "DistributorPurchaseOrder": "nuvias_purchase_order",
+      "NavsionSalesOrderNumber": "navision_sales_order_number",
+      "ResaleInvoiceDate": "navision_invoice_date",
+      "ProductJuniperPartNumber": "navision_part_code_id",
+      "JuniperVARID1": "nuvias_partner_id",
+      "ProductQuantity": "navision_quantity",
+      "ProductSerialNumber": "navision_serial_number",
+      "VendorReferenceNumber": "nuvias_vendor_promotion",
+      "SpecialPricingAuthorization": "navision_vendor_additional_discount1",
+      "NetPOS(ProductUnitPrice)": "nuvias_purchase_price",
+      "InfingateBuy": "navision_vendor_buy_price",
+      "ResellerVARName": "navision_reseller_name",
+      "ResellerVARAddress1": "navision_reseller_address1",
+      "ResellerVARAddress2": "navision_reseller_address2",
+      "ResellerVARAddress3": "navision_reseller_address3",
+      "ResellerVARACity": "navision_reseller_city",
+      "ResellerVARStateProvince": "navision_reseller_state",
+      "ResellerVARPostalCode": "navision_reseller_postal_code",
+      "ResellerVARCountryCode": "navision_reseller_country",
+      "ShipToName": "navision_ship_to_name",
+      "ShipToCountryCode": "navision_ship_to_country",
+      "ShipToPostalCode": "navision_ship_to_postal_code",
+      "ShipToAddress1": "navision_ship_to_address1",
+      "ShipToAddress2": "navision_ship_to_address2",
+      "ShipToAddress3": "navision_ship_to_address3",
+      "ShipToCity": "navision_ship_to_city",
+      "ShipToStateProvince": "navision_ship_to_state",
+      "EndUserName": "navision_end_customer_name",
+      "EndUserAddress1": "navision_end_customer_address1",
+      "EndUserAddress2": "navision_end_customer_address2",
+      "EndUserAddress3": "navision_end_customer_address3",
+      "EndUserCity": "navision_end_customer_city",
+      "EndUserStateProvince": "navision_end_customer_state",
+      "EndUserPostalCode": "navision_end_customer_postal_code",
+      "EndUserCountryCode": "navision_end_customer_country",
+      "ResellerPONumber": "navision_reseller_po_to_infinigate",
+      "DeliveryNoteId": "nuvias_packing_slip_id",
+      "ResaleInvoiceNumber": "navision_invoice_number",
+      "DistributerIDNumber": "distributer_id_number",
+      "DistributerTransactionType": "distributer_transaction_type",
+      "ExportLicenceNumber": "export_licence_number",
+      "BusinessModel1": "business_model1",
+      "BusinessModel2": "business_model2",
+      "JuniperVARID2": "juniper_var_id2"
+    }
+  },
+  "Mist POS (CSC Only) v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "MistPOSCSCOnlyv1.0",
+      "cte-file": "Mist.Cte.sql",
+      "main-query-file": "Mist POS CSC Only v1.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_id = 'VAC000904_NNL2' and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "ResaleSalesOrderNumber": "nuvias_sales_order_number",
+      "DistributorPurchaseOrder": "nuvias_purchase_order",
+      "NavisionSaleOrderNumber": "navision_sales_order_number",
+      "ResaleInvoiceDate": "navision_invoice_date",
+      "ProductJuniperPartNumber": "nuvias_part_code",
+      "ItemGroup": "nuvias_part_code_category",
+      "JuniperVARID1": "nuvias_partner_id",
+      "ProductQuantity": "nuvias_quantity",
+      "ProductSerialNumber": "nuvias_serial_number",
+      "SpecialPricingAuthorization": "nuvias_vendor_promotion",
+      "NetPOS(ProductUnitPrice)": "nuvias_unit_cost_in_quote_currency",
+      "ResellerVARName": "navision_reseller_name",
+      "ResellerVARAddress1": "navision_reseller_address1",
+      "ResellerVARAddress2": "navision_reseller_address2",
+      "ResellerVARAddress3": "navision_reseller_address3",
+      "ResellerVARACity": "navision_reseller_city",
+      "ResellerVARStateProvince": "navision_reseller_state",
+      "ResellerVARPostalCode": "navision_reseller_postal_code",
+      "ResellerVARCountryCode": "navision_reseller_country",
+      "ShipToName": "navision_ship_to_name",
+      "ShipToCountryCode": "navision_ship_to_country",
+      "ShipToPostalCode": "navision_ship_to_postal_code",
+      "ShipToAddress1": "navision_ship_to_address1",
+      "ShipToAddress2": "navision_ship_to_address2",
+      "ShipToAddress3": "navision_ship_to_address3",
+      "ShipToCity": "navision_ship_to_city",
+      "ShipToStateProvince": "navision_ship_to_state",
+      "EndUserName": "navision_end_customer_name",
+      "EndUserAddress1": "navision_end_customer_address1",
+      "EndUserAddress2": "navision_end_customer_address2",
+      "EndUserAddress3": "navision_end_customer_address3",
+      "EndUserCity": "navision_end_customer_city",
+      "EndUserStateProvince": "navision_end_customer_state",
+      "EndUserPostalCode": "navision_end_customer_postal_code",
+      "EndUserCountryCode": "navision_end_customer_country",
+      "ResellerPONumber": "navision_reseller_po_to_infinigate",
+      "ShipAndDebit": "nuvias_ship_and_debit",
+      "ResaleInvoiceNumber": "navision_invoice_number",
+      "DistributerIDNumber": "distributer_id_number",
+      "DistributerTransactionType": "distributer_transaction_type",
+      "ExportLicenceNumber": "export_licence_number",
+      "BusinessModel1": "business_model1",
+      "BusinessModel2": "business_model2",
+      "JuniperVARID2": "juniper_var_id2",
+      "Warehouse": "nuvias_warehouse",
+      "DistributorIDNo2": "distributer_id_no2"
+    }
+  },
+  "Nokia POS v1.0 (CSC Only)": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "NokiaPOSv1.0CSCOnly",
+      "cte-file": "Nokia.Cte.sql",
+      "main-query-file": "Nokia POS v1.0 CSC Only.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_name like 'Nokia%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "SalesOrderNumber": "nuvias_sales_order_number",
+      "DistributorPurchaseOrderNumber": "nuvias_purchase_order",
+      "NavisionSalesOrderNumber": "navision_sales_order_number",
+      "InvoiceDate": "navision_invoice_date",
+      "PartCode": "navision_part_code_id",
+      "ProductDescription": "nuvias_part_code_description",
+      "SandDRef": "nuvias_partner_id",
+      "Quantity": "navision_quantity",
+      "ProductSerial": "nuvias_serial_number",
+      "VendorReferenceNumber": "nuvias_vendor_promotion",
+      "CustomerName": "navision_reseller_name",
+      "CustomerAddress": "navision_reseller_address",
+      "CustomerPostalCode": "navision_reseller_postal_code",
+      "CustomerCountry": "navision_reseller_country",
+      "EndUserName": "navision_end_customer_name",
+      "EndUserAddress": "navision_end_customer_address",
+      "EndUserPostalCode": "navision_end_customer_postal_code",
+      "EndUserCountry": "navision_end_customer_country",
+      "AccountName": "distributor_account_name",
+      "InvoiceNumber": "navision_invoice_number",
+      "Blank1": "blank1",
+      "Blank2": "blank2",
+      "Blank3": "blank3",
+      "Blank4": "blank4",
+      "NokiaRef": "nokia_ref",
+      "IntercompanySalesOrder": "nuvias_intercompany_sales_order",
+      "SalesOrderDate": "sales_order_date",
+      "ProductCostEUR": "nuvias_product_cost_eur"
+    }
+  },
+  "SonicWall_POS_V1.0 (CSC Data Only) v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "SonicWall_POS_V1.0CSCDataOnlyv1.0",
+      "cte-file": "SonicWall.Cte.sql",
+      "main-query-file": "SonicWall_POS_V1.0 CSC Data Only v1.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_name like 'SonicWall%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "PoToSnwlNumber": "nuvias_purchase_order",
+      "(Used in SonicWall for filtering)": "nuvias_invoioce_date",
+      "InvoiceDate": "navision_invoice_date",
+      "VendorPN": "navision_part_code_id",
+      "ItemDesc": "nuvias_part_code_description",
+      "BuyingCustomerPartner-Id": "navision_partner_id",
+      "ItemQty": "navision_quantity",
+      "SerialNumber": "navision_serial_number",
+      "CurrentDistiCost": "mspunit_cost",
+      "ExtDistiCost": "mspunit_total_cost",
+      "BuyingCustomerCustNumber": "navision_reseller_number",
+      "BuyingCustomerName": "navision_reseller_name",
+      "BuyingCustomerAddress1": "navision_reseller_address1",
+      "BuyingCustomerAddress2": "navision_reseller_address2",
+      "BuyingCustomerCity": "navision_reseller_city",
+      "BuyingCustomerState": "navision_reseller_state",
+      "BuyingCustomerPostalCode": "navision_reseller_postal_code",
+      "BuyingCustomerCountry": "navision_reseller_country",
+      "ShipToCustomerName": "navision_ship_to_name",
+      "ShipToCustomerPostalCode": "navision_ship_to_country",
+      "ShipToCustomerCountry": "navision_ship_to_postal_code",
+      "ShipToCustomerAddress1": "navision_ship_to_address1",
+      "ShipToCustomerAddress2": "navision_ship_to_address2",
+      "ShipToCustomerCity": "navision_ship_to_city",
+      "ShipToCustomerState": "navision_ship_to_state",
+      "EndUserCompanyName": "navision_end_customer_name",
+      "EndUserAddress1": "navision_end_customer_address1",
+      "EndUserAddress2": "navision_end_customer_address2",
+      "EndUserCity": "navision_end_customer_city",
+      "EndUserState": "navision_end_customer_state",
+      "EndUserPostalCode": "navision_end_customer_postal_code",
+      "EndUserCountry": "navision_end_customer_country",
+      "EndUserFirstName": "navision_end_customer_first_name",
+      "EndUserLastName": "navision_end_customer_last_name",
+      "EndUserEmailAddress": "navision_end_customer_email",
+      "EndUserTelephoneNumber": "navision_end_customer_phone_number",
+      "PoNumber": "navision_reseller_po_to_infinigate",
+      "SpecialPricingRequest(SPR-XXXXXXX)": "navision_vendor_claim_id",
+      "InvoiceNumber": "navision_invoice_number",
+      "LineItem": "navision_invoice_line_number",
+      "SnwlPnSku": "snwl_pn_sku",
+      "(used in group by statement)": "navision_sales_order_line_no"
+    }
+  },
+  "WatchGuard POS (CSC Data Only) v2.1": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "WatchGuardPOSCSCDataOnlyv2.1",
+      "cte-file": "WatchGuard.Cte.sql",
+      "main-query-file": "WatchGuard POS CSC Data Only v2.1.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_name like 'WatchGuard%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "NuviasSalesOrderNumber": "nuvias_sales_order_number",
+      "DistiPurchaseOrder": "nuvias_purchase_order",
+      "InfinigateSalesOrderNumber": "navision_sales_order_number",
+      "InvoiceDate": "navision_invoice_date",
+      "InfinigateCustomerAccount": "nuvias_customer_account",
+      "ItemID": "navision_part_code_id",
+      "PartCodeDescription": "nuvias_part_code_description",
+      "PartCodeCategory": "nuvias_part_code_category",
+      "PartnerID": "nuvias_partner_id",
+      "Qty": "navision_quantity",
+      "SerialNumber": "navision_serial_number",
+      "VendorPromotion": "nuvias_vendor_promotion",
+      "VendorReferenceNumber": "nuvias_vendor_reference_number",
+      "MSPUnitCost": "mspunit_cost",
+      "NuviasNetUnitBuy": "nuvias_unit_cost_in_quote_currency",
+      "NuivasNetTotalBuy": "nuvias_unit_cost_in_quote_currency_total",
+      "MSPTotalCost": "mspunit_total_cost",
+      "BillToName": "navision_reseller_name",
+      "BillToPostCode": "navision_reseller_postal_code",
+      "BillToCountry": "navision_reseller_country",
+      "ShipToName": "navision_ship_to_name",
+      "ShipToCountry": "navision_ship_to_country",
+      "ShipToPostCode": "navision_ship_to_postal_code",
+      "EndCustomerName": "navision_end_customer_name",
+      "EndCustomerPostCode": "navision_end_customer_postal_code",
+      "EndCustomerCountry": "navision_end_customer_country",
+      "CustomerPO": "navision_reseller_po_to_infinigate"
+    }
+  },
+  "AddOn POS (CSC Only)": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "AddOnPOSCSCOnly",
+      "cte-file": "AddOn.Cte.sql",
+      "main-query-file": "TODO",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_name like 'Prolabs%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "CSCOrderNumber": "nuvias_sales_order_number",
+      "D365PurchasId": "nuvias_purchase_order",
+      "SalesOrderNumber": "navision_sales_order_number",
+      "InvoiceDate": "navision_invoice_date",
+      "NavisionInvoiceDate": "invoice_date",
+      "CustomerAccount": "nuvias_customer_account",
+      "NavisionAccount": "navision_customer_account",
+      "Product": "nuvias_part_code",
+      "Quantity": "navision_quantity",
+      "SerialNumber": "nuvias_serial_number",
+      "NSDAuthorisation": "nuvias_vendor_promotion",
+      "VendorReferenceNumber": "nuvias_vendor_reference_number",
+      "CurrencyCode": "navision_sell_currency",
+      "ExpectedVendorBuyPrice": "nuvias_purchase_price",
+      "PoBuyPrice": "nuvias_po_buy_price",
+      "PoTotalBuyPrice": "nuvias_po_buy_price_total",
+      "CustomerName": "navision_reseller_name",
+      "ShipToCountry": "navision_ship_to_country",
+      "ResellerPONumber": "navision_reseller_po_to_infinigate",
+      "ClaimAmount": "claim_amount",
+      "InvoiceNumber": "navision_invoice_number",
+      "SalesPrice": "navision_sales_price",
+      "NothingNeededAfter": "nothing_needed_after",
+      "PONumber": "po_number",
+      "Check": "check"
+    }
+  },
+  "Zyxel POS v1.0 (CSC Data Only) v1.0": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "ZyxelPOSv1.0CSCDataOnlyv1.0",
+      "cte-file": "Zyxel.Cte.sql",
+      "main-query-file": "Zyxel POS v1.0 CSC Data Only v1.0.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_name like 'Zyxel%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "D365Order": "nuvias_sales_order_number",
+      "POR": "nuvias_purchase_order",
+      "Nav SO": "navision_sales_order_number",
+      "Invoice": "navision_invoice_date",
+      "Part Number": "navision_part_code_id",
+      "Part Number Description": "nuvias_part_code_description",
+      "Quantity": "navision_quantity",
+      "Serial Number": "navision_serial_number",
+      "Unit Price": "mspunit_cost",
+      "Total Price": "mspunit_total_cost",
+      "Final Buy Price": "nuvias_purchase_price",
+      "POR Price": "nuvias_po_buy_price",
+      "Reseller VAT Number": "navision_vat_registration_no",
+      "Reseller Name": "navision_reseller_name",
+      "Reseller Address": "navision_reseller_address",
+      "Reseller City": "navision_reseller_city",
+      "Reseller Zip Code": "navision_reseller_postal_code",
+      "Reseller Country Code": "navision_reseller_country",
+      "SPQ": "navision_vendor_claim_id",
+      "Vendor Reseller Level": "navision_vendor_reseller_level",
+      "Local Currency": "local_currency",
+      "D365 SO": "d365_so"
+    }
+  },
+  "SmartOptics POS (CSC Only)": {
+    "report-params": [
+      "from",
+      "to",
+      "CustAccount"
+    ],
+    "ssrs-config": {
+      "folder": "SmartOpticsPOSCSCOnly",
+      "cte-file": "SmartOptics.Cte.sql",
+      "main-query-file": "SmartOptics POS CSC Only.sql",
+      "database": "NUAV_Prod_SQLBYOD",
+      "param-customizations": {
+        "from": "cast('@from' as date)",
+        "to": "cast('@to' as date)"
+      }
+    },
+    "databricks-config": {
+      "object-layer": "gold",
+      "object-schema": "ops_reporting",
+      "object-name": "t_pos_reports_csc",
+      "predicate": "nuvias_vendor_name like 'Smart Optics%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+    },
+    "column-mapping": {
+      "NuviasSalesId": "nuvias_sales_order_number",
+      "FinancialDate": "navision_invoice_date",
+      "CustomerAccount": "nuvias_customer_account",
+      "ProductName": "nuvias_part_code",
+      "Quantity": "navision_quantity",
+      "SerialNumber": "nuvias_serial_number",
+      "VendorReferenceNumber": "nuvias_vendor_promotion",
+      "SalesOrderCurrency": "navision_sell_currency",
+      "CustomerName": "navision_reseller_name",
+      "SalesInvoiceUnitPrice": "navision_sales_price",
+      "ExchangeRate": "exchange_rate",
+      "ProductUnitPriceUSD": "product_unit_price_usd"
     }
   }
 }
