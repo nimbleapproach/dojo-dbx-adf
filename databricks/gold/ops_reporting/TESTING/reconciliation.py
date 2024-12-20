@@ -108,13 +108,15 @@ for param_name, param_value in input_params.items():
 effective_databricks_predicate = substitute_params(databricks_predicate, databricks_param_mapping)
 # print(effective_databricks_predicate)
 
+debug_predicate="d365_sales_order_number='SO00158302_NUK1'"
+
 columns_in_scope = [col(c) for c in column_mapping.values()]
 
 databricks_table = (spark.read
                     .table(
     f"{databricks_object_layer}_{ENVIRONMENT}.{databricks_object_schema}.{databricks_object_name}")
                     .filter(effective_databricks_predicate)
-                    # .where("d365_sales_order_number='SO00003879_NES1'")
+                    .where(debug_predicate)
                     .select(columns_in_scope)
                     # .select(limited_columns_in_scope)
                     .fillna("").fillna(0).fillna(False)
@@ -150,7 +152,7 @@ remote_table = (spark.read
                 .option("query", main_query_sql)
                 .load()
                 .withColumnsRenamed(column_mapping)
-                # .where("d365_sales_order_number='SO00003879_NES1'")
+                .where(debug_predicate)
                 .select(columns_in_scope)
                 # .select(limited_columns_in_scope)
                 .fillna("").fillna(0).fillna(False)

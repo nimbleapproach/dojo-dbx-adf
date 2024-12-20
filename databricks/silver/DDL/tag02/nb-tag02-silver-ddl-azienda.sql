@@ -42,8 +42,6 @@ CREATE OR REPLACE TABLE azienda
       COMMENT 'The legal headquarters'
     ,SEDE_AMMINISTRATIVA STRING
       COMMENT 'The administrative city'
-    ,DATA_COSTITUZIONE TIMESTAMP
-      COMMENT 'The establishment date'
     ,TIPO_CONSOLIDAMENTO STRING
       COMMENT 'Consolidation type \n Possible values are: \n
       I: Line by line \n
@@ -52,7 +50,7 @@ CREATE OR REPLACE TABLE azienda
       E: Equity \n'
       ,COD_VALUTA STRING
       COMMENT 'Entity Local currency'
-    ,DATEUPD TIMESTAMP
+    ,DATE_UPD TIMESTAMP
       COMMENT 'Last Update Timestamp'
     ,Sys_Bronze_InsertDateTime_UTC TIMESTAMP
       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -66,7 +64,7 @@ CREATE OR REPLACE TABLE azienda
       COMMENT 'HashKey over all but Sys and DATEUPD columns.'
     ,Sys_Silver_IsCurrent BOOLEAN
     ,Sys_Silver_IsDeleted BOOLEAN
-,CONSTRAINT azienda_pk PRIMARY KEY(COD_AZIENDA, DATEUPD)
+,CONSTRAINT azienda_pk PRIMARY KEY(COD_AZIENDA, DATE_UPD)
   )
 COMMENT 'This table contains the "entity". \n
   The Entity dimension in Tagetik can be used to represent the Legal Entity (since the legal structure is represented through relationships between
