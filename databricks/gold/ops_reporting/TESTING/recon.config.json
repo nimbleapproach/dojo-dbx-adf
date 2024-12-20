@@ -110,15 +110,14 @@
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
-        "to": "cast('@to' as date)",
-        "entity": "@entity"
+        "to": "cast('@to' as date)"
       }
     },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'WatchGuard%' and entity in (@entity) and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "Entity": "entity",
@@ -151,8 +150,7 @@
   "WatchGuard POS_Monthly v2.0": {
     "report-params": [
       "from",
-      "to",
-      "entity"
+      "to"
     ],
     "ssrs-config": {
       "folder": "WatchGuardPOS_Monthlyv2.0",
@@ -169,7 +167,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'WatchGuard%' and entity in (@entity) and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "Entity": "entity",
@@ -202,8 +200,7 @@
   "WatchGuard POS_Weekly v2.0": {
     "report-params": [
       "from",
-      "to",
-      "entity"
+      "to"
     ],
     "ssrs-config": {
       "folder": "WatchGuardPOS_Weeklyv2.0",
@@ -220,7 +217,7 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'WatchGuard%' and entity in (@entity) and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "Entity": "entity",
@@ -272,7 +269,7 @@
       "predicate": "vendor_id in ('VAC001044_NGS1') and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
-      "InvoiceDate": "invoioce_date",
+      "InvoiceDate": "invoice_date",
       "PartNumber": "part_code",
       "PartDescription": "part_code_description",
       "Quantity": "quantity",
@@ -330,7 +327,7 @@
       "predicate": "vendor_name like 'Fortinet%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
-      "Date": "invoioce_date",
+      "Date": "invoice_date",
       "PartNumber": "part_code",
       "FortinetPOSID": "partner_id",
       "Qty": "quantity",
@@ -378,7 +375,7 @@
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "d365_sales_order_number",
-      "ResaleInvoiceDate": "invoioce_date",
+      "ResaleInvoiceDate": "invoice_date",
       "ProductJuniperPartNumber": "part_code",
       "ItemGroup": "part_code_category",
       "JuniperVARID1": "partner_id",
@@ -445,7 +442,7 @@
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "d365_sales_order_number",
-      "ResaleInvoiceDate": "invoioce_date",
+      "ResaleInvoiceDate": "invoice_date",
       "ProductJuniperPartNumber": "part_code",
       "JuniperVARID1": "partner_id",
       "ProductQuantity": "quantity",
@@ -515,7 +512,7 @@
     },
     "column-mapping": {
       "SalesOrder": "d365_sales_order_number",
-      "ReportingCompanyBillDate": "invoioce_date",
+      "ReportingCompanyBillDate": "invoice_date",
       "CambiumPartNumber": "part_code",
       "QuantitySold": "quantity",
       "ClaimID": "vendor_promotion",
@@ -566,7 +563,7 @@
     },
     "column-mapping": {
       "SalesOrderNumber": "d365_sales_order_number",
-      "InvoiceDate": "invoioce_date",
+      "InvoiceDate": "invoice_date",
       "PartCode": "part_code",
       "ProductDescription": "part_code_description",
       "Quantity": "quantity",
@@ -616,7 +613,7 @@
     },
     "column-mapping": {
       "ORDER": "d365_sales_order_number",
-      "INVOICE DATE": "invoioce_date",
+      "INVOICE DATE": "invoice_date",
       "PRODUCT": "part_code",
       "PRODUCT DESCRIPTION": "part_code_description",
       "QUANTITY": "quantity",
@@ -698,7 +695,7 @@
       "predicate": "vendor_name like 'Smart Optics%' and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
-      "FinancialDate": "invoioce_date",
+      "FinancialDate": "invoice_date",
       "CustomerAccount": "customer_account",
       "ProductName": "part_code",
       "Quantity": "quantity",
@@ -772,7 +769,7 @@
       "predicate": "(vendor_id in ('VAC001400_NGS1') or vendor_id in ('VAC001401_NGS1') or vendor_id in ('VAC001443_NGS1') or vendor_id in ('VAC001400_NNL2') or vendor_id in ('VAC001401_NNL2') or vendor_id in ('VAC001443_NNL2')) and report_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
-      "InvoiceDate": "invoioce_date",
+      "InvoiceDate": "invoice_date",
       "BuyingCustomerCustNumber": "customer_account",
       "VendorPN": "part_code",
       "ItemDesc": "part_code_description",
@@ -1133,7 +1130,7 @@
     },
     "column-mapping": {
       "PoToSnwlNumber": "nuvias_purchase_order",
-      "(Used in SonicWall for filtering)": "nuvias_invoioce_date",
+      "(Used in SonicWall for filtering)": "nuvias_invoice_date",
       "InvoiceDate": "navision_invoice_date",
       "VendorPN": "navision_part_code_id",
       "ItemDesc": "nuvias_part_code_description",
