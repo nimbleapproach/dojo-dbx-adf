@@ -37,20 +37,40 @@ schema = 'orion'
 
 # COMMAND ----------
 
-# DBTITLE 1,old script
-# MAGIC %sql
-# MAGIC   SELECT DISTINCT 
-# MAGIC     sl.No_ as sku,
-# MAGIC     sl.ShortcutDimension1Code,
-# MAGIC     sum(case when sih.CurrencyFactor > 0 then sl.Amount/sih.CurrencyFactor else sl.Amount end) as SalesLCYLTM,
-# MAGIC     Gen_Prod_PostingGroup
-# MAGIC   FROM silver_dev.igsql03.sales_invoice_line sl
-# MAGIC   INNER JOIN silver_dev.igsql03.sales_invoice_header sih
-# MAGIC     ON sl.DocumentNo_ = sih.No_ 
-# MAGIC   WHERE sih.PostingDate BETWEEN '2024-05-01' AND '2024-05-31'
-# MAGIC   and sl.Sys_Silver_IsCurrent =1
-# MAGIC   and sih.Sys_Silver_IsCurrent =1
-# MAGIC   GROUP BY all
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
+# Widget for full year processing
+dbutils.widgets.text("full_year", "0", "Data period")
+full_year_process = dbutils.widgets.get("full_year")
+full_year_process = {"0": False, "1": True}.get(full_year_process, False)  
+
+# Widget for month period
+dbutils.widgets.text("month_period", "YYYY-MM", "Month period")
+month_period_process = dbutils.widgets.get("month_period")
+
+# Check if a valid month period was provided
+if month_period_process == "YYYY-MM":
+    # No valid month provided, use previous month
+    today = date.today()
+    first_of_this_month = date(today.year, today.month, 1)
+    last_month_date = first_of_this_month - relativedelta(months=1)
+    month_period_process = last_month_date.strftime('%Y-%m')
+else:
+    # Validate the provided month period format
+    try:
+        # Try to parse the provided date
+        from datetime import datetime
+        datetime.strptime(month_period_process, '%Y-%m')
+        # If successful, keep the provided value
+    except ValueError:
+        # If invalid format, use previous month
+        today = date.today()
+        first_of_this_month = date(today.year, today.month, 1)
+        last_month_date = first_of_this_month - relativedelta(months=1)
+        month_period_process = last_month_date.strftime('%Y-%m')
+
+print(f"Processing {month_period_process} sales analysis")
 
 # COMMAND ----------
 
@@ -64,32 +84,36 @@ from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 import os
 
-def get_sales_analysis_v2(year_month=None):
+def get_sales_analysis_v2(period=None, full_year=False):
     """
-    Analyze sales data for a specific year-month or default to last month.
+    Analyze sales data for a specific period.
     
     Parameters:
-    year_month: str, optional - Format 'YYYY-MM' (e.g., '2024-05'). If None, uses last month
+    period: str, optional - Format 'YYYY-MM' or 'YYYY' (e.g., '2024-05' or '2024')
+    full_year: bool, optional - If True, analyzes entire year regardless of period format
     
     Returns:
     pyspark.sql.DataFrame: Analysis results
-    """ 
-    # Define base table path
+    """
     ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
     BASE_PATH = f"silver_{ENVIRONMENT}.igsql03"
     
-    # If no year_month provided, use last month
-    if year_month is None:
+    if period is None:
         today = date.today()
         first_of_this_month = date(today.year, today.month, 1)
         last_month_date = first_of_this_month - relativedelta(months=1)
-        year_month = last_month_date.strftime('%Y-%m')
+        period = last_month_date.strftime('%Y-%m')
     
-    # Convert year_month to start and end dates
-    start_date = f"{year_month}-01"
-    end_date = (datetime.strptime(start_date, '%Y-%m-%d') + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
+    # Handle period formatting
+    if full_year or len(period.split('-')) == 1:
+        year = period.split('-')[0] if '-' in period else period
+        start_date = f"{year}-01-01"
+        end_date = f"{year}-12-31"
+    else:
+        start_date = f"{period}-01"
+        end_date = (datetime.strptime(start_date, '%Y-%m-%d') + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
     
-    # Read tables with dynamic environment
+    # Rest of the function remains the same...
     invoice_lines = spark.table(f"{BASE_PATH}.sales_invoice_line").alias("invoice_lines")
     invoice_headers = spark.table(f"{BASE_PATH}.sales_invoice_header").alias("invoice_headers")
     cr_memo_lines = spark.table(f"{BASE_PATH}.sales_cr_memo_line").alias("cr_memo_lines")
@@ -109,7 +133,7 @@ def get_sales_analysis_v2(year_month=None):
                (F.col("invoice_headers.Sys_Silver_IsCurrent") == 1))
         .select(
             F.col("invoice_lines.No_").alias("sku"),
-            F.col("invoice_lines.sys_databaseName").alias("database_name"),  # Renamed to avoid ambiguity
+            F.col("invoice_lines.sys_databaseName").alias("database_name"),
             F.col("invoice_lines.ShortcutDimension1Code"),
             F.when(F.col("invoice_headers.CurrencyFactor") > 0,
                   F.col("invoice_lines.Amount") / F.col("invoice_headers.CurrencyFactor"))
@@ -131,7 +155,7 @@ def get_sales_analysis_v2(year_month=None):
                (F.col("cr_memo_headers.Sys_Silver_IsCurrent") == 1))
         .select(
             F.col("cr_memo_lines.No_").alias("sku"),
-            F.col("cr_memo_lines.sys_databaseName").alias("database_name"),  # Renamed to avoid ambiguity
+            F.col("cr_memo_lines.sys_databaseName").alias("database_name"),
             F.col("cr_memo_lines.ShortcutDimension1Code"),
             (F.when(F.col("cr_memo_headers.CurrencyFactor") > 0,
                    F.col("cr_memo_lines.Amount") / F.col("cr_memo_headers.CurrencyFactor"))
@@ -140,19 +164,17 @@ def get_sales_analysis_v2(year_month=None):
         )
     )
     
-    # Union invoice and credit memo sales
     sales_ltm = invoice_sales.union(cr_memo_sales)
     
-    # Final aggregation with items join
     result = (
         sales_ltm
-        .groupBy("sku", "ShortcutDimension1Code", "database_name")  # Using renamed column
+        .groupBy("sku", "ShortcutDimension1Code", "database_name")
         .agg(F.sum("SalesLCYLTM").alias("SalesLCYLTM"))
         .join(
             items, 
             (F.col("sku") == F.col("items.No_")) &
             (F.col("items.Sys_Silver_IsCurrent") ==1) &
-            (F.col("database_name") == F.col("items.sys_databaseName")),  # Using renamed column
+            (F.col("database_name") == F.col("items.sys_databaseName")),
             "left"
         )
         .select(
@@ -184,45 +206,86 @@ def get_sales_analysis_v2(year_month=None):
             F.col("items.Createdon"),
             F.col("SalesLCYLTM"),
             F.col("items.Sys_Bronze_InsertDateTime_UTC"),
-            
-            F.col("database_name").alias("sys_databaseName")  # Renamed back to original name in final output
+            F.col("items.Sys_Silver_InsertDateTime_UTC"),
+            F.col("items.Sys_Silver_IsCurrent"),
+            F.col("database_name").alias("sys_databaseName")
         )
         .where(F.col("SalesLCYLTM") != 0)
     )
     
-    # Replace NaN values with None
-    result = result.replace(float('nan'), None)
-    
-    return result
+    return result.replace(float('NaN'), None)
 
 # COMMAND ----------
 
-# DBTITLE 1,common funciton to check dupes
-def check_duplicate_keys(df, key_cols=["Manufacturer Item No_", "Consolidated Vendor Name","sys_databasename"], 
-                        order_cols=None):
+# DBTITLE 1,common function: check dupes and more
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+
+def check_duplicate_keys(
+    df, 
+    key_cols=["Manufacturer Item No_", "Consolidated Vendor Name", "sys_databasename"], 
+    order_cols=None, 
+    priority_col="sys_databasename",
+    priority_map = {
+        "ReportsUK": 1,
+        "ReportsDE": 2,
+        "ReportsCH": 3,
+        "ReportsNO": 4,
+        "ReportsDN": 5,
+        "ReportsSE": 6,
+        "ReportsFI": 7,
+        "ReportsNL": 8,
+        "ReportsBE": 9,
+        "ReportsFR": 10,
+        "ReportsDK": 11
+    }
+):
     """
-    Check for duplicate composite keys and provide detailed analysis
+    Check for duplicate composite keys and provide detailed analysis with priority-based ordering.
     
     Parameters:
     df: DataFrame to check
     key_cols: List of column names that form the composite key
     order_cols: List of column names for ordering. If None, uses key_cols
+    priority_col: Column to assign priorities
+    priority_map: Dictionary mapping values of the priority column to their priorities
     """
+    # Get actual columns from DataFrame
+    df_columns = df.columns
+    
+    # Filter key_cols to only include columns that exist in the DataFrame
+    key_cols = [col for col in key_cols if col in df_columns]
+    
+    # Adjust priority handling based on whether sys_databasename exists
+    if priority_col not in df_columns:
+        df = df.withColumn("priority", F.lit(999))
+    else:
+        df = df.withColumn(
+            "priority",
+            F.expr(
+                "CASE " +
+                " ".join([f"WHEN {priority_col} = '{k}' THEN {v}" for k, v in priority_map.items()]) +
+                " ELSE 999 END"
+            )
+        )
+    
     # Use order_cols if provided, otherwise fall back to key_cols
     order_cols = order_cols if order_cols is not None else key_cols
+    # Filter order_cols to only include columns that exist
+    order_cols = [col for col in order_cols if col in df_columns]
     
     # Get total record count
     total_records = df.count()
     
     # Define window specs
     cnt_window = Window.partitionBy(*key_cols)
-    row_window = Window.partitionBy(*key_cols).orderBy(*order_cols)
+    row_window = Window.partitionBy(*key_cols).orderBy(F.col("priority"), *order_cols)
     
     # Add occurrence and row_number using window functions
     occurrence_with_details = df \
         .withColumn("occurrence", F.count("*").over(cnt_window)) \
         .withColumn("row_number", F.row_number().over(row_window)) \
-        .orderBy(*order_cols, "row_number")
+        .orderBy(F.col("priority"), *order_cols, "row_number")
     
     # Filter for duplicates only
     dupes_with_details = occurrence_with_details.filter(F.col("occurrence") > 1)
@@ -236,9 +299,10 @@ def check_duplicate_keys(df, key_cols=["Manufacturer Item No_", "Consolidated Ve
     print(f"Total Records: {total_records}")
     print(f"Unique Keys: {num_unique_keys}")
     print(f"Keys with Duplicates: {num_duplicate_keys}")
+    print(f"Columns used as keys: {key_cols}")
     
     if num_duplicate_keys > 0:
-        # Show distribution of duplicate counts
+        # Show distribution of duplicates
         print("\nDistribution of Duplicates:")
         dupe_distribution = dupes_with_details \
             .select("occurrence") \
@@ -246,14 +310,8 @@ def check_duplicate_keys(df, key_cols=["Manufacturer Item No_", "Consolidated Ve
             .withColumn("frequency", F.count("*").over(Window.partitionBy("occurrence"))) \
             .distinct() \
             .orderBy("occurrence")
-        dupe_distribution.display()
-        
-        # Show the actual duplicate records
+            
         print("\nDetailed Duplicate Records:")
-        # dupes_with_details.display()
-        
-        # Optional: Save to a table
-        # dupes_with_details.write.mode("overwrite").saveAsTable("duplicate_records")
         
     return occurrence_with_details
 
@@ -283,25 +341,50 @@ def get_specific_duplicates(df, manufacturer_item, vendor_name):
 # COMMAND ----------
 
 
-df_oct_2024 = get_sales_analysis_v2("2024-10")
+df_sku_vendor = get_sales_analysis_v2(month_period_process, full_year=full_year_process)
 
 # COMMAND ----------
 
-# display(df_oct_2024.filter(F.col("ManufacturerItemNo_") == '5414602190420').select("*")\
-#     #.distinct()
-#     )
+
+# Create a clean table with column defaults enabled from the start
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_sku_vendor_stg 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+# Then write the data to the table
+(df_sku_vendor
+    .write
+    .format("delta")
+    .mode("overwrite")
+    .option("mergeSchema", "true")
+    .option("overwriteSchema", "true")
+    .saveAsTable(f"{catalog}.{schema}.arr_sku_vendor_stg"))
+
+# COMMAND ----------
+
+df_sku_vendor = spark.table(f"{catalog}.{schema}.arr_sku_vendor_stg")
 
 # COMMAND ----------
 
 # DBTITLE 1,stage igsql03 for dupes: include databasename
+#
+# this is used for investigation purpose only 
+# 
+
 key_cols=["ManufacturerItemNo_","VendorCodeItem", "sys_databasename"]
 order_cols=["Sys_Bronze_InsertDateTime_UTC"]
-df_sku_vendor_database_dq = check_duplicate_keys(df_oct_2024, key_cols, order_cols)
+df_sku_vendor_database_dq = check_duplicate_keys(df_sku_vendor, key_cols, order_cols)
 
 df_sku_vendor_database_dq = df_sku_vendor_database_dq.replace({'NaN': None})
-# display(df_oct_2024_dq.filter(F.col("ManufacturerItemNo_") == '5414602190420'))
+
 
 # COMMAND ----------
+
+#
+# this is used for investigation purpose only 
+#  
 
 # Create a clean table with column defaults enabled from the start
 spark.sql(f"""
@@ -321,6 +404,10 @@ spark.sql(f"""
     .saveAsTable(f"{catalog}.{schema}.arr_sku_vendor_database_dq"))
 
 # COMMAND ----------
+
+#
+# this is used for investigation purpose only 
+#  
 
 # Create a clean table with column defaults enabled from the start
 spark.sql(f"""
@@ -350,19 +437,64 @@ df_sku_vendor_database_unique = (df_sku_vendor_database_dq
 
 # COMMAND ----------
 
+# DBTITLE 1,mark records that are dupes based on local skus & vendor_name
+key_cols=["sku","VendorCodeItem"]
+order_cols=["Sys_Bronze_InsertDateTime_UTC"]
+df_local_sku_vendor_dq = check_duplicate_keys(df_sku_vendor, key_cols, order_cols)
+
+df_local_sku_vendor_dq = df_local_sku_vendor_dq.replace({'NaN': None})
+
+# Create a dq table with column defaults enabled
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_local_sku_vendor_dq 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+# Then write the data to the table
+(df_local_sku_vendor_dq
+    .filter(F.col('occurrence') > 1)
+    .write
+    .format("delta")
+    .mode("overwrite")
+    .option("mergeSchema", "true")
+    .option("overwriteSchema", "true")
+    .saveAsTable(f"{catalog}.{schema}.arr_local_sku_vendor_dq"))
+
+
+# Create a clean table with column defaults enabled
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_local_sku_vendor_unique 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+# Then write the data to the table
+(df_local_sku_vendor_dq
+    .filter(F.col('row_number') == 1)
+    .drop(F.col('row_number'))
+    .withColumn("has_duplicates", when(F.col('occurrence') > 1, "Y").otherwise(F.lit( "N")))
+    .drop(F.col('occurrence'))
+    .write
+    .format("delta")
+    .mode("overwrite")
+    .option("mergeSchema", "true")
+    .option("overwriteSchema", "true")
+    .saveAsTable(f"{catalog}.{schema}.arr_local_sku_vendor_unique"))
+
+# COMMAND ----------
+
 # DBTITLE 1,stage igsql03 for dupes: exclude databasename
+#key_cols=["ManufacturerItemNo_","VendorCodeItem"]
 key_cols=["ManufacturerItemNo_","VendorCodeItem"]
 order_cols=["Sys_Bronze_InsertDateTime_UTC"]
-df_sku_vendor_dq = check_duplicate_keys(df_oct_2024, key_cols, order_cols)
+df_sku_vendor_dq = check_duplicate_keys(df_sku_vendor, key_cols, order_cols)
 
 df_sku_vendor_dq = df_sku_vendor_dq.replace({'NaN': None})
 
 # COMMAND ----------
 
-# display(df_sku_vendor_database_dq.filter((F.col('ManufacturerItemNo_')=='LM-VA-500-EN') & (F.col('VendorCodeItem')=='PRO')))
-
-# display(df_sku_vendor_dq.filter((F.col('ManufacturerItemNo_')=='LM-VA-500-EN') & (F.col('VendorCodeItem')=='PRO')))
-
+df_sku_vendor_dq.filter(col("sku")=='XS136Z12ZZRCAA-SP').display()
 
 # COMMAND ----------
 
@@ -574,6 +706,8 @@ df_arr_auto = df_arr_auto.filter(F.col('vendorcodeitem').isNotNull() & F.col('sk
 df_arr_auto = df_arr_auto.replace({'NaN': None})
 # display(df_arr_auto)
 
+# First, enable the allowColumnDefaults feature
+# spark.sql(f"ALTER TABLE {catalog}.{schema}.arr_auto_stg SET TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')")
 
 # Write the cleaned DataFrame to Delta table
 df_arr_auto.write \
@@ -585,17 +719,49 @@ df_arr_auto.write \
 
 # COMMAND ----------
 
-df_source = spark.table(f"{catalog}.{schema}.arr_auto_stg")
+# DBTITLE 1,mark records that are dupes absed on manufacturer skus & vendor_name
+df_source_stg = spark.table(f"{catalog}.{schema}.arr_auto_stg")
 
 key_cols=["sku","vendor_name"]
 order_cols=["sys_databasename", "Sys_Bronze_InsertDateTime_UTC"]
-df_auto = check_duplicate_keys(df_source, key_cols, order_cols)
+df_manufacturer_auto = check_duplicate_keys(df_source_stg, key_cols, order_cols)
+
+df_manufacturer_auto = df_manufacturer_auto.replace({'NaN': None})
+
+
+
+# display(df_manufacturer_auto)
+
+
+# COMMAND ----------
+
+# Create a clean table with column defaults enabled from the start
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_manufacturer_auto_dq
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+# Then write the data to the table
+(df_manufacturer_auto
+    .filter(F.col('occurrence') > 1)
+    .write
+    .format("delta")
+    .mode("overwrite")
+    .option("mergeSchema", "true")
+    .option("overwriteSchema", "true")
+    .saveAsTable(f"{catalog}.{schema}.arr_manufacturer_auto_dq"))
+
+# COMMAND ----------
+
+df_source_stg = spark.table(f"{catalog}.{schema}.arr_auto_stg")
+
+key_cols=["local_sku","vendor_name"]
+order_cols=["sys_databasename", "Sys_Bronze_InsertDateTime_UTC"]
+df_auto = check_duplicate_keys(df_source_stg, key_cols, order_cols)
 
 df_auto = df_auto.replace({'NaN': None})
-
-
-
-# display(df_auto)
+# display(df_auto.filter(F.col('local_sku') =='XS136Z12ZZRCAA-SP'))
 
 
 # COMMAND ----------
@@ -619,12 +785,12 @@ spark.sql(f"""
 
 # COMMAND ----------
 
-# Create a clean table with column defaults enabled from the start
-spark.sql(f"""
-    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_auto 
-    USING delta
-    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
-""")
+# # Create a clean table with column defaults enabled from the start
+# spark.sql(f"""
+#     CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_auto 
+#     USING delta
+#     TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+# """)
 
 
 df_auto_unique = (df_auto
@@ -641,15 +807,30 @@ desired_columns = ['sku', 'vendorcodeitem', 'vendor_name','has_sku_master_vendor
 desired_order = desired_columns + [col for col in columns if col not in desired_columns]
 df_auto_unique = df_auto_unique.select(desired_order)
 
-(df_auto_unique.write
-    .format("delta")
-    .mode("overwrite")
-    .option("mergeSchema", "true")
-    .option("overwriteSchema", "true")
-    .saveAsTable(f"{catalog}.{schema}.arr_auto_0"))
+
+# First create a temporary view of the empty DataFrame
+df_auto_unique.limit(0).createOrReplaceTempView("temp_auto_unique")
+
+# Create the table using the temp view
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_auto_0
+USING delta
+TBLPROPERTIES (
+    'delta.feature.allowColumnDefaults' = 'supported'
+) AS
+SELECT * FROM temp_auto_unique
+""")
+
+# Write the data
+df_auto_unique.write \
+    .mode("overwrite") \
+    .format("delta") \
+    .option("mergeSchema", "true") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable(f"{catalog}.{schema}.arr_auto_0")
 
 
-
+    
 
 # COMMAND ----------
 
@@ -674,11 +855,11 @@ duplicate_records = check_duplicate_keys(df_source, key_cols)
 # COMMAND ----------
 
 # Convert to PySpark DataFrame
-df_source_0 = spark.table(f"silver_dev.masterdata.datanowarr")
-
+df_source_manual = spark.table(f"silver_dev.masterdata.datanowarr")
+df_source_manual = df_source_manual.filter(col("Sys_Silver_IsCurrent") == True)
 # Example usage:
 key_cols=["SKU", "Vendor_Name"]
-duplicate_records = check_duplicate_keys(df_source_0, key_cols)
+duplicate_records = check_duplicate_keys(df_source_manual, key_cols)
 
 # COMMAND ----------
 
@@ -771,7 +952,7 @@ def parse_months(df):
 
 # Define the transformation logic
 def default_columns(df):
-    return df.withColumn("match_type", F.lit("")) \
+    return df.withColumn("matched_type", F.lit("mt=auto")) \
     .withColumn("duration", F.lit("Not Assigned")) \
     .withColumn("frequency", F.lit("Not Assigned")) \
     .withColumn("Consumption", F.lit("Not Assigned")) \
@@ -2027,7 +2208,7 @@ def apply_vendor_transformations(df):
         .otherwise(F.col("Type"))
     ).withColumn(
         "frequency",
-        F.when(F.col("vendor_name") == "Cybereason", "Monthly")
+        F.when(F.col("vendor_name") == "Cybereason", "25.44 Monthly coef")
         .otherwise(F.col("frequency"))
     ).withColumn(
         "Mapping_type_Billing", 
@@ -2037,6 +2218,10 @@ def apply_vendor_transformations(df):
         "duration", 
         F.when(F.col("vendor_name") == "Cybereason", "2.26 YR")
         .otherwise(F.col("duration"))
+    ).withColumn(
+        "months", 
+        F.when(F.col("vendor_name") == "Cybereason", "27.12")
+        .otherwise(F.col("months"))
     ).withColumn(
         "Mapping_type_Duration", 
         F.when(F.col("vendor_name") == "Cybereason", "Ratio mapping")
@@ -2070,6 +2255,11 @@ def apply_vendor_transformations(df):
         F.when((F.col("vendor_name") == "Cybereason") & 
             (F.col("sku").rlike(r'(?i).*CR-TS-.*') | F.col("sku").rlike(r'(?i).*CR-TRI-.*')), "Other Mapping")
         .otherwise(F.col("Mapping_type_Duration"))
+    ).withColumn(
+        "months", 
+        F.when((F.col("vendor_name") == "Cybereason") & 
+            (F.col("sku").rlike(r'(?i).*CR-TS-.*') | F.col("sku").rlike(r'(?i).*CR-TRI-.*')), "0")
+        .otherwise(F.col("months"))
     )
 
     # Deepinstinct-Specific Transformations
@@ -3520,37 +3710,7 @@ df_source_lev=df_source.filter(col('local_sku')!=col('sku')).withColumn("levensh
 
 # COMMAND ----------
 
-# DBTITLE 1,Apply transformations to 1 record
-df_source_1=df_source.filter(col('sku')=='LANSSREN250-2999')
-
-df_1 = default_columns(df_source_1)
-# Apply transformations to 1 record
-df_1 = parse_months(df_1)
-
-# df_1 = apply_vendor_transformations(df_1)
-# df_1 = apply_final_transformations(df_1) 
-df_1 = df_1.withColumn(
-        "duration",
-        F.when((F.col("vendor_name") == "GFI") & 
-            (F.col("Description").rlike(r'(?i).*1 Year.*')) & 
-            (F.col("Description").rlike(r'(?i).*subscription.*')), "1 YR")
-        .when((F.col("vendor_name") == "GFI") & 
-            (F.col("Description").rlike(r'(?i).*2 Year.*')) & 
-            (F.col("Description").rlike(r'(?i).*subscription.*')), "2 YR")
-        .when((F.col("vendor_name") == "GFI") & 
-            (F.col("Description").rlike(r'(?i).*3 Year.*')) & 
-            (F.col("Description").rlike(r'(?i).*subscription.*')), "3 YR")
-        .when((F.col("vendor_name") == "GFI") & 
-            (F.col("Description").rlike(r'(?i).*GFI 6000 Fax Pages inbound or outbound LOCAL in one year.*')), "1 YR")
-        .when((F.col("vendor_name") == "GFI") & 
-            (F.col("itemtrackingcode").rlike(r'(?i).*FMO-SS500-OFS-1Y.*')), "1 YR")
-        .otherwise(F.col("duration")))
-
-# display(df_1)
-
-
-# COMMAND ----------
-
+# DBTITLE 1,begin automation matching
 
 
 # Apply transformations in sequence
@@ -3572,17 +3732,46 @@ df_arr_auto_1 = clean_column_names(df_arr_auto_1)
 # Reorder columns more elegantly
 columns = df_arr_auto_1.columns
 desired_columns = ['sku', 'vendorcodeitem', 'vendor_name',
-'match_type',
+'matched_type',
 'duration',
 'frequency',
 'consumption',
 'mapping_type_duration',
 'mapping_type_billing',
 'mrrratio',
-'months']
-desired_order = desired_columns + [col for col in columns if col not in desired_columns]
+'months',
+'type',
+'itemtrackingcode',
+'local_sku',
+'description',
+'vendor_group_id',
+'has_sku_master_vendor_duplicates',
+'has_vendor_master_duplicates',
+'has_sku_vendor_duplicates',
+'has_duplicates',
+'sys_databasename',
+'sys_bronze_insertdatetime_utc',
+'sys_silver_insertdatetime_utc',
+'sys_silver_iscurrent'
+]
+desired_order = desired_columns #+ [col for col in columns if col not in desired_columns]
 df_arr_auto_1 = df_arr_auto_1.select(desired_order)
 
+
+
+# COMMAND ----------
+
+# Create a clean table with column defaults enabled from the start
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_auto_1 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+
+# COMMAND ----------
+
+# DBTITLE 1,write matched arr skus to table arr_auto_1
 # Write the cleaned DataFrame to Delta table
 df_arr_auto_1.write \
   .mode("overwrite") \
@@ -3593,7 +3782,7 @@ df_arr_auto_1.write \
 
 # COMMAND ----------
 
-# 35display(df_arr_auto_1)
+# display(df_arr_auto_1)
 
 # COMMAND ----------
 
@@ -3638,6 +3827,8 @@ pierre_df.write \
 
 # arr_pierre_0: pierres file generated via python
 df_arr_pierre_0= spark.table(f"{catalog}.{schema}.arr_pierre_0")
+df_arr_auto_1= spark.table(f"{catalog}.{schema}.arr_auto_1")
+
 
 # MRR Ratio
 df_arr_pierre_0 = df_arr_pierre_0.withColumn(
@@ -3679,10 +3870,6 @@ df_arr_pierre_0 = df_arr_pierre_0.withColumn("mapping_type_duration",
 
 
 
-df_arr_auto_1= spark.table(f"{catalog}.{schema}.arr_auto_1")
-
-print(df_arr_pierre_0.count())
-print(df_arr_auto_1.count())
 
 # df_arr_pierre_0.printSchema()
 # df_arr_auto_1.printSchema()
@@ -3733,15 +3920,15 @@ print(f"Exact matches (based on SKU (manufacturer_item_no_) and Vendor): {exact_
 
 # COMMAND ----------
 
-df1_not_in_df2.display()
+# df1_not_in_df2.display()
 
 # COMMAND ----------
 
-df2_not_in_df1.display()
+# df2_not_in_df1.display()
 
 # COMMAND ----------
 
-display(df_arr_auto_1)
+# display(df_arr_auto_1)
 
 # COMMAND ----------
 
@@ -3776,13 +3963,10 @@ numeric_fields_tolerance = {
 
 # Define additional fields
 additional_fields = [
-    'match_type',
+    'matched_type',
     'country', 
     'consumption_model', 
-    'description',
-    'description_2', 
-    'description_3', 
-    'description_4'
+    'description'
 ]
 
 # Call the function
@@ -3807,39 +3991,67 @@ compare_df.write \
 
 # COMMAND ----------
 
-compare_df.filter(col('comparison_status')=='DIFFERENT_VALUES').display()
-
-# COMMAND ----------
-
-display(df_arr_pierre_0.filter(F.col("sku") == 'FG135Z13ZZRCAA'))
-display(df_arr_auto_1.filter(F.col("sku") == 'FG135Z13ZZRCAA'))
-
+# compare_df.filter(col('comparison_status')=='DIFFERENT_VALUES').display()
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Lets compare auto arr with Karls manual mapping
+# MAGIC # Map local skus to their manufacturer sku
+# MAGIC Manufacturer SKUs have been mapped using the automation process.  This does not account for the local skus which are occasionally used within the transaction table, and in certain situations they are paired to their MasterSKU (ManufacturerSKU). Populating the arr_sku table with local skus will fill satisfy these scenarios
+# MAGIC a match_type field will help classify the mapping types used.
+# MAGIC - match_type auto: means the skus have been mapped using the mapping process
+# MAGIC - match_type child: means the local skus have been mapped to their manufacturing sku that was processed in the automated stage
+# MAGIC - match_type manual: means the skus have been mapped through the manual data sheet master.datanowarr
+# MAGIC
 
 # COMMAND ----------
 
- 
-df_arr_datanow_0= spark.table(f"{catalog}.obt.datanowarr")
+# DBTITLE 1,map local sku to their manufacturer sku
+df_sku_vendor_local =spark.table(f"{catalog}.{schema}.arr_sku_vendor_dq").alias("svdq")
+df_sku_vendor_local= df_sku_vendor_local.filter((col('VendorCodeItem').isNotNull()) 
+                                                & (col('ManufacturerItemNo_') == lit('A320TCHNE'))
+                                                ).withColumn("matched_type", lit("mt=local"))
+
+key_cols=["sku","VendorCodeItem"]
+order_cols=["Sys_Bronze_InsertDateTime_UTC"]
+df_sku_vendor_local = check_duplicate_keys(df_sku_vendor_local, key_cols, order_cols)
+
+df_sku_vendor_local.display()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # Lets compare auto arr with the manual mapping
+
+# COMMAND ----------
+
+# DBTITLE 1,bring in manual file to compare it to the automated mapping process
+  
+df_arr_datanow_0= spark.table(f"silver_{ENVIRONMENT}.masterdata.datanowarr")
+df_arr_datanow_0= df_arr_datanow_0 \
+    .withColumn("matched_type", lit("mt=manual")) \
+    .withColumn("sys_databasename", lit("Managed Datasets")) \
+    .filter(col("sys_silver_iscurrent") == True)
 # Multiple column rename:
 columns_to_rename = { 
     "sku": "sku",
-    "Vendor Name": "vendor_name",
+    "Vendor_Name": "vendor_name",
     "billing_frequency": "frequency",
     "commitment_duration2": "duration",
+    "Commitment_Duration_in_months":"months",
     "consumption_model": "consumption",
-    "mrr_ratio": "mrrratio",
-    'match_type':"matchtype",
-    #"Mapping type Duration" : "mapping_type_duration"
+    "MRR_Ratio": "mrrratio",
+    'Product_Type':"type",
+    "Mapping_Type_Duration" : "mapping_type_duration",
+    "Mapping_Type_Billing" : "mapping_type_billing",
+    "Sys_Silver_IsCurrent": "sys_silver_iscurrent"
 }
 
 df_arr_datanow_0 = rename_columns(df_arr_datanow_0, columns_to_rename)
-
 # Apply the function to clean column names
 df_arr_datanow_0 = clean_column_names(df_arr_datanow_0)
+
+
 
 
 # COMMAND ----------
@@ -3882,6 +4094,281 @@ df_arr_datanow_0 = df_arr_datanow_0.withColumn("mapping_type_duration",
         F.lit("Sure Mapping")
     ).otherwise(F.col("mapping_type_duration")))
 
+#map the vendoritemcode using the vendorcode 
+#!!DO THIS LATER ONCE WE CREATE A VENDORGROUP TABLE. arr_vendor_group is actually a link table not a dimension
+# df_vendor_master_unique = spark.table(f"{catalog}.{schema}.arr_vendor_group")
+# # only pick the first unique vendor group
+# df_arr_datanow_0 = (
+#    df_arr_datanow_0
+#    .join(
+#        df_vendor_master_unique,
+#        df_arr_datanow_0['vendor_name'] == df_vendor_master_unique['VendorGroup'],
+#        'left'
+#    ).select(
+#        df_arr_datanow_0['*'],  # All columns from df_sku_vendor_unique
+#        df_vendor_master_unique['sid'].alias('vendor_group_id'),  # Renamed sid to vendor_group_id
+#        df_vendor_master_unique['VendorCode'].alias('VendorCodeItem'),  # VendorGroup from vendor master
+#        df_vendor_master_unique['has_duplicates'].alias('has_vendor_master_duplicates'),  # has_duplicates for vendormaster
+#    )
+# )
+
+
+# Create a clean table with column defaults enabled from the start
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_datanow_0 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+
+df_arr_datanow_0.write \
+  .mode("overwrite") \
+  .format("delta") \
+  .option("mergeSchema", "true") \
+  .option("overwriteSchema", "true") \
+  .saveAsTable(f"{catalog}.{schema}.arr_datanow_0")
+
+
+
+# COMMAND ----------
+
+display(df_arr_datanow_0.filter(col("sku")=='001-000001696'))
+
+# COMMAND ----------
+
+display(df_arr_datanow_0.filter(col("sku")=='95504-AP310I-WR'))
+
+# COMMAND ----------
+
+key_cols=["sku","VendorCodeItem"]
+order_cols=["Sys_Bronze_InsertDateTime_UTC"]
+df_sku_vendor_dq = check_duplicate_keys(df_sku_vendor, key_cols, order_cols)
+
+df_sku_vendor_child=df_sku_vendor_dq.filter(col("row_number") == lit(1))
+
+# COMMAND ----------
+
+display(df_sku_vendor_child.filter(col("sku")=='XS136Z12ZZRCAA-SP'))
+
+# COMMAND ----------
+
+# Load the auto DataFrame
+df_arr_auto_1 = spark.table(f"{catalog}.{schema}.arr_auto_1")
+df_arr_vendor_group = spark.table(f"{catalog}.{schema}.arr_vendor_group")
+# Add parent_sku column to df_arr_auto_1 with null values, at the front
+df_arr_auto_1 = df_arr_auto_1.select(
+    lit(None).alias("parent_sku"),
+    "*"
+)
+
+
+# Add parent_sku column to df_arr_auto_1 with null values
+df_arr_auto_1 = df_arr_auto_1.withColumn("parent_sku", lit(None))
+
+# Perform the anti join to find missing records
+df_arr_auto_2 = (
+    df_sku_vendor_child.alias("local")
+    .join(
+        df_arr_vendor_group.alias("vg"),
+        on=[
+            (col("vg.VendorCode") == col("local.VendorCodeItem"))
+        ],
+        how="inner"
+    )
+    .join(
+        df_arr_auto_1.alias("auto"),
+        on=[
+            (col("local.sku") == col("auto.sku")) & 
+            (col("auto.vendorcodeitem") == col("local.VendorCodeItem"))
+        ],
+        how="left_anti"
+    )
+    .join(
+        df_arr_auto_1.alias("auto2"),
+        on=[
+            (col("local.ManufacturerItemNo_") == col("auto2.sku")) &
+            (col("local.sku") != col("auto2.sku")) & 
+            (col("auto2.vendor_name") == col("vg.VendorGroup"))
+        ],
+        how="inner"
+    )
+)
+
+# Get all columns from df_arr_auto_1 except sku and local_sku
+columns_auto2 = [col_name for col_name in df_arr_auto_1.columns 
+                if col_name not in ["local_sku", "sku", "parent_sku", "matched_type"]]
+
+# Create intermediate DataFrame with new columns and proper structure
+df_arr_auto_2 = (
+    df_arr_auto_2
+    .select(
+        col("local.sku").alias("sku"),
+        col("auto2.sku").alias("parent_sku"),
+        col("local.vendorcodeitem").alias("new_vendorcodeitem"),
+        *[col(f"auto2.{c}").alias(c) for c in columns_auto2]
+    )
+    .withColumn("local_sku", lit(None))
+    .withColumn("new_matched_type", lit("mt=child"))
+    .withColumn("vendorcodeitem", coalesce(col("new_vendorcodeitem"), col("vendorcodeitem"), lit("NaN")))
+    .drop("matched_type", "new_vendorcodeitem")
+    .withColumnRenamed("new_matched_type", "matched_type")
+)
+
+# Get updated columns list including parent_sku
+columns_auto_1 = df_arr_auto_1.columns
+
+# Add any missing columns with null values
+for col_name in columns_auto_1:
+    if col_name not in df_arr_auto_2.columns:
+        df_arr_auto_2 = df_arr_auto_2.withColumn(col_name, lit(None))
+
+# Create final union with exact column ordering
+df_arr_auto_2 = df_arr_auto_1.unionByName(
+    df_arr_auto_2.select(*columns_auto_1),
+    allowMissingColumns=True
+)
+
+# Display the child matches
+# df_arr_auto_2.filter(col("matched_type") == "mt=child").display()
+
+
+# Create a clean table with column defaults enabled from the start
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_auto_2 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+df_arr_auto_2.write \
+  .mode("overwrite") \
+  .format("delta") \
+  .option("mergeSchema", "true") \
+  .option("overwriteSchema", "true") \
+  .saveAsTable(f"{catalog}.{schema}.arr_auto_2")
+
+
+df_arr_auto_2 = spark.table(f"{catalog}.{schema}.arr_auto_2")
+
+# COMMAND ----------
+
+
+ 
+# First do the anti join to find missing records
+df_arr_auto_3 = (
+    df_arr_datanow_0
+    .join(
+        df_arr_auto_2,
+        on=["sku", "vendor_name"],
+        how="left_anti"
+    )
+)
+columns_auto_2 = df_arr_auto_2.columns
+# Then add any missing columns and select
+for missing_col in columns_auto_1:
+    if missing_col not in df_arr_auto_3.columns:
+        df_arr_auto_3 = df_arr_auto_3.withColumn(missing_col, lit(None))
+
+# Create final union
+df_arr_auto_3 = df_arr_auto_2.union(
+    df_arr_auto_3.select(columns_auto_1)
+)
+
+# df_arr_auto_3.filter(col("matched_type")=="mt=child").display() 
+
+# COMMAND ----------
+
+key_cols=["sku","vendor_name"]
+order_cols=["sys_bronze_insertdatetime_utc"]
+df_arr_auto_3_dq = check_duplicate_keys(df_arr_auto_3, key_cols, order_cols)
+
+df_arr_auto_3_dq.filter((F.col('occurrence') > 1) & (F.col('matched_type')== 'mt=manual')).display() 
+
+# COMMAND ----------
+
+# Create a clean table with column defaults enabled from the start
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_auto_3 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
+
+# COMMAND ----------
+
+
+# df_arr_auto_3.write \
+#   .mode("overwrite") \
+#   .format("delta") \
+#   .option("mergeSchema", "true") \
+#   .option("overwriteSchema", "true") \
+#   .saveAsTable(f"{catalog}.{schema}.arr_auto_3")
+
+# COMMAND ----------
+
+#df_vendor_master_unique.filter(col("VendorCode")=='SO_UTM').display()
+#df_sku_vendor_unique.filter(col("sku")=='XS136Z12ZZRCAA-SP').display()
+df_arr_auto_3.filter(col("sku")=='XS136Z12ZZRCAA-SP').display()
+
+
+# COMMAND ----------
+
+from delta.tables import DeltaTable
+target_table=f"{catalog}.{schema}.arr_auto_3"
+# Define the columns to update/insert (excluding business keys)
+update_columns_manual = {
+    col: f"source.{col}" for col in df_arr_auto_3.columns 
+    if col not in ["sku", "vendor_name"]
+}
+update_columns = {
+    col: f"source.{col}" for col in df_arr_auto_3.columns 
+    if col not in ["sku", "vendorcodeitem", "vendor_name"]
+}
+
+# Define all columns for insert
+insert_columns = {col: f"source.{col}" for col in df_arr_auto_3.columns}
+
+# Perform the merge
+deltaTable = DeltaTable.forName(spark, target_table)
+
+# first update the records where target matched_type is manual
+merge_statement = (
+    deltaTable.alias("target")
+    .merge(
+        source=df_arr_auto_3.alias("source").filter(col("matched_type")!='mt=manual'),
+        condition=(
+            (col("target.sku") == col("source.sku")) &
+            (col("target.vendorcodeitem").isNull())  &
+            (col("target.vendor_name") == col("source.vendor_name"))
+        )
+    )
+    .whenMatchedUpdate(set=update_columns_manual)
+    .execute()
+)
+
+
+# # then merge the records where matched_type is manual
+merge_statement = (
+    deltaTable.alias("target")
+    .merge(
+        source=df_arr_auto_3.alias("source"),
+        condition=(
+            (col("target.sku") == col("source.sku")) &
+            (coalesce(col("target.vendorcodeitem"), lit('NaN')) == coalesce(col("source.vendorcodeitem"), lit('NaN'))) &
+            (col("target.vendor_name") == col("source.vendor_name"))
+        )
+    )
+    .whenMatchedUpdate(set=update_columns)
+    .whenNotMatchedInsert(values=insert_columns)
+    .execute()
+)
+
+
+
+
+# COMMAND ----------
+
+# Load the auto DataFrame
+df_arr_auto_3 = spark.table(f"{catalog}.{schema}.arr_auto_3")
 
 # COMMAND ----------
 
@@ -3911,14 +4398,17 @@ numeric_fields_tolerance = {
 
 # Define additional fields
 additional_fields = [
-    'matchtype',
+    'matched_type',
     'country', 
     'consumption_model', 
 ]
 
+df_arr_datanow_0 = df_arr_datanow_0.withColumn('vendor_name', lower(col('vendor_name')))
+df_arr_auto_3 = df_arr_auto_3.withColumn('vendor_name', lower(col('vendor_name')))
+
 # Call the function
 compare_df = compare_dataframes(
-    df1=df_arr_auto_1, 
+    df1=df_arr_auto_3, 
     df2=df_arr_datanow_0, 
     composite_key=composite_key, 
     fields_to_compare=fields_to_compare, 
@@ -3941,10 +4431,6 @@ compare_df.filter(col('comparison_status')=='ONLY_IN_DF1').display()
 # COMMAND ----------
 
 compare_df.filter(col('comparison_status')=='DIFFERENT_VALUES').display()
-
-# COMMAND ----------
-
-df_arr_auto_1.withColumn('x',F.regexp_extract(F.col("lifecycleformula"), "^(\d+)", 1).cast("int")).filter(col('sku')=='976-000086-001-000').select('x','lifecycleformula','*').display()
 
 # COMMAND ----------
 

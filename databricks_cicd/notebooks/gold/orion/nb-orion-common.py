@@ -263,6 +263,105 @@ def compare_dataframes(
 
 # COMMAND ----------
 
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+
+def check_duplicate_keys(
+    df, 
+    key_cols=["Manufacturer Item No_", "Consolidated Vendor Name", "sys_databasename"], 
+    order_cols=None, 
+    priority_col="sys_databasename",
+    priority_map = {
+        "ReportsUK": 1,
+        "ReportsDE": 2,
+        "ReportsCH": 3,
+        "ReportsNO": 4,
+        "ReportsDN": 5,
+        "ReportsSE": 6,
+        "ReportsFI": 7,
+        "ReportsNL": 8,
+        "ReportsBE": 9,
+        "ReportsFR": 10,
+        "ReportsDK": 11
+    }
+):
+    """
+    Check for duplicate composite keys and provide detailed analysis with priority-based ordering.
+    
+    Parameters:
+    df: DataFrame to check
+    key_cols: List of column names that form the composite key
+    order_cols: List of column names for ordering. If None, uses key_cols
+    priority_col: Column to assign priorities
+    priority_map: Dictionary mapping values of the priority column to their priorities
+    """
+    # Get actual columns from DataFrame
+    df_columns = df.columns
+    
+    # Filter key_cols to only include columns that exist in the DataFrame
+    key_cols = [col for col in key_cols if col in df_columns]
+    
+    # Adjust priority handling based on whether sys_databasename exists
+    if priority_col not in df_columns:
+        df = df.withColumn("priority", F.lit(999))
+    else:
+        df = df.withColumn(
+            "priority",
+            F.expr(
+                "CASE " +
+                " ".join([f"WHEN {priority_col} = '{k}' THEN {v}" for k, v in priority_map.items()]) +
+                " ELSE 999 END"
+            )
+        )
+    
+    # Use order_cols if provided, otherwise fall back to key_cols
+    order_cols = order_cols if order_cols is not None else key_cols
+    # Filter order_cols to only include columns that exist
+    order_cols = [col for col in order_cols if col in df_columns]
+    
+    # Get total record count
+    total_records = df.count()
+    
+    # Define window specs
+    cnt_window = Window.partitionBy(*key_cols)
+    row_window = Window.partitionBy(*key_cols).orderBy(F.col("priority"), *order_cols)
+    
+    # Add occurrence and row_number using window functions
+    occurrence_with_details = df \
+        .withColumn("occurrence", F.count("*").over(cnt_window)) \
+        .withColumn("row_number", F.row_number().over(row_window)) \
+        .orderBy(F.col("priority"), *order_cols, "row_number")
+    
+    # Filter for duplicates only
+    dupes_with_details = occurrence_with_details.filter(F.col("occurrence") > 1)
+    
+    # Get summary statistics
+    num_unique_keys = df.select(*key_cols).distinct().count()
+    num_duplicate_keys = dupes_with_details.select(*key_cols).distinct().count()
+    
+    # Print summary
+    print(f"\nDuplicate Key Analysis:")
+    print(f"Total Records: {total_records}")
+    print(f"Unique Keys: {num_unique_keys}")
+    print(f"Keys with Duplicates: {num_duplicate_keys}")
+    print(f"Columns used as keys: {key_cols}")
+    
+    if num_duplicate_keys > 0:
+        # Show distribution of duplicates
+        print("\nDistribution of Duplicates:")
+        dupe_distribution = dupes_with_details \
+            .select("occurrence") \
+            .filter(F.col("row_number") == 1) \
+            .withColumn("frequency", F.count("*").over(Window.partitionBy("occurrence"))) \
+            .distinct() \
+            .orderBy("occurrence")
+            
+        print("\nDetailed Duplicate Records:")
+        
+    return occurrence_with_details
+
+# COMMAND ----------
+
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, when, lit, coalesce, concat_ws, isnull
 from typing import List, Optional

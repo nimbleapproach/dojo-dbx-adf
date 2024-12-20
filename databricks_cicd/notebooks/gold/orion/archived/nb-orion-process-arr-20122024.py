@@ -32,43 +32,6 @@ schema = 'orion'
 
 # COMMAND ----------
 
-from datetime import date
-from dateutil.relativedelta import relativedelta
-
-# Widget for full year processing
-dbutils.widgets.text("full_year", "0", "Data period")
-full_year_process = dbutils.widgets.get("full_year")
-full_year_process = {"0": False, "1": True}.get(full_year_process, False)  
-
-# Widget for month period
-dbutils.widgets.text("month_period", "YYYY-MM", "Month period")
-month_period_process = dbutils.widgets.get("month_period")
-
-# Check if a valid month period was provided
-if month_period_process == "YYYY-MM":
-    # No valid month provided, use previous month
-    today = date.today()
-    first_of_this_month = date(today.year, today.month, 1)
-    last_month_date = first_of_this_month - relativedelta(months=1)
-    month_period_process = last_month_date.strftime('%Y-%m')
-else:
-    # Validate the provided month period format
-    try:
-        # Try to parse the provided date
-        from datetime import datetime
-        datetime.strptime(month_period_process, '%Y-%m')
-        # If successful, keep the provided value
-    except ValueError:
-        # If invalid format, use previous month
-        today = date.today()
-        first_of_this_month = date(today.year, today.month, 1)
-        last_month_date = first_of_this_month - relativedelta(months=1)
-        month_period_process = last_month_date.strftime('%Y-%m')
-
-print(f"Processing {month_period_process} sales analysis")
-
-# COMMAND ----------
-
 from pyspark.sql.functions import col, lower, concat_ws
 
 df_arr = spark.table(f"{catalog}.{schema}.arr_auto_3")
@@ -107,16 +70,24 @@ x = x.select('product_code',
 
 # COMMAND ----------
 
+#df_arr.filter(lower(col('sku'))==lower(lit('SS-WTP-ND-T9-C'))).display()
+
+#x.filter(lower(col('product_code'))==lower(lit('SS-WTP-ND-T9-C'))).display()
+
+x.filter(lower(col('matched_arr_type'))==lower(lit('mt=manual'))).display()
+
+
+
+
+# COMMAND ----------
+
 df_trans = spark.table(f"{catalog}.{schema}.vw_globaltransactions_obt_staging")
 
-if full_year_process==1:
-    year = month_period_process.split('-')[0] if '-' in month_period_process else month_period_process
-    df_trans =df_trans.filter(date_format(col('TransactionDate'), 'yyyy') == year)
-else:
-    ## analyse just a month period
-    df_trans =df_trans.filter(date_format(col('TransactionDate'), 'yyyy-MM') == month_period_process)
+## analyse just sep 2024
+df_trans =df_trans.filter(date_format(col('TransactionDate'), 'yyyy-MM') == '2024-11')
 
 # df_trans = df_trans.replace({'NaN': None})
+
 # Duration in years (rounded and formatted)
 df_trans = df_trans.withColumn(
     "CommitmentDuration2Master",
@@ -490,6 +461,10 @@ for i in range(iterations):
 
 # COMMAND ----------
 
+df.select(col('matched_arr_type'))
+
+# COMMAND ----------
+
 # DBTITLE 1,SKUInternal|VendorNameInternal|thres 1
 df_trans=spark.table(f"{catalog}.{schema}.globaltransactions_auto")
 
@@ -536,7 +511,7 @@ result = udf_run_match(
 
 df_trans=spark.table(f"{catalog}.{schema}.globaltransactions_auto")
 
-
+# display(df_trans.where(col('is_matched')>0))
 
 # COMMAND ----------
 
@@ -582,7 +557,8 @@ result = udf_run_match(
 
 df_trans=spark.table(f"{catalog}.{schema}.globaltransactions_auto")
 
-
+display(df_trans.where(col('is_matched')>1))
+##doesnt provide any matches
 
 # COMMAND ----------
 
@@ -625,6 +601,9 @@ result = udf_run_match(
 # COMMAND ----------
 
 df_trans=spark.table(f"{catalog}.{schema}.globaltransactions_auto")
+
+display(df_trans.where(col('is_matched')>2))
+##
 
 
 # COMMAND ----------
@@ -712,47 +691,36 @@ result = udf_run_match(
 
 # COMMAND ----------
 
-df_orion = spark.table(f"{catalog}.{schema}.globaltransactions_auto")
-df_platinum = spark.table(f"platinum_{ENVIRONMENT}.obt.globaltransactions")
 
-composite_key = [
-    'TransactionDate', 'SKUInternal', 'VendorNameInternal', 'VendorNameMaster', 'SKUMaster'
-]
-fields_to_update = [
-    'ProductTypeMaster', 'CommitmentDuration1Master', 'CommitmentDuration2Master', 
-    'BillingFrequencyMaster', 'ConsumptionModelMaster'
-]
+df=spark.table(f"{catalog}.{schema}.globaltransactions_auto")
 
-# Get all columns from platinum except the fields to update
-platinum_cols = [c for c in df_platinum.columns if c not in fields_to_update]
-
-# Using DataFrame merge/join operations
-df_updated = df_platinum.join(
-    df_orion,
-    on=composite_key,
-    how='left'
-).select(
-    *[df_platinum[col].alias(col) for col in platinum_cols],  # all platinum columns except updated fields
-    *[df_orion[field].alias(field) for field in fields_to_update]  # updated fields from orion
-)
-
-# Save the updated DataFrame
-df_updated.write \
-    .mode("overwrite") \
-    .format("delta") \
-    .option("mergeSchema", "true") \
-    .option("overwriteSchema", "true") \
-    .saveAsTable(f"platinum_{ENVIRONMENT}.obt.globaltransactions_arr")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # COMPARISON BETWEEN OBT VS ORION
+display(df.where(col('is_matched')==2))
 
 # COMMAND ----------
 
 df_obt=spark.table(f"{catalog}.{schema}.globaltransactions_obt_v6")
 df_orion=spark.table(f"{catalog}.{schema}.globaltransactions_auto")
+
+print(df_obt.count())
+print(df_orion.count())
+
+
+# COMMAND ----------
+
+
+display(df_obt.filter(
+    (col('GroupEntityCode') == 'VU') & 
+    (date_format(col('TransactionDate'), 'yyyy-MM') == '2024-11') &
+    (col('SKUInternal') == 'AVMB-SUB - Altaro VM Backup for MSPs')
+).orderBy(col('RevenueAmount_Euro').desc()))
+
+
+
+display(df_orion.filter(
+    (col('GroupEntityCode') == 'VU') & 
+    (date_format(col('TransactionDate'), 'yyyy-MM') == '2024-11') &
+    (col('SKUInternal') == 'AVMB-SUB - Altaro VM Backup for MSPs')
+).orderBy(col('RevenueAmount_Euro').desc()))
 
 # COMMAND ----------
 
@@ -811,6 +779,10 @@ df_comparison=spark.table(f"{catalog}.{schema}.globaltransactions_comparison")
 
 # COMMAND ----------
 
+display(df_comparison.filter(col('SKUInternal')=='SS-WTP-ND-T9-C'))
+
+# COMMAND ----------
+
 
 
 df_comparison=spark.table(f"{catalog}.{schema}.globaltransactions_comparison")
@@ -818,6 +790,16 @@ df_comparison=spark.table(f"{catalog}.{schema}.globaltransactions_comparison")
 
 df_significantdiff = df_comparison.filter(
         (col('is_matched') >= 2))
+        # & 
+        #(col('BillingFrequencyMaster_changes').like('NaN -> %')) & 
+        #(~col('BillingFrequencyMaster_changes').like('NaN -> Not assigned'))
+    
+
+display(df_comparison)
+# display(df_significantdiff.filter(
+#     (col('GroupEntityCode') == 'VU') & 
+#     (date_format(col('TransactionDate'), 'yyyy-MM') == '2024-11')
+# ))
 
 # COMMAND ----------
 
@@ -828,9 +810,13 @@ df_agg = df_significantdiff.groupBy(
     date_format(col('TransactionDate'), 'yyyy-MM')
 ).agg(
     sum(col('RevenueAmount_Euro')).alias('TotalRevenue')
-).where(date_format(col('TransactionDate'), 'yyyy-MM') == month_period_process) 
-#display(df_agg)
+).where(date_format(col('TransactionDate'), 'yyyy-MM') == '2024-11') 
+display(df_agg)
 
+
+# COMMAND ----------
+
+display(df_obt.filter(col('Id')==8590880627))
 
 # COMMAND ----------
 
@@ -870,4 +856,4 @@ result = (df_gt_auto.alias("gt")
 )
 
 # Display or use the result
-#result.display()
+result.display()
