@@ -30,9 +30,9 @@ resources:
           max_retries: 1
           min_retry_interval_millis: 100000
           retry_on_timeout: true
-        - task_key: load_daily_metrics_to_silver
+        - task_key: load_arr_to_globaltrans
           depends_on:
-            - task_key: load_arr_to_globaltrans
+            - task_key: run_automated_mapping_layer
           description: task to load arr back into the global transaction table
           notebook_task:
             notebook_path: ../notebooks/gold/orion/nb-orion-process-arr.py
