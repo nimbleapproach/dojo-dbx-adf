@@ -10,8 +10,7 @@
 		},
 		"parameters": {
 			"pm_scenario": {
-				"type": "string",
-				"defaultValue": "2025ACT-PFA-01"
+				"type": "string"
 			},
 			"pm_Code": {
 				"type": "string"
