@@ -1,0 +1,127 @@
+{
+	"name": "PL_30_TAG_SaaS_Load_TEST",
+	"properties": {
+		"activities": [
+			{
+				"name": "For Each Scenario",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('ScenarioArry')",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 8,
+					"activities": [
+						{
+							"name": "Load Tagetik View",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ODataSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										}
+									],
+									"httpRequestTimeout": "00:05:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings",
+										"maxRowsPerFile": 1000000,
+										"fileNamePrefix": {
+											"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{item()}-@{utcNow()}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_TAGETIK_SAAS",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_scenario": {
+											"value": "@item()",
+											"type": "Expression"
+										},
+										"pm_Code": {
+											"value": "@pipeline().parameters.pm_Code",
+											"type": "Expression"
+										},
+										"pm_update_date": {
+											"value": "@variables('UpdateDate')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										},
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_Code": {
+				"type": "string"
+			},
+			"pm_Table": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"ScenarioArry": {
+				"type": "Array",
+				"defaultValue": [
+					"2025ACT-PFA-01"
+				]
+			},
+			"UpdateDate": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+		},
+		"annotations": []
+	}
+}
