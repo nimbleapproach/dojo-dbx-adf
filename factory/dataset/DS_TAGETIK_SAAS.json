@@ -15,9 +15,6 @@
 			},
 			"pm_Code": {
 				"type": "string"
-			},
-			"pm_date": {
-				"type": "string"
 			}
 		},
 		"folder": {
