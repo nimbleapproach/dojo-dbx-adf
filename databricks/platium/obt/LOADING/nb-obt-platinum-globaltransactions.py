@@ -74,10 +74,35 @@ spark.sql(f"""SELECT
   SUM(RevenueAmount) AS RevenueAmount,
   Period_FX_rate,
   SUM(RevenueAmount_Euro) AS RevenueAmount_Euro,
-  SUM(GP1) AS GP1,
-  SUM(GP1_Euro) AS GP1_Euro,
-  SUM(COGS) AS COGS,
-  SUM(COGS_Euro) AS COGS_Euro,
+SUM(  CASE 
+      WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =1 
+      THEN 0 
+       WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =0
+      then GP1
+      ELSE GP1_adj
+  END )AS GP1,
+SUM(  CASE 
+      WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =1 
+      THEN 0 
+       WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =0
+      then GP1_Euro
+      ELSE GP1_adj_Euro
+  END )AS GP1_Euro,
+  -- SUM(COGS) AS COGS,
+SUM(  CASE 
+      WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =1 
+      THEN 0 
+       WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =0
+      then COGS
+      ELSE COGS_adj
+  END )AS COGS,
+SUM(  CASE 
+      WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =1 
+      THEN 0 
+       WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) and TopCostFlag =0
+      then COGS_Euro
+      ELSE COGS_adj_Euro
+  END )AS COGS_Euro,
   CASE /**TeamFON has only service SKU but is posted in MSP Product revenue**/
         WHEN GL_Group='Revenue' AND lower(Type) like '%service%' and VendorCode <> 'TEF' THEN 'Service' 
         WHEN GL_Group='Revenue' AND lower(SKUInternal) like 'inf-ps-%' THEN 'Service' 
@@ -139,11 +164,19 @@ SELECT
   g.RevenueAmount as RevenueAmount,
   e.Period_FX_rate ,
   cast(g.RevenueAmount/ e.Period_FX_rate AS DECIMAL(10,2)) as RevenueAmount_Euro,
-  g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 ))  AS GP1,
- cast(( g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) )/ e.Period_FX_rate AS DECIMAL(10,2)) AS GP1_Euro,
+
+    g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry )  AS GP1,
+ cast(( g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry ) )/ e.Period_FX_rate AS DECIMAL(10,2)) AS GP1_Euro,
+
+  g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 ))  AS GP1_adj,
+ cast(( g.RevenueAmount + (g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) )/ e.Period_FX_rate AS DECIMAL(10,2)) AS GP1_adj_Euro,
   --Added Cost Amount
-  g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 ) AS COGS,
+  (g.CostAmount +g.CostAmount_ValueEntry) AS COGS,
  cast((g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) / e.Period_FX_rate AS DECIMAL(10,2)) AS COGS_Euro,
+
+(g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) AS COGS_adj,
+ cast((g.CostAmount+g.CostAmount_ValueEntry + coalesce(g.Cost_ProRata_Adj,0 )) / e.Period_FX_rate AS DECIMAL(10,2)) AS COGS_adj_Euro,
+
  coalesce(GL_Group, 'Others') AS GL_Group,
   0 as TopCostFlag
 FROM gold_{ENVIRONMENT}.obt.infinigate_globaltransactions_cost_adjusted_gl g
@@ -225,10 +258,14 @@ SELECT
   tc.CostAmount / tc.CostAmount_EUR AS Period_FX_rate ,
   CAST(SUM(CASE WHEN GL_Group like  '%Revenue%' THEN ((-1) * tc.CostAmount_EUR)
       ELSE 0.00 END )AS DECIMAL(20,2)) AS RevenueAmount_Euro,
- (-1) * SUM(tc.CostAmount) AS GP1,
- (-1) * SUM(tc.CostAmount_EUR)  AS GP1_Euro,
- (-1) * SUM(tc.CostAmount)  AS COGS,
- (-1) * SUM(tc.CostAmount_EUR)  AS COGS_Euro,
+ 0 AS GP1,
+ 0 AS GP1_Euro,
+ (-1) * SUM(tc.CostAmount)  AS GP1_adj,
+ (-1) * SUM(tc.CostAmount_EUR)  AS GP1_adj_Euro,
+ 0  AS COGS,
+ 0 AS COGS_Euro,
+ (-1) * SUM(tc.CostAmount) AS COGS_adj,
+ (-1) * SUM(tc.CostAmount_EUR) AS COGS_adj_Euro,
  GL_Group,
  1 as TopCostFlag
 FROM gold_{ENVIRONMENT}.obt.infinigate_top_cost_adjustments tc
