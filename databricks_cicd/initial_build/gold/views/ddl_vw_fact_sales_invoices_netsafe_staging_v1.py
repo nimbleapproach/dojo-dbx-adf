@@ -17,6 +17,8 @@ catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
+
+
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -50,6 +52,9 @@ SELECT DISTINCT
     'N/A' AS gen_bus_posting_group,
     0 AS currency_factor,
     to_date(invoice.Invoice_Date) AS document_date,
+    NULL as deferred_revenue_startdate, 
+    NULL as deferred_revenue_enddate, 
+    0 as is_deferred,
     'netsafe sales invoice' AS document_source,
     CASE WHEN trim(invoice.SKU) = 'NaN' THEN 'N/A' ELSE COALESCE(trim(invoice.SKU), "N/A") END as product_code,
     'Netsafe Line Item' AS line_item_type,
@@ -86,29 +91,6 @@ LEFT JOIN
   gold_{ENVIRONMENT}.obt.datanowarr AS datanowarr
 ON
   trim(invoice.SKU) = trim(datanowarr.SKU)
---LEFT JOIN 
---(
---  SELECT DISTINCT ResellerID, ResellerGroupCode, ResellerGroupName, ResellerName, Entity
---  FROM silver_{ENVIRONMENT}.masterdata.resellergroups
---  WHERE InfinigateCompany = 'Nuvias'
---  AND Sys_Silver_IsCurrent = true
-  /*
-  Change Date [22/02/2024]
-  Change BY [MS]
-  Filter only relevant entities
-  */
---  AND Entity IN ('RO2', 'HR2', 'SI1', 'BG1')
---) rg
---ON 
---  cast(invoice.Customer_Account as string) = rg.ResellerID
-
---AND
---  CASE
---WHEN lower(invoice.Sys_Country) like '%romania%' THEN 'RO2'
---WHEN lower(invoice.Sys_Country) like '%croatia%' THEN 'HR2'
---WHEN lower(invoice.Sys_Country) like '%slovenia%' THEN 'SI1'
---WHEN lower(invoice.Sys_Country) like '%bulgaria%' THEN 'BG1'
---END = rg.Entity
 
 LEFT JOIN min_fx_rate mfx on mfx.currency = Transaction_Currency
 
@@ -132,6 +114,6 @@ LEFT JOIN cte_sources s on CASE
 
 WHERE invoice.Sys_Silver_IsCurrent = true
 AND invoice.SID is not null
---limit(100)
+
 """
 )

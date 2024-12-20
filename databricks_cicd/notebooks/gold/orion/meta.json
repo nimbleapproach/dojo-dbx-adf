@@ -246,6 +246,18 @@
         "active": 1
                 },
 
+    "fact_sales_transaction_igcloud" : {
+        "type": "fact",
+        "run_group": 500,
+        "run_order": 1,
+        "processing_notebook" : "nb-orion-process-fact-sales-transactions",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction_ig", 
+        "destination_key_columns" : ["source_system_fk","local_fact_id","document_source"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_cloudblue_staging" , 
+        "source_key_columns" : ["source_system_fk","local_fact_id","document_source"],
+        "active": 1
+                },
+
     "fact_sales_transaction_netsafe" : {
         "type": "fact",
         "run_group": 400,

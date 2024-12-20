@@ -1,14 +1,7 @@
 # Databricks notebook source
 # Importing Libraries
 import os
-from pyspark.sql import SparkSession
-
-# COMMAND ----------
-
-# Create a Spark session
-spark = SparkSession.builder \
-    .appName("Databricks Notebook") \
-    .getOrCreate()
+spark = spark  # noqa
 
 # COMMAND ----------
 
@@ -20,14 +13,12 @@ ENVIRONMENT
 
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
-
 # COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
-
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -42,16 +33,8 @@ AS with cte_sources as
 (
   select distinct s.source_system, source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
-  --where s.source_system = 'Infinigate ERP' 
   where s.is_current = 1
 ),
---cte_nuvias_sources as 
---(
--- select distinct source_system_pk, data_area_id
---  from {catalog}.{schema}.dim_source_system s 
---  where s.source_system = 'Nuvias ERP' 
---  and s.is_current = 1
---),,
 cte_source_data as 
 (
   -- vendors per country
@@ -105,7 +88,6 @@ cte_source_data as
   -- Netsafe
   SELECT
     case when invoice.Vendor_ID = 'NaN' then UPPER(invoice.Vendor_Name) ELSE invoice.Vendor_ID END AS Vendor_Code,
-    --UPPER(coalesce(invoice.Vendor_Name, 'N/A')) AS Vendor_Name_Internal,
     'N/A' AS Vendor_Name_Internal, --too many duplicates, vendor_id = 002_A, has load of different vendor names
     case when invoice.Vendor_ID = 'NaN' then UPPER(invoice.Vendor_Name) ELSE coalesce(invoice.Vendor_ID, 'N/A') END AS local_vendor_ID,
     'N/A' as Country_Code,
@@ -144,6 +126,19 @@ cte_source_data as
   LEFT JOIN cte_sources s on 'AE1' = s.source_entity AND s.source_system = 'Starlink (Netsuite) ERP'
   WHERE si.Sys_Silver_IsCurrent = 1
   GROUP BY ALL
+  UNION ALL
+  SELECT DISTINCT 
+    vendor_code,
+    Vendor_Name_Internal,
+    local_vendor_ID,
+    Country_Code,
+    source_system_fk,
+    start_datetime,
+    end_datetime,
+    is_current,
+    Sys_Gold_InsertedDateTime_UTC,
+    Sys_Gold_ModifiedDateTime_UTC
+  FROM {catalog}.{schema}.vw_dim_vendor_cloudblue_staging
 )
 SELECT DISTINCT 
   csd.vendor_code,

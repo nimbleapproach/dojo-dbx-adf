@@ -36,24 +36,16 @@ with cte_sources as
 (
   select distinct s.source_system, source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
-  --where s.source_system = 'Infinigate ERP' 
   where s.is_current = 1
 ),
 cte_duplicate_netsafe_reseller as 
 (
   select Customer_Account, Sys_Country, MAX(Customer_Name) as Reseller_Name_Internal,count(*) as reseller_count
-  from silver_dev.netsafe.invoicedata
+  from silver_{ENVIRONMENT}.netsafe.invoicedata
   where sys_silver_iscurrent = true
   group by Customer_Account, Sys_Country
   having count(*) > 1
 ),
---cte_nuvias_sources as 
---(
--- select distinct source_system_pk, data_area_id
---  from {catalog}.{schema}.dim_source_system s 
---  where s.source_system = 'Nuvias ERP' 
---  and s.is_current = 1
---),,
 cte_source_data as
 (
 select distinct
@@ -137,8 +129,6 @@ SELECT
       to_date(cust.CREATEDDATETIME),
       to_date('1900-01-01')
     ) AS Reseller_Start_Date,
-    -- coalesce(rg.ResellerGroupCode, 'NaN') AS ResellerGroupCode,
-    -- coalesce(rg.ResellerGroupName, 'NaN') AS ResellerGroupName,
     coalesce(s.source_system_pk,-1) AS source_system_fk,
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -166,7 +156,6 @@ GROUP BY ALL
 UNION all
 --Netsuite
 SELECT 
-  --coalesce(rs.Reseller_Name,'N/A') AS Reseller_Code,
   coalesce(rs.Reseller_Name,si.Reseller_Name) AS reseller_code,
   coalesce(rs.Reseller_Name,'N/A') AS Reseller_Name_Internal,
   'AE1' AS Reseller_Geography_Internal,
@@ -186,7 +175,7 @@ GROUP BY ALL
 UNION all
 --Netsafe
 SELECT
-  invoice.Customer_Account AS ResellerCode,
+  invoice.Customer_Account AS Reseller_Code,
   CASE WHEN d.reseller_count > 1 THEN d.Reseller_Name_Internal ELSE invoice.Customer_Name end AS Reseller_Name_Internal,
   'N/A' AS Reseller_Geography_Internal,
   to_date('1900-01-01') AS Reseller_Start_Date,
@@ -207,6 +196,19 @@ AND s.source_system = 'Netsafe ERP'
 LEFT JOIN cte_duplicate_netsafe_reseller d ON d.Customer_Account = invoice.Customer_Account and d.Sys_Country = invoice.Sys_Country
 WHERE invoice.Sys_Silver_IsCurrent = 1
 GROUP BY ALL
+UNION ALL
+SELECT 
+  Reseller_Code,
+  Reseller_Name_Internal,
+  Reseller_Geography_Internal,
+  Reseller_Start_Date,
+  source_system_fk,
+  start_datetime,
+  end_datetime,
+  is_current,
+  Sys_Gold_InsertedDateTime_UTC,
+  Sys_Gold_ModifiedDateTime_UTC
+FROM {catalog}.{schema}.vw_dim_reseller_cloudblue_staging
 )
 SELECT 
   csd.Reseller_Code,

@@ -36,10 +36,6 @@ with cte_report_dbs as
 ),
 cte_nuvias_entity as 
 (
-  --select distinct UPPER(entity.TagetikEntityCode) AS source_entity, dataareaid as data_area_id 
-  --FROM silver_{ENVIRONMENT}.nuvias_operations.custinvoicetrans trans
-  --LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON upper(trans.DataAreaId) = entity.SourceEntityCode 
-  --WHERE Sys_Silver_IsCurrent = 1
   select distinct trans.dataareaid as source_entity 
   FROM silver_{ENVIRONMENT}.nuvias_operations.custinvoicetrans trans
   WHERE Sys_Silver_IsCurrent = 1
@@ -63,8 +59,6 @@ select
   'Infinigate ERP' as source_system,
   'igsql03' as source_database,
   right(sys_databasename,2) as source_entity,
-  --sys_databasename as reporting_source_database,
-  --'N/A' as data_area_id,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -76,8 +70,6 @@ select
   'Wavelink ERP' as source_system,
   'TBC' as source_database,
   'TBC' as source_entity,
-  --'TBC',
-  --'TBC',
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -88,8 +80,6 @@ SELECT
   'Managed Datasets' AS source_system,
   'TBC' as source_database,
   'TBC' as source_entity,
-  --'TBC',
-  --'TBC',
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -100,8 +90,6 @@ SELECT
   'Nuvias ERP' AS source_system,
   'nuvias_operations',
   cne.source_entity,
-  --'N/A' AS reporting_source_database,
-  --cne.data_area_id,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -113,8 +101,6 @@ SELECT
   'Netsafe ERP' AS source_system,
   'netsafe',
   cne.source_entity,
-  --'N/A',
-  --'N/A',
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -126,20 +112,26 @@ SELECT
   'Starlink (Netsuite) ERP' AS source_system,
   'netsuite',
   'AE1',
-  --'N/A',
-  --'N/A',
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
   CAST('1990-01-01' AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
   CAST('1990-01-01' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
+UNION
+SELECT
+  'Cloudblue PBA ERP' AS source_system,
+  'cloudblue_pba',
+  'N/A',
+  CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
+  CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
+  1 AS is_current,
+  CAST('1990-01-01' AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
+  CAST('1990-01-01' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC)
 )
 SELECT DISTINCT
   csd.source_system,
   csd.source_database,
   csd.source_entity,
-  --csd.reporting_source_database,
-  --csd.data_area_id,
   case when d.is_current is null THEN csd.start_datetime ELSE CAST(NOW() as TIMESTAMP) END as start_datetime,
   csd.end_datetime,
   csd.is_current,
