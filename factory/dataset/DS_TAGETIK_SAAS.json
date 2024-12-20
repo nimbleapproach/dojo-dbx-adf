@@ -15,6 +15,9 @@
 			},
 			"pm_Code": {
 				"type": "string"
+			},
+			"pm_date": {
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -25,7 +28,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')",
+				"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')?$filter=DATE_UPD Gt ' 2024-12-01T00:00:00Z'",
 				"type": "Expression"
 			}
 		}
