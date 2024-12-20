@@ -537,7 +537,7 @@ SELECT
    NULL AS IndustryVertical,
    g.CurrencyCode,
    g.RevenueAmount,
-   (e.Period_FX_rate, mx.Period_FX_Rate) AS Period_FX_rate,
+   coalesce(e.Period_FX_rate, mx.Period_FX_Rate) AS Period_FX_rate,
   cast(g.RevenueAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2)) AS RevenueAmount_Euro,
    g.GP1,
    CASE 
