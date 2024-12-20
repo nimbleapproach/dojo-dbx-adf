@@ -126,7 +126,7 @@ SELECT
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
   CAST('1990-01-01' AS TIMESTAMP) AS Sys_Gold_InsertedDateTime_UTC,
-  CAST('1990-01-01' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC)
+  CAST('1990-01-01' AS TIMESTAMP) AS Sys_Gold_ModifiedDateTime_UTC
 )
 SELECT DISTINCT
   csd.source_system,
