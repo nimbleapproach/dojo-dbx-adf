@@ -25,7 +25,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')?$filter=DATE_UPD Ge '2024-12-01T00:00:00Z'",
+				"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')?$filter=DATE_UPD Eq 1",
 				"type": "Expression"
 			}
 		}
