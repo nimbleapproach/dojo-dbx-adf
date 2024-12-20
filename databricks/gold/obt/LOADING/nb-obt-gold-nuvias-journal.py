@@ -114,11 +114,13 @@ CASE WHEN EntityID = 'Austria'	THEN 'AT2'
            9
            )
    end AS VendorCode,
-  AccountName,
+  case when AccountName in ('Sales','Customer rebates') then 'Sales' else 'Cost of Sales' end AS AccountName,
   CurrencyCode,
   AmountLCY * (-1) AS AmountLCY
 from
-  cte""").createOrReplaceTempView('NU_JOURNAL')
+  cte
+where lower(PostingType) in ('customer revenue','ledger journal')
+  """).createOrReplaceTempView('NU_JOURNAL')
 
 # COMMAND ----------
 

@@ -537,34 +537,18 @@ SELECT
    NULL AS IndustryVertical,
    g.CurrencyCode,
    g.RevenueAmount,
-   CASE 
-   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-   THEN ifnull(e1.Period_FX_rate, mx.Period_FX_Rate)
-   ELSE ifnull(e.Period_FX_rate, mx.Period_FX_Rate)
-   END AS Period_FX_rate,
-   CASE 
-   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-   THEN cast(g.RevenueAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-   ELSE cast(g.RevenueAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-   END AS RevenueAmount_Euro,
+   (e.Period_FX_rate, mx.Period_FX_Rate) AS Period_FX_rate,
+  cast(g.RevenueAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2)) AS RevenueAmount_Euro,
    g.GP1,
-  -- CASE 
-  -- WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-  -- THEN cast(g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-  -- ELSE cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-  -- END AS GP1_Euro,
-  coalesce(GP1_Trueup, CASE 
-   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-   THEN cast(g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-   ELSE cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-   END ) GP1_Euro,
+   CASE 
+       WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) 
+      then cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
+      ELSE coalesce(GP1_Trueup, cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2)))
+  END  AS GP1_Euro,
+  -- coalesce(GP1_Trueup, cast(g.GP1 / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))) GP1_Euro,
    --Added Cost Amount
    g.CostAmount AS COGS,
-   CASE 
-   WHEN (g.GroupEntityCode = 'VU' OR g.EntityCode IN ('NOTINTAGETIK', 'RO2', 'HR2', 'SI1', 'BG1'))
-   THEN cast(g.CostAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-   ELSE cast(g.CostAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))
-   END AS COGS_Euro,
+   cast(g.CostAmount / ifnull(e.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10,2))AS COGS_Euro,
    case when g.VendorNameInternal in('Mouse & Bear Solutions Ltd','Blackthorne International Transport Ltd','Transport','Nuvias Internal Logistics') then 'Logistics'
          when g.SKUInternal in('TRADEFAIR_A','TRAVELEXP') then 'Marketing'
          when g.SKUInternal ='BEBAT' THEN 'Others'
@@ -587,15 +571,6 @@ SELECT
    CASE WHEN g.EntityCode = 'BE1' THEN 'NL1' ELSE  g.EntityCode  END   = e.COD_AZIENDA
  AND
    e.ScenarioGroup = 'Actual'
- --Only for VU and entitycode 'NOTINTAGETIK'
- LEFT JOIN
-   (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_{ENVIRONMENT}.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
- ON
-   e1.Calendar_Year = cast(year(g.TransactionDate) as string)
- AND
-   e1.Month = right(concat('0',cast(month(g.TransactionDate) as string)),2)
- AND
-   g.CurrencyCode = cast(e1.Currency as string)
  LEFT JOIN 
    max_fx_rates mx 
  ON
@@ -648,47 +623,18 @@ spark.sql(f"""SELECT
     ) THEN 1
     ELSE ifnull(e1.Period_FX_rate, mx.Period_FX_Rate)
   END AS Period_FX_rate,
-  CASE
-    WHEN (
-      g.GroupEntityCode = 'VU'
-      AND g.CurrencyCode = 'EUR'
-    ) THEN cast(g.RevenueAmount AS DECIMAL(10, 2))
-    ELSE cast(
-      g.RevenueAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
-    )
-  END AS RevenueAmount_Euro,
-  CASE
-    WHEN (
-      g.GroupEntityCode = 'VU'
-      AND g.CurrencyCode = 'EUR'
-    ) THEN cast(g.GP1 AS DECIMAL(10, 2))
-    ELSE cast(
-      g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
-    )
-  END AS GP1,
-  coalesce(
-    GP1_Trueup,
-    CASE
-      WHEN (
-        g.GroupEntityCode = 'VU'
-        AND g.CurrencyCode = 'EUR'
-      ) THEN cast(g.GP1 AS DECIMAL(10, 2))
-      ELSE cast(
-        g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
-      )
-    END
-  ) AS GP1_Euro,
+  cast( g.RevenueAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)) AS RevenueAmount_Euro,
+ cast(g.GP1 / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2))AS GP1,
+CASE
+  WHEN TransactionDate BETWEEN DATE_TRUNC('MONTH', CURRENT_DATE) AND LAST_DAY(CURRENT_DATE) THEN
+    CAST(g.GP1 / IFNULL(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2))
+  ELSE 
+    COALESCE(GP1_Trueup, CAST(g.GP1 / IFNULL(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)))
+END AS GP1_Euro,
+ 
   --Added Cost Amount
   g.CostAmount AS COGS,
-  CASE
-    WHEN (
-      g.GroupEntityCode = 'VU'
-      AND g.CurrencyCode = 'EUR'
-    ) THEN cast(g.CostAmount AS DECIMAL(10, 2))
-    ELSE cast(
-      g.CostAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2)
-    )
-  END AS COGS_Euro,
+cast(g.CostAmount / ifnull(e1.Period_FX_rate, mx.Period_FX_Rate) AS DECIMAL(10, 2) ) AS COGS_Euro,
   case
     when g.VendorNameInternal in(
       'Mouse & Bear Solutions Ltd',
