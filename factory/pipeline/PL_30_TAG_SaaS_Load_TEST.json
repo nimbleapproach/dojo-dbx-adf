@@ -5,7 +5,14 @@
 			{
 				"name": "For Each Scenario",
 				"type": "ForEach",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Set Update Date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
@@ -98,6 +105,23 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Set Update Date",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "UpdateDate",
+					"value": {
+						"value": "@startOfDay(utcNow())",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -116,8 +140,7 @@
 				]
 			},
 			"UpdateDate": {
-				"type": "String",
-				"defaultValue": "2024-11-01T00:00:00.000Z"
+				"type": "String"
 			}
 		},
 		"folder": {
