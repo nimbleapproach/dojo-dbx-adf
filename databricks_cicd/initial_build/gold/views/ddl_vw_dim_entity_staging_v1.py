@@ -1,26 +1,20 @@
 # Databricks notebook source
 # Importing Libraries
 import os
-
 # COMMAND ----------
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
-
 # COMMAND ----------
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
-
-
 # COMMAND ----------
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
-
 # COMMAND ----------
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
               DROP VIEW IF EXISTS {catalog}.{schema}.vw_dim_entity_staging
               """)
-
 # COMMAND ----------
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_entity_staging 
@@ -82,5 +76,5 @@ SELECT DISTINCT
   csd.Sys_Gold_ModifiedDateTime_UTC
 FROM cte_source_data csd
 LEFT JOIN {catalog}.{schema}.dim_entity d ON d.entity_code = csd.entity_code
-  """)
-
+  """
+)
