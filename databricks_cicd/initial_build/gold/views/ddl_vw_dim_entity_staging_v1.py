@@ -34,7 +34,7 @@ with cte_source_data AS
   b.entity_type,
   coalesce(b.legal_headquarters,'N/A') AS legal_headquarters,
   coalesce(b.administrative_city,'N/A') AS administrative_city,
-  coalesce(b.date_established,'N/A') AS date_established,
+  'N/A' AS date_established,
   coalesce(b.consolidation_type,'N/A') AS consolidation_type,
   coalesce(b.entity_local_currency,'N/A') AS entity_local_currency,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
