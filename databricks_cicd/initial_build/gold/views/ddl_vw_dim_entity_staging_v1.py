@@ -3,23 +3,18 @@
 import os
 
 # COMMAND ----------
-
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
 
 # COMMAND ----------
-
-
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 
 # COMMAND ----------
-
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
-
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -27,7 +22,6 @@ if ENVIRONMENT == 'dev':
               """)
 
 # COMMAND ----------
-
 spark.sql(f"""
 CREATE VIEW IF NOT EXISTS {catalog}.{schema}.vw_dim_entity_staging 
 AS 
@@ -38,11 +32,11 @@ with cte_source_data AS
   egm.entity_code_legacy,
   b.entity_description,
   b.entity_type,
-  coalesce(b.legal_headquarters,'N/A') as legal_headquarters,
-  coalesce(b.administrative_city,'N/A') as administrative_city,
-  coalesce(b.date_established,'N/A') as date_established,
-  coalesce(b.consolidation_type,'N/A') as consolidation_type,
-  coalesce(b.entity_local_currency,'N/A') as entity_local_currency,
+  coalesce(b.legal_headquarters,'N/A') AS legal_headquarters,
+  coalesce(b.administrative_city,'N/A') AS administrative_city,
+  coalesce(b.date_established,'N/A') AS date_established,
+  coalesce(b.consolidation_type,'N/A') AS consolidation_type,
+  coalesce(b.entity_local_currency,'N/A') AS entity_local_currency,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -59,12 +53,12 @@ SELECT DISTINCT
   'BE1',
   'BE1 + NL1',
   'BENELUX',
-  1 as entity_type,
-  'N/A' as legal_headquarters,
-  'N/A' as administrative_city,
-  'N/A' as date_established,
-  'N/A' as consolidation_type,
-  'N/A' as entity_local_currency,
+  1 AS entity_type,
+  'N/A' AS legal_headquarters,
+  'N/A' AS administrative_city,
+  'N/A' AS date_established,
+  'N/A' AS consolidation_type,
+  'N/A' AS entity_local_currency,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
@@ -87,6 +81,6 @@ SELECT DISTINCT
   csd.Sys_Gold_InsertedDateTime_UTC,
   csd.Sys_Gold_ModifiedDateTime_UTC
 FROM cte_source_data csd
-LEFT JOIN {catalog}.{schema}.dim_entity d on d.entity_code = csd.entity_code
+LEFT JOIN {catalog}.{schema}.dim_entity d ON d.entity_code = csd.entity_code
   """)
 

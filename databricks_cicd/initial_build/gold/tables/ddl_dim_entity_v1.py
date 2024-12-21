@@ -4,23 +4,18 @@ import os
 spark = spark  # noqa
 
 # COMMAND ----------
-
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 ENVIRONMENT
 
 # COMMAND ----------
-
-
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 
 # COMMAND ----------
-
 catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
-
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -38,7 +33,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.dim_entity (
   entity_type STRING COMMENT 'Entity type code',
   legal_headquarters STRING COMMENT 'The legal headquarters',
   administrative_city STRING COMMENT 'The city where the entity resides',
-  date_established STRING COMMENT 'Date the entity was established',
+  date_established STRING COMMENT 'Date the entity was established. Taken from Tagetik data mostly',
   entity_local_currency STRING COMMENT 'Entity local currency code',
   start_datetime TIMESTAMP NOT NULL COMMENT 'The dimensional start date of the record',
   end_datetime TIMESTAMP COMMENT 'The dimensional end date of the record, those records with a NULL value are current',
