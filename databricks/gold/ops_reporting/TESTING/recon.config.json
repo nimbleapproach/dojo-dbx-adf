@@ -890,7 +890,7 @@
       "ReportingCompanyBillDate": "navision_invoice_date",
       "CambiumPartNumber": "navision_part_code_id",
       "QuantitySold": "navision_quantity",
-      "VendorReferenceNumber": "nuvias_vendor_promotion",
+      "ClaimID": "nuvias_vendor_promotion",
       "InvoiceCurrency": "navision_sell_currency",
       "PurchasePrice": "nuvias_purchase_price",
       "BillToName": "navision_reseller_name",
@@ -1234,7 +1234,7 @@
     "ssrs-config": {
       "folder": "AddOnPOSCSCOnly",
       "cte-file": "AddOn.Cte.sql",
-      "main-query-file": "TODO",
+      "main-query-file": "AddOn POS CSC Only.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -1249,7 +1249,7 @@
     },
     "column-mapping": {
       "CSCOrderNumber": "nuvias_sales_order_number",
-      "D365PurchasId": "nuvias_purchase_order",
+      "DistriPurchasOrder": "nuvias_purchase_order",
       "SalesOrderNumber": "navision_sales_order_number",
       "InvoiceDate": "navision_invoice_date",
       "NavisionInvoiceDate": "invoice_date",

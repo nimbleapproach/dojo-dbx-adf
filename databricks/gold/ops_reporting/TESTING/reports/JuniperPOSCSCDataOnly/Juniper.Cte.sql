@@ -19,9 +19,8 @@ with NuviasCSCData as
 	,ncsc.SAG_RESELLERVENDORID		AS VarId
 	,ncsc.SAG_VENDORREFERENCENUMBER	AS VendorReferenceNumber
 FROM v_NCSC_NuviasData ncsc
--- WHERE ncsc.CUSTACCOUNT IN (@infinigatecustomer) 
 	WHERE ((ncsc.PrimaryVendorName LIKE 'Juniper%')
-		AND (ncsc.PrimaryVendorID != 'VAC000904_NGS1')-- Added to remove Mist product where vendor name was changed to ""Juniper"" (02/09/2020 MW - Connectwise #201748)
+		AND (ncsc.PrimaryVendorID != 'VAC000904_NGS1')
 		AND (ncsc.PrimaryVendorID != 'VAC000904_NNL2')
 		AND (ncsc.PrimaryVendorID != 'VAC001110_NGS1')
 		AND (ncsc.PrimaryVendorID != 'VAC001110_NNL2'))

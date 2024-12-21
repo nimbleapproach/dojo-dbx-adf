@@ -108,7 +108,9 @@ for param_name, param_value in input_params.items():
 effective_databricks_predicate = substitute_params(databricks_predicate, databricks_param_mapping)
 # print(effective_databricks_predicate)
 
-debug_predicate="d365_sales_order_number='SO00158302_NUK1'"
+debug_predicate="1=1" 
+
+# debug_predicate = '' #uncomment if necessarry. when finished, return filter back to '1=1'
 
 columns_in_scope = [col(c) for c in column_mapping.values()]
 
@@ -184,3 +186,15 @@ databricks_table.subtract(remote_table).toPandas().head(HEAD_SIZE)
 
 print(f"Missing records in SSRS (first {HEAD_SIZE})")
 remote_table.subtract(databricks_table).toPandas().head(HEAD_SIZE)
+
+# COMMAND ----------
+
+remote_table.filter("invoice_number = 'INV00169300-NUK1' AND serial_number = 'AD219E612681'").display()
+
+# COMMAND ----------
+
+databricks_table.filter("invoice_number = 'INV00169300-NUK1' AND serial_number = 'AD219E612681'").display()
+
+# COMMAND ----------
+
+remote_table.unionByName(databricks_table).filter("invoice_number = 'INV00169300-NUK1' AND serial_number = 'AD219E612681'").display()
