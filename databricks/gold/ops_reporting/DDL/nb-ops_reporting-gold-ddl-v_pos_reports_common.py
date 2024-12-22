@@ -789,7 +789,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     END)                                                              AS purchase_extended_price
 # MAGIC , (CASE
 # MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (sp.purchprice_intercomp - s.sag_purchprice) * (-1 * it.qty)  -- AddOn
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN null -- Extreme
 # MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
 # MAGIC            THEN (CASE
 # MAGIC                     WHEN di_ic.PrimaryVendorID LIKE 'VAC001014%' THEN (s.sag_vendorstandardcost - s.sag_purchprice) * ct.qty
