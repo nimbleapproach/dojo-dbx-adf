@@ -619,7 +619,7 @@
       "QUANTITY": "quantity",
       "INVOICE CURRENCY": "sell_currency",
       "PURCHASE ORDER BUY PRICE - UNIT": "final_vendor_unit_buy_price",
-      "PURCHASE ORDER BUY PRICE - UNIT 2": "final_vendor_unit_buy_price_2",
+      "PURCHASE ORDER BUY PRICE - UNIT 2": "final_vendor_unit_buy_price2",
       "RESELLER (ACCOUNT NAME)": "reseller_name",
       "RESELLER (COUNTRY)": "reseller_country",
       "END CUSTOMER (ACCOUNT NAME)": "end_customer_name",
@@ -835,7 +835,7 @@
     },
     "column-mapping": {
       "Ship Date": "shipping_date",
-      "Product # ": "part_code",
+      "Product #": "part_code",
       "Quantity": "quantity",
       "S/N": "serial_number",
       "Purchase Price (USD)": "purchase_price_usd",
@@ -1130,7 +1130,6 @@
     },
     "column-mapping": {
       "PoToSnwlNumber": "nuvias_purchase_order",
-      "(Used in SonicWall for filtering)": "nuvias_invoice_date",
       "InvoiceDate": "navision_invoice_date",
       "VendorPN": "navision_part_code_id",
       "ItemDesc": "nuvias_part_code_description",
@@ -1169,8 +1168,7 @@
       "SpecialPricingRequest(SPR-XXXXXXX)": "navision_vendor_claim_id",
       "InvoiceNumber": "navision_invoice_number",
       "LineItem": "navision_invoice_line_number",
-      "SnwlPnSku": "snwl_pn_sku",
-      "(used in group by statement)": "navision_sales_order_line_no"
+      "SnwlPnSku": "snwl_pn_sku"
     }
   },
   "WatchGuard POS (CSC Data Only) v2.1": {
@@ -1301,7 +1299,7 @@
       "D365Order": "nuvias_sales_order_number",
       "POR": "nuvias_purchase_order",
       "Nav SO": "navision_sales_order_number",
-      "Invoice": "navision_invoice_date",
+      "Invoice Date": "navision_invoice_date",
       "Part Number": "navision_part_code_id",
       "Part Number Description": "nuvias_part_code_description",
       "Quantity": "navision_quantity",

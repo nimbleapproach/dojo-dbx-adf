@@ -7,7 +7,7 @@ SELECT
 	,ifg.INVOICENUMBER															AS InvoiceNumber
 	,ncsc.NuviasResellerVendorId												AS SandDRef
 	,ifg.RESELLERNAME															AS CustomerName
-	,ifg.RESELLERADDRESS1 + ifg.RESELLERADDRESS2 + ifg.RESELLERADDRESSCITY		AS CustomerAddress --check if town etc is required 
+	,ifg.RESELLERADDRESS1 + ifg.RESELLERADDRESS2 + ifg.RESELLERADDRESSCITY		AS CustomerAddress 
 	,ifg.RESELLERZIPCODE														AS CustomerPostalCode
 	,ifg.RESELLERCOUNTRYCODE													AS CustomerCountry
 	,''																			AS Blank1
@@ -22,7 +22,6 @@ SELECT
 	,ifg.QUANTITY																AS Quantity
 	,ncsc.NuviasPurchPrice  * ex.RATE											AS ProductCostEUR
 	,''																			AS Blank3
-	--,sl.SAG_PURCHPRICE * (-1*it.QTY)											AS TotalCostEUR --Calculate in report layer
 	,''																			AS NokiaRef
 	,''																			AS Blank4 
 	,ncsc.NuviasSalesId															AS IntercompanySalesOrder

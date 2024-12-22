@@ -24,9 +24,6 @@ SELECT
 	,''								AS [End User State]
 	,sh.SAG_EUADDRESS_COUNTRY		AS [End User Country]
 	,sh.SAG_EUADDRESS_POSTCODE		AS [End User Postal Code]
-	--,sl.SALESID
-	--,pl.PURCHID
-	--,pl.ITEMID
 FROM SAG_SalesLineV2Staging sl
 	LEFT JOIN SAG_InventTransStaging it ON it.INVENTTRANSID = sl.INVENTTRANSID AND it.DATAAREAID = sl.DATAAREAID
 	LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID AND sh.DATAAREAID = sl.DATAAREAID
@@ -38,15 +35,6 @@ FROM SAG_SalesLineV2Staging sl
 WHERE sl.DATAAREAID NOT IN ('NGS1', 'NNL2')
 	AND it.DATEPHYSICAL BETWEEN @from AND @to
 	AND it.STATUSISSUE = '1'
-	AND ((di.PrimaryVendorID LIKE 'VAC001208_NGS1') --Jabil 
-	--AND ((di.PrimaryVendorID LIKE 'VAC000850_NGS1') --Versa
-		--OR (di.PrimaryVendorID LIKE 'VAC001068_NGS1') --Advantech Removed due to  T20240418.0066 update on 18/06/2024 
-		OR (di.PrimaryVendorID LIKE 'VAC001208_NNL2')) --Jabil NNL2
-		--OR (di.PrimaryVendorID LIKE 'VAC000850_NNL2')) --Versa NNL2
-		--OR (di.PrimaryVendorID LIKE 'VAC001068_NNL2') --Advantech NNL2 Removed due to  T20240418.0066 update on 18/06/2024 
-		--OR (di.PrimaryVendorID LIKE 'VAC001070_NGS1') -- Neeco S.R.O. Removed due to  T20240418.0066 update on 18/06/2024 
-		--OR (di.PrimaryVendorID LIKE 'VAC001070_NNL2')) -- Neeco S.R.O. NNL2 Removed due to  T20240418.0066 update on 18/06/2024 
-	--AND di.ItemGroupID IN ('Hardware', 'Accessory')
+	AND ((di.PrimaryVendorID LIKE 'VAC001208_NGS1')
+		OR (di.PrimaryVendorID LIKE 'VAC001208_NNL2'))
 	AND sl.SALESSTATUS LIKE '3'
-ORDER BY 
-	CAST(it.DATEPHYSICAL as date) asc

@@ -1,12 +1,11 @@
 SELECT 
-	CASE WHEN id.INVENTLOCATIONID = 'MAIN2' AND id.DATAAREAID = 'NNL2' --add post Rome Go Live (MW)
-		THEN '101421538' -- Venlo ID
+	CASE WHEN id.INVENTLOCATIONID = 'MAIN2' AND id.DATAAREAID = 'NNL2' 
+		THEN '101421538' 
 		WHEN id.INVENTLOCATIONID = 'MAIN5' AND id.DATAAREAID = 'NGS1'
-		THEN '101417609' -- UK ID 
+		THEN '101417609'  
 		WHEN id.INVENTLOCATIONID = 'MAIN2' AND id.DATAAREAID = 'NGS1' 
-		THEN '101456761' --NGS1 Venlo ID
+		THEN '101456761' 
 		ELSE '' 
-	
 	END									AS DistributerIDNumber 
 	,CASE WHEN -1*it.QTY > 0
 		THEN 'POS' 
@@ -18,12 +17,12 @@ SELECT
 	,di.ItemName						AS ProductJuniperPartNumber
 	,ABS(-1*it.QTY)				AS ProductQuantity   
 	,sl.SAG_VENDORREFERENCENUMBER		AS SpecialPricingAuthorization
-	,sl.SAG_PURCHPRICE					AS [NetPOS(ProductUnitPrice)] --Total Price in US Dollars Initially Paid By Distributor Minus andy Claims Credits
-	,''									AS ExportLicenceNumber --Not Required
-	,sp.PurchTableID_InterComp			AS DistributorPurchaseOrder  --PO to Juniper
+	,sl.SAG_PURCHPRICE					AS [NetPOS(ProductUnitPrice)] 
+	,''									AS ExportLicenceNumber 
+	,sp.PurchTableID_InterComp			AS DistributorPurchaseOrder  
 	,sl.SALESID							AS ResaleSalesOrderNumber
 	,it.INVOICEID						AS ResaleInvoiceNumber 
-	,it.DATEPHYSICAL					AS ResaleInvoiceDate --AKA ShipDate (DD-MON-YYYY)
+	,it.DATEPHYSICAL					AS ResaleInvoiceDate 
 	,sh.CUSTOMERREF						AS ResellerPONumber 
 	,sl.SAG_RESELLERVENDORID			AS JuniperVARID1
 	,''									AS BusinessModel1
@@ -35,8 +34,8 @@ SELECT
 	,ca.AddressState					AS ResellerVARStateProvince
 	,ca.AddressPostalCode				AS ResellerVARPostalCode
 	,ca.AddressCountryISO2				AS ResellerVARCountryCode 
-	,''									AS JuniperVARID2 --Required If Applicable
-	,''									AS BusinessModel2 -- Required if Applicable
+	,''									AS JuniperVARID2 
+	,''									AS BusinessModel2 
 	,pa.CompanyName						AS ShipToName
 	,pa.Street1							AS ShipToAddress1
 	,pa.Street2							AS ShipToAddress2
@@ -53,39 +52,30 @@ SELECT
 	,sh.SAG_EUADDRESS_COUNTY			AS EndUserStateProvince
 	,sh.SAG_EUADDRESS_POSTCODE			AS EndUserPostalCode
 	,sh.SAG_EUADDRESS_COUNTRY			AS EndUserCountryCode
-	,''									AS DistributorIDNo2 --Required if Applicable
-	,sl.CURRENCYCODE					AS CurrencyCode --
-	,sl.SALESPRICE						AS UnitPrice --
-	,'>>>'								
+	,''									AS DistributorIDNo2 
+	,sl.CURRENCYCODE					AS CurrencyCode 
+	,sl.SALESPRICE						AS UnitPrice 
 	,id.INVENTLOCATIONID				AS Warehouse
 	,di.ItemGroupName					AS ItemGroup
 	,CASE WHEN sl.SAG_SHIPANDDEBIT = 0  THEN 'No' 
 		WHEN sl.SAG_SHIPANDDEBIT = 1 THEN 'Yes' END AS ShipAndDebit
-	--,id.INVENTLOCATIONID + ' ' + id.DATAAREAID AS Concat1
-	--,sl.ITEMID
 FROM SAG_SalesLineV2Staging sl
 	LEFT JOIN SAG_InventTransStaging it ON it.INVENTTRANSID = sl.INVENTTRANSID AND it.DATAAREAID =sl.DATAAREAID 
-	--JG
-	--LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID AND sh.DATAAREAID NOT LIKE 'NGS1'
 	LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID AND sh.DATAAREAID NOT in( 'NGS1','NNL2')
 		LEFT JOIN ara.SO_PO_ID_List sp ON sp.SalesLineID_Local = sl.INVENTTRANSID
-	LEFT JOIN distitem di ON di.ItemID = sl.ITEMID and di.CompanyID = right(sp.SalesTableID_InterComp,4) --Using Temp Table
-	LEFT JOIN NGSInventory ng ON ng.INVENTTRANSID = sp.SalesLineID_InterComp --Using Temp Table
+	LEFT JOIN distitem di ON di.ItemID = sl.ITEMID and di.CompanyID = right(sp.SalesTableID_InterComp,4) 
+	LEFT JOIN NGSInventory ng ON ng.INVENTTRANSID = sp.SalesLineID_InterComp 
 	LEFT JOIN SAG_InventDimStaging id ON id.INVENTDIMID	= ng.INVENTDIMID
-	LEFT JOIN custadd ca ON ca.CustomerAccountNumber = sh.CUSTACCOUNT --Using Temp Table
-	LEFT JOIN logadd pa ON pa.AddressID = sh.DELIVERYPOSTALADDRESS --Using Temp Table
+	LEFT JOIN custadd ca ON ca.CustomerAccountNumber = sh.CUSTACCOUNT 
+	LEFT JOIN logadd pa ON pa.AddressID = sh.DELIVERYPOSTALADDRESS 
 WHERE sl.DATAAREAID NOT in( 'NGS1','NNL2')
-	--AND sl.SAG_SHIPANDDEBIT = '1'
 	AND ((di.PrimaryVendorID LIKE 'VAC000904_%')
 		OR (di.PrimaryVendorID LIKE 'VAC001110_%'))
 	AND id.INVENTLOCATIONID NOT LIKE 'DD'
 	AND it.DATEPHYSICAL BETWEEN @from AND @to
-	--AND sl.SALESID = 'SO00080598_NUK1' --
---Using physical movement date as parameter, current report uses invoice date for AKA ship date field? 
-
 GROUP BY
 	id.INVENTLOCATIONID
-	,it.INVENTTRANSID --added due to missing items with no serials MW 21/05/2020
+	,it.INVENTTRANSID 
 	,it.QTY
 	,it.INVENTSERIALID
 	,di.ItemName
@@ -121,8 +111,7 @@ GROUP BY
 	,sh.SAG_EUADDRESS_POSTCODE
 	,sh.SAG_EUADDRESS_COUNTRY
 	,di.ItemGroupName
-	,sl.SAG_SHIPANDDEBIT	--
+	,sl.SAG_SHIPANDDEBIT
 	,id.DATAAREAID
-	--,sl.itemid
 	,sl.CURRENCYCODE
 	,sl.SALESPRICE

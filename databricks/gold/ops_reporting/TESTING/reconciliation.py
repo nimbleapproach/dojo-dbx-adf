@@ -131,7 +131,8 @@ for col_name, col_type in databricks_table.dtypes:
     if col_type.startswith('decimal'):
         rounding[col_name] = round(col_name, ROUND_POSITIONS)
 
-databricks_table = databricks_table.withColumns(rounding)
+if len(rounding) > 0:
+    databricks_table = databricks_table.withColumns(rounding)
 
 print(f"DataBricks result (first {HEAD_SIZE}):")
 databricks_table.toPandas().head(HEAD_SIZE)
@@ -160,7 +161,9 @@ remote_table = (spark.read
                 .fillna("").fillna(0).fillna(False)
                 # .withColumn("hash_", xxhash64(*columns_in_scope))
                 )
-remote_table = remote_table.withColumns(rounding)
+
+if len(rounding) > 0:
+    remote_table = remote_table.withColumns(rounding)
 
 print(f"SSRS result (first {HEAD_SIZE}):")
 remote_table.toPandas().head(HEAD_SIZE)
@@ -186,15 +189,3 @@ databricks_table.subtract(remote_table).toPandas().head(HEAD_SIZE)
 
 print(f"Missing records in SSRS (first {HEAD_SIZE})")
 remote_table.subtract(databricks_table).toPandas().head(HEAD_SIZE)
-
-# COMMAND ----------
-
-remote_table.filter("invoice_number = 'INV00169300-NUK1' AND serial_number = 'AD219E612681'").display()
-
-# COMMAND ----------
-
-databricks_table.filter("invoice_number = 'INV00169300-NUK1' AND serial_number = 'AD219E612681'").display()
-
-# COMMAND ----------
-
-remote_table.unionByName(databricks_table).filter("invoice_number = 'INV00169300-NUK1' AND serial_number = 'AD219E612681'").display()

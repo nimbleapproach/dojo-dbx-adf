@@ -16,7 +16,7 @@ SELECT
 FROM SAG_InventTransStaging
 WHERE DATAAREAID in( 'NGS1','NNL2')
 	AND (STATUSISSUE IN ('1', '3')
-		OR (STATUSRECEIPT LIKE '1' AND INVOICERETURNED = 1)) -- added to capture returns 
+		OR (STATUSRECEIPT LIKE '1' AND INVOICERETURNED = 1)) 
 GROUP BY INVENTDIMID
 	,INVENTTRANSID
 ),
@@ -30,7 +30,6 @@ custadd as
 	,AddressState					
 	,AddressPostalCode				
 	,AddressCountryISO2				
-	into #
 from v_CustomerPrimaryPostalAddressSplit
 ),
 logadd as 
@@ -47,5 +46,3 @@ select
 	,CountryISO2									
 	from v_LogisticsPostalAddressSplit
 )
-
-

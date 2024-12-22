@@ -1,6 +1,6 @@
 SELECT  
 	CASE WHEN ncsc.[D365 Warehouse] = 'MAIN2' AND ncsc.[D365 Entity] = 'NNL2'
-		THEN '101421538' -- Venlo ID
+		THEN '101421538' 
 		ELSE '' END												AS DistributerIDNumber 
 	,CASE WHEN 1 * ncsc.D365Quantity > 0
 		THEN 'POS' 
@@ -29,8 +29,8 @@ SELECT
 	,ifg.ResellerState											AS ResellerVARStateProvince
 	,ifg.ResellerZipCode										AS ResellerVARPostalCode
 	,ifg.ResellerCountryCode									AS ResellerVARCountryCode 
-	,''															AS JuniperVARID2 --Required If Applicable
-	,''															AS BusinessModel2 -- Required if Applicable
+	,''															AS JuniperVARID2 
+	,''															AS BusinessModel2 
 	,ifg.SHIPTONAME												AS ShipToName
 	,ifg.SHIPTOADDRESS1											AS ShipToAddress1
 	,ifg.SHIPTOADDRESS2												AS ShipToAddress2
@@ -47,8 +47,7 @@ SELECT
 	,ifg.ENDUSERSTATE												AS EndUserStateProvince
 	,ifg.ENDUSERZIPCODE												AS EndUserPostalCode
 	,ifg.ENDUSERCOUNTRYCODE											AS EndUserCountryCode
-	,''																AS DistributorIDNo2 --Required if Applicable
-	,'>>>'
+	,''																AS DistributorIDNo2 
 	,ifg.SALESORDERNUMBER											AS NavisionSaleOrderNumber
 	,ncsc.[D365 Warehouse]											AS Warehouse
 	,ncsc.[D365 Item Group]											AS ItemGroup
@@ -58,7 +57,6 @@ FROM ifg.POSData ifg
 	LEFT OUTER JOIN NuviasCSCData ncsc ON ncsc.NavSoLink = ifg.SALESORDERNUMBER AND ncsc.NavisionLineNumber = ifg.SALESORDERLINENO AND ncsc.[D365 Packing Slip Id] = ifg.IGSSHIPMENTNO
 WHERE 
 	ncsc.SerialNumber IS NOT NULL 
-	--AND ncsc.D365PurchPrice / ifg.QUANTITY IS NOT NULL
 	AND ifg.CUSTOMERINVOICEDATE BETWEEN @from AND @to
 GROUP BY 
 	ncsc.[D365 Entity]

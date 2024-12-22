@@ -187,6 +187,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     ELSE it.datephysical
 # MAGIC     END)                                                              AS invoice_date
 # MAGIC , (CASE
+# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN it.datefinancial -- Sophos
 # MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
 # MAGIC     ELSE NULL
 # MAGIC     END)                                                             AS financial_date
@@ -1136,6 +1137,11 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC           THEN ''
 # MAGIC     ELSE NULL
 # MAGIC   END)                                                              AS end_customer_state_jabil
+# MAGIC , (CASE
+# MAGIC     WHEN (di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')
+# MAGIC             THEN ''
+# MAGIC     ELSE NULL
+# MAGIC   END)                                                              AS distributer_id_no2
 # MAGIC   FROM sales_data s
 # MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
 # MAGIC     ON it.inventtransid = s.inventtransid

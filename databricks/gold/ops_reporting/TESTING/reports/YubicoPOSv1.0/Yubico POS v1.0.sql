@@ -13,16 +13,12 @@ SELECT
 	,di.ItemName								AS [PRODUCT]
 	,di.ItemDescription							AS [PRODUCT DESCRIPTION]
 	,(-1 * it.QTY)								AS [QUANTITY]
-	--,it.INVENTSERIALID							AS []
 	,sl.CURRENCYCODE							AS [INVOICE CURRENCY]
 	,sl.SALESPRICE								AS [UNIT SALE PRICE]
 	,sp.PurchTableID_InterComp					AS [PURCHASE ORDER]
 	,sl.SALESID									AS [ORDER]
 	,pl.PURCHPRICE								AS [PURCHASE ORDER BUY PRICE - UNIT]
 	,sl.SAG_PURCHPRICE							AS [PURCHASE ORDER BUY PRICE - UNIT 2]
-		--,it.STATUSISSUE
-	--sl.DATAAREAID
-	--,it.DATEPHYSICAL
 FROM SAG_SalesLineV2Staging sl
 	LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID
 	LEFT JOIN SAG_InventTransStaging it ON it.INVENTTRANSID = sl.INVENTTRANSID AND it.DATAAREAID = sl.DATAAREAID AND STATUSISSUE IN ('1', '3')
@@ -33,7 +29,7 @@ FROM SAG_SalesLineV2Staging sl
 WHERE 
 	it.DATEPHYSICAL BETWEEN @from and @to
 	AND sl.DATAAREAID NOT IN( 'NGS1','NNL2')
-	AND ((di.PrimaryVendorID = 'VAC001388_NGS1') --Yubico account in D365 for NGS1 and NNL2
+	AND ((di.PrimaryVendorID = 'VAC001388_NGS1')
 		OR (di.PrimaryVendorID = 'VAC001388_NGS1'))
 GROUP BY
 	ca.CustomerName
@@ -50,8 +46,5 @@ GROUP BY
 	,sl.SALESPRICE
 	,sp.PurchTableID_InterComp	
 	,sl.SALESID	
-	--,it.STATUSISSUE
-	--sl.DATAAREAID
-	--,it.DATEPHYSICAL
 	,pl.PURCHPRICE
 	,sl.SAG_PURCHPRICE

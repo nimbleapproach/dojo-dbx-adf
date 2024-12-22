@@ -34,7 +34,6 @@ SELECT
 	,ROUND(nuv.SAG_NGS1POBUYPRICE, 2)			AS [NuviasPoBuyPrice]
 	,nuv.SAG_UNITCOSTINQUOTECURRENCY			AS [NuviasExpectBuyInQuoteCurrency]
 FROM v_NCSC_NuviasData nuv
--- WHERE nuv.CUSTACCOUNT IN (@CustAccount)
 	WHERE nuv.DATEPHYSICAL BETWEEN DATEADD(day, -31, @from) AND DATEADD(day, +1, @to)
 	AND nuv.PrimaryVendorName LIKE 'Zyxel%'
 GROUP BY 
@@ -47,11 +46,9 @@ GROUP BY
 	,nuv.SAG_RESELLERVENDORID
 	,nuv.INVENTTRANSID
 	,nuv.SAG_NAVSONUMBER
-	--,nsl.SAG_NAVLINENUM
 	,nuv.DATEPHYSICAL
 	,nuv.INVENTSERIALID
 	,nuv.PrimaryVendorName
-	--,nuv.QTY
 	,nuv.LINEAMOUNT
 	,nuv.SAG_NAVPONUMBER
 	,nuv.SAG_NAVSONUMBER

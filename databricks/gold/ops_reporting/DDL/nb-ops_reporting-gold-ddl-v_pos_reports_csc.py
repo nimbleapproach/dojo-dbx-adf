@@ -878,7 +878,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           THEN ncsc.SALESID
 # MAGIC     ELSE NULL
-# MAGIC   END)                                                                                  AS navision_intercompany_sales_order
+# MAGIC   END)                                                                                  AS nuvias_intercompany_sales_order
 # MAGIC , (CASE
 # MAGIC     WHEN ncsc.PrimaryVendorName LIKE 'Nokia%' -- Nokia
 # MAGIC           THEN ''

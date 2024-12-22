@@ -1,25 +1,9 @@
-/*
-##############################
-Name: Sophos POS Report
-Description: Sophos POS Report
-Created By: Mark Walton
-Date: 26/03/2024
-Version: 1.0 - Created based on specification from ticket T20240319.0056
-###############################
-*/
-
---##### DECLARE PARAMETERS #####
---DECLARE @from DATETIME = '2024-04-23'
---DECLARE @to DATETIME = '2024-05-01'
-
--- ###### MAIN QUERY ######
 SELECT
 	sl.SALESID													AS [Pos Reference Number]
 	,CAST(it.DATEPHYSICAL as date)								AS [Transaction Date]
 	,di.ItemName												AS [Sophos Sku Code]
 	,''															AS [Partner Sku Code]
 	,SUM((-1 * it.QTY))											AS [Sales Quantity]
-	----,it.INVENTSERIALID										AS [Serial Number]
 	,STUFF((SELECT ', ',  its.INVENTSERIALID
 			FROM SAG_SalesLineV2Staging sll
 				LEFT JOIN SAG_InventTransStaging its ON its.INVENTTRANSID = sl.INVENTTRANSID AND its.DATAAREAID = sl.DATAAREAID
@@ -67,7 +51,7 @@ FROM SAG_SalesLineV2Staging sl
 	LEFT JOIN [ora].[Oracle_Contacts] co ON CONCAT_WS(' ', CAST(co.FirstName as nvarchar), CAST(co.LastName as nvarchar)) = CAST(op.Contact_Name as nvarchar)
 WHERE
 	sl.DATAAREAID NOT IN( 'NGS1' ,'NNL2')
-	AND sl.SALESSTATUS IN ('1', '2', '3') -- MW 20/06/2023 added status 1 to capture part shipments
+	AND sl.SALESSTATUS IN ('1', '2', '3') 
 	AND it.DATEPHYSICAL BETWEEN @from AND @to
 	AND sl.SAG_SHIPANDDEBIT = '1'
 	AND di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
