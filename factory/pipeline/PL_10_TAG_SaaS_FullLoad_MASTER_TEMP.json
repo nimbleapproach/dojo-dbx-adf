@@ -1,0 +1,98 @@
+{
+	"name": "PL_10_TAG_SaaS_FullLoad_MASTER_TEMP",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get EDW Views",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\nFROM [adf].[CT_TAG_SAAS_TABLES]\nWHERE FULL_LOAD = 0",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_TAG_SAAS_TABLES",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachView",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get EDW Views",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get EDW Views').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "PL_20_TAG_SaaS_FullLoad",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_20_TAG_SaaS_FullLoad",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": false,
+								"parameters": {
+									"pm_Code": {
+										"value": "@item().CODE",
+										"type": "Expression"
+									},
+									"pm_Table": {
+										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@item().FULL_LOAD",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
+		},
+		"annotations": []
+	}
+}

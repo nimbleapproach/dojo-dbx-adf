@@ -1,11 +1,18 @@
 {
-	"name": "PL_10_TAG_SaaS_Load",
+	"name": "PL_10_TAG_SaaS_DeltaLoad_MASTER",
 	"properties": {
 		"activities": [
 			{
 				"name": "Get EDW Views",
 				"type": "Lookup",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Set Update Date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -57,7 +64,7 @@
 					"batchCount": 4,
 					"activities": [
 						{
-							"name": "PL_20_TAG_SaaS_Load",
+							"name": "PL_20_TAG_SaaS_DeltaLoad",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -66,15 +73,11 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_TAG_SaaS_Load",
+									"referenceName": "PL_20_TAG_SaaS_DeltaLoad",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": false,
 								"parameters": {
-									"pm_FullLoad": {
-										"value": "@item().FULL_LOAD",
-										"type": "Expression"
-									},
 									"pm_Code": {
 										"value": "@item().CODE",
 										"type": "Expression"
@@ -82,16 +85,42 @@
 									"pm_Table": {
 										"value": "@item().TABLE_NAME",
 										"type": "Expression"
+									},
+									"pm_UpdateDate": {
+										"value": "@variables('UpdateDate')",
+										"type": "Expression"
 									}
 								}
 							}
 						}
 					]
 				}
+			},
+			{
+				"name": "Set Update Date",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "UpdateDate",
+					"value": {
+						"value": "@startOfDay(subtractFromTime(utcNow(), 1, 'Day'))",
+						"type": "Expression"
+					}
+				}
 			}
 		],
+		"variables": {
+			"UpdateDate": {
+				"type": "String"
+			}
+		},
 		"folder": {
-			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS"
 		},
 		"annotations": []
 	}

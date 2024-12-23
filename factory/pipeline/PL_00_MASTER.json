@@ -210,6 +210,12 @@
 						"dependencyConditions": [
 							"Completed"
 						]
+					},
+					{
+						"activity": "PL_00_TAG02_SAAS_DELTA",
+						"dependencyConditions": [
+							"Succeeded"
+						]
 					}
 				],
 				"policy": {
@@ -370,6 +376,22 @@
 							"type": "Expression"
 						}
 					}
+				}
+			},
+			{
+				"name": "PL_00_TAG02_SAAS_DELTA",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_TAG_SaaS_DeltaLoad_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
 				}
 			}
 		],

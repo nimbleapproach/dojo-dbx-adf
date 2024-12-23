@@ -1,9 +1,9 @@
 {
-	"name": "PL_20_TAG_SaaS_Load",
+	"name": "PL_20_TAG_SaaS_FullLoad_TEMP",
 	"properties": {
 		"activities": [
 			{
-				"name": "IfFullLoad",
+				"name": "If Dimension",
 				"type": "IfCondition",
 				"dependsOn": [],
 				"userProperties": [],
@@ -14,7 +14,7 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "TAG_SaaS_LoadTable",
+							"name": "Load Fact Table",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -23,7 +23,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_30_TAG_SaaS_Load",
+									"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -42,7 +42,7 @@
 					],
 					"ifTrueActivities": [
 						{
-							"name": "Load Tagetik Dimension",
+							"name": "Load Dimension",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -65,7 +65,7 @@
 											}
 										}
 									],
-									"httpRequestTimeout": "00:10:00"
+									"httpRequestTimeout": "00:05:00"
 								},
 								"sink": {
 									"type": "ParquetSink",
@@ -81,18 +81,14 @@
 										}
 									}
 								},
-								"enableStaging": false,
-								"validateDataConsistency": true
+								"enableStaging": false
 							},
 							"inputs": [
 								{
-									"referenceName": "DS_TAGETIK_SAAS_DIM",
+									"referenceName": "DS_TAGETIK_SAAS_DIM_FULL",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_Code": {
-											"value": "@pipeline().parameters.pm_Code",
-											"type": "Expression"
-										}
+										"pm_Code": "@pipeline().parameters.pm_Code"
 									}
 								}
 							],
@@ -101,13 +97,10 @@
 									"referenceName": "DS_ADLS_PARQUET",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_Environment": {
-											"value": "@pipeline().globalParameters.gpm_Environment",
-											"type": "Expression"
-										},
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 										"pm_FileSystem": "bronze",
 										"pm_Directory": {
-											"value": "tag02/@{pipeline().parameters.pm_Table}",
+											"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
 											"type": "Expression"
 										}
 									}
@@ -119,18 +112,18 @@
 			}
 		],
 		"parameters": {
-			"pm_FullLoad": {
-				"type": "bool"
-			},
 			"pm_Code": {
 				"type": "string"
 			},
 			"pm_Table": {
 				"type": "string"
+			},
+			"pm_FullLoad": {
+				"type": "bool"
 			}
 		},
 		"folder": {
-			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
 		},
 		"annotations": []
 	}
