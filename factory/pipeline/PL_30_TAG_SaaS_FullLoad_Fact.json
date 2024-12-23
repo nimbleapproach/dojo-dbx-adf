@@ -70,7 +70,10 @@
 									"referenceName": "DS_TAGETIK_SAAS_FACT_FULL",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_Code": "@pipeline().parameters.pm_Code",
+										"pm_Code": {
+											"value": "@concat(pipeline().parameters.pm_Code, '_F')",
+											"type": "Expression"
+										},
 										"pm_scenario": {
 											"value": "@item().SCENARIO",
 											"type": "Expression"

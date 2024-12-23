@@ -63,7 +63,7 @@
 									"referenceName": "DS_TAGETIK_SAAS_FACT_FULL",
 									"type": "DatasetReference",
 									"parameters": {
-										"pm_Code": "@pipeline().parameters.pm_Code",
+										"pm_Code": "@concat(pipeline().parameters.pm_Code, '_F')",
 										"pm_scenario": "@item()"
 									}
 								}
