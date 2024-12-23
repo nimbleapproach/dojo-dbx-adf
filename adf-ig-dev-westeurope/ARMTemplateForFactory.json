@@ -2780,6 +2780,12 @@
 								"dependencyConditions": [
 									"Completed"
 								]
+							},
+							{
+								"activity": "PL_00_TAG02_SAAS_DELTA",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -2949,6 +2955,23 @@
 								}
 							}
 						}
+					},
+					{
+						"name": "PL_00_TAG02_SAAS_DELTA",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_10_TAG_SaaS_DeltaLoad_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -2981,7 +3004,8 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_DCB_Load_File_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_20_SILVER_TO_GOLD_TAG02_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL01_Load_Table_MASTER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL01_Load_Table_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_10_TAG_SaaS_DeltaLoad_MASTER')]"
 			]
 		},
 		{
@@ -3315,7 +3339,7 @@
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]"
+					"name": "10 Bronze/TAG02 [TAGETIK]/Deprecated"
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-09-25T15:09:25Z"
@@ -5421,7 +5445,7 @@
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]"
+					"name": "10 Bronze/TAG02 [TAGETIK]/Deprecated"
 				},
 				"annotations": [],
 				"lastPublishTime": "2024-03-06T11:16:28Z"
@@ -5535,7 +5559,143 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_TAG_SaaS_Load')]",
+			"name": "[concat(parameters('factoryName'), '/PL_10_TAG_SaaS_DeltaLoad_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get EDW Views",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Set Update Date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\n  FROM [adf].[CT_TAG_SAAS_TABLES]",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_TAG_SAAS_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Views",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Views').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_20_TAG_SaaS_DeltaLoad",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_TAG_SaaS_DeltaLoad",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": false,
+										"parameters": {
+											"pm_Code": {
+												"value": "@item().CODE",
+												"type": "Expression"
+											},
+											"pm_Table": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_UpdateDate": {
+												"value": "@variables('UpdateDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Set Update Date",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "UpdateDate",
+							"value": {
+								"value": "@startOfDay(subtractFromTime(utcNow(), 1, 'Day'))",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"UpdateDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_20_TAG_SaaS_DeltaLoad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_TAG_SaaS_FullLoad_MASTER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -5595,7 +5755,7 @@
 							"batchCount": 4,
 							"activities": [
 								{
-									"name": "PL_20_TAG_SaaS_Load",
+									"name": "PL_20_TAG_SaaS_FullLoad",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"policy": {
@@ -5604,21 +5764,21 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_20_TAG_SaaS_Load",
+											"referenceName": "PL_20_TAG_SaaS_FullLoad",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": false,
 										"parameters": {
-											"pm_FullLoad": {
-												"value": "@item().FULL_LOAD",
-												"type": "Expression"
-											},
 											"pm_Code": {
 												"value": "@item().CODE",
 												"type": "Expression"
 											},
 											"pm_Table": {
 												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@item().FULL_LOAD",
 												"type": "Expression"
 											}
 										}
@@ -5632,13 +5792,120 @@
 					"elapsedTimeMetric": {}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoad"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_20_TAG_SaaS_Load')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_20_TAG_SaaS_FullLoad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_10_TAG_SaaS_FullLoad_MASTER_TEMP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get EDW Views",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\nFROM [adf].[CT_TAG_SAAS_TABLES]\nWHERE FULL_LOAD = 0",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_TAG_SAAS_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachView",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get EDW Views",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get EDW Views').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "PL_20_TAG_SaaS_FullLoad",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_TAG_SaaS_FullLoad",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": false,
+										"parameters": {
+											"pm_Code": {
+												"value": "@item().CODE",
+												"type": "Expression"
+											},
+											"pm_Table": {
+												"value": "@item().TABLE_NAME",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@item().FULL_LOAD",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_20_TAG_SaaS_FullLoad')]"
 			]
 		},
 		{
@@ -11739,7 +12006,7 @@
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]"
+					"name": "10 Bronze/TAG02 [TAGETIK]/Deprecated"
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-10-27T07:55:09Z"
@@ -11927,7 +12194,7 @@
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]"
+					"name": "10 Bronze/TAG02 [TAGETIK]/Deprecated"
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-11-14T13:20:30Z"
@@ -11939,13 +12206,108 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_TAG_SaaS_Load')]",
+			"name": "[concat(parameters('factoryName'), '/PL_20_TAG_SaaS_DeltaLoad')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "IfFullLoad",
+						"name": "Load Tagetik Delta",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ODataSource",
+								"additionalColumns": [
+									{
+										"name": "Sys_Bronze_InsertDateTime_UTC",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									}
+								],
+								"httpRequestTimeout": "00:05:00"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings",
+									"maxRowsPerFile": 1000000,
+									"fileNamePrefix": {
+										"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{utcNow()}",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_TAGETIK_SAAS_DELTA",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Code": "@pipeline().parameters.pm_Code",
+									"pm_update_date": "@pipeline().parameters.pm_UpdateDate"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_PARQUET",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+									"pm_FileSystem": "bronze",
+									"pm_Directory": "tag02_testing/@{pipeline().parameters.pm_Table}"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					},
+					"pm_Table": {
+						"type": "string"
+					},
+					"pm_UpdateDate": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_DELTA')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_TAG_SaaS_FullLoad')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "If Dimension",
 						"type": "IfCondition",
 						"dependsOn": [],
 						"userProperties": [],
@@ -11956,7 +12318,7 @@
 							},
 							"ifFalseActivities": [
 								{
-									"name": "TAG_SaaS_LoadTable",
+									"name": "Load Fact Table",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"policy": {
@@ -11965,7 +12327,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_30_TAG_SaaS_Load",
+											"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
@@ -11984,7 +12346,7 @@
 							],
 							"ifTrueActivities": [
 								{
-									"name": "Load Tagetik Dimension",
+									"name": "Load Dimension",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -12007,7 +12369,7 @@
 													}
 												}
 											],
-											"httpRequestTimeout": "00:10:00"
+											"httpRequestTimeout": "00:05:00"
 										},
 										"sink": {
 											"type": "ParquetSink",
@@ -12023,18 +12385,14 @@
 												}
 											}
 										},
-										"enableStaging": false,
-										"validateDataConsistency": true
+										"enableStaging": false
 									},
 									"inputs": [
 										{
-											"referenceName": "DS_TAGETIK_SAAS_DIM",
+											"referenceName": "DS_TAGETIK_SAAS_DIM_FULL",
 											"type": "DatasetReference",
 											"parameters": {
-												"pm_Code": {
-													"value": "@pipeline().parameters.pm_Code",
-													"type": "Expression"
-												}
+												"pm_Code": "@pipeline().parameters.pm_Code"
 											}
 										}
 									],
@@ -12043,13 +12401,10 @@
 											"referenceName": "DS_ADLS_PARQUET",
 											"type": "DatasetReference",
 											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
+												"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 												"pm_FileSystem": "bronze",
 												"pm_Directory": {
-													"value": "tag02/@{pipeline().parameters.pm_Table}",
+													"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
 													"type": "Expression"
 												}
 											}
@@ -12064,24 +12419,166 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool"
-					},
 					"pm_Code": {
 						"type": "string"
 					},
 					"pm_Table": {
 						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool"
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoad"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_Load')]",
-				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_DIM')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_FullLoad_Fact')]",
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_DIM_FULL')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_TAG_SaaS_FullLoad_TEMP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "If Dimension",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Load Fact Table",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_Code": {
+												"value": "@pipeline().parameters.pm_Code",
+												"type": "Expression"
+											},
+											"pm_Table": {
+												"value": "@pipeline().parameters.pm_Table",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Load Dimension",
+									"type": "Copy",
+									"state": "Inactive",
+									"onInactiveMarkAs": "Succeeded",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ODataSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"httpRequestTimeout": "00:05:00"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings",
+												"maxRowsPerFile": 1000000,
+												"fileNamePrefix": {
+													"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{utcNow()}",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_TAGETIK_SAAS_DIM_FULL",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Code": "@pipeline().parameters.pm_Code"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+												"pm_FileSystem": "bronze",
+												"pm_Directory": {
+													"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					},
+					"pm_Table": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_FullLoad_Fact')]",
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_DIM_FULL')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]"
 			]
 		},
@@ -16161,7 +16658,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_30_TAG_SaaS_Load')]",
+			"name": "[concat(parameters('factoryName'), '/PL_30_TAG_SaaS_FullLoad_Fact')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -16171,7 +16668,7 @@
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Extract all current Keys",
+								"activity": "Get Current Scenarios",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -16180,7 +16677,159 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@variables('ScenarioArry')",
+								"value": "@activity('Get Current Scenarios').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 8,
+							"activities": [
+								{
+									"name": "Load Tagetik View",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ODataSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"httpRequestTimeout": "00:05:00"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings",
+												"maxRowsPerFile": 1000000,
+												"fileNamePrefix": {
+													"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{item().SCENARIO}-@{utcNow()}",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableStaging": false,
+										"validateDataConsistency": true
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_TAGETIK_SAAS_FACT_FULL",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Code": {
+													"value": "@concat(pipeline().parameters.pm_Code, '_F')",
+													"type": "Expression"
+												},
+												"pm_scenario": {
+													"value": "@item().SCENARIO",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": {
+													"value": "@pipeline().globalParameters.gpm_Environment",
+													"type": "Expression"
+												},
+												"pm_FileSystem": "bronze",
+												"pm_Directory": {
+													"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get Current Scenarios",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ODataSource",
+								"httpRequestTimeout": "00:05:00"
+							},
+							"dataset": {
+								"referenceName": "DS_TAGETIK_SAAS_DIM_FULL",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Code": {
+										"value": "@concat(pipeline().parameters.pm_Code, '_SC')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					},
+					"pm_Table": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoad"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_DIM_FULL')]",
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_FACT_FULL')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_30_TAG_SaaS_FullLoad_Fact_TEMP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For Each Scenario",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('ScenarioArray')",
 								"type": "Expression"
 							},
 							"isSequential": false,
@@ -16231,17 +16880,11 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "DS_TAGETIK_SAAS",
+											"referenceName": "DS_TAGETIK_SAAS_FACT_FULL",
 											"type": "DatasetReference",
 											"parameters": {
-												"pm_scenario": {
-													"value": "@item()",
-													"type": "Expression"
-												},
-												"pm_Code": {
-													"value": "@pipeline().parameters.pm_Code",
-													"type": "Expression"
-												}
+												"pm_Code": "@concat(pipeline().parameters.pm_Code, '_F')",
+												"pm_scenario": "@item()"
 											}
 										}
 									],
@@ -16265,78 +16908,6 @@
 								}
 							]
 						}
-					},
-					{
-						"name": "Extract all current Keys",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ODataSource",
-								"additionalColumns": [
-									{
-										"name": "Sys_DataFactory_LoadDateTime_UTC",
-										"value": {
-											"value": "@utcNow()",
-											"type": "Expression"
-										}
-									}
-								],
-								"httpRequestTimeout": "00:05:00"
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": false
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_TAGETIK_SAAS_KEY",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Code": {
-										"value": "@pipeline().parameters.pm_Code",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_ADLS_PARQUET_STATIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@{pipeline().globalParameters.gpm_Environment}",
-										"type": "Expression"
-									},
-									"pm_FileSystem": "keys",
-									"pm_Directory": {
-										"value": "tag02/toLower(@{pipeline().parameters.pm_Table})",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@{pipeline().parameters.pm_Table}",
-										"type": "Expression"
-									}
-								}
-							}
-						]
 					}
 				],
 				"policy": {
@@ -16351,7 +16922,7 @@
 					}
 				},
 				"variables": {
-					"ScenarioArry": {
+					"ScenarioArray": {
 						"type": "Array",
 						"defaultValue": [
 							"2025ACT-PFA-01",
@@ -16360,15 +16931,156 @@
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_KEY')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]",
-				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS')]",
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_FACT_FULL')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_30_TAG_SaaS_Load_Keys')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Tables",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\n  FROM [adf].[CT_TAG_SAAS_TABLES]",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_SchemaName": "adf",
+									"pm_TableName": "CT_TAG_SAAS_TABLES",
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "For Each Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 4,
+							"activities": [
+								{
+									"name": "Load Keys",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ODataSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_DataFactory_LoadDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"httpRequestTimeout": "00:05:00"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_TAGETIK_SAAS_KEY",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Code": {
+													"value": "@item().CODE",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET_STATIC",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": "@{pipeline().globalParameters.gpm_Environment}",
+												"pm_FileSystem": "keys",
+												"pm_Directory": {
+													"value": "tag02_saas/@{toLower(item().TABLE)}",
+													"type": "Expression"
+												},
+												"pm_FileName": "@item().TABLE"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
+				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_KEY')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]"
 			]
 		},
 		{
@@ -19102,7 +19814,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS')]",
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DELTA')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -19114,11 +19826,81 @@
 					}
 				},
 				"parameters": {
-					"pm_scenario": {
-						"type": "string",
-						"defaultValue": "2025ACT-PFA-01"
-					},
 					"pm_Code": {
+						"type": "string"
+					},
+					"pm_update_date": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": {
+						"value": "Datasource_@{dataset().pm_Code}?$filter=DATE_UPD ge @{dataset().pm_update_date}",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DIM_FULL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_env": "PROD"
+					}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": {
+						"value": "Datasource_@{dataset().pm_Code}",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_FACT_FULL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_env": "PROD"
+					}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					},
+					"pm_scenario": {
 						"type": "string"
 					}
 				},
@@ -19131,40 +19913,6 @@
 				"typeProperties": {
 					"path": {
 						"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_TAG_SAAS')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DIM')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_TAG_SAAS",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_env": "PROD"
-					}
-				},
-				"parameters": {
-					"pm_Code": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/TAG02 [Tagetik]"
-				},
-				"annotations": [],
-				"type": "ODataResource",
-				"schema": [],
-				"typeProperties": {
-					"path": {
-						"value": "ES_Datasource_@{dataset().pm_Code}",
 						"type": "Expression"
 					}
 				}
@@ -19966,7 +20714,14 @@
 					},
 					{
 						"pipelineReference": {
-							"referenceName": "PL_30_TAG_SaaS_Load",
+							"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact_TEMP",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "PL_10_TAG_SaaS_FullLoad_MASTER_TEMP",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -19990,7 +20745,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_Load')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_FullLoad_Fact_TEMP')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_10_TAG_SaaS_FullLoad_MASTER_TEMP')]"
 			]
 		},
 		{

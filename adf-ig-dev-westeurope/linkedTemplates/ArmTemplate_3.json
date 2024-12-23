@@ -506,7 +506,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS')]",
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DELTA')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -518,11 +518,77 @@
 					}
 				},
 				"parameters": {
-					"pm_scenario": {
-						"type": "string",
-						"defaultValue": "2025ACT-PFA-01"
-					},
 					"pm_Code": {
+						"type": "string"
+					},
+					"pm_update_date": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": {
+						"value": "Datasource_@{dataset().pm_Code}?$filter=DATE_UPD ge @{dataset().pm_update_date}",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DIM_FULL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_env": "PROD"
+					}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Sources/TAG02 [Tagetik]"
+				},
+				"annotations": [],
+				"type": "ODataResource",
+				"schema": [],
+				"typeProperties": {
+					"path": {
+						"value": "Datasource_@{dataset().pm_Code}",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_FACT_FULL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_TAG_SAAS",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"pm_env": "PROD"
+					}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					},
+					"pm_scenario": {
 						"type": "string"
 					}
 				},
@@ -535,38 +601,6 @@
 				"typeProperties": {
 					"path": {
 						"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_TAGETIK_SAAS_DIM')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_TAG_SAAS",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"pm_env": "PROD"
-					}
-				},
-				"parameters": {
-					"pm_Code": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Sources/TAG02 [Tagetik]"
-				},
-				"annotations": [],
-				"type": "ODataResource",
-				"schema": [],
-				"typeProperties": {
-					"path": {
-						"value": "ES_Datasource_@{dataset().pm_Code}",
 						"type": "Expression"
 					}
 				}
@@ -1852,146 +1886,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]",
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DEPRECATED_PL_30_IGSQL03_Sync_Keys')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Extract all current Keys",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"additionalColumns": [
-									{
-										"name": "Sys_DataFactory_LoadDateTime_UTC",
-										"value": {
-											"value": "@utcNow()",
-											"type": "Expression"
-										}
-									},
-									{
-										"name": "Sys_DataFactory_DatabaseName",
-										"value": {
-											"value": "@pipeline().parameters.pm_DatabaseName",
-											"type": "Expression"
-										}
-									}
-								],
-								"sqlReaderQuery": {
-									"value": "Select DISTINCT @{join(pipeline().parameters.pm_BuinessKeys,',')} FROM [dbo].[@{pipeline().parameters.pm_TableName}]\n",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"validateDataConsistency": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "DS_SQLDB_NAV_DYNAMIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_TableName": {
-										"value": "@pipeline().parameters.pm_TableName",
-										"type": "Expression"
-									},
-									"pm_SchemaName": "dbo",
-									"pm_DatabaseName": {
-										"value": "@pipeline().parameters.pm_DatabaseName",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DS_ADLS_PARQUET_STATIC",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									},
-									"pm_FileSystem": "keys",
-									"pm_Directory": {
-										"value": "igsql03/@{toLower(replace(pipeline().parameters.pm_TableName,' ','_'))}",
-										"type": "Expression"
-									},
-									"pm_FileName": {
-										"value": "@{pipeline().parameters.pm_TableName}-@{pipeline().parameters.pm_DatabaseName}",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_DatabaseName": {
-						"type": "string"
-					},
-					"pm_TableName": {
-						"type": "string"
-					},
-					"pm_BuinessKeys": {
-						"type": "array"
-					}
-				},
-				"variables": {
-					"v_Watermark": {
-						"type": "String"
-					},
-					"v_NewWatermark": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/IGSQL03 [Navision]"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-09-26T13:28:05Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_NAV_DYNAMIC')]"
 			]
 		}
 	]

@@ -13,6 +13,483 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_15_NUVIAS_OPERATIONS_ITERATOR__7')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetManifest",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "DS_ADLS_JSON_NUVIAS_FO_MANIFEST",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_ManifestPath": {
+										"value": "@pipeline().parameters.pm_ManifestPath",
+										"type": "Expression"
+									},
+									"pm_ManifestName": {
+										"value": "@pipeline().parameters.pm_ManifestFile",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "ForEachSubmanifest",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetManifest",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'subManifests'),activity('GetManifest').output.firstRow.subManifests,skip(array(''),1))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "FoundOneMoreDepth",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "Found more depths then 7.",
+										"errorCode": "400"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ForEachEntities",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetManifest",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@if(contains(activity('GetManifest').output.firstRow,'entities'),activity('GetManifest').output.firstRow.entities,skip(array(''),1))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_20_NUVIAS_OPERATIONS_LOAD_ENTITY",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_Entity": {
+												"value": "@item().entityName",
+												"type": "Expression"
+											},
+											"pm_ManifestPath": {
+												"value": "@pipeline().parameters.pm_ManifestPath",
+												"type": "Expression"
+											},
+											"pm_ManifestFile": {
+												"value": "@pipeline().parameters.pm_ManifestFile",
+												"type": "Expression"
+											},
+											"pm_FullLoad": {
+												"value": "@pipeline().parameters.pm_FullLoad",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_FullLoad": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"pm_ManifestPath": {
+						"type": "string"
+					},
+					"pm_ManifestFile": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/NUVIAS/OPERATIONS"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-25T15:09:24Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_CLOUD_DISTRIBUTION_Load_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_CLOUD_DISTRIBUTION_EXEL_LOAD",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_CLOUD_DISTRIBUTION_EXEL_LOAD",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"GetExcelFile": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									},
+									"WriteDeltaFiles": {}
+								},
+								"linkedServiceParameters": {
+									"WriteDeltaFiles": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/CLOUD_DISTRIBUTION"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-11-23T12:04:02Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_D2B_Load_sheet')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_D2B_EXEL_LOAD_CUSTOMER",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_D2B_EXEL_LOAD_CUSTOMER",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"GetExcelFile": {
+										"pm_environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									},
+									"WriteDeltaFiles": {}
+								},
+								"linkedServiceParameters": {
+									"WriteDeltaFiles": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "DF_D2B_EXEL_LOAD_SALES",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_D2B_EXEL_LOAD_CUSTOMER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_D2B_EXEL_LOAD_SALES",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"GetExcelFile": {
+										"pm_environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									},
+									"WriteDeltaFiles": {}
+								},
+								"linkedServiceParameters": {
+									"WriteDeltaFiles": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/D2B"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-29T09:14:53Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_DCB_Load_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_DCB_EXCEL_LOAD",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_DCB_EXCEL_LOAD",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"GetExcelFile": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									},
+									"WriteDeltaFiles": {}
+								},
+								"linkedServiceParameters": {
+									"WriteDeltaFiles": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "10 Bronze/DCB"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-03-25T10:29:29Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_DELTALINK_Load_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_DELTALINK_EXEL_LOAD",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_DELTALINK_EXCEL_LOAD",
+								"type": "DataFlowReference",
+								"parameters": {
+									"pm_FileName": {
+										"value": "@concat('\"',pipeline().parameters.pm_FileName,'\"')",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"GetExcelFile": {
+										"pm_Environment": {
+											"value": "@pipeline().globalParameters.gpm_Environment",
+											"type": "Expression"
+										}
+									},
+									"WriteDeltaFiles": {}
+								},
+								"linkedServiceParameters": {
+									"WriteDeltaFiles": {
+										"linkedService": {
+											"pm_Environment": {
+												"value": "@pipeline().globalParameters.gpm_Environment",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "ir-ig-managed-dev-westeurope",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_FileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/DELTALINK"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-12-11T10:51:13Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_20_IGSQL01_Load_Table_ITERATOR')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -495,13 +972,13 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/PL_20_TAG_SaaS_Load')]",
+			"name": "[concat(parameters('factoryName'), '/PL_20_TAG_SaaS_FullLoad')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "IfFullLoad",
+						"name": "If Dimension",
 						"type": "IfCondition",
 						"dependsOn": [],
 						"userProperties": [],
@@ -512,7 +989,7 @@
 							},
 							"ifFalseActivities": [
 								{
-									"name": "TAG_SaaS_LoadTable",
+									"name": "Load Fact Table",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"policy": {
@@ -521,7 +998,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_30_TAG_SaaS_Load",
+											"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
@@ -540,7 +1017,7 @@
 							],
 							"ifTrueActivities": [
 								{
-									"name": "Load Tagetik Dimension",
+									"name": "Load Dimension",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -563,7 +1040,7 @@
 													}
 												}
 											],
-											"httpRequestTimeout": "00:10:00"
+											"httpRequestTimeout": "00:05:00"
 										},
 										"sink": {
 											"type": "ParquetSink",
@@ -579,18 +1056,14 @@
 												}
 											}
 										},
-										"enableStaging": false,
-										"validateDataConsistency": true
+										"enableStaging": false
 									},
 									"inputs": [
 										{
-											"referenceName": "DS_TAGETIK_SAAS_DIM",
+											"referenceName": "DS_TAGETIK_SAAS_DIM_FULL",
 											"type": "DatasetReference",
 											"parameters": {
-												"pm_Code": {
-													"value": "@pipeline().parameters.pm_Code",
-													"type": "Expression"
-												}
+												"pm_Code": "@pipeline().parameters.pm_Code"
 											}
 										}
 									],
@@ -599,13 +1072,10 @@
 											"referenceName": "DS_ADLS_PARQUET",
 											"type": "DatasetReference",
 											"parameters": {
-												"pm_Environment": {
-													"value": "@pipeline().globalParameters.gpm_Environment",
-													"type": "Expression"
-												},
+												"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 												"pm_FileSystem": "bronze",
 												"pm_Directory": {
-													"value": "tag02/@{pipeline().parameters.pm_Table}",
+													"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
 													"type": "Expression"
 												}
 											}
@@ -620,18 +1090,156 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool"
-					},
 					"pm_Code": {
 						"type": "string"
 					},
 					"pm_Table": {
 						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool"
 					}
 				},
 				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoad"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_20_TAG_SaaS_FullLoad_TEMP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "If Dimension",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.pm_FullLoad",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Load Fact Table",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"pm_Code": {
+												"value": "@pipeline().parameters.pm_Code",
+												"type": "Expression"
+											},
+											"pm_Table": {
+												"value": "@pipeline().parameters.pm_Table",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Load Dimension",
+									"type": "Copy",
+									"state": "Inactive",
+									"onInactiveMarkAs": "Succeeded",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ODataSource",
+											"additionalColumns": [
+												{
+													"name": "Sys_Bronze_InsertDateTime_UTC",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												}
+											],
+											"httpRequestTimeout": "00:05:00"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings",
+												"maxRowsPerFile": 1000000,
+												"fileNamePrefix": {
+													"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{utcNow()}",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_TAGETIK_SAAS_DIM_FULL",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Code": "@pipeline().parameters.pm_Code"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_PARQUET",
+											"type": "DatasetReference",
+											"parameters": {
+												"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+												"pm_FileSystem": "bronze",
+												"pm_Directory": {
+													"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pm_Code": {
+						"type": "string"
+					},
+					"pm_Table": {
+						"type": "string"
+					},
+					"pm_FullLoad": {
+						"type": "bool"
+					}
+				},
+				"folder": {
+					"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
 				},
 				"annotations": []
 			},
@@ -1178,7 +1786,9 @@
 				"annotations": [],
 				"lastPublishTime": "2023-11-23T12:04:02Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_20_CLOUD_DISTRIBUTION_Load_File')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_D2B_Load_Table_MASTER')]",
@@ -1218,7 +1828,9 @@
 				"annotations": [],
 				"lastPublishTime": "2023-12-06T10:30:12Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_20_D2B_Load_sheet')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/PL_00_DATANOW_ARR_Load_Sheet_MASTER')]",
@@ -1288,323 +1900,9 @@
 				"annotations": [],
 				"lastPublishTime": "2024-03-25T10:29:29Z"
 			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_IGSQL03_Load_View_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_IGSQL03_DB_ITERATOR",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_IGSQL03_DB_ITERATOR",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "PL_10_IGSQL03_Load_ReportsAll_Views",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "PL_10_IGSQL03_DB_ITERATOR",
-								"dependencyConditions": [
-									"Completed"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_IGSQL03_Load_ReportsAll_Views",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_FullLoad": {
-						"type": "bool",
-						"defaultValue": false
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/IGSQL03 [Navision]"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-09-25T15:09:25Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_NETSAFE_Load_File_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_20_NETSAFE_Load_File",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_20_NETSAFE_Load_File",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/NETSAFE"
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-02-22T15:19:47Z"
-			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_20_NETSAFE_Load_File')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_20_DCB_Load_File')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_TAG02_Load_View_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_TAG02_Load_View_ITERATOR",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_TAG02_Load_View_ITERATOR",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"pm_FullLoad": {
-									"value": "@pipeline().parameters.pm_full_load",
-									"type": "Expression"
-								}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pm_full_load": {
-						"type": "bool",
-						"defaultValue": false
-					}
-				},
-				"folder": {
-					"name": "10 Bronze/TAG02 [TAGETIK]"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-09-25T15:09:25Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_VUZION_ARR_Load_Sheet_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_VUZION_ARR_Load_Sheet_ITERATOR",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_VUZION_ARR_Load_Sheet_ITERATOR",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/VUZION"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-01T13:53:32Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_00_VUZION_MONTHLY_ADJ_Load_Sheet_MASTER')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "PL_10_VUZION_MONTHLY_ADJ_Load_Sheet_ITERATOR",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PL_10_VUZION_MONTHLY_ADJ_Load_Sheet_ITERATOR",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/VUZION/MONTHLY_ADJ"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-01T13:53:32Z"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PL_10_DELTALINK_Load_File_ITERATOR')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "ForEachView",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetFileNames",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetFileNames').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "PL_20_DELTALINK_Load_File",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "PL_20_DELTALINK_Load_File",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"pm_FileName": {
-												"value": "@split(item().name,'.')[0]",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "GetFileNames",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "DS_BINARY_DELTALINK",
-								"type": "DatasetReference",
-								"parameters": {
-									"pm_Environment": {
-										"value": "@pipeline().globalParameters.gpm_Environment",
-										"type": "Expression"
-									}
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "10 Bronze/DELTALINK"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-23T10:00:34Z"
-			},
-			"dependsOn": []
 		}
 	]
 }
