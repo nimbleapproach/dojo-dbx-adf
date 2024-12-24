@@ -5862,7 +5862,7 @@
 							"batchCount": 4,
 							"activities": [
 								{
-									"name": "PL_20_TAG_SaaS_FullLoad",
+									"name": "PL_20_TAG_SaaS_FullLoad_TEMP",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"policy": {
@@ -5871,7 +5871,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_20_TAG_SaaS_FullLoad",
+											"referenceName": "PL_20_TAG_SaaS_FullLoad_TEMP",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": false,
@@ -5905,7 +5905,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_SQLDB_METADATA_DYNAMIC')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_20_TAG_SaaS_FullLoad')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_20_TAG_SaaS_FullLoad_TEMP')]"
 			]
 		},
 		{
@@ -12458,7 +12458,7 @@
 							},
 							"ifFalseActivities": [
 								{
-									"name": "Load Fact Table",
+									"name": "Load Fact Table TEMP",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"policy": {
@@ -12467,7 +12467,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact",
+											"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact_TEMP",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
@@ -12577,7 +12577,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_FullLoad_Fact')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_FullLoad_Fact_TEMP')]",
 				"[concat(variables('factoryId'), '/datasets/DS_TAGETIK_SAAS_DIM_FULL')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET')]"
 			]
@@ -20714,13 +20714,6 @@
 					},
 					{
 						"pipelineReference": {
-							"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact_TEMP",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					},
-					{
-						"pipelineReference": {
 							"referenceName": "PL_10_TAG_SaaS_FullLoad_MASTER_TEMP",
 							"type": "PipelineReference"
 						},
@@ -20745,7 +20738,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_00_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_30_TAG_SaaS_FullLoad_Fact_TEMP')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_10_TAG_SaaS_FullLoad_MASTER_TEMP')]"
 			]
 		},
