@@ -15,12 +15,6 @@
 			},
 			{
 				"pipelineReference": {
-					"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact_TEMP",
-					"type": "PipelineReference"
-				}
-			},
-			{
-				"pipelineReference": {
 					"referenceName": "PL_10_TAG_SaaS_FullLoad_MASTER_TEMP",
 					"type": "PipelineReference"
 				}

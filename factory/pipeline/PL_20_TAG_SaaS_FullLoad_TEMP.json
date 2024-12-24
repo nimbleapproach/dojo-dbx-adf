@@ -14,7 +14,7 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "Load Fact Table",
+							"name": "Load Fact Table TEMP",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -23,7 +23,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact",
+									"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact_TEMP",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
