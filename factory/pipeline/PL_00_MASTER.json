@@ -357,6 +357,29 @@
 				}
 			},
 			{
+				"name": "PL_40_SILVER_TO_GOLD_OPS_REPORTING_MASTER",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "PL_00_BRONZE_TO_SILVER_MASTER",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_40_SILVER_TO_GOLD_OPS_REPORTING_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
 				"name": "PL_00_IGSQL01_Load_View_MASTER",
 				"type": "ExecutePipeline",
 				"dependsOn": [],

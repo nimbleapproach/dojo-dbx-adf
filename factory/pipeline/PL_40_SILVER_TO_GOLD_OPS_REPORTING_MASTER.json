@@ -1,0 +1,28 @@
+{
+	"name": "PL_40_SILVER_TO_GOLD_OPS_REPORTING_MASTER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_50_SILVER_TO_GOLD_OPS_REPORTING_TRIGGER",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_50_SILVER_TO_GOLD_OPS_REPORTING_TRIGGER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "30 Gold"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
