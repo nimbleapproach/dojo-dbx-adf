@@ -37,13 +37,21 @@ schema = 'orion'
 
 # COMMAND ----------
 
-from datetime import date
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
+import warnings
 
 # Widget for full year processing
 dbutils.widgets.text("full_year", "0", "Data period")
 full_year_process = dbutils.widgets.get("full_year")
-full_year_process = {"0": False, "1": True}.get(full_year_process, False)  
+full_year_process = {"0": 0, "1": 1}.get(full_year_process, 0) 
+
+# disabled retro processing
+# df_final = spark.table(f"{catalog}.{schema}.globaltransactions_arr")
+# if df_final.count() == 0:
+#     warnings.warn("⚠️ No data found in target table. Full data load required.")
+#     full_year_process=2
+
 
 # Widget for month period
 dbutils.widgets.text("month_period", "YYYY-MM", "Month period")
@@ -53,22 +61,24 @@ month_period_process = dbutils.widgets.get("month_period")
 if month_period_process == "YYYY-MM":
     # No valid month provided, use previous month
     today = date.today()
-    first_of_this_month = date(today.year, today.month, 1)
-    last_month_date = first_of_this_month - relativedelta(months=1)
-    month_period_process = last_month_date.strftime('%Y-%m')
+    if today.day > 10:
+        month_period_process = today.strftime('%Y-%m')
+    else:
+        last_month_date = date(today.year, today.month, 1) - relativedelta(months=1)
+        month_period_process = last_month_date.strftime('%Y-%m')
 else:
     # Validate the provided month period format
     try:
-        # Try to parse the provided date
-        from datetime import datetime
         datetime.strptime(month_period_process, '%Y-%m')
         # If successful, keep the provided value
     except ValueError:
         # If invalid format, use previous month
         today = date.today()
-        first_of_this_month = date(today.year, today.month, 1)
-        last_month_date = first_of_this_month - relativedelta(months=1)
-        month_period_process = last_month_date.strftime('%Y-%m')
+        if today.day > 10:
+            month_period_process = today.strftime('%Y-%m')
+        else:
+            last_month_date = date(today.year, today.month, 1) - relativedelta(months=1)
+            month_period_process = last_month_date.strftime('%Y-%m')
 
 print(f"Processing {month_period_process} sales analysis")
 
@@ -109,6 +119,14 @@ def get_sales_analysis_v2(period=None, full_year=False):
         year = period.split('-')[0] if '-' in period else period
         start_date = f"{year}-01-01"
         end_date = f"{year}-12-31"
+    
+    # disabled retro processing
+    # elif full_year_process==2:
+    #     today = date.today()
+    #     two_years_ago = today - relativedelta(years=2)
+    #     year = two_years_ago.strftime('%Y')
+    #     start_date = f"{year}-01-01"
+    #     end_date = f"{year}-12-31"
     else:
         start_date = f"{period}-01"
         end_date = (datetime.strptime(start_date, '%Y-%m-%d') + relativedelta(months=1) - relativedelta(days=1)).strftime('%Y-%m-%d')
@@ -214,106 +232,6 @@ def get_sales_analysis_v2(period=None, full_year=False):
     )
     
     return result.replace(float('NaN'), None)
-
-# COMMAND ----------
-
-# DBTITLE 1,common function: check dupes and more
-from pyspark.sql import functions as F
-from pyspark.sql.window import Window
-
-def check_duplicate_keys(
-    df, 
-    key_cols=["Manufacturer Item No_", "Consolidated Vendor Name", "sys_databasename"], 
-    order_cols=None, 
-    priority_col="sys_databasename",
-    priority_map = {
-        "ReportsUK": 1,
-        "ReportsDE": 2,
-        "ReportsCH": 3,
-        "ReportsNO": 4,
-        "ReportsDN": 5,
-        "ReportsSE": 6,
-        "ReportsFI": 7,
-        "ReportsNL": 8,
-        "ReportsBE": 9,
-        "ReportsFR": 10,
-        "ReportsDK": 11
-    }
-):
-    """
-    Check for duplicate composite keys and provide detailed analysis with priority-based ordering.
-    
-    Parameters:
-    df: DataFrame to check
-    key_cols: List of column names that form the composite key
-    order_cols: List of column names for ordering. If None, uses key_cols
-    priority_col: Column to assign priorities
-    priority_map: Dictionary mapping values of the priority column to their priorities
-    """
-    # Get actual columns from DataFrame
-    df_columns = df.columns
-    
-    # Filter key_cols to only include columns that exist in the DataFrame
-    key_cols = [col for col in key_cols if col in df_columns]
-    
-    # Adjust priority handling based on whether sys_databasename exists
-    if priority_col not in df_columns:
-        df = df.withColumn("priority", F.lit(999))
-    else:
-        df = df.withColumn(
-            "priority",
-            F.expr(
-                "CASE " +
-                " ".join([f"WHEN {priority_col} = '{k}' THEN {v}" for k, v in priority_map.items()]) +
-                " ELSE 999 END"
-            )
-        )
-    
-    # Use order_cols if provided, otherwise fall back to key_cols
-    order_cols = order_cols if order_cols is not None else key_cols
-    # Filter order_cols to only include columns that exist
-    order_cols = [col for col in order_cols if col in df_columns]
-    
-    # Get total record count
-    total_records = df.count()
-    
-    # Define window specs
-    cnt_window = Window.partitionBy(*key_cols)
-    row_window = Window.partitionBy(*key_cols).orderBy(F.col("priority"), *order_cols)
-    
-    # Add occurrence and row_number using window functions
-    occurrence_with_details = df \
-        .withColumn("occurrence", F.count("*").over(cnt_window)) \
-        .withColumn("row_number", F.row_number().over(row_window)) \
-        .orderBy(F.col("priority"), *order_cols, "row_number")
-    
-    # Filter for duplicates only
-    dupes_with_details = occurrence_with_details.filter(F.col("occurrence") > 1)
-    
-    # Get summary statistics
-    num_unique_keys = df.select(*key_cols).distinct().count()
-    num_duplicate_keys = dupes_with_details.select(*key_cols).distinct().count()
-    
-    # Print summary
-    print(f"\nDuplicate Key Analysis:")
-    print(f"Total Records: {total_records}")
-    print(f"Unique Keys: {num_unique_keys}")
-    print(f"Keys with Duplicates: {num_duplicate_keys}")
-    print(f"Columns used as keys: {key_cols}")
-    
-    if num_duplicate_keys > 0:
-        # Show distribution of duplicates
-        print("\nDistribution of Duplicates:")
-        dupe_distribution = dupes_with_details \
-            .select("occurrence") \
-            .filter(F.col("row_number") == 1) \
-            .withColumn("frequency", F.count("*").over(Window.partitionBy("occurrence"))) \
-            .distinct() \
-            .orderBy("occurrence")
-            
-        print("\nDetailed Duplicate Records:")
-        
-    return occurrence_with_details
 
 # COMMAND ----------
 

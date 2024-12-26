@@ -34,11 +34,19 @@ schema = 'orion'
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
+import warnings
 
 # Widget for full year processing
 dbutils.widgets.text("full_year", "0", "Data period")
+#full year will be setup to process 2 years
 full_year_process = dbutils.widgets.get("full_year")
-full_year_process = {"0": False, "1": True}.get(full_year_process, False)  
+full_year_process = {"0": 0, "1": 1}.get(full_year_process, 0)
+
+
+df_final = spark.table(f"{catalog}.{schema}.globaltransactions_arr")
+if df_final.count() == 0:
+    warnings.warn("⚠️ No data found in target table. Full data load required.")
+    full_year_process=2
 
 # Widget for month period
 dbutils.widgets.text("month_period", "YYYY-MM", "Month period")
@@ -48,9 +56,11 @@ month_period_process = dbutils.widgets.get("month_period")
 if month_period_process == "YYYY-MM":
     # No valid month provided, use previous month
     today = date.today()
-    first_of_this_month = date(today.year, today.month, 1)
-    last_month_date = first_of_this_month - relativedelta(months=1)
-    month_period_process = last_month_date.strftime('%Y-%m')
+    if today.day > 10:
+        month_period_process = today.strftime('%Y-%m')
+    else:
+        last_month_date = date(today.year, today.month, 1) - relativedelta(months=1)
+        month_period_process = last_month_date.strftime('%Y-%m')
 else:
     # Validate the provided month period format
     try:
@@ -60,10 +70,12 @@ else:
         # If successful, keep the provided value
     except ValueError:
         # If invalid format, use previous month
-        today = date.today()
-        first_of_this_month = date(today.year, today.month, 1)
-        last_month_date = first_of_this_month - relativedelta(months=1)
-        month_period_process = last_month_date.strftime('%Y-%m')
+        today = date.today()        
+        if today.day > 10:
+            month_period_process = today.strftime('%Y-%m')
+        else:
+            last_month_date = date(today.year, today.month, 1) - relativedelta(months=1)
+            month_period_process = last_month_date.strftime('%Y-%m')
 
 print(f"Processing {month_period_process} sales analysis")
 
@@ -112,6 +124,13 @@ df_trans = spark.table(f"{catalog}.{schema}.vw_globaltransactions_obt_staging")
 if full_year_process==1:
     year = month_period_process.split('-')[0] if '-' in month_period_process else month_period_process
     df_trans =df_trans.filter(date_format(col('TransactionDate'), 'yyyy') == year)
+
+# disabled retro processing
+# elif full_year_process==2:
+#     today = date.today()
+#     two_years_ago = today - relativedelta(years=2)
+#     year = two_years_ago.strftime('%Y')
+#     df_trans =df_trans.filter(date_format(col('TransactionDate'), 'yyyy') >= year)
 else:
     ## analyse just a month period
     df_trans =df_trans.filter(date_format(col('TransactionDate'), 'yyyy-MM') == month_period_process)
@@ -712,37 +731,99 @@ result = udf_run_match(
 
 # COMMAND ----------
 
+df_orion.printSchema()
+# GP1_Euro: decimal(38,14) (nullable = true)
+
+# COMMAND ----------
+
 df_orion = spark.table(f"{catalog}.{schema}.globaltransactions_auto")
-df_platinum = spark.table(f"platinum_{ENVIRONMENT}.obt.globaltransactions")
+df_final = spark.table(f"{catalog}.{schema}.globaltransactions_arr") 
 
-composite_key = [
-    'TransactionDate', 'SKUInternal', 'VendorNameInternal', 'VendorNameMaster', 'SKUMaster'
-]
-fields_to_update = [
-    'ProductTypeMaster', 'CommitmentDuration1Master', 'CommitmentDuration2Master', 
-    'BillingFrequencyMaster', 'ConsumptionModelMaster'
-]
+if full_year_process == 2:
+    warnings.warn("⚠️ No data found in target table. Full data load required.")
+    write_mode="overwrite"
+    df_platinum = spark.table(f"platinum_{ENVIRONMENT}.obt.globaltransactions")
+    df_Source_min_YYYY_mm = df_orion.selectExpr("MIN(date_format(TransactionDate, 'yyyy-MM')) as min_date").collect()[0]['min_date']
+    
+    # Save the updated DataFrame
+    df_platinum.filter(date_format(col("TransactionDate"), "yyyy-MM") < df_Source_min_YYYY_mm).write \
+        .mode(write_mode) \
+        .format("delta") \
+        .option("mergeSchema", "false") \
+        .saveAsTable(f"{catalog}.{schema}.globaltransactions_arr")
 
-# Get all columns from platinum except the fields to update
-platinum_cols = [c for c in df_platinum.columns if c not in fields_to_update]
+elif full_year_process==1:    
+    year = month_period_process.split('-')[0] if '-' in month_period_process else month_period_process
+     # Using SQL
+    spark.sql(f"""
+        DELETE FROM {catalog}.{schema}.globaltransactions_arr 
+        WHERE date_format(TransactionDate, 'yyyy') >= '{year}'
+    """)
+else:
+    # Using SQL
+    spark.sql(f"""
+        DELETE FROM {catalog}.{schema}.globaltransactions_arr 
+        WHERE date_format(TransactionDate, 'yyyy-MM') = '{month_period_process}'
+    """) 
 
-# Using DataFrame merge/join operations
-df_updated = df_platinum.join(
-    df_orion,
-    on=composite_key,
-    how='left'
-).select(
-    *[df_platinum[col].alias(col) for col in platinum_cols],  # all platinum columns except updated fields
-    *[df_orion[field].alias(field) for field in fields_to_update]  # updated fields from orion
-)
 
+
+# COMMAND ----------
+
+
+# Read source table
+df_orion = df_orion.select(
+'GroupEntityCode',
+'EntityCode',
+'DocumentNo', 
+'TransactionDate',
+'SalesOrderDate',
+'SalesOrderID',
+'SalesOrderItemID',
+'SKUInternal',
+'SKUMaster',
+'Description',
+'Technology',
+'ProductTypeInternal',
+'VendorCode',
+'VendorNameInternal',
+'VendorNameMaster',
+'VendorGeography',
+'VendorStartDate',
+'ResellerCode',
+'ResellerNameInternal', 
+'ResellerGeographyInternal',
+'ResellerStartDate',
+'ResellerGroupCode',
+'ResellerGroupName',
+'ResellerGroupStartDate',
+'EndCustomer',
+'IndustryVertical',
+'CurrencyCode',
+'RevenueAmount',
+'Period_FX_rate',
+'RevenueAmount_Euro',
+'GP1',
+'GP1_Euro',
+'COGS',
+'COGS_Euro',
+'GL_Group',
+'TopCostFlag',
+'ProductTypeMaster',
+'CommitmentDuration1Master',
+'CommitmentDuration2Master',
+'BillingFrequencyMaster',
+'ConsumptionModelMaster',
+'matched_arr_type',
+'matched_type',
+'is_matched'
+) 
 # Save the updated DataFrame
-df_updated.write \
-    .mode("overwrite") \
+df_orion.write \
+    .mode("append") \
     .format("delta") \
-    .option("mergeSchema", "true") \
-    .option("overwriteSchema", "true") \
-    .saveAsTable(f"platinum_{ENVIRONMENT}.obt.globaltransactions_arr")
+    .option("mergeSchema", "false") \
+    .saveAsTable(f"{catalog}.{schema}.globaltransactions_arr")
 
 # COMMAND ----------
 

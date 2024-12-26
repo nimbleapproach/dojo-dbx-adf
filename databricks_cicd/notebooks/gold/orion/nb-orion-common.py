@@ -263,6 +263,113 @@ def compare_dataframes(
 
 # COMMAND ----------
 
+def get_primary_key_from_df(df):
+    """
+    Extract primary key information from a DataFrame's metadata
+    Returns the primary key column name(s) if found, None otherwise
+    """
+    try:
+        # Get the table's metadata if available
+        catalog = df.sparkSession.catalog
+        full_table_name = df._jdf.sparkSession().catalog().currentDatabase() + "." + df._jdf.queryExecution().analyzed().tableName()
+        table = catalog.get(full_table_name)
+        
+        # Look for primary key in constraints/properties
+        for prop in table.properties:
+            if 'primary_key' in prop.lower():
+                return table.properties[prop].strip('`() ').split(',')[0]
+    except:
+        pass
+    
+    # If no primary key found in metadata, look for identity columns
+    for field in df.schema.fields:
+        if 'identity' in str(field).lower() or 'pk' in field.name.lower():
+            return field.name
+            
+    return None
+
+
+# COMMAND ----------
+
+
+def map_parent_child_keys(
+    df,
+    key_cols,
+    order_cols=None,
+    priority_col=None,
+    priority_map=None
+):
+    """
+    Generic function to map parent-child relationships in any DataFrame
+    
+    Parameters:
+    df: DataFrame to process
+    key_cols: List of columns that form the business key
+    order_cols: Optional columns for ordering within groups
+    priority_col: Column used for priority-based ordering
+    priority_map: Dictionary mapping priority values to numeric priorities
+    """
+    # Get actual columns from DataFrame
+    df_columns = df.columns
+    
+    # Filter key_cols to only include existing columns
+    key_cols = [col for col in key_cols if col in df_columns]
+    if not key_cols:
+        raise ValueError("No valid key columns provided")
+    
+    # Try to get primary key, fall back to first key_col if none found
+    id_column = get_primary_key_from_df(df) or key_cols[0]
+    
+    # Handle priority column and mapping
+    if priority_col and priority_col in df_columns and priority_map:
+        df = df.withColumn(
+            "priority",
+            F.expr(
+                "CASE " +
+                " ".join([f"WHEN lower({priority_col}) LIKE '%{k.lower()}%' THEN {v}" 
+                         for k, v in priority_map.items()]) +
+                " ELSE 999 END"
+            )
+        )
+    else:
+        df = df.withColumn("priority", F.lit(999))
+    
+    # Use order_cols if provided, otherwise use key_cols
+    order_cols = [col for col in (order_cols or key_cols) if col in df_columns]
+    
+    # Define window specifications
+    cnt_window = Window.partitionBy(*key_cols)
+    row_window = Window.partitionBy(*key_cols).orderBy(F.col("priority"), *order_cols)
+    
+    # Create result DataFrame
+    result_df = df \
+        .withColumn("occurrence", F.count("*").over(cnt_window)) \
+        .withColumn("row_number", F.row_number().over(row_window)) \
+        .withColumn("is_parent", F.col("row_number") == 1) \
+        .withColumn("group_id", F.col(id_column)) \
+        .withColumn(
+            "parent_id",
+            F.when(F.col("row_number") == 1, None)
+            .otherwise(F.first(id_column).over(cnt_window))
+        )
+    
+    # Calculate summary statistics
+    total_records = result_df.count()
+    num_parents = result_df.filter(F.col("is_parent")).count()
+    num_children = result_df.filter(~F.col("is_parent")).count()
+    
+    # Print summary
+    print(f"\nParent-Child Mapping Summary:")
+    print(f"Total Records: {total_records}")
+    print(f"Parent Records: {num_parents}")
+    print(f"Child Records: {num_children}")
+    print(f"Key Columns: {key_cols}")
+    print(f"ID Column used: {id_column}")
+    
+    return result_df
+
+# COMMAND ----------
+
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
@@ -309,7 +416,7 @@ def check_duplicate_keys(
             "priority",
             F.expr(
                 "CASE " +
-                " ".join([f"WHEN {priority_col} = '{k}' THEN {v}" for k, v in priority_map.items()]) +
+                " ".join([f"WHEN lower({priority_col}) LIKE '%{k.lower()}%' THEN {v}" for k, v in priority_map.items()]) +
                 " ELSE 999 END"
             )
         )
