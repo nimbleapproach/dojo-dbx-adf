@@ -1,5 +1,5 @@
 {
-	"name": "DS_TAGETIK_SAAS",
+	"name": "DS_TAGETIK_SAAS_FACT_FULL",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_TAG_SAAS",
@@ -9,11 +9,10 @@
 			}
 		},
 		"parameters": {
-			"pm_scenario": {
-				"type": "string",
-				"defaultValue": "2025ACT-PFA-01"
-			},
 			"pm_Code": {
+				"type": "string"
+			},
+			"pm_scenario": {
 				"type": "string"
 			}
 		},

@@ -35,16 +35,8 @@ with cte_sources as
 (
   select distinct s.source_system, source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
-  --where s.source_system = 'Infinigate ERP' 
   where s.is_current = 1
 ),
---cte_nuvias_sources as 
---(
--- select distinct source_system_pk, data_area_id
---  from {catalog}.{schema}.dim_source_system s 
---  where s.source_system = 'Nuvias ERP' 
---  and s.is_current = 1
---),
 cte_source_data as 
 (
 --orders & quotes
@@ -57,7 +49,10 @@ select distinct
     when sla.DocumentType = 1 then 'sales order' 
     else 'N/A' 
   end as document_source,
+  CAST(sla.DocumentType AS STRING) as document_type,
+  'N/A' as document_status,
   replace(sla.Sys_DatabaseName,"Reports","") as country_code,
+  'N/A' as vendor_dimension_value,
   coalesce(s.source_system_pk,-1) as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -78,7 +73,7 @@ FROM
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sha.Sys_DatabaseName,2))
 AND s.source_system = 'Infinigate ERP'
 GROUP BY ALL
-union
+union all
 --msp
 select distinct
   msp_h.biztalkguid as local_document_id,
@@ -88,7 +83,10 @@ select distinct
   end as associated_document_id,
   cast(msp_h.DocumentDate as date) as document_date,
   concat('msp ' , case when msp_h.CreditMemo = '1' then 'sales credit memo' else 'sales invoice' end ) as document_source,
+  'N/A' as document_type,
+  'N/A' as document_status,
   replace(msp_h.Sys_DatabaseName,"Reports","") as country_code,
+  msp_h.vendordimensionvalue as vendor_dimension_value,
   coalesce(s.source_system_pk,-1) as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -100,14 +98,17 @@ LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(msp_h.Sys_Databa
 AND s.source_system = 'Infinigate ERP'
 where  msp_h.Sys_Silver_IsCurrent = true
 GROUP BY ALL
-union
+union all
 --invoices
 select distinct
   sil.DocumentNo_ AS local_document_id,
   'N/A' as associated_document_id,
   to_date(sih.PostingDate) AS document_date, 
   'sales invoice' as document_source,
+  'N/A' as document_type,
+  'N/A' as document_status,
   replace(sih.Sys_DatabaseName,"Reports","") as Country_Code,
+  'N/A' as vendor_dimension_value,
   coalesce(s.source_system_pk,-1) as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -125,14 +126,17 @@ LEFT JOIN gold_{ENVIRONMENT}.obt.entity_mapping AS entity ON RIGHT(sih.Sys_Datab
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
 AND s.source_system = 'Infinigate ERP'
 GROUP BY ALL
-union
+union all
 --credit memos
 select distinct
   sil.DocumentNo_ AS local_document_id,
   'N/A' as associated_document_id,
   to_date(sih.PostingDate) AS document_date, 
   'credit memo' as document_source,
+  'N/A' as document_type,
+  'N/A' as document_status,
   replace(sih.Sys_DatabaseName,"Reports","") as Country_Code,
+  'N/A' as vendor_dimension_value,
   coalesce(s.source_system_pk,-1) as source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -148,26 +152,27 @@ INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_cr_memo_line sil ON sih.No_ = sil.
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(sih.Sys_DatabaseName,2))
 AND s.source_system = 'Infinigate ERP'
 GROUP BY ALL
-UNION
+UNION all
 --Nuvias data
 SELECT 
   trans.SalesId As local_document_id,
   'N/A' AS associated_document_id,
   MAX(to_date(trans.invoicedate)) AS document_date,
   'nuvias sales invoice' AS document_source,
+  'N/A' as document_type,
+  'N/A' as document_status,
   'N/A' AS country_code,
+  'N/A' as vendor_dimension_value,
   coalesce(s.source_system_pk,-1) AS source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
   1 AS is_current,
   MAX(CAST(trans.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_InsertedDateTime_UTC,
   MAX(CAST(trans.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
-FROM silver_DEV.nuvias_operations.custinvoicetrans AS trans
-LEFT JOIN silver_dev.nuvias_operations.salesline AS salestrans ON trans.SalesId = salestrans.Salesid
+FROM silver_{ENVIRONMENT}.nuvias_operations.custinvoicetrans AS trans
+LEFT JOIN silver_{ENVIRONMENT}.nuvias_operations.salesline AS salestrans ON trans.SalesId = salestrans.Salesid
   AND salestrans.Sys_Silver_IsCurrent = 1
   AND salestrans.SalesStatus <> '4' --This is removed as it identifies cancelled lines on the sales order
-  --AND salestrans.itemid NOT IN ('Delivery_Out', '6550896')
-  -- This removes the Delivery_Out and Swedish Chemical Tax lines that are on some orders which is never included in the Revenue Number
   AND trans.DataAreaId = salestrans.DataAreaId
   AND trans.ItemId = salestrans.ItemId
   and trans.InventTransId = salestrans.InventTransId 
@@ -176,14 +181,17 @@ LEFT JOIN cte_sources s on trans.dataareaid = s.source_entity
 AND s.source_system = 'Nuvias ERP'
 WHERE trans.Sys_Silver_IsCurrent = 1
 GROUP BY ALL
-UNION
+UNION all
 --Netsafe data
 SELECT 
   invoice.Invoice_Number As local_document_id,
   'N/A' AS associated_document_id,
   MAX(to_date(invoice.Invoice_Date)) AS document_date,
   'netsafe sales invoice' AS document_source,
+  'N/A' as document_type,
+  'N/A' as document_status,
   'N/A' AS country_code,
+  'N/A' as vendor_dimension_value,
   coalesce(s.source_system_pk,-1) AS source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -201,14 +209,17 @@ LEFT JOIN cte_sources s on CASE
 AND s.source_system = 'Netsafe ERP'
 WHERE invoice.sys_silver_iscurrent = true
 GROUP BY ALL
-UNION 
+UNION all
 --Netsuite data
 SELECT 
-  RIGHT(si.Sales_Order_Number,9) As local_document_id,
-  'N/A' AS associated_document_id,
+  si.Invoice_Number as local_document_id,
+  RIGHT(si.Sales_Order_Number,9) AS associated_document_id,
   TO_DATE(si.Sales_Order_Date) AS document_date,
   'starlink (netsuite) sales invoice' AS document_source,
   'N/A' AS country_code,
+  CAST(si.Type as STRING) as document_type,
+  si.status as document_status,
+  'N/A' as vendor_dimension_value,
   coalesce(s.source_system_pk,-1) AS source_system_fk,
   CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
   CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -217,16 +228,40 @@ SELECT
   MAX(CAST(si.Sys_Silver_InsertDateTime_UTC as TIMESTAMP)) AS Sys_Gold_ModifiedDateTime_UTC
 FROM
   silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si
+INNER JOIN (Select invoice_number,MAX(TO_DATE(si1.Sales_Order_Date)) as sales_order_date 
+  FROM silver_{ENVIRONMENT}.netsuite.InvoiceReportsInfinigate AS si1 
+  GROUP BY ALL) as m 
+ON m.invoice_number = si.invoice_number AND m.sales_order_date = si.Sales_Order_Date
 LEFT JOIN cte_sources s on 'AE1' = s.source_entity AND s.source_system = 'Starlink (Netsuite) ERP'
 WHERE si.sys_silver_iscurrent = true
 GROUP BY ALL
+UNION ALL
+SELECT 
+  local_document_id,
+  associated_document_id,
+  document_date,
+  document_source,
+  country_code,
+  document_type,
+  document_status,
+  vendor_dimension_value,
+  source_system_fk,
+  start_datetime,
+  end_datetime,
+  is_current,
+  Sys_Gold_InsertedDateTime_UTC,
+  Sys_Gold_ModifiedDateTime_UTC
+FROM {catalog}.{schema}.vw_dim_document_cloudblue_staging
 )
 SELECT
   csd.local_document_id,
   csd.associated_document_id,
   csd.document_date,
   csd.document_source,
+  csd.document_type,
+  csd.document_status,
   csd.country_code,
+  csd.vendor_dimension_value,
   csd.source_system_fk,
   case when d.is_current is null THEN csd.start_datetime ELSE CAST(NOW() as TIMESTAMP) END AS start_datetime,
   csd.end_datetime,

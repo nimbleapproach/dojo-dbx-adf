@@ -33,24 +33,16 @@ with cte_sources as
 (
   select distinct s.source_system, source_system_pk, source_entity 
   from {catalog}.{schema}.dim_source_system s 
-  --where s.source_system = 'Infinigate ERP' 
   where s.is_current = 1
 ),
 cte_duplicate_netsafe_sku as 
 (
   select trim(sku) as sku,Sys_Country,MAX(SKU_Description) as product_description, count(*) as Sku_Count
-  from silver_dev.netsafe.invoicedata AS 
+  from silver_{ENVIRONMENT}.netsafe.invoicedata AS 
   where sys_silver_iscurrent = true 
   group by all
   having count(*) > 1
 ),
---cte_nuvias_sources as 
---(
--- select distinct source_system_pk, data_area_id
---  from {catalog}.{schema}.dim_source_system s 
---  where s.source_system = 'Nuvias ERP' 
---  and s.is_current = 1
---),,
 cte_source_data as 
 (
 -- Items
@@ -80,9 +72,8 @@ FROM silver_{ENVIRONMENT}.igsql03.item it
 LEFT JOIN cte_sources s on lower(s.source_entity) = lower(right(it.Sys_DatabaseName,2))
 AND s.source_system = 'Infinigate ERP'
 Where it.Sys_Silver_IsCurrent = true
-group by
+group by 
     it.No_,
-    --coalesce(it.manufacturerItemNo_, 'N/A'),
     trim(
       (
         concat(
@@ -119,7 +110,6 @@ AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i
                 and i.Sys_DatabaseName = sil.Sys_DatabaseName)
 group by
     sil.No_,
-    --coalesce(sil.manufacturerItemNo_, 'N/A'),
     coalesce(s.source_system_pk,-1)
 union -- sales orders & quotes
 select 
@@ -186,7 +176,6 @@ AND not exists (select 1 from silver_{ENVIRONMENT}.igsql03.item i
 WHERE sil.Sys_Silver_IsCurrent = true
 group by 
     sil.No_,
-    --coalesce(sil.manufacturerItemNo_, 'N/A'),
     coalesce(s.source_system_pk,-1)
 union -- msp
 select 
@@ -220,7 +209,6 @@ SELECT
     MAX(COALESCE(it.itemid,'N/A')) AS local_product_id ,
     COALESCE(datanowarr.Product_Type, 'N/A') AS product_type,
     CONCAT(it.DataAreaId,' Line Item') as line_item_type,
-    --coalesce(it.manufacturerItemNo_, 'N/A') as manufacturer_item_number,
     coalesce(s.source_system_pk,-1) AS source_system_fk,
     CAST('1990-01-01' AS TIMESTAMP) AS start_datetime,
     CAST('9999-12-31' AS TIMESTAMP) AS end_datetime,
@@ -284,6 +272,20 @@ AND s.source_system = 'Netsafe ERP'
 LEFT JOIN cte_duplicate_netsafe_sku d ON d.sku = trim(invoice.SKU) and d.Sys_Country = invoice.Sys_Country
 WHERE invoice.sys_silver_iscurrent = true
 GROUP BY ALL
+UNION ALL
+SELECT
+    product_code,
+    product_description,
+    local_product_id ,
+    product_type,
+    line_item_type,
+    source_system_fk,
+    start_datetime,
+    end_datetime,
+    is_current,
+    Sys_Gold_InsertedDateTime_UTC,
+    Sys_Gold_ModifiedDateTime_UTC
+FROM {catalog}.{schema}.vw_dim_product_cloudblue_staging
 )
 SELECT
     csd.product_code,
@@ -304,3 +306,5 @@ LEFT JOIN {catalog}.{schema}.dim_product d ON d.local_product_id = csd.local_pro
 WHERE csd.product_code IS NOT NULL
 GROUP BY ALL
 """)
+
+# COMMAND ----------

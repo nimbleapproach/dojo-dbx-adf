@@ -1,6 +1,6 @@
 With ExchangeRates as (
 SELECT 
-	CONVERT(DATE,STARTDATE) AS StartDate --removed correction on date?? 
+	CONVERT(DATE,STARTDATE) AS StartDate
 	,TOCURRENCY
 	,FROMCURRENCY
 	,RATE
@@ -11,7 +11,7 @@ FROM ExchangeRateEntityStaging
 ExchangeRates2 as 
 (
 SELECT 
-	CONVERT(DATE,STARTDATE) AS StartDate --removed correction on date?? 
+	CONVERT(DATE,STARTDATE) AS StartDate
 	,TOCURRENCY
 	,FROMCURRENCY
 	,RATE

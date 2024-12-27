@@ -1,5 +1,5 @@
 {
-	"name": "PL_10_TAG_SaaS_Load",
+	"name": "PL_10_TAG_SaaS_FullLoad_MASTER_TEMP",
 	"properties": {
 		"activities": [
 			{
@@ -17,7 +17,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\n  FROM [adf].[CT_TAG_SAAS_TABLES]",
+						"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\nFROM [adf].[CT_TAG_SAAS_TABLES]\nWHERE FULL_LOAD = 0",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -57,7 +57,7 @@
 					"batchCount": 4,
 					"activities": [
 						{
-							"name": "PL_20_TAG_SaaS_Load",
+							"name": "PL_20_TAG_SaaS_FullLoad_TEMP",
 							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
@@ -66,21 +66,21 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_20_TAG_SaaS_Load",
+									"referenceName": "PL_20_TAG_SaaS_FullLoad_TEMP",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": false,
 								"parameters": {
-									"pm_FullLoad": {
-										"value": "@item().FULL_LOAD",
-										"type": "Expression"
-									},
 									"pm_Code": {
 										"value": "@item().CODE",
 										"type": "Expression"
 									},
 									"pm_Table": {
 										"value": "@item().TABLE_NAME",
+										"type": "Expression"
+									},
+									"pm_FullLoad": {
+										"value": "@item().FULL_LOAD",
 										"type": "Expression"
 									}
 								}
@@ -91,7 +91,7 @@
 			}
 		],
 		"folder": {
-			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS_Test"
+			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
 		},
 		"annotations": []
 	}

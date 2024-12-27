@@ -15,1287 +15,1291 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC USE SCHEMA ops_reporting;
 
 # COMMAND ----------
-
-# MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR REPLACE VIEW v_pos_reports_common AS
-# MAGIC WITH sales_data as (
-# MAGIC   SELECT DISTINCT
-# MAGIC     sl.SALESID
-# MAGIC   , sl.DATAAREAID
-# MAGIC   , sl.inventtransid
-# MAGIC   , sl.inventreftransid
-# MAGIC   , sl.sag_resellervendorid
-# MAGIC   , sl.sag_vendorreferencenumber
-# MAGIC   , sl.sag_purchprice
-# MAGIC   , sl.sag_vendorstandardcost
-# MAGIC   , sl.salesstatus
-# MAGIC   , sl.sag_shipanddebit
-# MAGIC   , sl.currencycode
-# MAGIC   , sl.salesprice
-# MAGIC   , sl.itemid
-# MAGIC   , sl.sag_ngs1pobuyprice
-# MAGIC   , sl.linenum
-# MAGIC   , st.purchorderformnum
-# MAGIC   , st.sag_euaddress_name
-# MAGIC   , st.sag_euaddress_street1
-# MAGIC   , st.sag_euaddress_street2
-# MAGIC   , st.sag_euaddress_city
-# MAGIC   , st.sag_euaddress_county
-# MAGIC   , st.sag_euaddress_postcode
-# MAGIC   , st.sag_euaddress_country
-# MAGIC   , st.sag_euaddress_contact
-# MAGIC   , st.sag_euaddress_email
-# MAGIC   , st.salesname
-# MAGIC   , st.customerref
-# MAGIC   , st.custaccount
-# MAGIC   , st.salesordertype
-# MAGIC   , st.INVOICEACCOUNT
-# MAGIC   , st.DELIVERYPOSTALADDRESS
-# MAGIC   , st.sag_reselleremailaddress
-# MAGIC   , st.sag_createddatetime
-# MAGIC     FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl
-# MAGIC     JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging WHERE Sys_Silver_IsCurrent = 1) st
-# MAGIC       ON st.salesid    = sl.salesid								--Sales Line Local
-# MAGIC      AND st.dataareaid = sl.dataareaid
-# MAGIC )
-# MAGIC , oracle_data as (
-# MAGIC   SELECT
-# MAGIC     op.sales_order
-# MAGIC   , op.contact_name
-# MAGIC   , co.firstName
-# MAGIC   , co.lastName
-# MAGIC   , co.emailaddress
-# MAGIC   , co.contactisprimaryforaccount
-# MAGIC   , co.creationdate
-# MAGIC     FROM (SELECT * FROM silver_dev.nuav_prodtrans_sqlbyod.ora_oracle_opportunities WHERE Sys_Silver_IsCurrent = 1) op
-# MAGIC     LEFT JOIN (SELECT * FROM silver_dev.nuav_prodtrans_sqlbyod.ora_oracle_contacts WHERE Sys_Silver_IsCurrent = 1) co
-# MAGIC       ON CONCAT_WS(' ', STRING(co.firstName), STRING(co.lastName)) = STRING(op.contact_name)
-# MAGIC )
-# MAGIC , distinctitem_cte AS
-# MAGIC (
-# MAGIC SELECT
-# MAGIC 	ROW_NUMBER() OVER(PARTITION BY it.itemid, it.dataareaid ORDER BY it.itemid) rn
-# MAGIC 	,it.dataareaid				AS companyid
-# MAGIC 	,it.itemid					AS itemid
-# MAGIC 	,it.name					AS itemname
-# MAGIC 	,it.description				AS itemdescription
-# MAGIC 	,it.modelgroupid			AS itemmodelgroupid
-# MAGIC 	,it.itemgroupid				AS itemgroupid
-# MAGIC 	,it.practice				AS practice
-# MAGIC 	,it.primaryvendorid			AS primaryvendorid
-# MAGIC 	,ve.vendororganizationname	AS primaryvendorname
-# MAGIC 	,ig.name					AS itemgroupname
-# MAGIC --	,mg.name					AS itemmodelgroupname
-# MAGIC --	,fd.description				AS practicedescr
-# MAGIC FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtablestaging WHERE Sys_Silver_IsCurrent = 1) it
-# MAGIC 	LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging WHERE Sys_Silver_IsCurrent = 1) ve
-# MAGIC     ON (ve.vendoraccountnumber = it.primaryvendorid AND ve.dataareaid = it.dataareaid)
-# MAGIC 	LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventitemgroupstaging WHERE Sys_Silver_IsCurrent = 1) ig
-# MAGIC     ON (ig.itemgroupid = it.itemgroupid AND ig.dataareaid = it.dataareaid)
-# MAGIC --	LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventmodelgroupstaging WHERE Sys_Silver_IsCurrent = 1) mg
-# MAGIC --    ON (mg.modelgroupid = it.modelgroupid AND mg.dataareaid = it.dataareaid)
-# MAGIC --	LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging WHERE Sys_Silver_IsCurrent = 1) fd
-# MAGIC --    ON (fd.dimensionvalue = it.PRACTICE AND fd.financialdimension = 'Practice')
-# MAGIC WHERE LEFT(primaryvendorid,3) = 'VAC'
-# MAGIC ),
-# MAGIC v_distinctitems AS
-# MAGIC (
-# MAGIC   SELECT *
-# MAGIC   FROM distinctitem_cte
-# MAGIC   WHERE rn = 1
-# MAGIC ),
-# MAGIC local_id_list AS
-# MAGIC (
-# MAGIC   SELECT
-# MAGIC     s.salesid AS salestableid_local,
-# MAGIC     s.inventtransid AS saleslineid_local,
-# MAGIC     pt.purchid AS purchtableid_local,
-# MAGIC     pl.inventtransid AS purchlineid_local,
-# MAGIC     '>> Inter Joins >>' AS hdr,
-# MAGIC     upper(pt.intercompanycompanyid) as intercompanycompanyid,
-# MAGIC     pl.intercompanyinventtransid
-# MAGIC   FROM sales_data s
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging WHERE Sys_Silver_IsCurrent = 1) pl
-# MAGIC     ON s.inventreftransid = pl.inventtransid
-# MAGIC     AND s.dataareaid = pl.dataareaid				--Purchase Line Local
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_purchtablestaging WHERE Sys_Silver_IsCurrent = 1) pt
-# MAGIC     ON pl.purchid = pt.purchid					--Purchase Header Local
-# MAGIC     AND pl.dataareaid = pt.dataareaid
-# MAGIC ),
-# MAGIC so_po_id_list AS
-# MAGIC (
-# MAGIC   SELECT
-# MAGIC     lil.salestableid_local,
-# MAGIC     lil.saleslineid_local,
-# MAGIC     lil.purchtableid_local,
-# MAGIC     lil.purchlineid_local,
-# MAGIC     '>> Inter Company Results >>' AS hdr,
-# MAGIC     sli.salesid AS salestableid_intercomp,
-# MAGIC     sli.inventtransid AS saleslineid_intercomp,
-# MAGIC     pli.purchid AS purchtableid_intercomp,
-# MAGIC     pli.inventtransid AS purchlineid_intercomp,
-# MAGIC 	pli.purchprice as purchprice_intercomp,
-# MAGIC 	pli.lineamount as purchlineamount_intercomp,
-# MAGIC 	pli.purchqty   as purchqty_intercomp,
-# MAGIC 	pli.dataareaid as purchline_dataareaid_intercomp
-# MAGIC   FROM local_id_list lil
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sli
-# MAGIC     ON lil.intercompanycompanyid = sli.dataareaid
-# MAGIC     AND lil.intercompanyinventtransid = sli.inventtransid
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_purchlinestaging WHERE Sys_Silver_IsCurrent = 1) pli
-# MAGIC     ON sli.inventreftransid = pli.inventtransid
-# MAGIC     AND sli.dataareaid = pli.dataareaid
-# MAGIC ),
-# MAGIC exchangerates AS
-# MAGIC (
-# MAGIC   SELECT
-# MAGIC     TO_DATE(startdate) AS startdate
-# MAGIC     ,tocurrency
-# MAGIC     ,fromcurrency
-# MAGIC     ,rate
-# MAGIC   FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_exchangerateentitystaging WHERE Sys_Silver_IsCurrent = 1)
-# MAGIC     WHERE (fromcurrency = 'USD')
-# MAGIC     OR (fromcurrency = 'GBP' AND tocurrency = 'USD')
-# MAGIC     OR (fromcurrency = 'GBP' AND tocurrency = 'EUR')
-# MAGIC ),
-# MAGIC row_gen_ AS
-# MAGIC (
-# MAGIC     select explode(sequence(1,10000)) as row_id
-# MAGIC ),
-# MAGIC ngs_inventory as
-# MAGIC (
-# MAGIC   SELECT DISTINCT
-# MAGIC     it.inventtransid
-# MAGIC   , id.inventlocationid
-# MAGIC   , id.dataareaid
-# MAGIC     FROM (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
-# MAGIC     JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventdimstaging WHERE Sys_Silver_IsCurrent = 1) id
-# MAGIC       ON it.inventdimid = id.inventdimid
-# MAGIC      AND it.DATAAREAID in ('NGS1','NNL2')
-# MAGIC 	 AND (it.STATUSISSUE IN ('1', '3') OR (it.STATUSRECEIPT LIKE '1' AND it.INVOICERETURNED = 1))
-# MAGIC      AND id.inventlocationid NOT LIKE 'DD'
-# MAGIC )
-# MAGIC SELECT DISTINCT
-# MAGIC   (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
-# MAGIC     ELSE it.datephysical
-# MAGIC     END)                                                              AS report_date
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN NULL -- WatchGuard
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN ct.invoicedate -- Cambium
-# MAGIC     ELSE it.datephysical
-# MAGIC     END)                                                              AS invoice_date
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN it.datefinancial -- Sophos
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                             AS financial_date
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC     THEN TO_DATE(it.datephysical)
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           THEN it.datephysical
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                             AS shipping_date
-# MAGIC , s.dataareaid                                                       AS entity
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           THEN s.itemid
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                             AS part_code_id
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC             OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC             OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC             OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC             OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC             OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC             OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC             THEN di.itemname
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC             THEN di_ic.itemname
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             THEN (CASE WHEN di_ic.itemname = 'FORTICARE' THEN 'RENEWAL' ELSE di_ic.itemname END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                         AS part_code
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN di.itemdescription
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN di_ic.itemdescription
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                                AS part_code_description
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC     THEN di.itemgroupname
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC     THEN di_ic.itemgroupname
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS part_code_category
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC             THEN s.sag_resellervendorid
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN ''   -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS partner_id
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SUM(-1* it.qty) OVER(
-# MAGIC       PARTITION BY s.salesid, it.datephysical, di.itemname, s.inventtransid, s.dataareaid,
-# MAGIC       s.purchorderformnum, s.currencycode, pa.addressdescription, CONCAT_WS(', ',SPLIT(pa.addressstreet,'\n')[0],SPLIT(pa.addressstreet,'\n')[1]),
-# MAGIC       pa.addresscity, pa.addresszipcode, pa.addresscountryregionisocode,SPLIT(o.contact_name, ' +')[0], SPLIT(o.contact_name, ' +')[1],
-# MAGIC       o.emailaddress, s.sag_euaddress_name, CONCAT_WS(', ', s.sag_euaddress_street1, s.sag_euaddress_street2),
-# MAGIC       s.sag_euaddress_city, s.sag_euaddress_county, s.sag_euaddress_postcode, s.sag_euaddress_country, s.sag_euaddress_contact, s.sag_euaddress_email,
-# MAGIC       o.contactisprimaryforaccount, o.creationdate) -- Sophos
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             THEN ct.qty
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' THEN 1 -- Fortinet
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN ABS(-1 * it.qty)
-# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           THEN SUM(-1* it.qty) OVER (PARTITION BY s.salesname, pa.ADDRESSCOUNTRYREGIONISOCODE, s.SAG_EUADDRESS_NAME, s.SAG_EUADDRESS_COUNTRY, s.CUSTOMERREF, di.ItemName
-# MAGIC           /* s.SAG_CREATEDDATETIME should be added also when it will be added to view*/
-# MAGIC           )
-# MAGIC     ELSE (-1* it.qty)
-# MAGIC     END)                                                              AS quantity
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
-# MAGIC     THEN array_join(array_sort(collect_set(it.INVENTSERIALID) over (partition by s.SALESID, it.ItemID, it.INVENTTRANSID, s.DATAAREAID)), ' ,') -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS serial_numbers --- TO DO
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN s.purchorderformnum -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS special_pricing_identifier
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.sag_vendorreferencenumber
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS vendor_promotion
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.sag_vendorstandardcost
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS mspunit_cost
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.sag_vendorstandardcost * (-1 * it.qty)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS mspunit_total_cost
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_number
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.salesname
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sales_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.organizationname -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS bill_to_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC             OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC             THEN pa.ADDRESSDESCRIPTION
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.salesname
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
-# MAGIC             THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1')
-# MAGIC             THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1],SPLIT(pa.ADDRESSSTREET,'\n')[2]) --  Extreme
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             THEN pa.ADDRESSSTREET
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             THEN CONCAT_WS(' ', pa.ADDRESSSTREET, pa.ADDRESSCITY)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN SPLIT(pa.ADDRESSSTREET,'\n')[0]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_address1
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN SPLIT(pa.ADDRESSSTREET,'\n')[1]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_address2
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN SPLIT(pa.ADDRESSSTREET,'\n')[2]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_address3
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN pa.ADDRESSCITY
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_city
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           THEN ''
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           THEN 'NA'
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN pa.ADDRESSSTATE
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_state
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.addresszipcode -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS bill_to_postal_code
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN pa.ADDRESSZIPCODE
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_postal_code
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.addresscountryregionisocode -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS bill_to_country
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN pa.ADDRESSCOUNTRYREGIONISOCODE
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_country
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(o.contact_name, ' +')[0] -- Sophos
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_contact_first_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(o.contact_name, ' +')[1] -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_contact_last_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_contact_phone_number
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN o.emailaddress -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_contact_email -- ora.Oracle_Contacts not ingested
-# MAGIC --, 'To Be Done'                                                        AS reseller_email -- probably added by mistake
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN ad.DESCRIPTION
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_name
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
-# MAGIC           THEN ad.COUNTRYREGIONID
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'   -- WatchGuard
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN b.ISOCODE
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_country
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN ad.ZIPCODE
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_postal_code
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN SPLIT(ad.STREET,'\n')[0]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_address1
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN SPLIT(ad.STREET,'\n')[1]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_address2
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN SPLIT(ad.STREET,'\n')[2]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_address3
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN ad.CITY
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_city
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN ad.COUNTY
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_to_state
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_number
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.sag_euaddress_name
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           THEN CONCAT_WS(', ',s.sag_euaddress_street1, s.sag_euaddress_street2)
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           THEN CONCAT_WS(' ',s.sag_euaddress_street1, s.sag_euaddress_street2)
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           THEN (CASE
-# MAGIC                 WHEN s.SAG_EUADDRESS_STREET1 = '' AND s.SAG_EUADDRESS_STREET2 = '' AND s.SAG_EUADDRESS_CITY = '' AND s.SAG_EUADDRESS_COUNTY = '' AND s.SAG_EUADDRESS_POSTCODE = ''
-# MAGIC 			          THEN ''
-# MAGIC 			          WHEN s.SAG_EUADDRESS_STREET2 = ''
-# MAGIC 			          THEN s.SAG_EUADDRESS_STREET1 +  ', ' + s.SAG_EUADDRESS_CITY + ', ' + s.SAG_EUADDRESS_COUNTY + ', ' + s.SAG_EUADDRESS_POSTCODE
-# MAGIC 			          ELSE s.SAG_EUADDRESS_STREET1 + ', ' + s.SAG_EUADDRESS_STREET2 + ', ' + s.SAG_EUADDRESS_CITY + ', ' + s.SAG_EUADDRESS_COUNTY + ', ' + s.SAG_EUADDRESS_POSTCODE
-# MAGIC 	              END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_address
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC             OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC             THEN s.sag_euaddress_street1
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             THEN s.sag_euaddress_street1
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_address1
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.sag_euaddress_street2
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_address2
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.sag_euaddress_city
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_city
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.sag_euaddress_county
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           THEN 'NA'
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_state
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.sag_euaddress_postcode
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_postal_code
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN s.sag_euaddress_country
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_country
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.sag_euaddress_contact
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_contact
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC             THEN SPLIT(s.sag_euaddress_contact,' ')[0]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_contact_first_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC             THEN SPLIT(s.sag_euaddress_contact,' ')[1]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_contact_last_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.sag_euaddress_email -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_email
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS end_customer_phone_number
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN it.inventserialid
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN UPPER(it.inventserialid)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS serial_number
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia'
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.salesid
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS d365_sales_order_number
-# MAGIC , 'Infinigate Global Services Ltd'                                    AS distributor_name
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN it.invoiceid
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           THEN ct.invoiceid
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                        AS invoice_number
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.customerref
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS reseller_po_to_infinigate
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC             OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC             OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC             THEN sp.purchtableid_intercomp
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS infinigate_po_to_vendor
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC           THEN s.currencycode
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN s.currencycode
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             THEN ct.currencycode
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                     AS sell_currency
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC           OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN s.sag_purchprice
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
-# MAGIC             THEN sp.purchprice_intercomp
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS final_vendor_unit_buy_price
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           THEN s.sag_purchprice
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS final_vendor_unit_buy_price2
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN s.sag_purchprice * (-1 * it.qty)  -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS final_vendor_total_buy_price
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
-# MAGIC                                                       WHEN sp.purchlineamount_intercomp = 0 AND sp.purchqty_intercomp = 0 THEN s.sag_purchprice
-# MAGIC                                                       ELSE sp.purchlineamount_intercomp / sp.purchqty_intercomp
-# MAGIC                                                     END) -- AddOn
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS po_buy_price
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
-# MAGIC                                                       WHEN sp.purchlineamount_intercomp = 0 AND sp.purchqty_intercomp = 0 THEN (-1 * it.qty) * s.sag_purchprice
-# MAGIC                                                       ELSE (-1 * it.qty) * (sp.purchlineamount_intercomp / sp.purchqty_intercomp)
-# MAGIC                                                     END) -- AddOn
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS po_total_buy_price
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN sp.purchprice_intercomp / sp.purchqty_intercomp
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS purchase_price_usd
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN sp.purchprice_intercomp
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS purchase_extended_price
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (sp.purchprice_intercomp - s.sag_purchprice) * (-1 * it.qty)  -- AddOn
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC            THEN (CASE
-# MAGIC                     WHEN di_ic.PrimaryVendorID LIKE 'VAC001014%' THEN (s.sag_vendorstandardcost - s.sag_purchprice) * ct.qty
-# MAGIC                     ELSE 0
-# MAGIC                 END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS claim_amount
-# MAGIC , di.primaryvendorid                                                  AS vendor_id
-# MAGIC , di.primaryvendorname                                                AS vendor_name
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN s.salesstatus -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sales_status
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN s.sag_shipanddebit -- Sophos
-# MAGIC     WHEN ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN (CASE
-# MAGIC                 WHEN s.sag_shipanddebit = 0 THEN 'No'
-# MAGIC                 WHEN s.sag_shipanddebit = 1 THEN 'Yes'
-# MAGIC                 END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS ship_and_debit
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN di.itemgroupid -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS part_code_group_id
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.statusissue  -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS status_issue
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.statusreceipt -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS status_receipt
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.invoicereturned -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS invoice_returned
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.packingslipreturned -- WatchGuard
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS packing_slip_returned
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN '' -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS price_per_unit_for_this_deal
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN '' -- Sophos
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS extended_price_for_this_deal
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN NULL -- Nokia
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') THEN NULL -- Yubico
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN NULL -- Extreme
-# MAGIC     ELSE it.recid
-# MAGIC     END)                                                              AS transaction_record_id
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'
-# MAGIC           OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.custaccount  -- AddOn
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS customer_account
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN sp.purchlineamount_intercomp  -- AddOn
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS line_amount
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN sp.purchqty_intercomp  -- AddOn
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS purch_quantity
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
-# MAGIC                                                     WHEN sp.purchlineamount_intercomp=0 AND sp.purchqty_intercomp=0 THEN 'PO QTY Zero'
-# MAGIC                                                     ELSE ''
-# MAGIC                                                     END) -- AddOn
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS check
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
-# MAGIC                                                     WHEN s.currencycode = 'USD' THEN s.salesprice
-# MAGIC                                                     WHEN s.currencycode = 'GBP' THEN s.salesprice * ex2.rate
-# MAGIC                                                     ELSE s.salesprice / ex.rate
-# MAGIC                                                     END)  -- AddOn
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             THEN (CASE
-# MAGIC                     WHEN ct.currencycode = 'USD' THEN ct.salesprice
-# MAGIC                     WHEN ct.currencycode = 'GBP' THEN ct.salesprice * ex2.rate
-# MAGIC                     ELSE ct.salesprice / ex.rate
-# MAGIC                  END)
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC             THEN (CASE
-# MAGIC                     WHEN s.currencycode = 'USD' THEN (s.salesprice * (-1 * it.qty))
-# MAGIC                     WHEN s.currencycode = 'GBP' THEN (s.salesprice * (-1 * it.qty)) * ex2.rate
-# MAGIC                     ELSE (s.salesprice * (-1 * it.qty)) / ex.rate
-# MAGIC                  END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sales_price_usd
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC           THEN s.sag_purchprice * (-1 * it.qty)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sales_price_total_usd
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             THEN ct.salesprice
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC           OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC             THEN s.salesprice
-# MAGIC     WHEN di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC             THEN s.salesprice * (-1 * it.qty)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sales_price
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC             OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             THEN sp.purchtableid_intercomp
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS distributer_purchase_order
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS country_of_purchase
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS custom1
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
-# MAGIC             OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS custom2
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC             OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
-# MAGIC             THEN (CASE WHEN ct.currencycode = 'USD' THEN 1 ELSE IFNULL(ex.rate, ex2.rate) END)
-# MAGIC     END)                                                              AS exchange_rate
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             THEN IFNULL(sp.purchprice_intercomp, s.sag_purchprice)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS usd_disti_unit_buy_price
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             THEN (CASE WHEN sp.purchtableid_intercomp IS NULL THEN 'Fulfilled from existing distributor stock' ELSE 'Back to Back' END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS order_type
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             THEN s.salesordertype
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS sales_order_type
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
-# MAGIC             THEN rwg.row_id
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS fortinet_row_id
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC           THEN (CASE
-# MAGIC                 WHEN ng.INVENTLOCATIONID LIKE '%2' AND ng.DATAAREAID = 'NNL2' --add post Rome Go Live (MW)
-# MAGIC                 THEN '101421538' -- Venlo ID
-# MAGIC                 WHEN ng.INVENTLOCATIONID LIKE'%5' AND ng.DATAAREAID = 'NGS1'
-# MAGIC                 THEN '101417609' -- UK ID
-# MAGIC                 WHEN ng.INVENTLOCATIONID LIKE'CORR%'AND ng.DATAAREAID = 'NGS1'
-# MAGIC                 THEN '101417609' --Added to pick up random name convention for Corrective Warehouse in NGS1
-# MAGIC                 WHEN ng.INVENTLOCATIONID LIKE '%2' AND ng.DATAAREAID = 'NGS1'
-# MAGIC                 THEN '101456761' --NGS1 Venlo ID
-# MAGIC                 END)
-# MAGIC     WHEN ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC           THEN (CASE
-# MAGIC                 WHEN ng.inventlocationid = 'MAIN2' AND ng.dataareaid = 'NNL2' --add post Rome Go Live (MW)
-# MAGIC 		        THEN '101421538' -- Venlo ID
-# MAGIC 		        WHEN ng.inventlocationid = 'MAIN5' AND ng.dataareaid = 'NGS1'
-# MAGIC 		        THEN '101417609' -- UK ID
-# MAGIC 		        WHEN ng.inventlocationid = 'MAIN2' AND ng.dataareaid = 'NGS1'
-# MAGIC 		        THEN '101456761' --NGS1 Venlo ID
-# MAGIC 		        ELSE ''
-# MAGIC 	            END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS distributer_id_number
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC            THEN (CASE WHEN -1*it.QTY > 0 THEN 'POS'
-# MAGIC                 WHEN -1*it.QTY <0 THEN 'RD'
-# MAGIC                 ELSE ''
-# MAGIC                 END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS distributer_transaction_type
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC            THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS export_licence_number
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC            THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS business_model1
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC            THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS business_model2
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC            THEN ''
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS juniper_var_id2
-# MAGIC , (CASE
-# MAGIC     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
-# MAGIC            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC            THEN ng.inventlocationid
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS warehouse
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-# MAGIC           OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN sp.salestableid_intercomp
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS intercompany_sales_order
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           THEN SPLIT(di_ic.PrimaryVendorName,' ')[0]
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS oem_name
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           THEN (CASE
-# MAGIC                 WHEN di_ic.PrimaryVendorName	LIKE 'Advantech%'
-# MAGIC 		            THEN di_ic.ItemDescription
-# MAGIC 			          ELSE di_ic.ItemName
-# MAGIC                 END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS oem_part_number
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           THEN (CASE
-# MAGIC                 WHEN RIGHT(sp.SalesTableID_InterComp, 4) = 'NGS1' THEN 'United Kingdom'
-# MAGIC 		            WHEN RIGHT(sp.SalesTableID_InterComp, 4) = 'NNL2' THEN 'Netherlands'
-# MAGIC                 END)
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS shipping_legal_entity
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN di.itemname
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS snwl_pn_sku
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN it.inventtransid
-# MAGIC     ELSE NULL
-# MAGIC     END)                                                              AS invent_trans_id
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             THEN 'Zycko Ltd'
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC             THEN 'Nuvias Global Services Ltd'
-# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC             THEN 'Infinigate UK Ltd'
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS distributor_account_name
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC             THEN s.SAG_CREATEDDATETIME
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS sales_order_date
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           THEN DATE_FORMAT(s.SAG_CREATEDDATETIME, 'dd-MM-yyyy')
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS order_date
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN s.SAG_NGS1POBUYPRICE * ex3.RATE
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS product_cost_eur
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN (s.SAG_NGS1POBUYPRICE * ex3.RATE) * (-1 * it.qty)
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS product_cost_eur_total
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS blank3
-# MAGIC , (CASE
-# MAGIC     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS blank4
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           THEN 'www.nuvias.com'
-# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           THEN 'infinigate.co.uk'
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS distributor_domain
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           THEN 'GB'
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS distributor_country
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC           THEN s.SAG_RESELLEREMAILADDRESS
-# MAGIC     WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS reseller_email
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
-# MAGIC           OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS end_customer_domain
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-# MAGIC           THEN s.LINENUM
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS line_item
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS ship_to_state_jabil
-# MAGIC , (CASE
-# MAGIC     WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           THEN ''
-# MAGIC     ELSE NULL
-# MAGIC   END)                                                              AS end_customer_state_jabil
-# MAGIC   FROM sales_data s
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
-# MAGIC     ON it.inventtransid = s.inventtransid
-# MAGIC    AND it.dataareaid NOT IN ('NGS1','NNL2')
-# MAGIC   LEFT JOIN so_po_id_list sp
-# MAGIC     ON sp.saleslineid_local = s.inventtransid
-# MAGIC   LEFT JOIN v_distinctitems di
-# MAGIC     ON di.itemid = s.itemid
-# MAGIC    AND di.companyid = (CASE WHEN s.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
-# MAGIC   LEFT JOIN v_distinctitems di_ic
-# MAGIC     ON di_ic.itemid = s.itemid
-# MAGIC    AND di_ic.companyid = substr(sp.SalesTableID_InterComp, -4)
-# MAGIC   LEFT JOIN ngs_inventory ng
-# MAGIC     ON ng.inventtransid = sp.SalesLineID_InterComp
-# MAGIC    AND (
-# MAGIC         (di_ic.PrimaryVendorName LIKE 'Juniper%'
-# MAGIC           AND di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))  -- Juniper
-# MAGIC         OR
-# MAGIC         (di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_custcustomerv3staging WHERE Sys_Silver_IsCurrent = 1) cu
-# MAGIC     ON cu.customeraccount = s.custaccount
-# MAGIC    AND cu.dataareaid = s.dataareaid
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_customerpostaladdressstaging WHERE Sys_Silver_IsCurrent = 1 AND ISPRIMARY = 1) pa
-# MAGIC     ON pa.CUSTOMERACCOUNTNUMBER = s.INVOICEACCOUNT
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_logisticspostaladdressbasestaging WHERE Sys_Silver_IsCurrent = 1) ad
-# MAGIC     ON ad.ADDRESSRECID = s.DELIVERYPOSTALADDRESS
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging WHERE Sys_Silver_IsCurrent = 1) b
-# MAGIC     ON b.COUNTRYREGION = ad.COUNTRYREGIONID
-# MAGIC   LEFT JOIN oracle_data o
-# MAGIC     ON o.sales_order = s.salesid
-# MAGIC   LEFT JOIN (SELECT * FROM silver_dev.nuav_prod_sqlbyod.dbo_sag_custinvoicetransstaging WHERE Sys_Silver_IsCurrent = 1) ct
-# MAGIC     ON ct.inventtransid = s.inventtransid
-# MAGIC    AND ct.dataareaid NOT IN ('NGS1' ,'NNL2')
-# MAGIC    AND di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2')
-# MAGIC   LEFT JOIN exchangerates ex
-# MAGIC     ON ex.startdate = TO_DATE(it.datephysical)
-# MAGIC    AND ex.tocurrency = s.currencycode
-# MAGIC    AND ex.fromcurrency = 'USD'
-# MAGIC   LEFT JOIN exchangerates ex2
-# MAGIC     ON ex2.startdate = TO_DATE(it.datephysical)
-# MAGIC    AND ex2.fromcurrency = s.currencycode
-# MAGIC    AND ex2.fromcurrency = 'GBP'
-# MAGIC    AND ex2.tocurrency = 'USD'
-# MAGIC   LEFT JOIN exchangerates ex3
-# MAGIC     ON ex3.startdate = TO_DATE(it.datephysical)
-# MAGIC    AND ex3.fromcurrency = 'GBP'
-# MAGIC    AND ex3.tocurrency = 'EUR'
-# MAGIC   LEFT JOIN row_gen_ rwg
-# MAGIC     ON (-1 * it.qty) >= rwg.row_id
-# MAGIC    AND di_ic.PrimaryVendorName LIKE 'Fortinet%'
-# MAGIC  WHERE 1 = 1
-# MAGIC   AND (
-# MAGIC         -- Sophos
-# MAGIC         (
-# MAGIC                 s.SALESSTATUS IN ('1', '2', '3') -- MW 20/06/2023 added status 1 to capture part shipments
-# MAGIC             AND s.SAG_SHIPANDDEBIT = '1'
-# MAGIC             AND di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
-# MAGIC             AND di.ItemGroupID = 'Hardware'
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- WatchGuard
-# MAGIC         (
-# MAGIC             (  it.STATUSISSUE IN ('1', '3') OR (it.STATUSRECEIPT LIKE '1' AND it.INVOICERETURNED = 1))
-# MAGIC             AND di.PrimaryVendorName LIKE 'WatchGuard%'
-# MAGIC             AND it.PACKINGSLIPRETURNED <> 1
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- AddON
-# MAGIC         (
-# MAGIC             di_ic.PrimaryVendorName LIKE 'Prolabs%'
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Extreme
-# MAGIC         (
-# MAGIC           di.PrimaryVendorID IN ('VAC001044_NGS1')
-# MAGIC           AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Cambium
-# MAGIC         (
-# MAGIC           di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2')
-# MAGIC           AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Fortinet
-# MAGIC         (
-# MAGIC             di_ic.PrimaryVendorName LIKE 'Fortinet%'
-# MAGIC             AND (-1 * it.qty) > 0
-# MAGIC             AND s.salesordertype NOT LIKE 'Demo'
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Juniper
-# MAGIC         (
-# MAGIC             di_ic.PrimaryVendorName LIKE 'Juniper%'
-# MAGIC             AND di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2')
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC             AND ng.INVENTLOCATIONID NOT LIKE 'DD'
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Mist
-# MAGIC         (
-# MAGIC             ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%'))
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Nokia
-# MAGIC         (
-# MAGIC             di_ic.PrimaryVendorName LIKE 'Nokia%'
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Yubico POS
-# MAGIC         (
-# MAGIC             it.STATUSISSUE IN ('1', '3')
-# MAGIC             AND di.PrimaryVendorID IN('VAC001388_NGS1')
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Yubico POS Report
-# MAGIC         (
-# MAGIC             di.PrimaryVendorID = 'VAC001358_NGS1'
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- SmartOptics
-# MAGIC         (
-# MAGIC             di.PrimaryVendorName LIKE 'Smart Optics%'
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Versa POS v1.2 External
-# MAGIC         (
-# MAGIC             di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
-# MAGIC             AND it.STATUSISSUE = '1'
-# MAGIC             AND s.SALESSTATUS = '3'
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- SonicWall
-# MAGIC         (
-# MAGIC             di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2')
-# MAGIC             AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC         OR
-# MAGIC         -- Jabil v1.2 External
-# MAGIC         (
-# MAGIC           di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
-# MAGIC           AND it.STATUSISSUE = '1'
-# MAGIC           AND s.SALESSTATUS = '3'
-# MAGIC           AND s.DATAAREAID NOT IN ('NGS1','NNL2')
-# MAGIC         )
-# MAGIC     )
+spark.sql(f"""
+CREATE OR REPLACE VIEW v_pos_reports_common AS
+WITH sales_data as (
+  SELECT DISTINCT
+    sl.SALESID
+  , sl.DATAAREAID
+  , sl.inventtransid
+  , sl.inventreftransid
+  , sl.sag_resellervendorid
+  , sl.sag_vendorreferencenumber
+  , sl.sag_purchprice
+  , sl.sag_vendorstandardcost
+  , sl.salesstatus
+  , sl.sag_shipanddebit
+  , sl.currencycode
+  , sl.salesprice
+  , sl.itemid
+  , sl.sag_ngs1pobuyprice
+  , sl.linenum
+  , st.purchorderformnum
+  , st.sag_euaddress_name
+  , st.sag_euaddress_street1
+  , st.sag_euaddress_street2
+  , st.sag_euaddress_city
+  , st.sag_euaddress_county
+  , st.sag_euaddress_postcode
+  , st.sag_euaddress_country
+  , st.sag_euaddress_contact
+  , st.sag_euaddress_email
+  , st.salesname
+  , st.customerref
+  , st.custaccount
+  , st.salesordertype
+  , st.INVOICEACCOUNT
+  , st.DELIVERYPOSTALADDRESS
+  , st.sag_reselleremailaddress
+  , st.sag_createddatetime
+    FROM (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sl
+    JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_salestablestaging WHERE Sys_Silver_IsCurrent = 1) st
+      ON st.salesid    = sl.salesid								--Sales Line Local
+     AND st.dataareaid = sl.dataareaid
+)
+, oracle_data as (
+  SELECT
+    op.sales_order
+  , op.contact_name
+  , co.firstName
+  , co.lastName
+  , co.emailaddress
+  , co.contactisprimaryforaccount
+  , co.creationdate
+    FROM (SELECT * FROM silver_{ENVIRONMENT}.nuav_prodtrans_sqlbyod.ora_oracle_opportunities WHERE Sys_Silver_IsCurrent = 1) op
+    LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prodtrans_sqlbyod.ora_oracle_contacts WHERE Sys_Silver_IsCurrent = 1) co
+      ON CONCAT_WS(' ', STRING(co.firstName), STRING(co.lastName)) = STRING(op.contact_name)
+)
+, distinctitem_cte AS
+(
+SELECT
+	ROW_NUMBER() OVER(PARTITION BY it.itemid, it.dataareaid ORDER BY it.itemid) rn
+	,it.dataareaid				AS companyid
+	,it.itemid					AS itemid
+	,it.name					AS itemname
+	,it.description				AS itemdescription
+	,it.modelgroupid			AS itemmodelgroupid
+	,it.itemgroupid				AS itemgroupid
+	,it.practice				AS practice
+	,it.primaryvendorid			AS primaryvendorid
+	,ve.vendororganizationname	AS primaryvendorname
+	,ig.name					AS itemgroupname
+--	,mg.name					AS itemmodelgroupname
+--	,fd.description				AS practicedescr
+FROM (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_inventtablestaging WHERE Sys_Silver_IsCurrent = 1) it
+	LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_vendvendorv2staging WHERE Sys_Silver_IsCurrent = 1) ve
+    ON (ve.vendoraccountnumber = it.primaryvendorid AND ve.dataareaid = it.dataareaid)
+	LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_inventitemgroupstaging WHERE Sys_Silver_IsCurrent = 1) ig
+    ON (ig.itemgroupid = it.itemgroupid AND ig.dataareaid = it.dataareaid)
+--	LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_inventmodelgroupstaging WHERE Sys_Silver_IsCurrent = 1) mg
+--    ON (mg.modelgroupid = it.modelgroupid AND mg.dataareaid = it.dataareaid)
+--	LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_financialdimensionvalueentitystaging WHERE Sys_Silver_IsCurrent = 1) fd
+--    ON (fd.dimensionvalue = it.PRACTICE AND fd.financialdimension = 'Practice')
+WHERE LEFT(primaryvendorid,3) = 'VAC'
+),
+v_distinctitems AS
+(
+  SELECT *
+  FROM distinctitem_cte
+  WHERE rn = 1
+),
+local_id_list AS
+(
+  SELECT
+    s.salesid AS salestableid_local,
+    s.inventtransid AS saleslineid_local,
+    pt.purchid AS purchtableid_local,
+    pl.inventtransid AS purchlineid_local,
+    '>> Inter Joins >>' AS hdr,
+    upper(pt.intercompanycompanyid) as intercompanycompanyid,
+    pl.intercompanyinventtransid
+  FROM sales_data s
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_purchlinestaging WHERE Sys_Silver_IsCurrent = 1) pl
+    ON s.inventreftransid = pl.inventtransid
+    AND s.dataareaid = pl.dataareaid				--Purchase Line Local
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_purchtablestaging WHERE Sys_Silver_IsCurrent = 1) pt
+    ON pl.purchid = pt.purchid					--Purchase Header Local
+    AND pl.dataareaid = pt.dataareaid
+),
+so_po_id_list AS
+(
+  SELECT
+    lil.salestableid_local,
+    lil.saleslineid_local,
+    lil.purchtableid_local,
+    lil.purchlineid_local,
+    '>> Inter Company Results >>' AS hdr,
+    sli.salesid AS salestableid_intercomp,
+    sli.inventtransid AS saleslineid_intercomp,
+    pli.purchid AS purchtableid_intercomp,
+    pli.inventtransid AS purchlineid_intercomp,
+	pli.purchprice as purchprice_intercomp,
+	pli.lineamount as purchlineamount_intercomp,
+	pli.purchqty   as purchqty_intercomp,
+	pli.dataareaid as purchline_dataareaid_intercomp
+  FROM local_id_list lil
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging WHERE Sys_Silver_IsCurrent = 1) sli
+    ON lil.intercompanycompanyid = sli.dataareaid
+    AND lil.intercompanyinventtransid = sli.inventtransid
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_purchlinestaging WHERE Sys_Silver_IsCurrent = 1) pli
+    ON sli.inventreftransid = pli.inventtransid
+    AND sli.dataareaid = pli.dataareaid
+),
+exchangerates AS
+(
+  SELECT
+    TO_DATE(startdate) AS startdate
+    ,tocurrency
+    ,fromcurrency
+    ,rate
+  FROM (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_exchangerateentitystaging WHERE Sys_Silver_IsCurrent = 1)
+    WHERE (fromcurrency = 'USD')
+    OR (fromcurrency = 'GBP' AND tocurrency = 'USD')
+    OR (fromcurrency = 'GBP' AND tocurrency = 'EUR')
+),
+row_gen_ AS
+(
+    select explode(sequence(1,10000)) as row_id
+),
+ngs_inventory as
+(
+  SELECT DISTINCT
+    it.inventtransid
+  , id.inventlocationid
+  , id.dataareaid
+    FROM (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
+    JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_inventdimstaging WHERE Sys_Silver_IsCurrent = 1) id
+      ON it.inventdimid = id.inventdimid
+     AND it.DATAAREAID in ('NGS1','NNL2')
+	 AND (it.STATUSISSUE IN ('1', '3') OR (it.STATUSRECEIPT LIKE '1' AND it.INVOICERETURNED = 1))
+     AND id.inventlocationid NOT LIKE 'DD'
+)
+SELECT DISTINCT
+  (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
+    ELSE it.datephysical
+    END)                                                              AS report_date
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN NULL -- WatchGuard
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN ct.invoicedate -- Cambium
+    ELSE it.datephysical
+    END)                                                              AS invoice_date
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN it.datefinancial -- Sophos
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
+    ELSE NULL
+    END)                                                             AS financial_date
+, (CASE
+    WHEN di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+    THEN TO_DATE(it.datephysical)
+    WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          THEN it.datephysical
+    ELSE NULL
+    END)                                                             AS shipping_date
+, s.dataareaid                                                       AS entity
+, (CASE
+    WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          THEN s.itemid
+    ELSE NULL
+    END)                                                             AS part_code_id
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+            OR di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+            OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+            OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+            OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+            OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+            OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+            THEN di.itemname
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+            OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+            OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+            OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+            OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+            THEN di_ic.itemname
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            THEN (CASE WHEN di_ic.itemname = 'FORTICARE' THEN 'RENEWAL' ELSE di_ic.itemname END)
+    ELSE NULL
+    END)                                         AS part_code
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN di.itemdescription
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN di_ic.itemdescription
+    ELSE NULL
+  END)                                                                AS part_code_description
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+    THEN di.itemgroupname
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+    THEN di_ic.itemgroupname
+    ELSE NULL
+    END)                                                              AS part_code_category
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+            OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+            THEN s.sag_resellervendorid
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN ''   -- Sophos
+    ELSE NULL
+    END)                                                              AS partner_id
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SUM(-1* it.qty) OVER(
+      PARTITION BY s.salesid, it.datephysical, di.itemname, s.inventtransid, s.dataareaid,
+      s.purchorderformnum, s.currencycode, pa.addressdescription, CONCAT_WS(', ',SPLIT(pa.addressstreet,'\n')[0],SPLIT(pa.addressstreet,'\n')[1]),
+      pa.addresscity, pa.addresszipcode, pa.addresscountryregionisocode,SPLIT(o.contact_name, ' +')[0], SPLIT(o.contact_name, ' +')[1],
+      o.emailaddress, s.sag_euaddress_name, CONCAT_WS(', ', s.sag_euaddress_street1, s.sag_euaddress_street2),
+      s.sag_euaddress_city, s.sag_euaddress_county, s.sag_euaddress_postcode, s.sag_euaddress_country, s.sag_euaddress_contact, s.sag_euaddress_email,
+      o.contactisprimaryforaccount, o.creationdate) -- Sophos
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            THEN ct.qty
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' THEN 1 -- Fortinet
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN ABS(-1 * it.qty)
+    WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          THEN SUM(-1* it.qty) OVER (PARTITION BY s.salesname, pa.ADDRESSCOUNTRYREGIONISOCODE, s.SAG_EUADDRESS_NAME, s.SAG_EUADDRESS_COUNTRY, s.CUSTOMERREF, di.ItemName
+          /* s.SAG_CREATEDDATETIME should be added also when it will be added to view*/
+          )
+    ELSE (-1* it.qty)
+    END)                                                              AS quantity
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
+    THEN array_join(array_sort(collect_set(it.INVENTSERIALID) over (partition by s.SALESID, it.ItemID, it.INVENTTRANSID, s.DATAAREAID)), ' ,') -- Sophos
+    ELSE NULL
+    END)                                                              AS serial_numbers --- TO DO
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN s.purchorderformnum -- Sophos
+    ELSE NULL
+    END)                                                              AS special_pricing_identifier
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+          OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.sag_vendorreferencenumber
+    ELSE NULL
+    END)                                                              AS vendor_promotion
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.sag_vendorstandardcost
+    ELSE NULL
+    END)                                                              AS mspunit_cost
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.sag_vendorstandardcost * (-1 * it.qty)
+    ELSE NULL
+    END)                                                              AS mspunit_total_cost
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+    ELSE NULL
+    END)                                                              AS reseller_number
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.salesname
+    ELSE NULL
+    END)                                                              AS sales_name
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.organizationname -- WatchGuard
+    ELSE NULL
+    END)                                                              AS bill_to_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+            OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+            OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+            OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+            THEN pa.ADDRESSDESCRIPTION
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.salesname
+    ELSE NULL
+    END)                                                              AS reseller_name  -- v_CustomerPrimaryPostalAddressSplit
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
+            THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1]) --  Sophos
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1')
+            THEN CONCAT_WS(', ',SPLIT(pa.ADDRESSSTREET,'\n')[0],SPLIT(pa.ADDRESSSTREET,'\n')[1],SPLIT(pa.ADDRESSSTREET,'\n')[2]) --  Extreme
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            THEN pa.ADDRESSSTREET
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+            THEN CONCAT_WS(' ', pa.ADDRESSSTREET, pa.ADDRESSCITY)
+    ELSE NULL
+    END)                                                              AS reseller_address -- v_CustomerPrimaryPostalAddressSplit
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN SPLIT(pa.ADDRESSSTREET,'\n')[0]
+    ELSE NULL
+    END)                                                              AS reseller_address1
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN SPLIT(pa.ADDRESSSTREET,'\n')[1]
+    ELSE NULL
+    END)                                                              AS reseller_address2
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN SPLIT(pa.ADDRESSSTREET,'\n')[2]
+    ELSE NULL
+    END)                                                              AS reseller_address3
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN pa.ADDRESSCITY
+    ELSE NULL
+    END)                                                              AS reseller_city
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          THEN ''
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          THEN 'NA'
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN pa.ADDRESSSTATE
+    ELSE NULL
+    END)                                                              AS reseller_state
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.addresszipcode -- WatchGuard
+    ELSE NULL
+    END)                                                              AS bill_to_postal_code
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN pa.ADDRESSZIPCODE
+    ELSE NULL
+    END)                                                              AS reseller_postal_code
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN cu.addresscountryregionisocode -- WatchGuard
+    ELSE NULL
+    END)                                                              AS bill_to_country
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN pa.ADDRESSCOUNTRYREGIONISOCODE
+    ELSE NULL
+    END)                                                              AS reseller_country
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(o.contact_name, ' +')[0] -- Sophos
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+    ELSE NULL
+    END)                                                              AS reseller_contact_first_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SPLIT(o.contact_name, ' +')[1] -- Sophos
+    ELSE NULL
+    END)                                                              AS reseller_contact_last_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+    ELSE NULL
+    END)                                                              AS reseller_contact_phone_number
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN o.emailaddress -- Sophos
+    ELSE NULL
+    END)                                                              AS reseller_contact_email -- ora.Oracle_Contacts not ingested
+--, 'To Be Done'                                                        AS reseller_email -- probably added by mistake
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN ad.DESCRIPTION
+    ELSE NULL
+    END)                                                              AS ship_to_name
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+          THEN ad.COUNTRYREGIONID
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'   -- WatchGuard
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN b.ISOCODE
+    ELSE NULL
+    END)                                                              AS ship_to_country
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN ad.ZIPCODE
+    ELSE NULL
+    END)                                                              AS ship_to_postal_code
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN SPLIT(ad.STREET,'\n')[0]
+    ELSE NULL
+    END)                                                              AS ship_to_address1
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN SPLIT(ad.STREET,'\n')[1]
+    ELSE NULL
+    END)                                                              AS ship_to_address2
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN SPLIT(ad.STREET,'\n')[2]
+    ELSE NULL
+    END)                                                              AS ship_to_address3
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN ad.CITY
+    ELSE NULL
+    END)                                                              AS ship_to_city
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN ad.COUNTY
+    ELSE NULL
+    END)                                                              AS ship_to_state
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN ''
+    ELSE NULL
+    END)                                                              AS end_customer_number
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+          OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.sag_euaddress_name
+    ELSE NULL
+    END)                                                              AS end_customer_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          THEN CONCAT_WS(', ',s.sag_euaddress_street1, s.sag_euaddress_street2)
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          THEN CONCAT_WS(' ',s.sag_euaddress_street1, s.sag_euaddress_street2)
+    WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          THEN (CASE
+                WHEN s.SAG_EUADDRESS_STREET1 = '' AND s.SAG_EUADDRESS_STREET2 = '' AND s.SAG_EUADDRESS_CITY = '' AND s.SAG_EUADDRESS_COUNTY = '' AND s.SAG_EUADDRESS_POSTCODE = ''
+			          THEN ''
+			          WHEN s.SAG_EUADDRESS_STREET2 = ''
+			          THEN s.SAG_EUADDRESS_STREET1 +  ', ' + s.SAG_EUADDRESS_CITY + ', ' + s.SAG_EUADDRESS_COUNTY + ', ' + s.SAG_EUADDRESS_POSTCODE
+			          ELSE s.SAG_EUADDRESS_STREET1 + ', ' + s.SAG_EUADDRESS_STREET2 + ', ' + s.SAG_EUADDRESS_CITY + ', ' + s.SAG_EUADDRESS_COUNTY + ', ' + s.SAG_EUADDRESS_POSTCODE
+	              END)
+    ELSE NULL
+    END)                                                              AS end_customer_address
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+            OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+            OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+            THEN s.sag_euaddress_street1
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+            THEN s.sag_euaddress_street1
+    ELSE NULL
+    END)                                                              AS end_customer_address1
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.sag_euaddress_street2
+    ELSE NULL
+    END)                                                              AS end_customer_address2
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR ((di.PrimaryVendorName LIKE 'Juniper%') AND (di.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.sag_euaddress_city
+    ELSE NULL
+    END)                                                              AS end_customer_city
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.sag_euaddress_county
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          THEN 'NA'
+    ELSE NULL
+    END)                                                              AS end_customer_state
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+          OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.sag_euaddress_postcode
+    ELSE NULL
+    END)                                                              AS end_customer_postal_code
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+          OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')  -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN s.sag_euaddress_country
+    ELSE NULL
+    END)                                                              AS end_customer_country
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.sag_euaddress_contact
+    ELSE NULL
+    END)                                                              AS end_customer_contact
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+            OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+            THEN SPLIT(s.sag_euaddress_contact,' ')[0]
+    ELSE NULL
+    END)                                                              AS end_customer_contact_first_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+            OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+            THEN SPLIT(s.sag_euaddress_contact,' ')[1]
+    ELSE NULL
+    END)                                                              AS end_customer_contact_last_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.sag_euaddress_email -- Sophos
+    ELSE NULL
+    END)                                                              AS end_customer_email
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN ''
+    ELSE NULL
+    END)                                                              AS end_customer_phone_number
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+          OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+          OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN it.inventserialid
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN UPPER(it.inventserialid)
+    ELSE NULL
+    END)                                                              AS serial_number
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+          OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+          OR di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia'
+          OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.salesid
+    ELSE NULL
+    END)                                                              AS d365_sales_order_number
+, 'Infinigate Global Services Ltd'                                    AS distributor_name
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN it.invoiceid
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          THEN ct.invoiceid
+    ELSE NULL
+    END)                                                        AS invoice_number
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+          OR di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.customerref
+    ELSE NULL
+    END)                                                              AS reseller_po_to_infinigate
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+            OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+            OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+            OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
+            OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+            OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+            OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+            THEN sp.purchtableid_intercomp
+    ELSE NULL
+    END)                                                              AS infinigate_po_to_vendor
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
+          OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+          THEN s.currencycode
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+          OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN s.currencycode
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            THEN ct.currencycode
+    ELSE NULL
+    END)                                                     AS sell_currency
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'  -- WatchGuard
+          OR di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN s.sag_purchprice
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR di.PrimaryVendorID IN ('VAC001388_NGS1') -- Yubico
+            THEN sp.purchprice_intercomp
+    ELSE NULL
+    END)                                                              AS final_vendor_unit_buy_price
+, (CASE
+    WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          THEN s.sag_purchprice
+    ELSE NULL
+    END)                                                              AS final_vendor_unit_buy_price2
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN s.sag_purchprice * (-1 * it.qty)  -- WatchGuard
+    ELSE NULL
+    END)                                                              AS final_vendor_total_buy_price
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
+                                                      WHEN sp.purchlineamount_intercomp = 0 AND sp.purchqty_intercomp = 0 THEN s.sag_purchprice
+                                                      ELSE sp.purchlineamount_intercomp / sp.purchqty_intercomp
+                                                    END) -- AddOn
+    ELSE NULL
+    END)                                                              AS po_buy_price
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
+                                                      WHEN sp.purchlineamount_intercomp = 0 AND sp.purchqty_intercomp = 0 THEN (-1 * it.qty) * s.sag_purchprice
+                                                      ELSE (-1 * it.qty) * (sp.purchlineamount_intercomp / sp.purchqty_intercomp)
+                                                    END) -- AddOn
+    ELSE NULL
+    END)                                                              AS po_total_buy_price
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN sp.purchprice_intercomp / sp.purchqty_intercomp
+    ELSE NULL
+    END)                                                              AS purchase_price_usd
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN sp.purchprice_intercomp
+    ELSE NULL
+    END)                                                              AS purchase_extended_price
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (sp.purchprice_intercomp - s.sag_purchprice) * (-1 * it.qty)  -- AddOn
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN null -- Extreme
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+           THEN (CASE
+                    WHEN di_ic.PrimaryVendorID LIKE 'VAC001014%' THEN (s.sag_vendorstandardcost - s.sag_purchprice) * ct.qty
+                    ELSE 0
+                END)
+    ELSE NULL
+    END)                                                              AS claim_amount
+, di.primaryvendorid                                                  AS vendor_id
+, di.primaryvendorname                                                AS vendor_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN s.salesstatus -- Sophos
+    ELSE NULL
+    END)                                                              AS sales_status
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN s.sag_shipanddebit -- Sophos
+    WHEN ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN (CASE
+                WHEN s.sag_shipanddebit = 0 THEN 'No'
+                WHEN s.sag_shipanddebit = 1 THEN 'Yes'
+                END)
+    ELSE NULL
+    END)                                                              AS ship_and_debit
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN di.itemgroupid -- Sophos
+    ELSE NULL
+    END)                                                              AS part_code_group_id
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.statusissue  -- WatchGuard
+    ELSE NULL
+    END)                                                              AS status_issue
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.statusreceipt -- WatchGuard
+    ELSE NULL
+    END)                                                              AS status_receipt
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.invoicereturned -- WatchGuard
+    ELSE NULL
+    END)                                                              AS invoice_returned
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.packingslipreturned -- WatchGuard
+    ELSE NULL
+    END)                                                              AS packing_slip_returned
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN '' -- Sophos
+    ELSE NULL
+    END)                                                              AS price_per_unit_for_this_deal
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN '' -- Sophos
+    ELSE NULL
+    END)                                                              AS extended_price_for_this_deal
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN NULL -- Nokia
+    WHEN di.PrimaryVendorID IN('VAC001388_NGS1') THEN NULL -- Yubico
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN NULL -- Extreme
+    ELSE it.recid
+    END)                                                              AS transaction_record_id
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'
+          OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+          OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.custaccount  -- AddOn
+    ELSE NULL
+    END)                                                              AS customer_account
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN sp.purchlineamount_intercomp  -- AddOn
+    ELSE NULL
+    END)                                                              AS line_amount
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN sp.purchqty_intercomp  -- AddOn
+    ELSE NULL
+    END)                                                              AS purch_quantity
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
+                                                    WHEN sp.purchlineamount_intercomp=0 AND sp.purchqty_intercomp=0 THEN 'PO QTY Zero'
+                                                    ELSE ''
+                                                    END) -- AddOn
+    ELSE NULL
+    END)                                                              AS check
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (CASE
+                                                    WHEN s.currencycode = 'USD' THEN s.salesprice
+                                                    WHEN s.currencycode = 'GBP' THEN s.salesprice * ex2.rate
+                                                    ELSE s.salesprice / ex.rate
+                                                    END)  -- AddOn
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            THEN (CASE
+                    WHEN ct.currencycode = 'USD' THEN ct.salesprice
+                    WHEN ct.currencycode = 'GBP' THEN ct.salesprice * ex2.rate
+                    ELSE ct.salesprice / ex.rate
+                 END)
+    WHEN di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+            THEN (CASE
+                    WHEN s.currencycode = 'USD' THEN (s.salesprice * (-1 * it.qty))
+                    WHEN s.currencycode = 'GBP' THEN (s.salesprice * (-1 * it.qty)) * ex2.rate
+                    ELSE (s.salesprice * (-1 * it.qty)) / ex.rate
+                 END)
+    ELSE NULL
+    END)                                                              AS sales_price_usd
+, (CASE
+    WHEN di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+          THEN s.sag_purchprice * (-1 * it.qty)
+    ELSE NULL
+    END)                                                              AS sales_price_total_usd
+, (CASE
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            THEN ct.salesprice
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+          OR ((di.PrimaryVendorID LIKE 'VAC000904_%') OR (di.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          OR di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+            THEN s.salesprice
+    WHEN di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+            THEN s.salesprice * (-1 * it.qty)
+    ELSE NULL
+    END)                                                              AS sales_price
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+            OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            THEN sp.purchtableid_intercomp
+    ELSE NULL
+    END)                                                              AS distributer_purchase_order
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          THEN ''
+    ELSE NULL
+    END)                                                              AS country_of_purchase
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+            OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN ''
+    ELSE NULL
+    END)                                                              AS custom1
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+            OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN ''
+    ELSE NULL
+    END)                                                              AS custom2
+, (CASE
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+            OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+            THEN (CASE WHEN ct.currencycode = 'USD' THEN 1 ELSE IFNULL(ex.rate, ex2.rate) END)
+    END)                                                              AS exchange_rate
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            THEN IFNULL(sp.purchprice_intercomp, s.sag_purchprice)
+    ELSE NULL
+    END)                                                              AS usd_disti_unit_buy_price
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            THEN (CASE WHEN sp.purchtableid_intercomp IS NULL THEN 'Fulfilled from existing distributor stock' ELSE 'Back to Back' END)
+    ELSE NULL
+    END)                                                              AS order_type
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            THEN s.salesordertype
+    ELSE NULL
+    END)                                                              AS sales_order_type
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
+            THEN rwg.row_id
+    ELSE NULL
+    END)                                                              AS fortinet_row_id
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+          THEN (CASE
+                WHEN ng.INVENTLOCATIONID LIKE '%2' AND ng.DATAAREAID = 'NNL2' --add post Rome Go Live (MW)
+                THEN '101421538' -- Venlo ID
+                WHEN ng.INVENTLOCATIONID LIKE'%5' AND ng.DATAAREAID = 'NGS1'
+                THEN '101417609' -- UK ID
+                WHEN ng.INVENTLOCATIONID LIKE'CORR%'AND ng.DATAAREAID = 'NGS1'
+                THEN '101417609' --Added to pick up random name convention for Corrective Warehouse in NGS1
+                WHEN ng.INVENTLOCATIONID LIKE '%2' AND ng.DATAAREAID = 'NGS1'
+                THEN '101456761' --NGS1 Venlo ID
+                END)
+    WHEN ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+          THEN (CASE
+                WHEN ng.inventlocationid = 'MAIN2' AND ng.dataareaid = 'NNL2' --add post Rome Go Live (MW)
+		        THEN '101421538' -- Venlo ID
+		        WHEN ng.inventlocationid = 'MAIN5' AND ng.dataareaid = 'NGS1'
+		        THEN '101417609' -- UK ID
+		        WHEN ng.inventlocationid = 'MAIN2' AND ng.dataareaid = 'NGS1'
+		        THEN '101456761' --NGS1 Venlo ID
+		        ELSE ''
+	            END)
+    ELSE NULL
+    END)                                                              AS distributer_id_number
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+           THEN (CASE WHEN -1*it.QTY > 0 THEN 'POS'
+                WHEN -1*it.QTY <0 THEN 'RD'
+                ELSE ''
+                END)
+    ELSE NULL
+    END)                                                              AS distributer_transaction_type
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+           THEN ''
+    ELSE NULL
+    END)                                                              AS export_licence_number
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+           THEN ''
+    ELSE NULL
+    END)                                                              AS business_model1
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+           THEN ''
+    ELSE NULL
+    END)                                                              AS business_model2
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+            OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+           THEN ''
+    ELSE NULL
+    END)                                                              AS juniper_var_id2
+, (CASE
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+           THEN ng.inventlocationid
+    ELSE NULL
+    END)                                                              AS warehouse
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+          OR di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          OR di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN sp.salestableid_intercomp
+    ELSE NULL
+    END)                                                              AS intercompany_sales_order
+, (CASE
+    WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          THEN SPLIT(di_ic.PrimaryVendorName,' ')[0]
+    ELSE NULL
+    END)                                                              AS oem_name
+, (CASE
+    WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          THEN (CASE
+                WHEN di_ic.PrimaryVendorName	LIKE 'Advantech%'
+		            THEN di_ic.ItemDescription
+			          ELSE di_ic.ItemName
+                END)
+    ELSE NULL
+    END)                                                              AS oem_part_number
+, (CASE
+    WHEN di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          THEN (CASE
+                WHEN RIGHT(sp.SalesTableID_InterComp, 4) = 'NGS1' THEN 'United Kingdom'
+		            WHEN RIGHT(sp.SalesTableID_InterComp, 4) = 'NNL2' THEN 'Netherlands'
+                END)
+    ELSE NULL
+    END)                                                              AS shipping_legal_entity
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN di.itemname
+    ELSE NULL
+    END)                                                              AS snwl_pn_sku
+, (CASE
+    WHEN di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN it.inventtransid
+    ELSE NULL
+    END)                                                              AS invent_trans_id
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+            THEN 'Zycko Ltd'
+    WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+            THEN 'Nuvias Global Services Ltd'
+    WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+            THEN 'Infinigate UK Ltd'
+    ELSE NULL
+  END)                                                              AS distributor_account_name
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+            THEN s.SAG_CREATEDDATETIME
+    ELSE NULL
+  END)                                                              AS sales_order_date
+, (CASE
+    WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          THEN DATE_FORMAT(s.SAG_CREATEDDATETIME, 'dd-MM-yyyy')
+    ELSE NULL
+  END)                                                              AS order_date
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN s.SAG_NGS1POBUYPRICE * ex3.RATE
+    ELSE NULL
+  END)                                                              AS product_cost_eur
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN (s.SAG_NGS1POBUYPRICE * ex3.RATE) * (-1 * it.qty)
+    ELSE NULL
+  END)                                                              AS product_cost_eur_total
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN ''
+    ELSE NULL
+  END)                                                              AS blank3
+, (CASE
+    WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
+          THEN ''
+    ELSE NULL
+  END)                                                              AS blank4
+, (CASE
+    WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          THEN 'www.nuvias.com'
+    WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          THEN 'infinigate.co.uk'
+    ELSE NULL
+  END)                                                              AS distributor_domain
+, (CASE
+    WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          THEN 'GB'
+    ELSE NULL
+  END)                                                              AS distributor_country
+, (CASE
+    WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+          THEN s.SAG_RESELLEREMAILADDRESS
+    WHEN di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          THEN ''
+    ELSE NULL
+  END)                                                              AS reseller_email
+, (CASE
+    WHEN di.PrimaryVendorID IN('VAC001388_NGS1') -- Yubico
+          OR di.PrimaryVendorID = 'VAC001358_NGS1' -- Yubico POS Report
+          THEN ''
+    ELSE NULL
+  END)                                                              AS end_customer_domain
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          THEN s.LINENUM
+    ELSE NULL
+  END)                                                              AS line_item
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN ''
+    ELSE NULL
+  END)                                                              AS ship_to_state_jabil
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          THEN ''
+    ELSE NULL
+  END)                                                              AS end_customer_state_jabil
+, (CASE
+    WHEN (di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')
+            THEN ''
+    ELSE NULL
+  END)                                                              AS distributer_id_no2
+  FROM sales_data s
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_inventtransstaging WHERE Sys_Silver_IsCurrent = 1) it
+    ON it.inventtransid = s.inventtransid
+   AND it.dataareaid NOT IN ('NGS1','NNL2')
+  LEFT JOIN so_po_id_list sp
+    ON sp.saleslineid_local = s.inventtransid
+  LEFT JOIN v_distinctitems di
+    ON di.itemid = s.itemid
+   AND di.companyid = (CASE WHEN s.dataareaid = 'NUK1' THEN 'NGS1' ELSE 'NNL2' END)
+  LEFT JOIN v_distinctitems di_ic
+    ON di_ic.itemid = s.itemid
+   AND di_ic.companyid = substr(sp.SalesTableID_InterComp, -4)
+  LEFT JOIN ngs_inventory ng
+    ON ng.inventtransid = sp.SalesLineID_InterComp
+   AND (
+        (di_ic.PrimaryVendorName LIKE 'Juniper%'
+          AND di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))  -- Juniper
+        OR
+        (di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_custcustomerv3staging WHERE Sys_Silver_IsCurrent = 1) cu
+    ON cu.customeraccount = s.custaccount
+   AND cu.dataareaid = s.dataareaid
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_customerpostaladdressstaging WHERE Sys_Silver_IsCurrent = 1 AND ISPRIMARY = 1) pa
+    ON pa.CUSTOMERACCOUNTNUMBER = s.INVOICEACCOUNT
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_logisticspostaladdressbasestaging WHERE Sys_Silver_IsCurrent = 1) ad
+    ON ad.ADDRESSRECID = s.DELIVERYPOSTALADDRESS
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging WHERE Sys_Silver_IsCurrent = 1) b
+    ON b.COUNTRYREGION = ad.COUNTRYREGIONID
+  LEFT JOIN oracle_data o
+    ON o.sales_order = s.salesid
+  LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_custinvoicetransstaging WHERE Sys_Silver_IsCurrent = 1) ct
+    ON ct.inventtransid = s.inventtransid
+   AND ct.dataareaid NOT IN ('NGS1' ,'NNL2')
+   AND di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2')
+  LEFT JOIN exchangerates ex
+    ON ex.startdate = TO_DATE(it.datephysical)
+   AND ex.tocurrency = s.currencycode
+   AND ex.fromcurrency = 'USD'
+  LEFT JOIN exchangerates ex2
+    ON ex2.startdate = TO_DATE(it.datephysical)
+   AND ex2.fromcurrency = s.currencycode
+   AND ex2.fromcurrency = 'GBP'
+   AND ex2.tocurrency = 'USD'
+  LEFT JOIN exchangerates ex3
+    ON ex3.startdate = TO_DATE(it.datephysical)
+   AND ex3.fromcurrency = 'GBP'
+   AND ex3.tocurrency = 'EUR'
+  LEFT JOIN row_gen_ rwg
+    ON (-1 * it.qty) >= rwg.row_id
+   AND di_ic.PrimaryVendorName LIKE 'Fortinet%'
+ WHERE 1 = 1
+  AND (
+        -- Sophos
+        (
+                s.SALESSTATUS IN ('1', '2', '3') -- MW 20/06/2023 added status 1 to capture part shipments
+            AND s.SAG_SHIPANDDEBIT = '1'
+            AND di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
+            AND di.ItemGroupID = 'Hardware'
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- WatchGuard
+        (
+            (  it.STATUSISSUE IN ('1', '3') OR (it.STATUSRECEIPT LIKE '1' AND it.INVOICERETURNED = 1))
+            AND di.PrimaryVendorName LIKE 'WatchGuard%'
+            AND it.PACKINGSLIPRETURNED <> 1
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- AddON
+        (
+            di_ic.PrimaryVendorName LIKE 'Prolabs%'
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Extreme
+        (
+          di.PrimaryVendorID IN ('VAC001044_NGS1')
+          AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Cambium
+        (
+          di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2')
+          AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Fortinet
+        (
+            di_ic.PrimaryVendorName LIKE 'Fortinet%'
+            AND (-1 * it.qty) > 0
+            AND s.salesordertype NOT LIKE 'Demo'
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Juniper
+        (
+            di_ic.PrimaryVendorName LIKE 'Juniper%'
+            AND di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2')
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+            AND ng.INVENTLOCATIONID NOT LIKE 'DD'
+        )
+        OR
+        -- Mist
+        (
+            ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%'))
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Nokia
+        (
+            di_ic.PrimaryVendorName LIKE 'Nokia%'
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Yubico POS
+        (
+            it.STATUSISSUE IN ('1', '3')
+            AND di.PrimaryVendorID IN('VAC001388_NGS1')
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Yubico POS Report
+        (
+            di.PrimaryVendorID = 'VAC001358_NGS1'
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- SmartOptics
+        (
+            di.PrimaryVendorName LIKE 'Smart Optics%'
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Versa POS v1.2 External
+        (
+            di_ic.PrimaryVendorID IN ('VAC000850_NGS1', 'VAC000850_NNL2') -- Versa POS 1.2 External
+            AND it.STATUSISSUE = '1'
+            AND s.SALESSTATUS = '3'
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- SonicWall
+        (
+            di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2')
+            AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+        OR
+        -- Jabil v1.2 External
+        (
+          di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
+          AND it.STATUSISSUE = '1'
+          AND s.SALESSTATUS = '3'
+          AND s.DATAAREAID NOT IN ('NGS1','NNL2')
+        )
+    )
+""")
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER VIEW gold_dev.ops_reporting.v_pos_reports_common OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER VIEW v_pos_reports_common OWNER TO `az_edw_data_engineers_ext_db`

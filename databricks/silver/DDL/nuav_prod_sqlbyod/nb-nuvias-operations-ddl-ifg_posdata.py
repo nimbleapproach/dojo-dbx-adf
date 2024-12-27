@@ -182,4 +182,4 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE silver_dev.nuav_prod_sqlbyod.ifg_posdata OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE ifg_posdata OWNER TO `az_edw_data_engineers_ext_db`

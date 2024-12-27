@@ -58,10 +58,11 @@ SELECT
   'N/A' AS gen_bus_posting_group,
   0.00 AS currency_factor,
   to_date(trans.InvoiceDate)  AS document_date, --JOIN to dim_date
-  --to_date(salestrans.CREATEDDATETIME) AS document_date, --JOIN to dim_date
-  'nuvias sales invoice' AS document_source, 
-  --concat(right(msp_h.Sys_DatabaseName, 2), '1') as EntityCode,
-  COALESCE(it.Description, 'N/A') AS product_code, -- JOIN to dim_product
+  NULL as deferred_revenue_startdate, 
+  NULL as deferred_revenue_enddate, 
+  0 as is_deferred,
+   'nuvias sales invoice' AS document_source, 
+   COALESCE(it.Description, 'N/A') AS product_code, -- JOIN to dim_product
   CASE WHEN it.DataAreaId IS NOT NULL THEN CONCAT(it.DataAreaId,' Line Item') ELSE 'N/A' END AS line_item_type,
   COALESCE('N/A') AS product_type,
   coalesce(disit.PrimaryVendorID, 'N/A') AS vendor_code,
@@ -155,6 +156,9 @@ invoice as (
   gen_bus_posting_group,
   currency_factor,
   document_date, --JOIN to dim_date
+  deferred_revenue_startdate, 
+  deferred_revenue_enddate, 
+  is_deferred,
   document_source, 
   product_code, -- JOIN to dim_product
   line_item_type,
@@ -197,6 +201,9 @@ select
   gen_bus_posting_group,
   currency_factor,
   document_date, --JOIN to dim_date
+  deferred_revenue_startdate, 
+  deferred_revenue_enddate, 
+  is_deferred,
   document_source, 
   product_code, -- JOIN to dim_product
   line_item_type,
@@ -248,6 +255,7 @@ ON e.Calendar_Year = cast(year(i.document_date) as string)
 AND e.Month = right(concat('0',cast(month(i.document_date) as string)),2)
 AND CASE WHEN i.Entity_Code = 'BE1' THEN 'NL1' ELSE  i.Entity_Code  END   = e.COD_AZIENDA
 AND e.ScenarioGroup = 'Actual'
+AND e.Currency = i.Currency_Code
 
 --Only for VU and entitycode 'NOTINTAGETIK'
 LEFT JOIN (SELECT DISTINCT Calendar_Year, Month, Currency, Period_FX_rate FROM gold_{ENVIRONMENT}.obt.exchange_rate WHERE ScenarioGroup = 'Actual') e1
@@ -257,6 +265,6 @@ AND i.Currency_Code = cast(e1.Currency as string)
 
 LEFT JOIN min_fx_rate mfx 
 ON i.Currency_Code = cast(mfx.Currency as string)
---limit(100)
+
 """
 )

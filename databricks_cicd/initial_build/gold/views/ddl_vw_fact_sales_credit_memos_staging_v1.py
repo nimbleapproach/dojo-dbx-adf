@@ -54,6 +54,9 @@ min_fx_rate AS
   sil.Gen_Bus_PostingGroup AS gen_bus_posting_group,
   sih.CurrencyFactor AS currency_factor,
   TO_DATE(sih.PostingDate) AS document_date, --JOIN to dim_date
+  NULL as deferred_revenue_startdate, 
+  NULL as deferred_revenue_enddate, 
+  0 as is_deferred,
   'credit memo' AS document_source, 
   COALESCE(it.No_, sil.No_, 'N/A') AS product_code, -- JOIN to dim_product
   CASE WHEN it.No_ IS NOT NULL THEN 'item' ELSE 'Credit Memo Line Item' END AS line_item_type,
@@ -162,6 +165,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
 WHERE sih.Sys_Silver_IsCurrent = true 
 AND sil.Sys_Silver_IsCurrent = true
 AND sil.sid IS NOT NULL
---limit(100)
+
 """
 )

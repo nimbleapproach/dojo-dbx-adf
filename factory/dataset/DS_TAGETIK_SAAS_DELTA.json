@@ -1,5 +1,5 @@
 {
-	"name": "DS_TAGETIK_SAAS_DIM",
+	"name": "DS_TAGETIK_SAAS_DELTA",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_TAG_SAAS",
@@ -11,6 +11,9 @@
 		"parameters": {
 			"pm_Code": {
 				"type": "string"
+			},
+			"pm_update_date": {
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -21,7 +24,7 @@
 		"schema": [],
 		"typeProperties": {
 			"path": {
-				"value": "ES_Datasource_@{dataset().pm_Code}",
+				"value": "Datasource_@{dataset().pm_Code}?$filter=DATE_UPD ge @{dataset().pm_update_date}",
 				"type": "Expression"
 			}
 		}

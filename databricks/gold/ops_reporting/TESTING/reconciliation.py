@@ -108,7 +108,9 @@ for param_name, param_value in input_params.items():
 effective_databricks_predicate = substitute_params(databricks_predicate, databricks_param_mapping)
 # print(effective_databricks_predicate)
 
-debug_predicate="d365_sales_order_number='SO00158302_NUK1'"
+debug_predicate="1=1" 
+
+# debug_predicate = '' #uncomment if necessarry. when finished, return filter back to '1=1'
 
 columns_in_scope = [col(c) for c in column_mapping.values()]
 
@@ -129,7 +131,8 @@ for col_name, col_type in databricks_table.dtypes:
     if col_type.startswith('decimal'):
         rounding[col_name] = round(col_name, ROUND_POSITIONS)
 
-databricks_table = databricks_table.withColumns(rounding)
+if len(rounding) > 0:
+    databricks_table = databricks_table.withColumns(rounding)
 
 print(f"DataBricks result (first {HEAD_SIZE}):")
 databricks_table.toPandas().head(HEAD_SIZE)
@@ -158,7 +161,9 @@ remote_table = (spark.read
                 .fillna("").fillna(0).fillna(False)
                 # .withColumn("hash_", xxhash64(*columns_in_scope))
                 )
-remote_table = remote_table.withColumns(rounding)
+
+if len(rounding) > 0:
+    remote_table = remote_table.withColumns(rounding)
 
 print(f"SSRS result (first {HEAD_SIZE}):")
 remote_table.toPandas().head(HEAD_SIZE)

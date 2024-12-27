@@ -1,0 +1,132 @@
+{
+	"name": "PL_20_TAG_SaaS_FullLoad_TEMP",
+	"properties": {
+		"activities": [
+			{
+				"name": "If Dimension",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@pipeline().parameters.pm_FullLoad",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Load Fact Table TEMP",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_30_TAG_SaaS_FullLoad_Fact_TEMP",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pm_Code": {
+										"value": "@pipeline().parameters.pm_Code",
+										"type": "Expression"
+									},
+									"pm_Table": {
+										"value": "@pipeline().parameters.pm_Table",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Load Dimension",
+							"type": "Copy",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ODataSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_Bronze_InsertDateTime_UTC",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										}
+									],
+									"httpRequestTimeout": "00:05:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings",
+										"maxRowsPerFile": 1000000,
+										"fileNamePrefix": {
+											"value": "bronze-tag02_saas-@{pipeline().parameters.pm_Table}-@{utcNow()}",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_TAGETIK_SAAS_DIM_FULL",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Code": "@pipeline().parameters.pm_Code"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
+										"pm_FileSystem": "bronze",
+										"pm_Directory": {
+											"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pm_Code": {
+				"type": "string"
+			},
+			"pm_Table": {
+				"type": "string"
+			},
+			"pm_FullLoad": {
+				"type": "bool"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS/FullLoadTemp"
+		},
+		"annotations": []
+	}
+}

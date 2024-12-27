@@ -1,0 +1,133 @@
+{
+	"name": "PL_30_TAG_SaaS_Load_Keys",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Tables",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\n  FROM [adf].[CT_TAG_SAAS_TABLES]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLDB_METADATA_DYNAMIC",
+						"type": "DatasetReference",
+						"parameters": {
+							"pm_SchemaName": "adf",
+							"pm_TableName": "CT_TAG_SAAS_TABLES",
+							"pm_Environment": {
+								"value": "@pipeline().globalParameters.gpm_Environment",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For Each Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Tables').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "Load Keys",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ODataSource",
+									"additionalColumns": [
+										{
+											"name": "Sys_DataFactory_LoadDateTime_UTC",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										}
+									],
+									"httpRequestTimeout": "00:05:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_TAGETIK_SAAS_KEY",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Code": {
+											"value": "@item().CODE",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PARQUET_STATIC",
+									"type": "DatasetReference",
+									"parameters": {
+										"pm_Environment": "@{pipeline().globalParameters.gpm_Environment}",
+										"pm_FileSystem": "keys",
+										"pm_Directory": {
+											"value": "tag02_saas/@{toLower(item().TABLE)}",
+											"type": "Expression"
+										},
+										"pm_FileName": "@item().TABLE"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "10 Bronze/TAG02 [TAGETIK]/SaaS"
+		},
+		"annotations": []
+	}
+}

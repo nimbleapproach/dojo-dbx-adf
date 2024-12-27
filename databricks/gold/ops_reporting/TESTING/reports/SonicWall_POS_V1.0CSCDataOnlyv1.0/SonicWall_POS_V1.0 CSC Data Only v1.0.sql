@@ -39,9 +39,7 @@ SELECT
 	,ifg.ENDUSERCOUNTRYCODE						AS EndUserCountry
 	,ifg.ENDCUSTOMERTELEPHONENUMBER				AS EndUserTelephoneNumber
 	,ifg.ENDCUSTOMEREMAILADDRESS				AS EndUserEmailAddress
-	--,ifg.RESELLERID								AS ResellerId
-	--,ifg.VENDORRESELLERLEVEL					AS VendorResellerLevel
-	--,ncsc.D365Order
+
 FROM NavData ifg
 	LEFT JOIN NuviasCSCData ncsc ON ncsc.[Navision So Number] = ifg.SALESORDERNUMBER AND ncsc.NavisionLineNumber = ifg.SALESORDERLINENO --AND ncsc.[D365 Packing Slip Id] = ifg.[IGSSHIPMENTNO] 
 WHERE  
@@ -90,7 +88,3 @@ GROUP BY
 	,ifg.ENDCUSTOMEREMAILADDRESS
 	,ifg.CUSTOMERINVOICEDATE
 	,ifg.SALESORDERLINENO
-	--,ifg.RESELLERID
-	--,ifg.VENDORRESELLERLEVEL
-	--,ncsc.D365Order
-ORDER BY ifg.CUSTOMERINVOICEDATE asc, ifg.SALESORDERLINENO asc

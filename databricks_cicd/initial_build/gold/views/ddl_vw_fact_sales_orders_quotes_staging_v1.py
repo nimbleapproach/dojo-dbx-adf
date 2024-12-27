@@ -54,6 +54,9 @@ SELECT
   'N/A' AS gen_bus_posting_group,
   sha2.CurrencyFactor AS currency_factor,
   CAST(sha.DocumentDate AS date) AS document_date, --JOIN to dim_date
+  NULL as deferred_revenue_startdate, 
+  NULL as deferred_revenue_enddate, 
+  0 as is_deferred,
   CASE WHEN sla.DocumentType = 0 THEN 'sales quote' WHEN sla.DocumentType = 1 THEN 'sales order' ELSE 'N/A' END AS document_source, 
   --concat(right(sha.Sys_DatabaseName, 2), '1') as EntityCode,
   COALESCE(sla.No_,'N/A') AS product_code,
@@ -159,6 +162,6 @@ LEFT JOIN min_fx_rate mfx on mfx.currency =  CASE
   END
 WHERE sla.Sys_Silver_IsCurrent = true
 AND sla.sid IS NOT NULL
---limit(100)
+
 """
 )

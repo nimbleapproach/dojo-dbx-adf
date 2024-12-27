@@ -58,7 +58,9 @@ VALUES
   ('sales order', '2000-01-01', current_timestamp()),
   ('nuvias sales invoice', '2000-01-01', current_timestamp()),
   ('starlink (netsuite) sales invoice', '2000-01-01', current_timestamp()),
-  ('netsafe sales invoice', '2000-01-01', current_timestamp())
+  ('netsafe sales invoice', '2000-01-01', current_timestamp()),
+  ('cloudblue sales order', '2000-01-01', current_timestamp()),
+  ('cloudblue sales invoice', '2000-01-01', current_timestamp())
 """
 )
 

@@ -11,9 +11,7 @@ SELECT
 	,ifg.RESELLERADDRESSCITY							AS [Reseller City]
 	,ifg.QUANTITY										AS [Quantity]
 	,ncsc.VendorStandardCost							AS [Unit Price]
-	--,ifg.UNITSELLPRICE									AS [Unit Price]  --from Navision Data
-	,(ncsc.VendorStandardCost * ifg.QUANTITY)			AS [Total Price] --change this back to Nav data for cost maybe
-	--,(ifg.UNITSELLPRICE * ifg.QUANTITY)					AS [Total Price] --from Navision Data
+	,(ncsc.VendorStandardCost * ifg.QUANTITY)			AS [Total Price]
 	,'€'												AS [Local Currency]
 	,ncsc.[D365PurchasId]								AS [POR]
 	,ncsc.[D365PurchPrice]								AS [POR Price]
@@ -26,7 +24,7 @@ SELECT
 FROM NavData ifg
 	LEFT JOIN NuviasCSCData ncsc ON ncsc.[Navision So Number] = ifg.SALESORDERNUMBER AND ncsc.NavisionLineNumber = ifg.SALESORDERLINENO AND ncsc.[D365 Packing Slip Id] = ifg.[IGSShipmentNo]
 WHERE ifg.CUSTOMERINVOICEDATE BETWEEN @from AND @to
-	AND ifg.VATREGISTRATIONNO IS NOT NULL --this may need to be removed in production
+	AND ifg.VATREGISTRATIONNO IS NOT NULL
 GROUP BY 
 	ifg.CUSTOMERINVOICEDATE
 	,ifg.MANUFACTURERITEMNUMBER
@@ -42,11 +40,7 @@ GROUP BY
 	,ifg.RESELLERADDRESSCITY
 	,ifg.QUANTITY
 	,ncsc.VendorStandardCost
-	--,ifg.VENDORBUYPRICE
-	--,ifg.UNITSELLPRICE
 	,ncsc.VendorStandardCost  
-	--,ifg.UNITSELLPRICE * ifg.QUANTITY
-	--,ifg.QUANTITY
 	,ncsc.D365PurchasId
 	,ncsc.[D365PurchPrice]
 	,ncsc.[D365ExpectedPurchasePrice]

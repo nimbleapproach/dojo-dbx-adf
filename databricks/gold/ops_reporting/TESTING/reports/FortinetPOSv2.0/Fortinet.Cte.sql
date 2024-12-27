@@ -31,19 +31,12 @@ SELECT
 	,sh.SAG_EUADDRESS_POSTCODE						AS EndUserZipCode
 	,sh.SAG_EUADDRESS_CITY							AS EndUserCity
 	,CAST(-1*it.QTY AS decimal)						AS Qty 
-	--,sl.DATAAREAID									AS Entity -- this is a check remove for final report
 FROM SAG_SalesLineV2Staging sl 
---JG
-	--LEFT JOIN SAG_InventTransStaging it ON it.INVENTTRANSID = sl.INVENTTRANSID AND it.DATAAREAID NOT LIKE 'NGS1'
 	LEFT JOIN SAG_InventTransStaging it ON it.INVENTTRANSID = sl.INVENTTRANSID AND it.DATAAREAID NOT in( 'NGS1','NNL2')
-	--JG
-		--LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID AND sh.DATAAREAID NOT LIKE 'NGS1'
 	LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID AND sh.DATAAREAID NOT in( 'NGS1','NNL2')
 	LEFT JOIN ara.SO_PO_ID_List sp ON sp.SalesLineID_Local = sl.INVENTTRANSID
 	LEFT JOIN v_DistinctItems di ON di.ItemID = sl.ITEMID and di.CompanyID = right(sp.SalesTableID_InterComp,4)
 	LEFT JOIN v_CustomerPrimaryPostalAddressSplit ca ON ca.CustomerAccountNumber = sh.CUSTACCOUNT 
-	--JG
-	--LEFT JOIN SAG_PurchLineStaging pl ON pl.INVENTTRANSID = sp.PurchLineID_InterComp AND pl.DATAAREAID = 'NGS1'
 	LEFT JOIN SAG_PurchLineStaging pl ON pl.INVENTTRANSID = sp.PurchLineID_InterComp AND pl.DATAAREAID in ('NGS1','NNL2')
 WHERE 
 --JG
@@ -51,8 +44,8 @@ WHERE
 sl.DATAAREAID NOT in( 'NGS1','NNL2')
 	AND di.PrimaryVendorName LIKE 'Fortinet%'
 	AND it.DATEPHYSICAL BETWEEN @from AND @to
-	AND -1*it.Qty > 0 -- Added to remove return order not currently shown -- MW 19/05/20
-	AND sh.SALESORDERTYPE NOT LIKE 'Demo' --add to remove demo order due to not be show on current POS MW 19/05/20
+	AND -1*it.Qty > 0 
+	AND sh.SALESORDERTYPE NOT LIKE 'Demo' 
 
 UNION ALL
 SELECT
@@ -78,7 +71,32 @@ SELECT
 	,EndUserZipCode
 	,EndUserCity
 	,CAST(Qty - 1 AS decimal)
-	--,Entity
 FROM cte 
 WHERE Qty > 1
-	)
+)
+SELECT 
+	Date
+	,SerialNumber
+	,PartNumber
+	,USDDistiUnitBuyPrice
+	,FortinetPOSID
+	,ResaleCurrency
+	,UnitResalePrice
+	,ResellerName
+	,ResellerCountry
+	,EndUserCompanyName
+	,EndUserCountry
+	,EndUserFirstName
+	,EndUserLastName
+	,EndUserEmailAddress
+	,EndUserPhoneNumber
+	,OrderType
+	,BusinessType
+	,PONumber
+	,EndUserAddress
+	,EndUserZipCode
+	,EndUserCity
+	,1 AS Qty
+INTO #fortinet_result
+FROM cte 
+OPTION (MAXRECURSION 10000);
