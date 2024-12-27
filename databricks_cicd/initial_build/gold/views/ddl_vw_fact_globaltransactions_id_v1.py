@@ -76,6 +76,6 @@ select
 , f.COGS_Euro
 , f.GL_Group
 , f.TopCostFlag
- from platinum_dev.obt.globaltransactions f
+ from platinum_{ENVIRONMENT}.obt.globaltransactions f
 )
 """)
