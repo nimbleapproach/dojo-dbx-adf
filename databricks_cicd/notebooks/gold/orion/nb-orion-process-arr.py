@@ -731,11 +731,6 @@ result = udf_run_match(
 
 # COMMAND ----------
 
-df_orion.printSchema()
-# GP1_Euro: decimal(38,14) (nullable = true)
-
-# COMMAND ----------
-
 df_orion = spark.table(f"{catalog}.{schema}.globaltransactions_auto")
 df_final = spark.table(f"{catalog}.{schema}.globaltransactions_arr") 
 
