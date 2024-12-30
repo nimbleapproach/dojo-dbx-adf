@@ -3,7 +3,7 @@
 ## Summary 
 There are 2 parts to the load routine:
 1. [⚡ ARR Data Mapping Process](#arr-data-mapping-process)
-   - Standardizes SKU and vendor data
+   - Standardises SKU and vendor data
    - Maps local SKUs to manufacturer SKUs
    - Handles automated and manual mappings
    - Maintains match type classifications (auto/child/manual)
@@ -11,7 +11,7 @@ There are 2 parts to the load routine:
 2. [🔄 Global Transactions Update](#global-transactions-update)
    - Processes transaction data with mapped ARR attributes
    - Multiple match passes (exact & fuzzy)
-   - Updates transactions with standardized:
+   - Updates transactions with standardised:
      - Product types
      - Duration values
      - Billing frequencies
@@ -99,7 +99,7 @@ graph TD
 
 7. **Data Preparation**
 - Transform ARR attributes 
-- Standardize vendor names
+- Standardise vendor names
 - Clean SKU formats
 
 8. **Match Strategy**
