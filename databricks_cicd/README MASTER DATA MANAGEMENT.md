@@ -44,14 +44,14 @@ def map_parent_child_keys(
 ```
 
 ### Data Flow
-```mermaid
+:::mermaid
 graph TD
     A[Source Data] --> B[Priority Engine]
     B --> C[Stage Tables]
     B --> D[Quality Tables]
     C --> E[Meta Framework]
     E --> F[Target Tables]
-```
+:::
 
 ### Processing Pipeline
 1. **Priority-based Mastering**
@@ -64,11 +64,11 @@ graph TD
    - SCD Type 2 versioning
    - Automated target loading
 
-```mermaid
+:::mermaid
 graph TD
     A[Staging Layer] --> B[Processing Layer]
     B --> C[Target Layer]
-```
+:::
 
 ### 📑 Dependencies
 - `nb-orion-common`: Core utilities
