@@ -86,14 +86,14 @@ ARR Data Processing and Matching System
 
 📄nb-orion-process-arr.py (matching)
 
-```mermaid
+:::mermaid
 graph TD
     A[Input ARR Data] --> B[Match SKU & Vendor]
     B --> C1[Exact Match Pass]
     C1 --> C2[Fuzzy Match Pass]
     C2 --> D[Update Transaction Records]
     D --> E[Compare with OBT Data]
-```
+:::
 
 ## Core Components
 
