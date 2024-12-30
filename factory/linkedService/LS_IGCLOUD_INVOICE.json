@@ -1,0 +1,29 @@
+{
+	"name": "LS_IGCLOUD_INVOICE",
+	"properties": {
+		"parameters": {
+			"pm_database": {
+				"type": "string",
+				"defaultValue": "sqldb-azureinvoices-prod"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "sql-azureinvoices-prod.database.windows.net",
+			"database": "@{linkedService().pm_database}",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "adl_readonly_temp",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "scecret-sql-azureinvoices-prod-ig-cloud"
+			}
+		}
+	}
+}

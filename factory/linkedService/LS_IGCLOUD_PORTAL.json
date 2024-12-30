@@ -1,0 +1,23 @@
+{
+	"name": "LS_IGCLOUD_PORTAL",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "sql-development-dev.database.windows.net",
+			"database": "Portal",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "adl_readonly_temp",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "secret-sql-development-dev-ig-cloud"
+			}
+		}
+	}
+}
