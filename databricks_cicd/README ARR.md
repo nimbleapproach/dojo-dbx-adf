@@ -32,7 +32,7 @@ There are 2 parts to the load routine:
 
 This code implements an automated process for mapping and standardizing Annual Recurring Revenue (ARR) attributes across different data sources. Here's the key workflow:
 
-```mermaid
+:::mermaid
 graph TD
     A[Raw Sales Data] --> B[SKU Vendor Processing]
     B --> C[Vendor Group Processing]
@@ -40,7 +40,7 @@ graph TD
     D --> E[Local SKU Mapping]
     E --> F[Manual ARR Integration]
     F --> G[Final ARR Table]
-```
+:::
 
 ## Key Processing Steps
 
