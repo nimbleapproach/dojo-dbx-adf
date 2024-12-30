@@ -1,72 +1,78 @@
-# 🎯 Master Data Management (MDM) Overview
+# 🗄️ Master Data Management Framework
 
-## Summary 
-The MDM is a POC, which is created to showcase the Dimensional Modelling standards and include means of Mastering the Source Data
-1. [📥 Stage Data](#staging-process)
-   - Standardises SKU and vendor data
-   - Maps local SKUs to manufacturer SKUs
-   - Multiple match passes (exact & fuzzy)
-   - Hold multiple occurences in Data Quality tables
-   - Setup prioty columns to Master records based on their priority
+## Summary
+The MDM POC demonstrates dimensional modeling standards and source data mastering capabilities.
 
-2. [🔄 Modelling framework](#modelling-framework-demo)
-   - Configure the model to process an MDM Entity
-   - Create target table
-   - Run job
+1. [📥 Stage Data Process](#staging-process)
+   - Data Standardization & Mapping
+   - Advanced Matching (Exact/Fuzzy)
+   - Data Quality Management
+   - Priority-based Record Mastering
+   - Source System Hierarchy Configuration
 
-## Key Features
-- Mastering Entities by Priority Order 
-- Fuzzy matching with configurable thresholds
-- Quality control checks
+2. [⚙️ Modeling Framework](#modelling-framework-demo)
+   - Entity Configuration 
+   - Target Schema Generation
+   - Automated Processing Pipeline
+   - SCD Type 2 Support
 
+## Core Features
+- 🎯 Priority-based Entity Mastering
+- 🔍 Configurable Match Thresholds
+- 📊 Quality Monitoring
+- 🔄 Version Control (SCD Type 2)
+- 🏗️ Metadata-driven Architecture
 
-# 📥 Stage Data {#staging-process}
-📄nb-orion-common.py (data prep)
+## 📥 Stage Data {#staging-process}
 
-The notebook above holds 2 main mastering functions, `map_parent_child_keys`, `check_duplicate_keys`. the first `map_parent_child_keys` is used to prioritise multiple occurences and help rank them based on their priority. 
+### Key Functions
+**map_parent_child_keys**
+- Prioritises records using configurable hierarchy
+- Handles multiple source systems
+- Maintains data lineage
 
 ```python
 def map_parent_child_keys(
-    df, 
-    key_cols=["Manufacturer Item No_", "Consolidated Vendor Name", "sys_databasename"], 
-    order_cols=None, 
-    priority_col="sys_databasename",
+    df,
+    key_cols=["ManufacturerItemNo", "VendorName", "SourceSystem"],
     priority_map = {
-        "ReportsUK": 1,
-        "ReportsDE": 2,
-        "ReportsCH": 3
-        .......
+        "System_A": 1,  # Primary
+        "System_B": 2,  # Secondary
+        "System_C": 3   # Tertiary
     }
-):
+)
 ```
 
-:::mermaid
+### Data Flow
+```mermaid
 graph TD
-    A[Raw Sales Data] --> B[Priotise composite records]
-    B --> C[stage priority entity]
-    B --> D[store multiple occurence in dq table]
-    C --> E[process entity through Meta Framework]
-:::
+    A[Source Data] --> B[Priority Engine]
+    B --> C[Stage Tables]
+    B --> D[Quality Tables]
+    C --> E[Meta Framework]
+    E --> F[Target Tables]
+```
 
-## Key Processing Steps
+### Processing Pipeline
+1. **Priority-based Mastering**
+   - Entity-specific staging (e.g., `dim_vendor_stg`)
+   - Master reference tables (e.g., `dim_master_vendor_stg`) 
+   - Hierarchy-based golden record selection
 
-1. **Master records based on their priority**
-- create a specific notebook to master the entity into a stage table
-- use the priotiy function to help master the multiple occurences
-- for example the vendor table will be called `dim_vendor_stg`
-  - this will be paired with a master vendor table, called `dim_master_vendor_stg`
-    - the master vendor record will be dedtermined by the last node vendor in the `dim_vendor_stg` table
+2. **Meta Framework Processing**
+   - Schema-driven transformations
+   - SCD Type 2 versioning
+   - Automated target loading
 
-2. **Meta Framework**
-- configured dim_vendor_master & dim_vendor staged tables will be process into their target table 
-- loads data into the `dim_vendor` table for the `dim_vendor_stg`
-- the meta framework handles Type 2 Data 
-:::mermaid
+```mermaid
 graph TD
-    A[dim_vendor_stg] --> B[dim_vendor]
-:::
+    A[Staging Layer] --> B[Processing Layer]
+    B --> C[Target Layer]
+```
 
-## 📑 File Dependencies
-- nb-orion-common (utilities)
-- meta.json (metadata)
-- nb-orion-process-fact-model.py (run entire model)
+### 📑 Dependencies
+- `nb-orion-common`: Core utilities
+- `meta.json`: Configuration metadata
+- `nb-orion-process-fact-model.py`: Pipeline orchestration
+
+The framework supports extensible entity modeling while maintaining data quality and versioning standards.
