@@ -1,12 +1,13 @@
 # Databricks notebook source
 import json
 import os
-from pyspark.sql.functions import *
 
 ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 current_notebook = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
 working_folder = '/Workspace' + current_notebook[0:current_notebook.rfind('/')]
+
+# COMMAND ----------
 
 # Loading config
 report_config = "report.config.json"
@@ -20,29 +21,12 @@ except:
     dbutils.widgets.dropdown(name="wg_reportName", defaultValue=list(data.keys())[0], choices=sorted(data.keys()))
     REPORT_NAME = dbutils.widgets.get("wg_reportName")
 
-try:
-    REPORT_DATE_FROM = dbutils.widgets.get("wg_reportDateFrom")
-except:
-    dbutils.widgets.text(name="wg_reportDateFrom", defaultValue="")
-    REPORT_DATE_FROM = dbutils.widgets.get("wg_reportDateFrom")
-
-try:
-    REPORT_DATE_TO = dbutils.widgets.get("wg_reportDateTo")
-except:
-    dbutils.widgets.text(name="wg_reportDateTo", defaultValue="")
-    REPORT_DATE_TO = dbutils.widgets.get("wg_reportDateTo")
+# COMMAND ----------
 
 # Reading config
 report_config = data.get(REPORT_NAME)
 
 report_params = report_config.get("report-params")
-input_params = {"from": REPORT_DATE_FROM, "to": REPORT_DATE_TO}
-
-def substitute_params(str, substitutions):
-    result = str
-    for bind_var, replacement in substitutions.items():
-        result = result.replace(bind_var, replacement)
-    return result
 
 databricks_config = report_config.get("databricks-config")
 databricks_predicate = databricks_config.get("predicate")
@@ -50,6 +34,54 @@ databricks_object_layer = databricks_config.get("object-layer")
 databricks_object_schema = databricks_config.get("object-schema")
 databricks_object_name = databricks_config.get("object-name")
 
+subscription_schedule = report_config.get("subscription").get("schedule")
+from_date_cron = subscription_schedule.get("from-date-cron")
+to_date_cron = subscription_schedule.get("to-date-cron")
+
+subscription_recipients = report_config.get("subscription").get("recipients")
+subscription_to = subscription_recipients.get("to")
+subscription_cc = subscription_recipients.get("cc")
+subscription_bcc = subscription_recipients.get("bcc")
+
+# COMMAND ----------
+
+# MAGIC %run ../library/nb-cron-utils
+
+# COMMAND ----------
+
+from datetime import datetime, timedelta
+
+date_format = "%Y-%m-%d"
+
+try:
+    REPORT_RUN_DATE = dbutils.widgets.get("wg_reportRunDate")
+except:
+    dbutils.widgets.text(name="wg_reportRunDate", defaultValue=datetime.strftime(datetime.now(), date_format))
+    REPORT_RUN_DATE = dbutils.widgets.get("wg_reportRunDate")
+
+report_run_date_as_datetime = datetime.strptime(REPORT_RUN_DATE, date_format)
+report_date_to = get_previous_date(report_run_date_as_datetime, to_date_cron) - timedelta(days=1)
+report_date_from = get_previous_date(report_date_to, from_date_cron)
+
+try:
+    REPORT_DATE_FROM = dbutils.widgets.get("wg_reportDateFrom")
+except:
+    dbutils.widgets.text(name="wg_reportDateFrom", defaultValue=datetime.strftime(report_date_from, date_format))
+    REPORT_DATE_FROM = dbutils.widgets.get("wg_reportDateFrom")
+
+try:
+    REPORT_DATE_TO = dbutils.widgets.get("wg_reportDateTo")
+except:
+    dbutils.widgets.text(name="wg_reportDateTo", defaultValue=datetime.strftime(report_date_to, date_format))
+    REPORT_DATE_TO = dbutils.widgets.get("wg_reportDateTo")
+
+
+
+# COMMAND ----------
+
+from pyspark.sql.functions import *
+
+input_params = {"from": REPORT_DATE_FROM, "to": REPORT_DATE_TO}
 column_mapping = dict((v,k) for k,v in report_config.get("column-mapping").items())
 report_columns = column_mapping.values()
 view_columns_in_scope = [col(c) for c in column_mapping.keys()]
@@ -58,6 +90,12 @@ databricks_param_mapping = {}
 for param_name, param_value in input_params.items():
     databricks_param_mapping[f"@{param_name}"] = param_value
 # print(databricks_param_mapping)
+
+def substitute_params(str, substitutions):
+    result = str
+    for bind_var, replacement in substitutions.items():
+        result = result.replace(bind_var, replacement)
+    return result
 
 effective_databricks_predicate = substitute_params(databricks_predicate, databricks_param_mapping)
 # print(effective_databricks_predicate)
@@ -156,6 +194,6 @@ report_folder = working_folder + "/reports"
 os.makedirs(report_folder, exist_ok=True)
 
 timestamp=datetime.strftime(datetime.today(), "%Y%m%d%H%M%S")
-report_file = f"{REPORT_NAME}-{timestamp}.xlsx"
+report_file_name = f"{REPORT_NAME}-{timestamp}.xlsx"
 
 wb.save(report_folder + "/" + report_file_name)

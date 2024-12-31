@@ -4,6 +4,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 * * 1",
+        "to-date-cron": "0 0 * * 1"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -39,6 +50,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 * * 1",
+        "to-date-cron": "0 0 * * 1"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -396,6 +418,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 * * 1",
+        "to-date-cron": "0 0 * * 1"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -436,6 +469,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 1 * *",
+        "to-date-cron": "0 0 1 * *"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -475,6 +519,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 1 * *",
+        "to-date-cron": "0 0 1 * *"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -509,6 +564,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 1 * *",
+        "to-date-cron": "0 0 1 * *"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -536,6 +602,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 1 * *",
+        "to-date-cron": "0 0 1 * *"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -681,6 +758,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 * * 1",
+        "to-date-cron": "0 0 * * 1"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -840,6 +928,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 1 * *",
+        "to-date-cron": "0 0 1 * *"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
@@ -978,6 +1077,17 @@
       "from",
       "to"
     ],
+    "subscription": {
+      "schedule": {
+        "from-date-cron": "0 0 * * 1",
+        "to-date-cron": "0 0 * * 1"
+      },
+      "recipients": {
+        "to": [],
+        "cc": [],
+        "bcc": []
+      }
+    },
     "databricks-config": {
       "object-layer": "gold",
       "object-schema": "ops_reporting",
