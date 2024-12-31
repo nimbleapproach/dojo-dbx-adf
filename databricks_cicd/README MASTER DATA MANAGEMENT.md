@@ -1,7 +1,7 @@
 # 🗄️ Master Data Management Framework
 
 ## Summary
-The MDM POC demonstrates dimensional modeling standards and source data mastering capabilities.
+The MDM POC demonstrates dimensional modelling standards and source data mastering capabilities.
 
 1. [📥 Stage Data Process](#staging-process)
    - Data Standardisation & Mapping
@@ -75,4 +75,4 @@ graph TD
 - `meta.json`: Configuration metadata
 - `nb-orion-process-fact-model.py`: Pipeline orchestration
 
-The framework supports extensible entity modeling while maintaining data quality and versioning standards.
+The framework supports extensible entity modelling while maintaining data quality and versioning standards.
