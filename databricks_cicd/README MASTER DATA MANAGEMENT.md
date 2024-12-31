@@ -4,13 +4,13 @@
 The MDM POC demonstrates dimensional modeling standards and source data mastering capabilities.
 
 1. [📥 Stage Data Process](#staging-process)
-   - Data Standardization & Mapping
+   - Data Standardisation & Mapping
    - Advanced Matching (Exact/Fuzzy)
    - Data Quality Management
    - Priority-based Record Mastering
    - Source System Hierarchy Configuration
 
-2. [⚙️ Modeling Framework](#modelling-framework-demo)
+2. [⚙️ Modelling Framework](#modelling-framework-demo)
    - Entity Configuration 
    - Target Schema Generation
    - Automated Processing Pipeline
