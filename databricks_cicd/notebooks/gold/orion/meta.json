@@ -110,10 +110,10 @@
         "type": "link",
         "run_group": 2,
         "run_order": 2,
-        "processing_notebook" : "nb-orion-pre-process-link-vendor-to-vendor-master",
+        "processing_notebook" : "nb-orion-pre-process-link-vendor-to-master-vendor",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_master_vendor",  
         "destination_key_columns" : ["master_vendor_fk","vendor_fk","vendor_fk","parent_vendor_fk"],
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_vendor_master_pre1" ,
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_master_vendor_pre1" ,
         "source_key_columns" : ["master_vendor_fk","vendor_fk","parent_vendor_fk"],
         "active": 1
                  },
