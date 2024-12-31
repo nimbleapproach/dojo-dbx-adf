@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %pip install cron-converter --quiet
-# MAGIC
-# MAGIC from cron_converter import Cron
-# MAGIC from datetime import datetime
 
 # COMMAND ----------
+
+from cron_converter import Cron
+from datetime import datetime
 
 def get_previous_date(reference_date: datetime, cron) -> datetime:
     cron_instance = Cron(cron, {'output_hashes': True})
