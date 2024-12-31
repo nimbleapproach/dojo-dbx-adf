@@ -30,7 +30,7 @@ There are 2 parts to the load routine:
 # ⚡ARR Data Mapping Process {#arr-data-mapping-process}
 📄nb-orion-process-arr-auto.py (data prep)
 
-This code implements an automated process for mapping and standardizing Annual Recurring Revenue (ARR) attributes across different data sources. Here's the key workflow:
+This code implements an automated process for mapping and standardising Annual Recurring Revenue (ARR) attributes across different data sources. Here's the key workflow:
 
 :::mermaid
 graph TD
