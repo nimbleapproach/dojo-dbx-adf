@@ -23,6 +23,10 @@ ENVIRONMENT
 # COMMAND ----------
 
 
+
+# COMMAND ----------
+
+
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------

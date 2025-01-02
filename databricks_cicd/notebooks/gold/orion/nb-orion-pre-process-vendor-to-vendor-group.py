@@ -43,15 +43,16 @@ schema = 'orion'
 
 # COMMAND ----------
 
-df_vendor_master = spark.table(f"silver_{ENVIRONMENT}.masterdata.vendor_mapping").alias("vm").filter(F.col("sys_silver_iscurrent") == True)
-
+df_vendor_map = spark.table(f"silver_{ENVIRONMENT}.masterdata.vendor_mapping").alias("vm").filter(F.col("sys_silver_iscurrent") == True)
+df_vendor = spark.table(f"{catalog}.{schema}.dim_vendor").alias("v").filter(F.col("is_current") == True)
+df_vendor_group = spark.table(f"{catalog}.{schema}.dim_vendor_group").alias("vg").filter(F.col("is_current") == True)
 
 # COMMAND ----------
 
 # DBTITLE 1,stage Vendor Groups table
 key_cols=["VendorCode", "VendorGroup"]
 order_cols=["Sys_Bronze_InsertDateTime_UTC"]
-df_vendor_to_vendor_group_dq = check_duplicate_keys(df_vendor_master, key_cols, order_cols)
+df_vendor_to_vendor_group_dq = check_duplicate_keys(df_vendor_map, key_cols, order_cols)
 
 # COMMAND ----------
 
@@ -82,7 +83,7 @@ spark.sql(f"""
 """)
 
 
-df_vendor_master_unique = (df_vendor_to_vendor_group_dq
+df_vendor_map_unique = (df_vendor_to_vendor_group_dq
     .filter(F.col('row_number') == 1) 
     .withColumn("Sys_Gold_InsertedDateTime_UTC", to_timestamp(lit('1990-01-01')))
     .withColumn("Sys_Gold_ModifiedDateTime_UTC", to_timestamp(lit('1990-01-01')))
@@ -100,14 +101,24 @@ columns_to_rename = {
     "SID": "local_link_id"
 }
 
-df_vendor_master_unique = rename_columns(df_vendor_master_unique, columns_to_rename)
+df_vendor_map_unique = rename_columns(df_vendor_map_unique, columns_to_rename)
 
 #clean column names
-df_vendor_master_unique = clean_column_names(df_vendor_master_unique)
+df_vendor_map_unique = clean_column_names(df_vendor_map_unique)
+
+# df_vendor_map_with_keys = df_vendor_map_unique.alias("vm")\
+#     .join(df_vendor, ["vendor_code"], "left")\
+#     .join(df_vendor_group, ["vendor_group_code"], "left")\
+#     .select(
+#         "vm.*",
+#         F.col("vendor_pk").alias("vendor_fk"),
+#         F.col("v.source_system_fk").alias("source_system_fk"),
+#         F.col("vendor_group_pk").alias("vendor_group_fk")
+#     )
 
 
 # Then write the data to the table
-(df_vendor_master_unique.write
+(df_vendor_map_unique.write
     .format("delta")
     .mode("overwrite")
     .option("mergeSchema", "true")

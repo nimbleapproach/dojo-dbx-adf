@@ -80,15 +80,7 @@ priority_map = {
     "AE": 12,
     "AT": 13
 }
-df_vendor_to_master_vendor_dq = map_parent_child_keys(df_vendor_with_source, key_cols, order_cols, priority_col, priority_map)
-
-# COMMAND ----------
-
-display(df_vendor_to_master_vendor_dq.orderBy(F.asc("priority")))
-
-# COMMAND ----------
-
-display(df_vendor_to_master_vendor_dq.filter(F.col("vendor_code").isin('INFI BV', 'VAC000018_NNL2')).orderBy(F.asc("priority")))
+df_vendor_to_master_vendor_dq = map_parent_child_keys(df_vendor_with_source, key_cols, order_cols, priority_col, priority_map).alias("vmv")
 
 # COMMAND ----------
 
@@ -133,6 +125,78 @@ columns_to_rename = {
 }
 
 df_vendor_to_master_vendor = rename_columns(df_vendor_to_master_vendor, columns_to_rename)
+
+
+# COMMAND ----------
+
+display(df_with_parent_path)
+
+# COMMAND ----------
+
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+
+# First rename columns as specified
+df_vendor_to_master_vendor = rename_columns(df_vendor_to_master_vendor, columns_to_rename)
+
+# Start with initial DataFrame
+df_with_parents = df_vendor_to_master_vendor \
+    .withColumn("tree_level", F.lit(0))
+
+# Add first parent level
+df_with_parents = df_with_parents \
+    .alias("c") \
+    .join(df_vendor_to_master_vendor.alias("vmv"), 
+          F.col("c.parent_vendor_fk") == F.col("vmv.vendor_fk"),
+          "left") \
+    .select(
+        "c.*",
+        F.col("vmv.vendor_fk").alias("parent_level_1")
+    )
+
+# Add subsequent parent levels
+for i in range(2, 10):  # Get parents up to level 9
+    df_with_parents = df_with_parents \
+        .alias("c") \
+        .join(df_vendor_to_master_vendor.alias("vmv"), 
+              F.col(f"parent_level_{i-1}") == F.col("vmv.vendor_fk"),
+              "left") \
+        .select(
+            "c.*",
+            F.col("vmv.vendor_fk").alias(f"parent_level_{i}")
+        )
+
+# Get the ultimate parent
+final_df = df_with_parents \
+    .withColumn(
+        "master_vendor_fk",
+        F.when(F.col("is_parent"), F.col("vendor_fk"))
+         .otherwise(F.coalesce(
+             *[F.col(f"parent_level_{i}") for i in range(1, 10)][::-1]
+         ))
+    ) \
+    .select(
+        "master_vendor_fk",
+        "vendor_fk",
+        "vendor_code",
+        "vendor_name_internal",
+        "is_parent",
+        "parent_vendor_fk",
+        "Sys_Gold_InsertedDateTime_UTC",
+        "Sys_Gold_ModifiedDateTime_UTC",
+        "source_system_fk",
+        "start_datetime",
+        "end_datetime",
+        "is_current"
+    )
+
+# COMMAND ----------
+
+# display(final_df.filter(F.col("vendor_code") == "1000"))
+# display(final_df)
+
+# COMMAND ----------
+
 
 #clean column names
 df_vendor_to_master_vendor = clean_column_names(df_vendor_to_master_vendor)
