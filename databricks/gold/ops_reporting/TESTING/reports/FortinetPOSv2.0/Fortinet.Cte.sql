@@ -96,7 +96,7 @@ SELECT
 	,EndUserAddress
 	,EndUserZipCode
 	,EndUserCity
-	,1 AS Qty
+	,CAST(1 AS decimal(31,4)) AS Qty
 INTO #fortinet_result
 FROM cte 
 OPTION (MAXRECURSION 10000);

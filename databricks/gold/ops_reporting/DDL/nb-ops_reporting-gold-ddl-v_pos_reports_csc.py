@@ -273,6 +273,11 @@ ncsc.PrimaryVendorId                                                            
     ELSE NULL
   END)                                                                                  AS navision_invoice_date
 , (CASE
+    WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
+          THEN date_format(ifg.CUSTOMERINVOICEDATE, 'dd/MM/yyyy')
+    ELSE NULL
+  END)                                                                                  AS navision_invoice_date2
+, (CASE
     WHEN ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
           THEN ifg.CUSTOMERINVOICEDATE
     ELSE NULL
@@ -281,6 +286,8 @@ ncsc.PrimaryVendorId                                                            
     WHEN ncsc.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
           OR ncsc.PrimaryVendorName  LIKE 'Smart Optics%' -- SmartOptics
           THEN ''
+    WHEN di.PrimaryVendorName LIKE 'WatchGuard%' -- WatchGuard
+          THEN ncsc.CUSTACCOUNT
     ELSE NULL
     END)                                                                                AS nuvias_customer_account
 , (CASE
@@ -511,7 +518,7 @@ ncsc.PrimaryVendorId                                                            
 , (CASE
     WHEN ncsc.PrimaryVendorName LIKE 'Juniper%' AND ncsc.PrimaryVendorID NOT IN ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') -- Juniper
           OR ncsc.PrimaryVendorID = 'VAC000904_NNL2' -- Mist
-          THEN ifg.ResellerAddress2
+          THEN ifg.ResellerAddress3
     ELSE NULL
   END)                                                                                  AS navision_reseller_address3
 , (CASE
@@ -975,7 +982,7 @@ LEFT JOIN exchangerates ex1
       ON ex1.fromcurrency = 'GBP'
       AND ex1.tocurrency = 'EUR'
       AND ex1.StartDate = ifg.CUSTOMERINVOICEDATE
-# MAGIC
+
 WHERE 1 = 1
 AND (
       -- Cambium

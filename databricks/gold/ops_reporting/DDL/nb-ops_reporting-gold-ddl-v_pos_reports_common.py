@@ -15,6 +15,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC USE SCHEMA ops_reporting;
 
 # COMMAND ----------
+
 spark.sql(f"""
 CREATE OR REPLACE VIEW v_pos_reports_common AS
 WITH sales_data as (
@@ -177,6 +178,7 @@ ngs_inventory as
 SELECT DISTINCT
   (CASE
     WHEN di.PrimaryVendorName LIKE 'WatchGuard%' THEN it.datefinancial -- WatchGuard
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN ct.invoicedate -- Cambium
     ELSE it.datephysical
     END)                                                              AS report_date
 , (CASE
@@ -246,6 +248,7 @@ SELECT DISTINCT
             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
             OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
             OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
+            OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
             THEN s.sag_resellervendorid
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN ''   -- Sophos
     ELSE NULL
@@ -272,7 +275,7 @@ SELECT DISTINCT
     END)                                                              AS quantity
 , (CASE
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
-    THEN array_join(array_sort(collect_set(it.INVENTSERIALID) over (partition by s.SALESID, it.ItemID, it.INVENTTRANSID, s.DATAAREAID)), ' ,') -- Sophos
+    THEN array_join(array_sort(collect_set(it.INVENTSERIALID) over (partition by s.SALESID, it.ItemID, it.INVENTTRANSID, s.DATAAREAID)), ', ') -- Sophos
     ELSE NULL
     END)                                                              AS serial_numbers --- TO DO
 , (CASE
@@ -456,9 +459,9 @@ SELECT DISTINCT
     END)                                                              AS ship_to_name
 , (CASE
     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%'  -- AddOn
+            OR di.PrimaryVendorName LIKE 'WatchGuard%'   -- WatchGuard
           THEN ad.COUNTRYREGIONID
-    WHEN di.PrimaryVendorName LIKE 'WatchGuard%'   -- WatchGuard
-          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
           OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
           OR di.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
@@ -557,7 +560,7 @@ SELECT DISTINCT
             OR di_ic.PrimaryVendorID IN ('VAC001208_NGS1', 'VAC001208_NNL2') -- Jabil v1.2 External
             THEN s.sag_euaddress_street1
     WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' -- Nokia
-            THEN s.sag_euaddress_street1
+            THEN CONCAT(s.sag_euaddress_street1, ' ', s.sag_euaddress_street2, ' ', s.sag_euaddress_city)
     ELSE NULL
     END)                                                              AS end_customer_address1
 , (CASE
@@ -632,14 +635,14 @@ SELECT DISTINCT
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
             OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-            THEN SPLIT(s.sag_euaddress_contact,' ')[0]
+            THEN SUBSTRING(s.sag_euaddress_contact, 1, POSITION(' ' IN s.sag_euaddress_contact) - 1)
     ELSE NULL
     END)                                                              AS end_customer_contact_first_name
 , (CASE
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') -- Sophos
             OR di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
             OR di.PrimaryVendorID IN ('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
-            THEN SPLIT(s.sag_euaddress_contact,' ')[1]
+            THEN SUBSTRING(s.sag_euaddress_contact, POSITION(' ' IN s.sag_euaddress_contact) + 1, LENGTH(s.sag_euaddress_contact))
     ELSE NULL
     END)                                                              AS end_customer_contact_last_name
 , (CASE
@@ -671,7 +674,7 @@ SELECT DISTINCT
           THEN it.inventserialid
     WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
           OR ((di_ic.PrimaryVendorID LIKE 'VAC000904_%') OR (di_ic.PrimaryVendorID LIKE 'VAC001110_%')) -- Mist
-          THEN UPPER(it.inventserialid)
+          THEN LEFT(UPPER(it.inventserialid),30)
     ELSE NULL
     END)                                                              AS serial_number
 , (CASE
@@ -689,7 +692,11 @@ SELECT DISTINCT
           THEN s.salesid
     ELSE NULL
     END)                                                              AS d365_sales_order_number
-, 'Infinigate Global Services Ltd'                                    AS distributor_name
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
+          THEN 'Infinigate Global Services'
+    ELSE 'Infinigate Global Services Ltd'
+    END)                                                              AS distributor_name
 , (CASE
     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
           OR di.PrimaryVendorID IN ('VAC001044_NGS1') -- Extreme
@@ -788,7 +795,6 @@ SELECT DISTINCT
     END)                                                              AS purchase_extended_price
 , (CASE
     WHEN di_ic.PrimaryVendorName LIKE 'Prolabs%' THEN (sp.purchprice_intercomp - s.sag_purchprice) * (-1 * it.qty)  -- AddOn
-    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN null -- Extreme
     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
            THEN (CASE
                     WHEN di_ic.PrimaryVendorID LIKE 'VAC001014%' THEN (s.sag_vendorstandardcost - s.sag_purchprice) * ct.qty
@@ -796,6 +802,10 @@ SELECT DISTINCT
                 END)
     ELSE NULL
     END)                                                              AS claim_amount
+, (CASE
+    WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN '' -- Extreme
+    ELSE NULL
+    END)                                                              AS amount
 , di.primaryvendorid                                                  AS vendor_id
 , di.primaryvendorname                                                AS vendor_name
 , (CASE
@@ -841,9 +851,11 @@ SELECT DISTINCT
     END)                                                              AS extended_price_for_this_deal
 , (CASE
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN NULL -- Sophos
-    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN NULL -- Nokia
+    -- WHEN di_ic.PrimaryVendorName LIKE 'Nokia%' THEN NULL -- Nokia
     WHEN di.PrimaryVendorID IN('VAC001388_NGS1') THEN NULL -- Yubico
     WHEN di.PrimaryVendorID IN ('VAC001044_NGS1') THEN NULL -- Extreme
+    WHEN ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) THEN NULL -- Juniper
+    WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') THEN ct.recid -- Cambium
     ELSE it.recid
     END)                                                              AS transaction_record_id
 , (CASE
@@ -929,8 +941,9 @@ SELECT DISTINCT
     END)                                                              AS custom2
 , (CASE
     WHEN di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
-            OR di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
             THEN (CASE WHEN ct.currencycode = 'USD' THEN 1 ELSE IFNULL(ex.rate, ex2.rate) END)
+    WHEN di.PrimaryVendorName LIKE 'Smart Optics%' -- SmartOptics
+            THEN (CASE WHEN s.currencycode = 'USD' THEN 1 ELSE IFNULL(ex.rate, ex2.rate) END)
     END)                                                              AS exchange_rate
 , (CASE
     WHEN di_ic.PrimaryVendorName LIKE 'Fortinet%' -- Fortinet
@@ -1051,6 +1064,7 @@ SELECT DISTINCT
     END)                                                              AS snwl_pn_sku
 , (CASE
     WHEN di.PrimaryVendorID IN('VAC001400_NGS1', 'VAC001401_NGS1', 'VAC001443_NGS1', 'VAC001400_NNL2', 'VAC001401_NNL2', 'VAC001443_NNL2') -- SonicWall
+          OR ((di_ic.PrimaryVendorName LIKE 'Juniper%') AND (di_ic.PrimaryVendorID NOT IN ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2'))) -- Juniper
           THEN it.inventtransid
     ELSE NULL
     END)                                                              AS invent_trans_id
@@ -1163,7 +1177,17 @@ SELECT DISTINCT
     ON cu.customeraccount = s.custaccount
    AND cu.dataareaid = s.dataareaid
   LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_customerpostaladdressstaging WHERE Sys_Silver_IsCurrent = 1 AND ISPRIMARY = 1) pa
-    ON pa.CUSTOMERACCOUNTNUMBER = s.INVOICEACCOUNT
+    ON (  
+          (
+            di_ic.PrimaryVendorName LIKE 'Fortinet%'
+            AND pa.CUSTOMERACCOUNTNUMBER = s.CUSTACCOUNT
+          )
+          OR
+          (
+            di_ic.PrimaryVendorName NOT LIKE 'Fortinet%'
+            AND pa.CUSTOMERACCOUNTNUMBER = s.INVOICEACCOUNT
+          )
+        )
   LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_sag_logisticspostaladdressbasestaging WHERE Sys_Silver_IsCurrent = 1) ad
     ON ad.ADDRESSRECID = s.DELIVERYPOSTALADDRESS
   LEFT JOIN (SELECT * FROM silver_{ENVIRONMENT}.nuav_prod_sqlbyod.dbo_logisticsaddresscountryregionstaging WHERE Sys_Silver_IsCurrent = 1) b
@@ -1175,14 +1199,39 @@ SELECT DISTINCT
    AND ct.dataareaid NOT IN ('NGS1' ,'NNL2')
    AND di.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2')
   LEFT JOIN exchangerates ex
-    ON ex.startdate = TO_DATE(it.datephysical)
-   AND ex.tocurrency = s.currencycode
-   AND ex.fromcurrency = 'USD'
+    ON  (
+          di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+          AND ex.startdate = TO_DATE(ct.invoicedate)
+          AND ex.tocurrency = s.currencycode
+          AND ex.fromcurrency = 'USD'
+        ) 
+    OR  (
+          (
+              di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+              OR di.PrimaryVendorName LIKE 'Smart Optics%' --SmartOptics
+          )
+          AND ex.startdate = TO_DATE(it.datephysical)
+          AND ex.tocurrency = s.currencycode
+          AND ex.fromcurrency = 'USD'
+        )
   LEFT JOIN exchangerates ex2
-    ON ex2.startdate = TO_DATE(it.datephysical)
-   AND ex2.fromcurrency = s.currencycode
-   AND ex2.fromcurrency = 'GBP'
-   AND ex2.tocurrency = 'USD'
+    ON (
+        di_ic.PrimaryVendorID IN ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') -- Cambium
+        AND ex2.startdate = TO_DATE(ct.invoicedate)
+        AND ex2.fromcurrency = s.currencycode
+        AND ex2.fromcurrency = 'GBP'
+        AND ex2.tocurrency = 'USD'
+        )
+    OR (
+        (
+            di_ic.PrimaryVendorName LIKE 'Prolabs%' -- AddOn
+            OR di.PrimaryVendorName LIKE 'Smart Optics%' --SmartOptics
+        )
+        AND ex2.startdate = TO_DATE(it.datephysical)
+        AND ex2.fromcurrency = s.currencycode
+        
+        AND ex2.tocurrency = 'USD'
+        )
   LEFT JOIN exchangerates ex3
     ON ex3.startdate = TO_DATE(it.datephysical)
    AND ex3.fromcurrency = 'GBP'
