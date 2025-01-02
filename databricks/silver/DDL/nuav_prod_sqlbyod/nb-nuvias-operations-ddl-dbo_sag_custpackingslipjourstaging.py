@@ -15,30 +15,23 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR REPLACE TABLE dbo_sag_custpackingslipjourstaging
+# MAGIC create or replace table dbo_sag_custpackingslipjourstaging
 # MAGIC   (
-# MAGIC     SID BIGINT GENERATED ALWAYS AS IDENTITY
-# MAGIC       COMMENT 'Surrogate Key'
-# MAGIC   , RECID BIGINT
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , PACKINGSLIPID STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
-# MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
-# MAGIC   , Sys_Silver_InsertDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry landed in silver.'
-# MAGIC   , Sys_Silver_ModifedDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
-# MAGIC   , Sys_Silver_HashKey BIGINT NOT NULL
-# MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC   , Sys_Silver_IsCurrent BOOLEAN
-# MAGIC   , CONSTRAINT dbo_sag_custpackingslipjourstaging_pk PRIMARY KEY(RECID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC     SID                             bigint generated always as identity        comment 'Surrogate Key'
+# MAGIC   , recid                           bigint                                     comment 'TODO'
+# MAGIC   , packingslipid                   string                                     comment 'TODO'
+# MAGIC   , dataareaid                      string                                     comment 'Identifier for the data area'
+# MAGIC   , sag_trackingnumber              string                                     comment 'Tracking number for the shipment'
+# MAGIC   , intercompanycompanyid           string                                     comment 'Identifier for the intercompany company'
+# MAGIC   , Sys_Bronze_InsertDateTime_UTC   timestamp                                  comment 'The timestamp when this entry landed in bronze.'
+# MAGIC   , Sys_Silver_InsertDateTime_UTC   timestamp      default current_timestamp() comment 'The timestamp when this entry landed in silver.'
+# MAGIC   , Sys_Silver_ModifedDateTime_UTC  timestamp      default current_timestamp() comment 'The timestamp when this entry was last modifed in silver.'
+# MAGIC   , Sys_Silver_HashKey              bigint         not null                    comment 'HashKey over all but Sys columns.'
+# MAGIC   , Sys_Silver_IsCurrent            boolean
+# MAGIC   , constraint dbo_sag_custpackingslipjourstaging_pk primary key(recid, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the data from dbo_sag_custpackingslipjourstaging. \n'
-# MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
+# MAGIC comment 'This table contains the data from dbo_sag_custpackingslipjourstaging.'
+# MAGIC tblproperties ('delta.feature.allowColumnDefaults' = 'supported');
 
 # COMMAND ----------
 

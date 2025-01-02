@@ -18,10 +18,10 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC create or replace table t_pos_reports_csc as select * from v_pos_reports_csc;
+# MAGIC create or replace table t_reports_outbound_shipments as select * from v_reports_outbound_shipments;
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE t_pos_reports_csc OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE t_reports_outbound_shipments OWNER TO `az_edw_data_engineers_ext_db`
