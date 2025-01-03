@@ -118,7 +118,7 @@ resources:
             - task_key: platinum_globaltransactions
           run_if: ALL_DONE
           run_job_task:
-            job_name: inf_edw_model_job_product_vendor_arr
+            job_id: ${resources.jobs.inf_edw_model_job_product_vendor_arr.id}
         - task_key: test_globaltransactions
           depends_on:
             - task_key: process_arr
