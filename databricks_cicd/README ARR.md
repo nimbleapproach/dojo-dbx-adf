@@ -3,7 +3,7 @@
 ## Summary 
 There are 2 parts to the load routine:
 1. [⚡ ARR Data Mapping Process](#arr-data-mapping-process)
-   - Standardizes SKU and vendor data
+   - Standardises SKU and vendor data
    - Maps local SKUs to manufacturer SKUs
    - Handles automated and manual mappings
    - Maintains match type classifications (auto/child/manual)
@@ -11,7 +11,7 @@ There are 2 parts to the load routine:
 2. [🔄 Global Transactions Update](#global-transactions-update)
    - Processes transaction data with mapped ARR attributes
    - Multiple match passes (exact & fuzzy)
-   - Updates transactions with standardized:
+   - Updates transactions with standardised:
      - Product types
      - Duration values
      - Billing frequencies
@@ -30,9 +30,9 @@ There are 2 parts to the load routine:
 # ⚡ARR Data Mapping Process {#arr-data-mapping-process}
 📄nb-orion-process-arr-auto.py (data prep)
 
-This code implements an automated process for mapping and standardizing Annual Recurring Revenue (ARR) attributes across different data sources. Here's the key workflow:
+This code implements an automated process for mapping and standardising Annual Recurring Revenue (ARR) attributes across different data sources. Here's the key workflow:
 
-```mermaid
+:::mermaid
 graph TD
     A[Raw Sales Data] --> B[SKU Vendor Processing]
     B --> C[Vendor Group Processing]
@@ -40,7 +40,7 @@ graph TD
     D --> E[Local SKU Mapping]
     E --> F[Manual ARR Integration]
     F --> G[Final ARR Table]
-```
+:::
 
 ## Key Processing Steps
 
@@ -86,20 +86,20 @@ ARR Data Processing and Matching System
 
 📄nb-orion-process-arr.py (matching)
 
-```mermaid
+:::mermaid
 graph TD
     A[Input ARR Data] --> B[Match SKU & Vendor]
     B --> C1[Exact Match Pass]
     C1 --> C2[Fuzzy Match Pass]
     C2 --> D[Update Transaction Records]
     D --> E[Compare with OBT Data]
-```
+:::
 
 ## Core Components
 
 7. **Data Preparation**
 - Transform ARR attributes 
-- Standardize vendor names
+- Standardise vendor names
 - Clean SKU formats
 
 8. **Match Strategy**

@@ -35,9 +35,17 @@ variables:
     default: "kv-ig-westeurope" # default secret scope for infinigate dev
   
   existing_cluster_id:
-    # In 
     description: "Databricks used for the workflows"
     default: "0801-073207-ifiio15" # default  
+  existing_silver_pool_id:
+    description: "Databricks used for the silver workflows"
+    default: "0928-091049-ochre136-pool-joos2i7m" # default silver pool
+  existing_gold_pool_id:
+    description: "Databricks used for the gold workflows"
+    default: "1012-074738-map10-pool-n9xi00j6" # default gold pool
+  existing_sqlwarehouse_id:
+    description: "SQL Warehouse used for the workflows"
+    default: "b9e87a9bba49e4ae" # default silver pool
 
 targets:
   manual:
@@ -69,6 +77,9 @@ targets:
         level: CAN_MANAGE
     variables: 
       existing_cluster_id: "1216-133954-8hl7aeag"
+      existing_silver_pool_id: :"1214-142409-tins207-pool-xydaktwy"
+      existing_gold_pool_id: :"1214-142437-cramp208-pool-ozomc2b6"
+      existing_sqlwarehouse_id: "757a6e5552e30f16"
     
 
   prod:
@@ -83,4 +94,7 @@ targets:
         level: CAN_MANAGE
     variables: 
       existing_cluster_id: "1216-134132-rttgeb5l"
+      existing_silver_pool_id: :"0105-094342-lap253-pool-ax8orq2a"
+      existing_gold_pool_id: :"0105-094238-yawns255-pool-in0xryl2"
+      existing_sqlwarehouse_id: "757a6e5552e30f16"
     

@@ -625,7 +625,12 @@ df_arr_auto = df_arr_auto.replace({'NaN': None})
 # display(df_arr_auto)
 
 # First, enable the allowColumnDefaults feature
-# spark.sql(f"ALTER TABLE {catalog}.{schema}.arr_auto_stg SET TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')")
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.arr_auto_stg 
+    USING delta
+    TBLPROPERTIES('delta.feature.allowColumnDefaults' = 'supported')
+""")
+
 
 # Write the cleaned DataFrame to Delta table
 df_arr_auto.write \
