@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS {catalog}.{schema}.fact_sales_transaction_ig (
   currency_fk BIGINT,
   reseller_fk BIGINT,
   vendor_fk BIGINT,
-  --entity_fk BIGINT,
+  entity_fk BIGINT,
   Sys_Gold_FactProcessedDateTime_UTC TIMESTAMP
   )
 USING delta

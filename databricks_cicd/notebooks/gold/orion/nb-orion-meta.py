@@ -310,14 +310,39 @@ common_dimension_columns = [
 # COMMAND ----------
 
 def match_dimensions(df_data_to_match, df_shared_dimension_data):
+    """Not used. Match Names between 2 dataframes
+
+        Args:
+            df_data_to_match (df): Contains the Name and ID to match to a master.
+            df_shared_dimension_data (df): Contains the master Name, which needs to be used.
+
+        Returns:
+            df
+
+        # Add a section detailing what errors might be raised
+        Raises:
+            None: None
+    """
     # stub function to run this process locally in the notebooks to simulate the matching process until it is written
     # each dataframe should have an "id" column and a "name" column - strict rules
-
     output_df = df_shared_dimension_data.join(df_data_to_match, df_data_to_match.name == df_shared_dimension_data.name, how="inner").drop(df_data_to_match.id)
     return output_df
 
 # COMMAND ----------
 def clear_tables(type,data):
+    """Delete and Vacuum delta tables
+
+        Args:
+            type (str): Contains the type of objects from config.
+            data (dict): Contains the config which lists the type and names of the destination tables to be cleared.
+
+        Returns:
+            None
+
+        # Add a section detailing what errors might be raised
+        Raises:
+            None: None
+    """
     processed_tables=[] # a list to hold the table names of the ones processed already within this type - avoids doing the same table twice
     active_objects = {key: value for key, value in data.items() if value.get("active") == 1 and value.get("type") == type}
     for key, value in active_objects.items():
@@ -333,3 +358,24 @@ def clear_tables(type,data):
             spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = false")
             spark.sql(f"VACUUM {table_name} RETAIN 0 HOURS")
             spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = true")
+
+
+def reset_fact_delta_timestamp(catalog,orion_schema):
+    """Reset the fact_delta_timestamp table back to 2000-01-01 to cause a full fact refresh
+
+        Args:
+            type (str): Contains the type of objects from config.
+            data (dict): Contains the config which lists the type and names of the destination tables to be cleared.
+
+        Returns:
+            None
+
+        # Add a section detailing what errors might be raised
+        Raises:
+            None: None
+    """
+    # now we have to clear down the fact_delta_timestamp table to allow facts to be re-processed as the timestamp in here
+    # is used in the fact views to select fact records > max_transaction_line_timestamp.  Hence remove all timestamps > 2000-01-01
+    # This will cause a full refresh of the fact table
+    spark.sql(f"Delete From {catalog}.{orion_schema}.fact_delta_timestamp Where max_transaction_line_timestamp >CAST('2000-01-01' AS TIMESTAMP)")
+    df=spark.sql(f"SELECT * FROM {catalog}.{orion_schema}.fact_delta_timestamp") 
