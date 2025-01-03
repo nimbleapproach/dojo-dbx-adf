@@ -253,7 +253,7 @@ SELECT DISTINCT
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN ''   -- Sophos
     ELSE NULL
     END)                                                              AS partner_id
-, (CASE
+, CAST((CASE
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2') THEN SUM(-1* it.qty) OVER(
       PARTITION BY s.salesid, it.datephysical, di.itemname, s.inventtransid, s.dataareaid,
       s.purchorderformnum, s.currencycode, pa.addressdescription, CONCAT_WS(', ',SPLIT(pa.addressstreet,'\n')[0],SPLIT(pa.addressstreet,'\n')[1]),
@@ -272,7 +272,7 @@ SELECT DISTINCT
           /* s.SAG_CREATEDDATETIME should be added also when it will be added to view*/
           )
     ELSE (-1* it.qty)
-    END)                                                              AS quantity
+    END) as BIGINT)                                                             AS quantity
 , (CASE
     WHEN di.PrimaryVendorID IN ('VAC001461_NGS1', 'VAC001461_NNL2')
     THEN array_join(array_sort(collect_set(it.INVENTSERIALID) over (partition by s.SALESID, it.ItemID, it.INVENTTRANSID, s.DATAAREAID)), ', ') -- Sophos
