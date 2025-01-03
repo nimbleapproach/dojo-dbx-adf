@@ -354,3 +354,33 @@ resources:
               wg_tableName: ora_oracle_opportunities
             source: WORKSPACE
           existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: ara_so_po_id_list
+          depends_on:
+            - task_key: dbo_custcustomerv3staging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prodtrans_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: ara_so_po_id_list
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_ecoresproductv2staging
+          depends_on:
+            - task_key: dbo_custcustomerv3staging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prodtrans_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_ecoresproductv2staging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}

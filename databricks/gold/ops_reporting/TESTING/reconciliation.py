@@ -129,10 +129,18 @@ databricks_table = (spark.read
 rounding = {}
 for col_name, col_type in databricks_table.dtypes:
     if col_type.startswith('decimal'):
-        rounding[col_name] = round(col_name, ROUND_POSITIONS)
+        rounding[col_name] = ceil(col_name, ROUND_POSITIONS)
+
+trimming = {}
+for col_name, col_type in databricks_table.dtypes:
+    if col_type.startswith('string'):
+        trimming[col_name] = trim(col_name)
 
 if len(rounding) > 0:
     databricks_table = databricks_table.withColumns(rounding)
+
+if len(trimming) > 0:
+    databricks_table = databricks_table.withColumns(trimming)
 
 print(f"DataBricks result (first {HEAD_SIZE}):")
 databricks_table.toPandas().head(HEAD_SIZE)
@@ -160,10 +168,13 @@ remote_table = (spark.read
                 # .select(limited_columns_in_scope)
                 .fillna("").fillna(0).fillna(False)
                 # .withColumn("hash_", xxhash64(*columns_in_scope))
-                )
+                ).cache()
 
 if len(rounding) > 0:
     remote_table = remote_table.withColumns(rounding)
+
+if len(trimming) > 0:
+    remote_table = remote_table.withColumns(trimming)
 
 print(f"SSRS result (first {HEAD_SIZE}):")
 remote_table.toPandas().head(HEAD_SIZE)
@@ -189,3 +200,19 @@ databricks_table.subtract(remote_table).toPandas().head(HEAD_SIZE)
 
 print(f"Missing records in SSRS (first {HEAD_SIZE})")
 remote_table.subtract(databricks_table).toPandas().head(HEAD_SIZE)
+
+# COMMAND ----------
+
+databricks_table.exceptAll(remote_table).display()
+
+# COMMAND ----------
+
+remote_table.exceptAll(databricks_table).display()
+
+# COMMAND ----------
+
+remote_table.filter("serial_number = '1EA2D482NSH'").display()
+
+# COMMAND ----------
+
+databricks_table.filter("serial_number = '1EA2D482NSH'").display()

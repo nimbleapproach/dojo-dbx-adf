@@ -15,32 +15,31 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR REPLACE TABLE dbo_sag_custpackingsliptransstaging
+# MAGIC create or replace table dbo_sag_custpackingsliptransstaging
 # MAGIC   (
-# MAGIC     SID BIGINT GENERATED ALWAYS AS IDENTITY
-# MAGIC       COMMENT 'Surrogate Key'
-# MAGIC   , RECID BIGINT
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , INVENTTRANSID STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , PACKINGSLIPID STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
-# MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
-# MAGIC   , Sys_Silver_InsertDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry landed in silver.'
-# MAGIC   , Sys_Silver_ModifedDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
-# MAGIC   , Sys_Silver_HashKey BIGINT NOT NULL
-# MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC   , Sys_Silver_IsCurrent BOOLEAN
-# MAGIC   , CONSTRAINT dbo_sag_custpackingsliptransstaging_pk PRIMARY KEY(RECID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC     SID                               bigint       generated always as identity    comment 'Surrogate Key'
+# MAGIC   , recid                             bigint                                       comment 'TODO'
+# MAGIC   , inventtransid                     string                                       comment 'TODO'
+# MAGIC   , packingslipid                     string                                       comment 'TODO'
+# MAGIC   , dataareaid                        string                                       comment 'Identifier for the data area'
+# MAGIC   , deliverydate                      timestamp                                    comment 'The date on which the delivery is scheduled to be made.'
+# MAGIC   , dlvterm                           string                                       comment 'Delivery term code'
+# MAGIC   , origsalesid                       string                                       comment 'The original sales ID associated with the transaction.'
+# MAGIC   , salesid                           string                                       comment 'Unique identifier for a sales transaction'
+# MAGIC   , itemid                            string                                       comment 'Identifier for the item'
+# MAGIC   , qty                               decimal(32,6)                                comment 'Quantity of items'
+# MAGIC   , weight                            decimal(32,12)                               comment 'The weight of the item in a specific unit of measurement.'
+# MAGIC   , inventdimid                       string                                       comment 'Identifier for the inventory dimension of the item'
+# MAGIC   , Sys_Bronze_InsertDateTime_UTC     timestamp                                    comment 'The timestamp when this entry landed in bronze.'
+# MAGIC   , Sys_Silver_InsertDateTime_UTC     timestamp   default current_timestamp()      comment 'The timestamp when this entry landed in silver.'
+# MAGIC   , Sys_Silver_ModifedDateTime_UTC    timestamp   default current_timestamp()      comment 'The timestamp when this entry was last modifed in silver.'
+# MAGIC   , Sys_Silver_HashKey                bigint      not null                         comment 'HashKey over all but Sys columns.'
+# MAGIC   , Sys_Silver_IsCurrent              boolean
+# MAGIC    , constraint dbo_sag_custpackingsliptransstaging_pk primary key(recid, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the data from dbo_sag_custpackingsliptransstaging. \n'
-# MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
+# MAGIC comment 'This table contains the data from dbo_sag_custpackingsliptransstaging.'
+# MAGIC tblproperties ('delta.feature.allowColumnDefaults' = 'supported');
+# MAGIC
 
 # COMMAND ----------
 

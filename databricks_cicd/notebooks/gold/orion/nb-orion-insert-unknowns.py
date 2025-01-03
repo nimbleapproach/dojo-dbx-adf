@@ -24,9 +24,8 @@ schema = 'orion'
 
 
 # COMMAND ----------
-# 5/12 - commented outreporting_source_database, data_area_id,
 # SOURCE SYSTEM 
-# Now do the insert for DIM source system as the default members need 1 default member per source system
+# Now do the insert for DIM source system as the default members need 1 default member per source system per source entity
 spark.sql(f"""insert into {catalog}.{schema}.dim_source_system (
   source_system,source_database,source_entity,
   --reporting_source_database, data_area_id, 
@@ -45,7 +44,7 @@ where not exists (select 1 from {catalog}.{schema}.dim_source_system s where s.s
 # COMMAND ----------
 
 # DOCUMENT
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system per document source
 sqldf = spark.sql(f"""
 with cte_sources as 
 (
@@ -80,7 +79,7 @@ WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_document v WHERE v.local_
 # COMMAND ----------
 
 # PRODUCT
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system per line item type
 sqldf= spark.sql(f"""
 with cte_sources as 
 (
@@ -118,7 +117,7 @@ WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_product v WHERE v.product
 # COMMAND ----------
 
 # RESELLER
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system
 sqldf= spark.sql(f"""
 with cte_sources as 
 (
@@ -143,7 +142,7 @@ WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_reseller v WHERE v.resell
 # COMMAND ----------
 
 # VENDOR
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system
 sqldf= spark.sql(f"""
 with cte_sources as 
 (

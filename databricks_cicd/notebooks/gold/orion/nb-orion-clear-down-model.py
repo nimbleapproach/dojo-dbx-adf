@@ -12,14 +12,14 @@ replacements = {
 data = read_and_replace_json(file_path, replacements)
 
 # order of deletes - link tables, fact tables, dim tables
-# link tables remove all
+# link tables clear all
 clear_tables('link',data)
-# fact tables remove all
+# fact tables clear all
 clear_tables('fact',data) 
-# dim tables remove where _pk > 0
+# dim tables clear where _pk > 0
 clear_tables('dim',data)
 
-#now we have to clear down the fact_delta_timestamp table to allow facts to be re-processed
-spark.sql(f"Delete From {catalog}.{orion_schema}.fact_delta_timestamp  Where max_transaction_line_timestamp >CAST('2000-01-01' AS TIMESTAMP)")
-df=spark.sql(f"SELECT * FROM {catalog}.{orion_schema}.fact_delta_timestamp")
-#df.display()
+# now we have to clear down the fact_delta_timestamp table to allow facts to be re-processed as the timestamp in here
+# is used in the fact views to select fact records > max_transaction_line_timestamp.  Hence remove all timestamps > 2000-01-01
+# This will cause a full refresh of the fact table
+reset_fact_delta_timestamp(catalog,orion_schema)

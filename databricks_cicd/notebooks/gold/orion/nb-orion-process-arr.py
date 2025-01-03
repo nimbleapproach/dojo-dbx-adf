@@ -23,6 +23,10 @@ ENVIRONMENT
 # COMMAND ----------
 
 
+
+# COMMAND ----------
+
+
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
@@ -731,11 +735,6 @@ result = udf_run_match(
 
 # COMMAND ----------
 
-df_orion.printSchema()
-# GP1_Euro: decimal(38,14) (nullable = true)
-
-# COMMAND ----------
-
 df_orion = spark.table(f"{catalog}.{schema}.globaltransactions_auto")
 df_final = spark.table(f"{catalog}.{schema}.globaltransactions_arr") 
 
@@ -754,6 +753,13 @@ if full_year_process == 2:
 
 elif full_year_process==1:    
     year = month_period_process.split('-')[0] if '-' in month_period_process else month_period_process
+     # Using SQL
+    spark.sql(f"""
+        DELETE FROM {catalog}.{schema}.globaltransactions_arr 
+        WHERE date_format(TransactionDate, 'yyyy') >= '{year}'
+    """)
+
+    
      # Using SQL
     spark.sql(f"""
         DELETE FROM {catalog}.{schema}.globaltransactions_arr 
@@ -824,6 +830,109 @@ df_orion.write \
     .format("delta") \
     .option("mergeSchema", "false") \
     .saveAsTable(f"{catalog}.{schema}.globaltransactions_arr")
+
+# COMMAND ----------
+
+# DBTITLE 1,replace the platinum global transaction table
+# so that downstream layers are unaffected by this new feature we can overwrite the platinum table with the orion.globaltransactions_arr table. if you wish to revert back to the original table one can ignore this step
+spark.sql(f"""
+          TRUNCATE TABLE platinum_{ENVIRONMENT}.obt.globaltransactions
+          """)
+
+spark.sql(f"""
+INSERT INTO platinum_{ENVIRONMENT}.obt.globaltransactions (
+    GroupEntityCode,
+    EntityCode,
+    DocumentNo,
+    TransactionDate,
+    SalesOrderDate,
+    SalesOrderID,
+    SalesOrderItemID,
+    SKUInternal,
+    SKUMaster,
+    Description,
+    Technology,
+    ProductTypeInternal,
+    VendorCode,
+    VendorNameInternal,
+    VendorNameMaster,
+    VendorGeography,
+    VendorStartDate,
+    ResellerCode,
+    ResellerNameInternal,
+    ResellerGeographyInternal,
+    ResellerStartDate,
+    ResellerGroupCode,
+    ResellerGroupName,
+    ResellerGroupStartDate,
+    EndCustomer,
+    IndustryVertical,
+    CurrencyCode,
+    RevenueAmount,
+    Period_FX_rate,
+    RevenueAmount_Euro,
+    GP1,
+    GP1_Euro,
+    COGS,
+    COGS_Euro,
+    GL_Group,
+    TopCostFlag,
+    ProductTypeMaster,
+    CommitmentDuration1Master,
+    CommitmentDuration2Master,
+    BillingFrequencyMaster,
+    ConsumptionModelMaster,
+    matched_arr_type,
+    matched_type,
+    is_matched
+)
+SELECT 
+    GroupEntityCode,
+    EntityCode,
+    DocumentNo,
+    TransactionDate,
+    SalesOrderDate,
+    SalesOrderID,
+    SalesOrderItemID,
+    SKUInternal,
+    SKUMaster,
+    Description,
+    Technology,
+    ProductTypeInternal,
+    VendorCode,
+    VendorNameInternal,
+    VendorNameMaster,
+    VendorGeography,
+    VendorStartDate,
+    ResellerCode,
+    ResellerNameInternal,
+    ResellerGeographyInternal,
+    ResellerStartDate,
+    ResellerGroupCode,
+    ResellerGroupName,
+    ResellerGroupStartDate,
+    EndCustomer,
+    IndustryVertical,
+    CurrencyCode,
+    RevenueAmount,
+    Period_FX_rate,
+    RevenueAmount_Euro,
+    GP1,
+    GP1_Euro,
+    COGS,
+    COGS_Euro,
+    GL_Group,
+    TopCostFlag,
+    ProductTypeMaster,
+    CommitmentDuration1Master,
+    CommitmentDuration2Master,
+    BillingFrequencyMaster,
+    ConsumptionModelMaster,
+    matched_arr_type,
+    matched_type,
+    is_matched
+FROM {catalog}.{schema}.globaltransactions_arr
+""")
 
 # COMMAND ----------
 

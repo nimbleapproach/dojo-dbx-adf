@@ -1,0 +1,186 @@
+resources:
+  jobs:
+    inf_Silver_to_Gold_obt:
+      name: inf_Silver_to_Gold_obt
+      email_notifications:
+        on_failure:
+          - ${var.email_team_notification}
+          - ${var.email_mailbox_notification}
+        no_alert_for_skipped_runs: false
+      permissions:
+        - group_name: users
+          level: CAN_MANAGE_RUN
+      tasks:
+        - task_key: datanowarr
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-gold-datanowarr
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: infinigate_step1
+          depends_on:
+            - task_key: datanowarr
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-infinigate
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: infinigate_step2
+          depends_on:
+            - task_key: infinigate_step1
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-gold-infinigate_globaltransactions_cost_adjusted
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: nuvias
+          depends_on:
+            - task_key: infinigate_step2
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-nuvias
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: deltalink
+          depends_on:
+            - task_key: nuvias
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-deltalink
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: netsafe
+          depends_on:
+            - task_key: deltalink
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-netsafe
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: dcb
+          depends_on:
+            - task_key: netsafe
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-dcb
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: starlink
+          depends_on:
+            - task_key: dcb
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-starlink
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: cloud_distribution
+          depends_on:
+            - task_key: starlink
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-cloud_distribution
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: vuzion_monthly
+          depends_on:
+            - task_key: cloud_distribution
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-vuzion_monthly
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: d2b
+          depends_on:
+            - task_key: vuzion_monthly
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-silver-to-gold-d2b
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: exchange_rate
+          depends_on:
+            - task_key: d2b
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/LOADING/nb-obt-gold-exchange_rate
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: platinum_globaltransactions
+          depends_on:
+            - task_key: exchange_rate
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/platium/obt/LOADING/nb-obt-platinum-globaltransactions
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        
+        - task_key: process_arr
+          depends_on:
+            - task_key: platinum_globaltransactions
+          run_if: ALL_DONE
+          run_job_task:
+            job_name: inf_edw_model_job_product_vendor_arr
+        - task_key: test_globaltransactions
+          depends_on:
+            - task_key: process_arr
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/TESTING/nb-gold-testing-obt
+            source: WORKSPACE
+          job_cluster_key: job-cluster-gold-memory-optimized-photon
+        - task_key: refresh_globaltransactions_monitoring
+          depends_on:
+            - task_key: test_globaltransactions
+          sql_task:
+            dashboard:
+              dashboard_id: 55ca7c24-89fa-49f6-a7c9-6de59ae4137f
+            warehouse_id: ${var.existing_sqlwarehouse_id}
+        - task_key: refresh_powerbi_dataset
+          depends_on:
+            - task_key: test_globaltransactions
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/powerbi/nb-powerbi-obt-dataset-refresh
+            base_parameters:
+              wg_datasetID: secret-powerbi-dataset-id
+              wg_workspaceID: secret-powerbi-workspace-id
+            source: WORKSPACE
+          job_cluster_key: job-cluster-powerbi-rest-api
+        - task_key: refresh_powerbi_recon_dataset
+          depends_on:
+            - task_key: test_globaltransactions
+          run_if: ALL_DONE
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/powerbi/nb-powerbi-obt-dataset-refresh
+            base_parameters:
+              wg_datasetID: secret-powerbi-dataset-recon-id
+              wg_workspaceID: secret-powerbi-workspace-recon-id
+            source: WORKSPACE
+          job_cluster_key: job-cluster-powerbi-rest-api
+      job_clusters:
+        - job_cluster_key: job-cluster-gold-memory-optimized-photon
+          new_cluster:
+            cluster_name: ""
+            spark_version: 13.3.x-scala2.12
+            spark_env_vars:
+              PYSPARK_PYTHON: /databricks/python3/bin/python3
+            instance_pool_id: ${var.existing_silver_pool_id}
+            data_security_mode: SINGLE_USER
+            runtime_engine: PHOTON
+            autoscale:
+              min_workers: 1
+              max_workers: 4
+        - job_cluster_key: job-cluster-powerbi-rest-api
+          new_cluster:
+            cluster_name: ""
+            spark_version: 13.3.x-scala2.12
+            azure_attributes:
+              first_on_demand: 1
+              availability: ON_DEMAND_AZURE
+              spot_bid_max_price: -1
+            node_type_id: Standard_DS3_v2
+            spark_env_vars:
+              PYSPARK_PYTHON: /databricks/python3/bin/python3
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            num_workers: 1

@@ -68,7 +68,7 @@ select distinct
     MAX(sil.Sys_Silver_InsertDateTime_UTC) as Sys_Gold_InsertedDateTime_UTC,
     MAX(sil.Sys_Silver_ModifedDateTime_UTC) as Sys_Gold_ModifiedDateTime_UTC,
   sil.Sys_DatabaseName
-from silver_dev.igsql03.sales_line_archive as sil
+from silver_{ENVIRONMENT}.igsql03.sales_line_archive as sil
 inner join (
   select
     No_,
@@ -76,7 +76,7 @@ inner join (
     max(DocumentDate) DocumentDate,
     max(VersionNo_) VersionNo_
   from
-    silver_dev.igsql03.sales_header_archive
+    silver_{ENVIRONMENT}.igsql03.sales_header_archive
   where
     Sys_Silver_IsCurrent = 1
   group by
