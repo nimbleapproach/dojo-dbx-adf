@@ -75,14 +75,12 @@ except:
     dbutils.widgets.text(name="wg_reportDateTo", defaultValue=datetime.strftime(report_date_to, date_format))
     REPORT_DATE_TO = dbutils.widgets.get("wg_reportDateTo")
 
-
-
 # COMMAND ----------
 
 from pyspark.sql.functions import *
 
 input_params = {"from": REPORT_DATE_FROM, "to": REPORT_DATE_TO}
-column_mapping = dict((v,k) for k,v in report_config.get("column-mapping").items())
+column_mapping = dict((v, k) for k, v in report_config.get("column-mapping").items())
 report_columns = column_mapping.values()
 view_columns_in_scope = [col(c) for c in column_mapping.keys()]
 
@@ -100,7 +98,7 @@ def substitute_params(str, substitutions):
 effective_databricks_predicate = substitute_params(databricks_predicate, databricks_param_mapping)
 # print(effective_databricks_predicate)
 
-debug_predicate="1=1" 
+# debug_predicate="1=1"
 
 databricks_table = (spark.read
                     .table(
@@ -123,7 +121,6 @@ dataset = databricks_table.collect()
 from copy import copy
 from datetime import datetime
 from openpyxl.reader.excel import load_workbook
-from openpyxl.styles import Border, Side
 
 # Loading report template
 template = "template.xlsx"
@@ -142,8 +139,10 @@ date_range_cell_name = "A5"
 date_range_input_format = "%Y-%m-%d"
 date_range_print_format = "%d/%m/%Y"
 
-formatted_date_from=datetime.strftime(datetime.strptime(REPORT_DATE_FROM, date_range_input_format), date_range_print_format)
-formatted_date_to=datetime.strftime(datetime.strptime(REPORT_DATE_TO, date_range_input_format), date_range_print_format)
+formatted_date_from = datetime.strftime(datetime.strptime(REPORT_DATE_FROM, date_range_input_format),
+                                        date_range_print_format)
+formatted_date_to = datetime.strftime(datetime.strptime(REPORT_DATE_TO, date_range_input_format),
+                                      date_range_print_format)
 
 date_range_header_text = f"Report Period From {formatted_date_from} To {formatted_date_to}"
 sheet[date_range_cell_name] = date_range_header_text
@@ -193,7 +192,29 @@ for i, data_row in enumerate(dataset):
 report_folder = working_folder + "/reports"
 os.makedirs(report_folder, exist_ok=True)
 
-timestamp=datetime.strftime(datetime.today(), "%Y%m%d%H%M%S")
+timestamp = datetime.strftime(datetime.today(), "%Y%m%d%H%M%S")
 report_file_name = f"{REPORT_NAME}-{timestamp}.xlsx"
+report_file_path = report_folder + "/" + report_file_name
+wb.save(report_file_path)
 
-wb.save(report_folder + "/" + report_file_name)
+# COMMAND ----------
+
+# MAGIC %run ../library/nb-email-utils
+
+# COMMAND ----------
+import getpass
+
+sender_email = "test@test.org"
+receiver_email = "test@test.org"
+cc_email = "test@test.org"
+bcc_email = "test@test.org"
+
+subject = f"{REPORT_NAME} subscription"
+body = f"{REPORT_NAME} extract for the period from {REPORT_DATE_FROM} to {REPORT_DATE_TO}"
+
+smtp_login = sender_email
+smtp_password = getpass.getpass("SMTP password")
+smtp_host = "smtp.test.co.uk"
+smtp_port = 587
+
+sendEmail(subject, sender_email, [receiver_email], [cc_email], [bcc_email], body, [report_file_path], smtp_host, smtp_port, smtp_login, smtp_password)
