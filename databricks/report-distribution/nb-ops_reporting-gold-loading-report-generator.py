@@ -7,19 +7,29 @@ ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 current_notebook = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
 working_folder = '/Workspace' + current_notebook[0:current_notebook.rfind('/')]
 
-# COMMAND ----------
-
 # Loading config
 report_config = "report.config.json"
 with open(f"{working_folder}/{report_config}", "r") as file:
     data = json.load(file)
 
-# Prompting input parameters
+# COMMAND ----------
+
+from datetime import datetime, timedelta
+
+date_format = "%Y-%m-%d"
+
+# Prompting report name and run date
 try:
     REPORT_NAME = dbutils.widgets.get("wg_reportName")
 except:
     dbutils.widgets.dropdown(name="wg_reportName", defaultValue=list(data.keys())[0], choices=sorted(data.keys()))
     REPORT_NAME = dbutils.widgets.get("wg_reportName")
+
+try:
+    REPORT_RUN_DATE = dbutils.widgets.get("wg_reportRunDate")
+except:
+    dbutils.widgets.text(name="wg_reportRunDate", defaultValue=datetime.strftime(datetime.now(), date_format))
+    REPORT_RUN_DATE = dbutils.widgets.get("wg_reportRunDate")
 
 # COMMAND ----------
 
@@ -49,37 +59,38 @@ subscription_bcc = subscription_recipients.get("bcc")
 
 # COMMAND ----------
 
-from datetime import datetime, timedelta
+# calculating defaults for special parameters
+report_param_defaults = {}
 
-date_format = "%Y-%m-%d"
-
-try:
-    REPORT_RUN_DATE = dbutils.widgets.get("wg_reportRunDate")
-except:
-    dbutils.widgets.text(name="wg_reportRunDate", defaultValue=datetime.strftime(datetime.now(), date_format))
-    REPORT_RUN_DATE = dbutils.widgets.get("wg_reportRunDate")
-
+# report start date 
 report_run_date_as_datetime = datetime.strptime(REPORT_RUN_DATE, date_format)
 report_date_to = get_previous_date(report_run_date_as_datetime, to_date_cron) - timedelta(days=1)
+report_param_defaults["to"] = datetime.strftime(report_date_to, date_format)
+
+# report end date
 report_date_from = get_previous_date(report_date_to, from_date_cron)
+report_param_defaults["from"] = datetime.strftime(report_date_from, date_format)
 
-try:
-    REPORT_DATE_FROM = dbutils.widgets.get("wg_reportDateFrom")
-except:
-    dbutils.widgets.text(name="wg_reportDateFrom", defaultValue=datetime.strftime(report_date_from, date_format))
-    REPORT_DATE_FROM = dbutils.widgets.get("wg_reportDateFrom")
+# COMMAND ----------
 
-try:
-    REPORT_DATE_TO = dbutils.widgets.get("wg_reportDateTo")
-except:
-    dbutils.widgets.text(name="wg_reportDateTo", defaultValue=datetime.strftime(report_date_to, date_format))
-    REPORT_DATE_TO = dbutils.widgets.get("wg_reportDateTo")
+input_params = {}
+
+for report_param_name in report_params:
+    widget_name = f"wg_reportParam_{report_param_name}"
+    widget_default_value = report_param_defaults.get(report_param_name, "")
+
+    try:
+        report_param_value = dbutils.widgets.get(widget_name)
+    except:
+        dbutils.widgets.text(name=widget_name, defaultValue=widget_default_value)
+        report_param_value = dbutils.widgets.get(widget_name)
+    
+    input_params[report_param_name] = report_param_value
 
 # COMMAND ----------
 
 from pyspark.sql.functions import *
 
-input_params = {"from": REPORT_DATE_FROM, "to": REPORT_DATE_TO}
 column_mapping = dict((v, k) for k, v in report_config.get("column-mapping").items())
 report_columns = column_mapping.values()
 view_columns_in_scope = [col(c) for c in column_mapping.keys()]
@@ -139,9 +150,9 @@ date_range_cell_name = "A5"
 date_range_input_format = "%Y-%m-%d"
 date_range_print_format = "%d/%m/%Y"
 
-formatted_date_from = datetime.strftime(datetime.strptime(REPORT_DATE_FROM, date_range_input_format),
+formatted_date_from = datetime.strftime(datetime.strptime(input_params["from"], date_range_input_format),
                                         date_range_print_format)
-formatted_date_to = datetime.strftime(datetime.strptime(REPORT_DATE_TO, date_range_input_format),
+formatted_date_to = datetime.strftime(datetime.strptime(input_params["to"], date_range_input_format),
                                       date_range_print_format)
 
 date_range_header_text = f"Report Period From {formatted_date_from} To {formatted_date_to}"
@@ -202,19 +213,19 @@ wb.save(report_file_path)
 # MAGIC %run ../library/nb-email-utils
 
 # COMMAND ----------
+
 import getpass
 
 sender_email = "test@test.org"
-receiver_email = "test@test.org"
-cc_email = "test@test.org"
-bcc_email = "test@test.org"
-
-subject = f"{REPORT_NAME} subscription"
-body = f"{REPORT_NAME} extract for the period from {REPORT_DATE_FROM} to {REPORT_DATE_TO}"
 
 smtp_login = sender_email
 smtp_password = getpass.getpass("SMTP password")
 smtp_host = "smtp.test.co.uk"
 smtp_port = 587
 
-sendEmail(subject, sender_email, [receiver_email], [cc_email], [bcc_email], body, [report_file_path], smtp_host, smtp_port, smtp_login, smtp_password)
+# COMMAND ----------
+
+subject = f"{REPORT_NAME} subscription"
+body = f"{REPORT_NAME} extract for the period from {input_params['from']} to {input_params['to']}"
+
+sendEmail(subject, sender_email, subscription_to, subscription_cc, subscription_bcc, body, [report_file_path], smtp_host, smtp_port, smtp_login, smtp_password)
