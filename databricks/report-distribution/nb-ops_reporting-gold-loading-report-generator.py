@@ -40,6 +40,7 @@ report_params = report_config.get("report-params")
 
 databricks_config = report_config.get("databricks-config")
 databricks_predicate = databricks_config.get("predicate")
+databricks_order_by = databricks_config.get("order-by")
 databricks_object_layer = databricks_config.get("object-layer")
 databricks_object_schema = databricks_config.get("object-schema")
 databricks_object_name = databricks_config.get("object-name")
@@ -110,6 +111,9 @@ effective_databricks_predicate = substitute_params(databricks_predicate, databri
 # print(effective_databricks_predicate)
 
 # debug_predicate="1=1"
+sorting_elements = [sorting_element.strip().split(" ") for sorting_element in databricks_order_by.split(",")]
+sorting_columns = [sorting_tokens[0].strip() for sorting_tokens in sorting_elements]
+sorting_ascending = [sorting_tokens[1].strip().lower() == "asc" if len(sorting_tokens) > 1 else True for sorting_tokens in sorting_elements]
 
 databricks_table = (spark.read
                     .table(
@@ -117,6 +121,7 @@ databricks_table = (spark.read
                     .filter(effective_databricks_predicate)
                     #.where(debug_predicate)
                     .select(view_columns_in_scope)
+                    .sort(sorting_columns, ascending=sorting_ascending)
                     .withColumnsRenamed(column_mapping)
                     )
 

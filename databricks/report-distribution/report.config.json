@@ -19,7 +19,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'Prolabs%' and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'Prolabs%' and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Company": "entity",
@@ -65,7 +66,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_id in ('VAC001461_NGS1', 'VAC001461_NNL2') and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_id in ('VAC001461_NGS1', 'VAC001461_NNL2') and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Pos Reference Number": "d365_sales_order_number",
@@ -118,7 +120,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Entity": "entity",
@@ -168,7 +171,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Entity": "entity",
@@ -218,7 +222,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'WatchGuard%' and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Entity": "entity",
@@ -268,7 +273,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_id in ('VAC001044_NGS1') and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_id in ('VAC001044_NGS1') and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "InvoiceDate": "invoice_date",
@@ -326,7 +332,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'Fortinet%' and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'Fortinet%' and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Date": "invoice_date",
@@ -373,7 +380,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'Juniper%' and vendor_id not in ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2') and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'Juniper%' and vendor_id not in ('VAC000904_NGS1','VAC000904_NNL2','VAC001110_NGS1','VAC001110_NNL2') and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "d365_sales_order_number",
@@ -440,7 +448,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "(vendor_id like 'VAC000904_%' or vendor_id like 'VAC001110_%') and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "(vendor_id like 'VAC000904_%' or vendor_id like 'VAC001110_%') and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "d365_sales_order_number",
@@ -510,7 +519,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-       "predicate": "vendor_id in ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_id in ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "SalesOrder": "d365_sales_order_number",
@@ -561,7 +571,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'Nokia%' and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'Nokia%' and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "SalesOrderNumber": "d365_sales_order_number",
@@ -611,7 +622,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "(vendor_id in ('VAC001388_NGS1') or vendor_id in ('VAC001388_NGS1')) and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "(vendor_id in ('VAC001388_NGS1') or vendor_id in ('VAC001388_NGS1')) and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "ORDER": "d365_sales_order_number",
@@ -656,7 +668,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_id in ('VAC001358_NGS1') and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_id in ('VAC001358_NGS1') and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Product": "part_code",
@@ -694,7 +707,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "vendor_name like 'Smart Optics%' and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "vendor_name like 'Smart Optics%' and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "FinancialDate": "invoice_date",
@@ -730,7 +744,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "(vendor_id in ('VAC000850_NGS1') or vendor_id in ('VAC000850_NNL2')) and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "(vendor_id in ('VAC000850_NGS1') or vendor_id in ('VAC000850_NNL2')) and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "SalesOrder": "d365_sales_order_number",
@@ -768,7 +783,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "(vendor_id in ('VAC001400_NGS1') or vendor_id in ('VAC001401_NGS1') or vendor_id in ('VAC001443_NGS1') or vendor_id in ('VAC001400_NNL2') or vendor_id in ('VAC001401_NNL2') or vendor_id in ('VAC001443_NNL2')) and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "(vendor_id in ('VAC001400_NGS1') or vendor_id in ('VAC001401_NGS1') or vendor_id in ('VAC001443_NGS1') or vendor_id in ('VAC001400_NNL2') or vendor_id in ('VAC001401_NNL2') or vendor_id in ('VAC001443_NNL2')) and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "InvoiceDate": "invoice_date",
@@ -833,7 +849,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_common",
-      "predicate": "(vendor_id in ('VAC001208_NGS1') or vendor_id in ('VAC001208_NNL2')) and report_date between to_date('@from') and to_date('@to')"
+      "predicate": "(vendor_id in ('VAC001208_NGS1') or vendor_id in ('VAC001208_NNL2')) and report_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "Ship Date": "shipping_date",
@@ -883,7 +900,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_id in ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_id in ('VAC001014_NGS1', 'VAC001144_NGS1', 'VAC001014_NNL2', 'VAC001144_NNL2') and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "SalesOrder": "nuvias_sales_order_number",
@@ -934,7 +952,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name LIKE 'Juniper%' and nuvias_vendor_id not in ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_name LIKE 'Juniper%' and nuvias_vendor_id not in ('VAC000904_NGS1', 'VAC000904_NNL2', 'VAC001110_NGS1', 'VAC001110_NNL2') and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "nuvias_sales_order_number",
@@ -1004,7 +1023,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_id = 'VAC000904_NNL2' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_id = 'VAC000904_NNL2' and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "ResaleSalesOrderNumber": "nuvias_sales_order_number",
@@ -1075,7 +1095,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name like 'Nokia%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_name like 'Nokia%' and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "SalesOrderNumber": "nuvias_sales_order_number",
@@ -1128,7 +1149,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name like 'SonicWall%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_name like 'SonicWall%' and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "PoToSnwlNumber": "nuvias_purchase_order",
@@ -1194,7 +1216,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name like 'WatchGuard%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_name like 'WatchGuard%' and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "NuviasSalesOrderNumber": "nuvias_sales_order_number",
@@ -1246,7 +1269,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name like 'Prolabs%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_name like 'Prolabs%' and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "CSCOrderNumber": "nuvias_sales_order_number",
@@ -1296,7 +1320,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name like 'Zyxel%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_name like 'Zyxel%' and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "D365Order": "nuvias_sales_order_number",
@@ -1343,7 +1368,8 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name like 'Smart Optics%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "nuvias_vendor_name like 'Smart Optics%' and navision_invoice_date between to_date('@from') and to_date('@to')",
+      "order-by": "report_date"
     },
     "column-mapping": {
       "NuviasSalesId": "nuvias_sales_order_number",
