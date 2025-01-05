@@ -200,7 +200,19 @@
       "EndCustomerCountry": "end_customer_country",
       "CustomerPO": "reseller_po_to_infinigate",
       "DistiPurchaseOrder": "infinigate_po_to_vendor"
-    }
+    },
+    "totals": [
+      {
+        "base_column_name": "mspunit_total_cost",
+        "display_name": "MRSP Total Cost",
+        "aggregation_type": "sum"
+      },
+      {
+        "base_column_name": "final_vendor_total_buy_price",
+        "display_name": "Nuvias Net Total Buy",
+        "aggregation_type": "sum"
+      }
+    ]
   },
   "WatchGuard POS_Weekly v2.0": {
     "report-params": [

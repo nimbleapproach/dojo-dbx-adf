@@ -37,6 +37,8 @@ except:
 report_config = data.get(REPORT_NAME)
 
 report_params = report_config.get("report-params")
+column_mapping = report_config.get("column-mapping")
+report_totals = report_config.get("totals")
 
 databricks_config = report_config.get("databricks-config")
 databricks_predicate = databricks_config.get("predicate")
@@ -85,14 +87,15 @@ for report_param_name in report_params:
     except:
         dbutils.widgets.text(name=widget_name, defaultValue=widget_default_value)
         report_param_value = dbutils.widgets.get(widget_name)
-    
+
     input_params[report_param_name] = report_param_value
 
 # COMMAND ----------
 
 from pyspark.sql.functions import *
+from pyspark.sql import Window
 
-column_mapping = dict((v, k) for k, v in report_config.get("column-mapping").items())
+column_mapping = dict((v, k) for k, v in column_mapping.items())
 report_columns = column_mapping.values()
 view_columns_in_scope = [col(c) for c in column_mapping.keys()]
 
@@ -107,6 +110,7 @@ def substitute_params(str, substitutions):
         result = result.replace(bind_var, replacement)
     return result
 
+
 effective_databricks_predicate = substitute_params(databricks_predicate, databricks_param_mapping)
 # print(effective_databricks_predicate)
 
@@ -115,18 +119,36 @@ sorting_elements = [sorting_element.strip().split(" ") for sorting_element in da
 sorting_columns = [sorting_tokens[0].strip() for sorting_tokens in sorting_elements]
 sorting_ascending = [sorting_tokens[1].strip().lower() == "asc" if len(sorting_tokens) > 1 else True for sorting_tokens in sorting_elements]
 
+report_totals = report_totals if report_totals else {}
+total_columns = {}
+for total in report_totals:
+    total_column_base_name = total.get("base_column_name")
+    total_column_display_name = total.get("display_name")
+    total_column_aggregation_type = total.get("aggregation_type")
+
+    if total_column_aggregation_type == "sum":
+        total_column_aggregation_func = sum
+    else:
+        raise Exception(f"Unsupported aggregation type: {total_column_aggregation_type}")
+
+    total_columns[total_column_display_name] = total_column_aggregation_func(col(total_column_base_name)).over(
+        Window.partitionBy())
+
 databricks_table = (spark.read
                     .table(
     f"{databricks_object_layer}_{ENVIRONMENT}.{databricks_object_schema}.{databricks_object_name}")
                     .filter(effective_databricks_predicate)
-                    #.where(debug_predicate)
+                    # .where(debug_predicate)
                     .select(view_columns_in_scope)
                     .sort(sorting_columns, ascending=sorting_ascending)
                     .withColumnsRenamed(column_mapping)
                     )
 
+if (len(total_columns) > 0):
+    databricks_table = databricks_table.withColumns(total_columns)
+
 report_data_types = dict(databricks_table.dtypes)
-print(report_data_types)
+# print(report_data_types)
 
 dataset = databricks_table.collect()
 
@@ -137,6 +159,7 @@ dataset = databricks_table.collect()
 from copy import copy
 from datetime import datetime
 from openpyxl.reader.excel import load_workbook
+from openpyxl.styles import Alignment
 
 # Loading report template
 template = "template.xlsx"
@@ -147,11 +170,11 @@ sheet = wb.active
 sheet.title = REPORT_NAME
 
 # Populating report name header
-report_name_cell_name = "A2"
+report_name_cell_name = "A1"
 sheet[report_name_cell_name] = REPORT_NAME
 
 # Populating date range header
-date_range_cell_name = "A5"
+date_range_cell_name = "A3"
 date_range_input_format = "%Y-%m-%d"
 date_range_print_format = "%d/%m/%Y"
 
@@ -165,7 +188,7 @@ sheet[date_range_cell_name] = date_range_header_text
 
 # Populating data column headers
 header_template_cell_col = "A"
-header_template_cell_row = 8
+header_template_cell_row = 4
 header_template_cell_name = header_template_cell_col + str(header_template_cell_row)
 header_template_cell = sheet[header_template_cell_name]
 header_cell_font = copy(header_template_cell.font)
@@ -181,7 +204,7 @@ for i, col in enumerate(report_columns):
 
 # Populating data cells
 data_template_cell_col = "A"
-data_template_cell_row = 9
+data_template_cell_row = 5
 data_template_cell_name = data_template_cell_col + str(data_template_cell_row)
 data_template_cell = sheet[data_template_cell_name]
 data_cell_font = copy(data_template_cell.font)
@@ -203,6 +226,38 @@ for i, data_row in enumerate(dataset):
             c.number_format = cell_number_format
         elif (data_type == "date") or (data_type == "timestamp") or (data_type == "timestampNTZ"):
             c.number_format = cell_date_format
+
+# Populating totals
+total_template_first_cell_col = "A"
+total_template_last_cell_col = "C"
+total_template_cell_row = 4
+
+current_row = total_template_cell_row
+
+for total in report_totals:
+    total_column_base_name = total.get("base_column_name")
+    total_column_display_name = total.get("display_name")
+    total_column_aggregation_type = total.get("aggregation_type")
+
+    total_value = dataset[0][total_column_display_name] if len(dataset) > 0 else 0
+
+    sheet.insert_rows(current_row)
+    total_first_cell = total_template_first_cell_col + str(current_row)
+    total_last_cell = total_template_last_cell_col + str(current_row)
+    sheet.merge_cells(f"{total_first_cell}:{total_last_cell}")
+
+    total_cell = sheet[total_first_cell]
+    total_cell.value = f"{total_column_display_name} {total_value:,.2f}"
+    total_cell.alignment = Alignment(horizontal="left", vertical="center")
+    total_cell.font = header_cell_font
+
+    current_row = current_row + 1
+
+# freezing header
+header_row_count = total_template_cell_row + len(report_totals)
+sheet.insert_rows(header_row_count)
+sheet.row_dimensions[header_row_count].height = 5
+sheet.freeze_panes = total_template_first_cell_col + str(header_row_count + 2)
 
 # Saving result
 report_folder = working_folder + "/reports"
