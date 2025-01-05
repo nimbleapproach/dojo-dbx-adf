@@ -141,11 +141,12 @@ databricks_table = (spark.read
                     # .where(debug_predicate)
                     .select(view_columns_in_scope)
                     .sort(sorting_columns, ascending=sorting_ascending)
-                    .withColumnsRenamed(column_mapping)
                     )
 
 if (len(total_columns) > 0):
     databricks_table = databricks_table.withColumns(total_columns)
+
+databricks_table = databricks_table.withColumnsRenamed(column_mapping)
 
 report_data_types = dict(databricks_table.dtypes)
 # print(report_data_types)
