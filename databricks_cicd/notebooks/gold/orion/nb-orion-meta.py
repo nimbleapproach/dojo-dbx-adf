@@ -349,16 +349,18 @@ def clear_tables(type,data):
         if value["destination_table_name"] not in processed_tables: # if logic to only process tables not seen before
             processed_tables.append(value["destination_table_name"])
             table_name = value["destination_table_name"]
-            print(f"clearing down {type} : {table_name}")
-            if type != 'dim':
-                spark.sql(f"Delete From {table_name}")
+            # get columns for the table to check for pks
+            if spark.catalog.tableExists(f"{table_name}"):
+                columns = spark.table(f"{table_name}").columns
+                print(f"clearing down {type} : {table_name}")
+                if type != 'dim' or f"{key}_pk" not in columns:
+                    spark.sql(f"Delete From {table_name}")
+                else:
+                    spark.sql(f"Delete From {table_name} where {key}_pk > 0")
                 # Disable the retention duration check
-            else:
-                spark.sql(f"Delete From {table_name} where {key}_pk > 0")
-            spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = false")
-            spark.sql(f"VACUUM {table_name} RETAIN 0 HOURS")
-            spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = true")
-
+                spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = false")
+                spark.sql(f"VACUUM {table_name} RETAIN 0 HOURS")
+                spark.sql(f"SET spark.databricks.delta.retentionDurationCheck.enabled = true")
 
 def reset_fact_delta_timestamp(catalog,orion_schema):
     """Reset the fact_delta_timestamp table back to 2000-01-01 to cause a full fact refresh
