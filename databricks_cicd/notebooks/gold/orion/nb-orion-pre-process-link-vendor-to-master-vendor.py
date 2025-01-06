@@ -44,7 +44,7 @@ schema = 'orion'
 # COMMAND ----------
 
 # First get the source system table
-df_source_system = spark.table("gold_dev.orion.dim_source_system").alias("ss")
+df_source_system = spark.table("gold_{ENVIRONMENT}.orion.dim_source_system").alias("ss")
 
 # Join vendor with source system
 df_vendor_with_source = spark.table(f"{catalog}.{schema}.dim_vendor").alias("v") \

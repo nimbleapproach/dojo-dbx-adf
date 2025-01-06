@@ -103,7 +103,7 @@ SELECT
         Currency,
         Period_FX_rate
       FROM
-        gold_dev.obt.exchange_rate
+        gold_{ENVIRONMENT}.obt.exchange_rate
       WHERE
         ScenarioGroup = 'Actual'
     ) fx on msp_l.PurchaseCurrencyCode = fx.Currency
@@ -116,7 +116,7 @@ SELECT
         Currency,
         Period_FX_rate
       FROM
-        gold_dev.obt.exchange_rate
+        gold_{ENVIRONMENT}.obt.exchange_rate
       WHERE
         ScenarioGroup = 'Actual'
     ) fx2 on Case

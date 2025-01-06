@@ -49,8 +49,8 @@ schema = 'orion'
 # MAGIC     sl.ShortcutDimension1Code,
 # MAGIC     sum(case when sih.CurrencyFactor > 0 then sl.Amount/sih.CurrencyFactor else sl.Amount end) as SalesLCYLTM,
 # MAGIC     Gen_Prod_PostingGroup
-# MAGIC   FROM silver_dev.igsql03.sales_invoice_line sl
-# MAGIC   INNER JOIN silver_dev.igsql03.sales_invoice_header sih
+# MAGIC   FROM silver_{ENVIRONMENT}.igsql03.sales_invoice_line sl
+# MAGIC   INNER JOIN silver_{ENVIRONMENT}.igsql03.sales_invoice_header sih
 # MAGIC     ON sl.DocumentNo_ = sih.No_ 
 # MAGIC   WHERE sih.PostingDate BETWEEN '2024-05-01' AND '2024-05-31'
 # MAGIC   and sl.Sys_Silver_IsCurrent =1
