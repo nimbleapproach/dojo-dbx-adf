@@ -5,7 +5,7 @@ import pytest
 
 # Initialize Spark session
 spark = SparkSession.builder \
-    .appName("Read from silver_dev.ref.calendar") \
+    .appName("Read from silver_{ENVIRONMENT}.ref.calendar") \
     .getOrCreate()
 
 # COMMAND ----------

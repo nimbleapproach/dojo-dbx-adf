@@ -4,7 +4,6 @@
 # COMMAND ----------
 
 # Importing Libraries
-# Importing Libraries
 import os
 spark = spark  # noqa
 
@@ -18,19 +17,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # COMMAND ----------
 
 catalog = spark.catalog.currentCatalog()
-schema = 'orion'
-
-# COMMAND ----------
-# Importing Libraries
-import os
-spark = spark  # noqa
-
-
-# COMMAND ----------
-
-ENVIRONMENT = os.environ["__ENVIRONMENT__"]
-ENVIRONMENT
-spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
+#schema = 'phil_orion_testing'
 
 # COMMAND ----------
 
@@ -173,6 +160,7 @@ SELECT cte_max_timestamp.document_source, cte_max_timestamp.max_transaction_line
 FROM cte_max_timestamp
 """
 )
+
 
 
 # COMMAND ----------

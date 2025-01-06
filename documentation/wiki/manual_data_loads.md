@@ -16,12 +16,12 @@ IG Sharepoint - 15 - Infinigate Cloud Data (Check Access)  [LINK](https://infini
 **ADLS Location:**  
 dv0ig0[ENV]0westeurope / external / vuzion / monthly_export / pending  
 **ADF Pipeline:**  
-Bronze - Vuzion - Monthly  
+Bronze - Vuzion - Monthly - PL_00_VUZION_MONTHLY_Load_Sheet_MASTER    
 **Databricks Jobs:**  
 vuzion-bronze-to-silver, silver-to-gold-obt  
 **Process:**  
 * Download XLSX file from sharepoint site
-* Open file and save current month sheet into a new file, named FY24 Vuzion Revenue FY24 budget margin.xlsx - Number following FY should match current FY
+* Open file and save current month sheet into a new file, named FY24 Vuzion Revenue FY24 budget margin_MONTH.xlsx - Number following FY should match current FY
 * Navigate to the correct ADLS folder, if a file is already present, download it, delete it and then add new file
 * If a previous file has been downloaded, upload this to the archived folder
 * Run ADF Pipeline, via debug mode
@@ -41,7 +41,7 @@ IG Sharepoint - 15 - Infinigate Cloud Data (Check Access)  [LINK](https://infini
 **ADLS Location:**  
 dv0ig0[ENV]0westeurope / external / vuzion / monthly_revenue_adjustment / pending  
 **ADF Pipeline:**  
-Bronze - Vuzion - Monthly_adj
+Bronze - Vuzion - Monthly_adj - PL_00_VUZION_MONTHLY_ADJ_Load_Sheet_MASTER  
 **Databricks Jobs:**  
 vuzion-bronze-to-silver, silver-to-gold-obt  
 **Process:**  
@@ -93,7 +93,7 @@ Alroy Lopes to provide
 **ADLS Location:**  
 dv0ig0[ENV]0westeurope / external / netsafe / pending  
 **ADF Pipeline:**  
-Bronze - Netsafe  
+Bronze - Netsafe - PL_00_NETSAFE_Load_File_MASTER  
 **Databricks Jobs:**  
 netsafe-bronze-to-silver, silver-to-gold-obt  
 **Process:**  
@@ -118,7 +118,7 @@ Karl Naughton to provide
 **ADLS Location:**  
 dv0ig0[ENV]0westeurope / external / datanow / arr / latest  
 **ADF Pipeline:**  
-Bronze - DATANOW - Latest  
+Bronze - DATANOW - Latest - PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER  
 **Databricks Jobs:**  
 masterdata-bronze-to-silver, silver-to-gold-obt  
 **Process:**  

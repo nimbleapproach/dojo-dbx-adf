@@ -2,6 +2,7 @@
 # MAGIC %run ./nb-orion-meta
 
 # COMMAND ----------
+
 # Databricks notebook source
 # MAGIC %run ./nb-orion-meta
 
@@ -23,12 +24,8 @@ schema = 'orion'
 
 
 # COMMAND ----------
-
-
-# COMMAND ----------
-# 5/12 - commented outreporting_source_database, data_area_id,
 # SOURCE SYSTEM 
-# Now do the insert for DIM source system as the default members need 1 default member per source system
+# Now do the insert for DIM source system as the default members need 1 default member per source system per source entity
 spark.sql(f"""insert into {catalog}.{schema}.dim_source_system (
   source_system,source_database,source_entity,
   --reporting_source_database, data_area_id, 
@@ -47,7 +44,7 @@ where not exists (select 1 from {catalog}.{schema}.dim_source_system s where s.s
 # COMMAND ----------
 
 # DOCUMENT
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system per document source
 sqldf = spark.sql(f"""
 with cte_sources as 
 (
@@ -56,13 +53,14 @@ with cte_sources as
 cte_document_sources as 
 (
    select 'msp sales invoice' as document_source union select 'credit memo' union select 'sales invoice' union select 'msp sales credit memo' 
-   union select 'nuvias sales invoice' union select 'sales quote' union select 'sales order' union select 'N/A'
+   union select 'nuvias sales invoice' union select 'sales quote' union select 'sales order' union select 'cloudblue sales invoice' union select 'N/A'
 )
 SELECT DISTINCT
        CAST('N/A' AS STRING) AS local_document_id,
        CAST('N/A' AS STRING) AS associated_document_id,
        CAST('1900-01-01' AS DATE) AS document_date,
-       CAST(-1 AS BIGINT) AS document_type,
+       CAST('N/A' AS STRING) AS document_type,
+       CAST('N/A' AS STRING) AS document_status,
        CAST(NULL AS STRING) AS country_code,
        CAST(s.source_system_pk AS BIGINT) AS source_system_fk,
        CAST('1900-01-01' AS TIMESTAMP) AS start_datetime,
@@ -81,7 +79,7 @@ WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_document v WHERE v.local_
 # COMMAND ----------
 
 # PRODUCT
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system per line item type
 sqldf= spark.sql(f"""
 with cte_sources as 
 (
@@ -92,7 +90,8 @@ cte_line_item_types as
    select 'item' as line_item_type union select 'Credit Memo Line Item' union
    select 'Sales Archive Line Item' union select 'Sales Invoice Line Item' union
    select 'MSP Line Item' union select 'N/A' union select 'Netsafe Line Item' union
-   select 'Starlink (Netsuite) Line Item'
+   select 'Starlink (Netsuite) Line Item' union select 'Cloudblue Resource Item' union
+   select 'Cloudblue Line Item'
    UNION
    SELECT DISTINCT concat(it.DataAreaId + ' Line Item')
    FROM silver_{ENVIRONMENT}.nuvias_operations.custvendexternalitem AS it 
@@ -118,7 +117,7 @@ WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_product v WHERE v.product
 # COMMAND ----------
 
 # RESELLER
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system
 sqldf= spark.sql(f"""
 with cte_sources as 
 (
@@ -143,7 +142,7 @@ WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_reseller v WHERE v.resell
 # COMMAND ----------
 
 # VENDOR
-# Now do the default inserts per reporting database name
+# Now do the default inserts per source system
 sqldf= spark.sql(f"""
 with cte_sources as 
 (
@@ -164,7 +163,7 @@ FROM cte_sources s
 WHERE NOT EXISTS (SELECT 1 FROM {catalog}.{schema}.dim_vendor v WHERE v.vendor_code = 'N/A' AND v.source_system_fk = s.source_system_pk)
 """).write.mode("append").option("mergeSchema", "true").saveAsTable(f"{catalog}.{schema}.dim_vendor")
 
-# COMMAND ----------
 
+# COMMAND ----------
 # dbutils.notebook.exit(0)
 

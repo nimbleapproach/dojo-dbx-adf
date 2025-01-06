@@ -4,7 +4,6 @@ SELECT
 	,ifg.MANUFACTURERITEMNUMBER							AS ItemID
 	,ncsc.SkuDescription								AS PartCodeDescription
 	,ncsc.[D365 Item Group]								AS PartCodeCategory
-	--,ifg.QUANTITY										AS Qty
 	,CASE WHEN ifg.SERIALNUMBER	IS NULL THEN SUM(ifg.QUANTITY) ELSE ifg.QUANTITY END		AS Qty
 	,ncsc.[D365 Var Id]									AS PartnerID
 	,ifg.RESELLERNAME									AS BillToName
@@ -13,7 +12,6 @@ SELECT
 	,ifg.SHIPTONAME										AS ShipToName
 	,ifg.SHIPTOCOUNTRYCODE								AS ShipToCountry
 	,ifg.SHIPTOZIPCODE									AS ShipToPostCode
-	--,ncsc.SerialNumber									AS SerialNumber
 	,ifg.SERIALNUMBER									AS SerialNumber
 	,ncsc.VendorStandardCost							AS MSPUnitCost
 	,ncsc.VendorStandardCost * (ncsc.D365Quantity)		AS MSPTotalCost
@@ -34,7 +32,6 @@ WHERE
 	((DATEADD(day, -1, ifg.CUSTOMERINVOICEDATE) >= CAST(ncsc.D365ShipDate as date))
 		OR (DATEADD(day, 0, ifg.CUSTOMERINVOICEDATE) = CAST(ncsc.D365ShipDate as date))
 		OR (DATEADD(day, +1, ifg.CUSTOMERINVOICEDATE) <= CAST(ncsc.D365ShipDate as date)))
-	-- AND ncsc.[D365CustomerAccount(InfiningateEntity)] IN (@CustAccount)
 GROUP BY  
 	ncsc.[D365CustomerAccount(InfiningateEntity)]
 	,ifg.CUSTOMERINVOICEDATE
@@ -49,7 +46,6 @@ GROUP BY
 	,ifg.SHIPTONAME
 	,ifg.SHIPTOCOUNTRYCODE
 	,ifg.SHIPTOZIPCODE
-	--,ncsc.SerialNumber
 	,ifg.SERIALNUMBER
 	,ncsc.VendorStandardCost
 	,ncsc.VendorReferenceNumber	
@@ -72,7 +68,6 @@ SELECT
 	,ifg.MANUFACTURERITEMNUMBER							AS ItemID
 	,ncsc.SkuDescription								AS PartCodeDescription
 	,ncsc.[D365 Item Group]								AS PartCodeCategory
---	,ifg.QUANTITY									AS Qty
 	,CASE WHEN ifg.SERIALNUMBER	IS NULL THEN SUM(ifg.QUANTITY) ELSE ifg.QUANTITY END		AS Qty
 	,ncsc.[D365 Var Id]									AS PartnerID
 	,ifg.RESELLERNAME									AS BillToName
@@ -81,7 +76,6 @@ SELECT
 	,ifg.SHIPTONAME										AS ShipToName
 	,ifg.SHIPTOCOUNTRYCODE								AS ShipToCountry
 	,ifg.SHIPTOZIPCODE									AS ShipToPostCode
-	--,ncsc.SerialNumber									AS SerialNumber
 	,ifg.SERIALNUMBER									AS SerialNumber
 	,ncsc.VendorStandardCost							AS MSPUnitCost
 	,ncsc.VendorStandardCost * (ncsc.D365Quantity)		AS MSPTotalCost
@@ -114,7 +108,6 @@ GROUP BY
 	,ifg.SHIPTONAME
 	,ifg.SHIPTOCOUNTRYCODE
 	,ifg.SHIPTOZIPCODE
-	--,ncsc.SerialNumber
 	,ifg.SERIALNUMBER
 	,ncsc.VendorStandardCost
 	,ncsc.VendorReferenceNumber	

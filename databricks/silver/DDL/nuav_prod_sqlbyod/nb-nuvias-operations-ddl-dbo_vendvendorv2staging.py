@@ -54,4 +54,4 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE silver_dev.nuav_prod_sqlbyod.dbo_vendvendorv2staging OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE dbo_vendvendorv2staging OWNER TO `az_edw_data_engineers_ext_db`

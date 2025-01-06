@@ -1,26 +1,3 @@
-/*
-##############################
-Name: Watchguard POS
-Description: POS report for WatchGuard
-Created By: Mark Walton 
-Date: 16/04/2020
-Version: 0.1
-
-verson 1.2 J - NNL2 
-version 1.3 MW - remove cancelled delivery notes 
-###############################
-*/
-
-
---##### DECLARE PARAMETERS ##### 
---DECLARE @from DATETIME = '2020-04-27'
---DECLARE @to DATETIME = '2020-05-02'
---DECLARE @Vendor VARCHAR(255) = 'WatchGuard'
---DECLARE @entity VARCHAR(4) = 'NUK1'
-
-
--- ##### MAIN REPORT QUERY ######
-
 SELECT 
 	sl.DATAAREAID								AS Entity
 	,it.DATEFINANCIAL							AS InvoiceDate -- used Date financial to match the original report - date physical would show the date goods were shipped?
@@ -48,8 +25,6 @@ SELECT
 	,sh.CUSTOMERREF								AS CustomerPO
 	,li.PurchTableID_InterComp					AS DistiPurchaseOrder
 FROM SAG_SalesLineV2Staging sl
---JG
---	LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID AND sh.DATAAREAID NOT in ('NGS1','NNL2')
 		LEFT JOIN SAG_SalesTableStaging sh ON sh.SALESID = sl.SALESID AND sh.DATAAREAID NOT in ('NGS1','NNL2')
 
 		LEFT JOIN SAG_InventTransStaging it ON it.INVENTTRANSID = sl.INVENTTRANSID AND it.DATAAREAID NOT in ('NGS1','NNL2')

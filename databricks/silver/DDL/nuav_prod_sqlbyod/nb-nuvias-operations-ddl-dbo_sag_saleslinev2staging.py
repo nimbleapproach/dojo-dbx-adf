@@ -16,65 +16,42 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE dbo_sag_saleslinev2staging
+# MAGIC create or replace table dbo_sag_saleslinev2staging
 # MAGIC   (
-# MAGIC   SID BIGINT GENERATED ALWAYS AS IDENTITY
-# MAGIC       COMMENT 'Surrogate Key'
-# MAGIC   , INVENTTRANSID STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , DATAAREAID STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SALESID STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_VENDORREFERENCENUMBER STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_RESELLERVENDORID STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , CURRENCYCODE  STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_PURCHPRICE  DECIMAL(32, 6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SALESSTATUS  INT
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_SHIPANDDEBIT  INT
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , ITEMID STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , INVENTREFTRANSID STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_VENDORSTANDARDCOST DECIMAL(32, 6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SALESPRICE DECIMAL(32, 6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SALESQTY DECIMAL(32,6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , LINEAMOUNT DECIMAL(32,6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   ,SAG_NAVLINENUM STRING
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_NGS1POBUYPRICE DECIMAL(32,6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_NGS1STANDARDBUYPRICE DECIMAL(32,6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , SAG_UNITCOSTINQUOTECURRENCY DECIMAL(32,6)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , LINENUM DECIMAL(32,16)
-# MAGIC         COMMENT 'TODO'
-# MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
-# MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
-# MAGIC   , Sys_Silver_InsertDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry landed in silver.'
-# MAGIC   , Sys_Silver_ModifedDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
-# MAGIC   , Sys_Silver_HashKey BIGINT NOT NULL
-# MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC   , Sys_Silver_IsCurrent BOOLEAN
-# MAGIC   , CONSTRAINT dbo_sag_saleslinev2staging_pk PRIMARY KEY(INVENTTRANSID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC     SID                             bigint generated always as identity             comment 'Surrogate Key'
+# MAGIC   , inventtransid                   string                                          comment 'TODO'
+# MAGIC   , dataareaid                      string                                          comment 'TODO'
+# MAGIC   , salesid                         string                                          comment 'TODO'
+# MAGIC   , sag_vendorreferencenumber       string                                          comment 'TODO'
+# MAGIC   , sag_resellervendorid            string                                          comment 'TODO'
+# MAGIC   , currencycode                    string                                          comment 'TODO'
+# MAGIC   , sag_purchprice                  decimal(32, 6)                                  comment 'TODO'
+# MAGIC   , salesstatus                     int                                             comment 'TODO'
+# MAGIC   , sag_shipanddebit                int                                             comment 'TODO'
+# MAGIC   , shippingdaterequested           timestamp                                       comment 'The requested date for shipping the item.'
+# MAGIC   , receiptdaterequested            timestamp                                       comment 'The date when the receipt was requested.'
+# MAGIC   , itemid                          string                                          comment 'TODO'
+# MAGIC   , inventreftransid                string                                          comment 'TODO'
+# MAGIC   , sag_vendorstandardcost          decimal(32, 6)                                  comment 'TODO'
+# MAGIC   , salesprice                      decimal(32, 6)                                  comment 'TODO'
+# MAGIC   , salesqty                        decimal(32,6)                                   comment 'TODO'
+# MAGIC   , lineamount                      decimal(32,6)                                   comment 'TODO'
+# MAGIC   , sag_navlinenum                  string                                          comment 'TODO'
+# MAGIC   , sag_ngs1pobuyprice              decimal(32,6)                                   comment 'TODO'
+# MAGIC   , sag_ngs1standardbuyprice        decimal(32,6)                                   comment 'TODO'
+# MAGIC   , sag_unitcostinquotecurrency     decimal(32,6)                                   comment 'TODO'
+# MAGIC   , linenum                         decimal(32,16)                                  comment 'TODO'
+# MAGIC   , qtyordered                      decimal(32,6)                                   comment 'The quantity of items ordered.'
+# MAGIC   , Sys_Bronze_InsertDateTime_UTC   timestamp                                       comment 'The timestamp when this entry landed in bronze.'
+# MAGIC   , Sys_Silver_InsertDateTime_UTC   timestamp      default current_timestamp()      comment 'The timestamp when this entry landed in silver.'
+# MAGIC   , Sys_Silver_ModifedDateTime_UTC  timestamp      default current_timestamp()      comment 'The timestamp when this entry was last modifed in silver.'
+# MAGIC   , Sys_Silver_HashKey              bigint not null                                 comment 'HashKey over all but Sys columns.'
+# MAGIC   , Sys_Silver_IsCurrent            boolean
+# MAGIC   , constraint dbo_sag_saleslinev2staging_pk primary key(inventtransid, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the data from dbo_sag_saleslinev2staging. \n'
-# MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
+# MAGIC comment 'This table contains the data from dbo_sag_saleslinev2staging.'
+# MAGIC tblproperties ('delta.feature.allowColumnDefaults' = 'supported');
+# MAGIC
 
 # COMMAND ----------
 
@@ -88,4 +65,4 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE silver_dev.nuav_prod_sqlbyod.dbo_sag_saleslinev2staging OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE dbo_sag_saleslinev2staging OWNER TO `az_edw_data_engineers_ext_db`

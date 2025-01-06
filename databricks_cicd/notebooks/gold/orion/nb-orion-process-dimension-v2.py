@@ -2,6 +2,7 @@
 # MAGIC %run ./nb-orion-meta
 
 # COMMAND ----------
+
 # 
 # Notebook to process a single dimension based on the name being passed via widgets
 #
@@ -16,6 +17,7 @@ dimension_name = dbutils.widgets.get("dimension_name")
 run_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # COMMAND ----------
+
 spark = spark  # noqa
 
 # file_path = 'meta.json'
@@ -31,6 +33,7 @@ spark = spark  # noqa
 source_system_config = get_object_detail(data, 'source_system')
 source_system_table_name = source_system_config['destination_table_name'] # string
    
+
 # COMMAND ----------
 
 def merge_dimension(dimension_name):
@@ -46,7 +49,7 @@ def merge_dimension(dimension_name):
     
     # Get the last part of the string after the period, then split at the first underscore
     table_pk = destination_table_name_only.split('.')[-1].split('_', 1)[1] + "_pk"
-
+    print(f"table_pk: {table_pk}")
     # source of data config
     updates_dimension_table = dimension_config['source_table_name'] # string
     source_key_columns = dimension_config['source_key_columns'] # string
@@ -87,6 +90,8 @@ def merge_dimension(dimension_name):
     insert_columns_sql = insert_columns_sql[:-1]
     select_columns_sql = select_columns_sql[:-1]
 
+    # print(f"insert_columns_sql: {insert_columns_sql}")
+    # print(f"select_columns_sql: {select_columns_sql}")
     # in order to grab a correct delta per source system, we might need to pull in the keys and a MAX(timestamp)
     # grouping by the source_system and non dimension name column 
     # eg line_item_type and source_system_fk , document_source and source_system_fk
@@ -197,4 +202,3 @@ def merge_dimension(dimension_name):
 # run the function
 merge_dimension(dimension_name)
 dbutils.notebook.exit(0)
-

@@ -19,6 +19,8 @@ catalog = spark.catalog.currentCatalog()
 schema = 'orion'
 
 # COMMAND ----------
+
+
 # REMOVE ONCE SOLUTION IS LIVE
 if ENVIRONMENT == 'dev':
     spark.sql(f"""
@@ -44,7 +46,7 @@ min_fx_rate AS
 )
 SELECT DISTINCT 
     si.SID AS local_fact_id,
-    RIGHT(si.Sales_Order_Number,9) AS local_document_id,
+    si.Invoice_Number as local_document_id,
     Line_ID AS document_line_number,
     'N/A' AS associated_document_line_number,
     COALESCE(it.Description,'N/A') AS description,
@@ -52,6 +54,9 @@ SELECT DISTINCT
     coalesce(rg.ResellerGroupName,'N/A') AS gen_bus_posting_group,
     0 AS currency_factor,
     TO_DATE(si.Sales_Order_Date) AS document_date,
+    NULL as deferred_revenue_startdate, 
+    NULL as deferred_revenue_enddate, 
+    0 as is_deferred,
     'starlink (netsuite) sales invoice' AS document_source,
     COALESCE(si.SKU_ID, 'N/A') AS product_code,
     'Starlink (Netsuite) Line Item' AS line_item_type,
@@ -103,6 +108,6 @@ LEFT JOIN cte_sources s on 'AE1' = s.source_entity
 
 where si.Sys_Silver_IsCurrent = 1
 AND si.SID is not null
---limit(100)
+
 """
 )

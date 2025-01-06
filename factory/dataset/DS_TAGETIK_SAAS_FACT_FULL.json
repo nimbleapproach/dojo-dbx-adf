@@ -1,0 +1,32 @@
+{
+	"name": "DS_TAGETIK_SAAS_FACT_FULL",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_TAG_SAAS",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_env": "PROD"
+			}
+		},
+		"parameters": {
+			"pm_Code": {
+				"type": "string"
+			},
+			"pm_scenario": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/TAG02 [Tagetik]"
+		},
+		"annotations": [],
+		"type": "ODataResource",
+		"schema": [],
+		"typeProperties": {
+			"path": {
+				"value": "Datasource_@{dataset().pm_Code}(Scenario='@{dataset().pm_scenario}')",
+				"type": "Expression"
+			}
+		}
+	}
+}

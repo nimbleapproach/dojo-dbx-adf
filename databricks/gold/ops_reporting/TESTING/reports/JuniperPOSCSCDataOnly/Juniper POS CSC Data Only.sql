@@ -1,6 +1,4 @@
 SELECT 
-	--ncsc.NuviasEntity
-	--,ncsc.NuviasWarehouse
 	CASE WHEN ncsc.NuviasEntity = 'NNL2' AND ncsc.NuviasWarehouse LIKE '%2' 
 			THEN '101421538' 
 		WHEN ncsc.NuviasEntity = 'NGS1' AND ncsc.NuviasWarehouse LIKE '%5' OR ncsc.NuviasEntity = 'NGS1'  AND ncsc.NuviasWarehouse = 'CORR'
@@ -15,14 +13,14 @@ SELECT
 	,ifg.VENDORADDITIONALDISCOUNT1							AS SpecialPricingAuthorization
 	,ncsc.NuviasPurchPrice									AS [NetPOS(ProductUnitPrice)]
 	,CAST(ifg.VENDORBUYPRICE as numeric(18,2))				AS InfingateBuy
-	,''														AS ExportLicenceNumber --Not Required
-	,ncsc.NuviasPurchaseOrder								AS DistributorPurchaseOrder  --PO to Juniper
+	,''														AS ExportLicenceNumber 
+	,ncsc.NuviasPurchaseOrder								AS DistributorPurchaseOrder  
 	,ncsc.NuviasSalesId										AS ResaleSalesOrderNumber
 	,ifg.INVOICENUMBER										AS ResaleInvoiceNumber 
-	,FORMAT(ifg.CUSTOMERINVOICEDATE, 'dd/MM/yyyy')			AS ResaleInvoiceDate --(DD-MON-YYYY)
+	,FORMAT(ifg.CUSTOMERINVOICEDATE, 'dd/MM/yyyy')			AS ResaleInvoiceDate 
 	,ifg.RESELLERPONUMBER									AS ResellerPONumber
 	,ncsc.VarId												AS JuniperVARID1
-	,''														AS BusinessModel1 -- always blank
+	,''														AS BusinessModel1 
 	,ifg.ResellerName										AS ResellerVARName
 	,ifg.ResellerAddress1									AS ResellerVARAddress1
 	,ifg.ResellerAddress2									AS ResellerVARAddress2 
@@ -31,8 +29,8 @@ SELECT
 	,ifg.ResellerState										AS ResellerVARStateProvince
 	,ifg.ResellerZipCode									AS ResellerVARPostalCode
 	,ifg.ResellerCountryCode								AS ResellerVARCountryCode
-	,''														AS JuniperVARID2 --Required If Applicable
-	,''														AS BusinessModel2 -- Required if Applicable
+	,''														AS JuniperVARID2 
+	,''														AS BusinessModel2 
 	,ifg.SHIPTONAME											AS ShipToName
 	,ifg.SHIPTOADDRESS1										AS ShipToAddress1
 	,ifg.SHIPTOADDRESS2										AS ShipToAddress2
@@ -49,26 +47,16 @@ SELECT
 	,ifg.ENDUSERSTATE										AS EndUserStateProvince
 	,ifg.ENDUSERZIPCODE										AS EndUserPostalCode
 	,ifg.ENDUSERCOUNTRYCODE									AS EndUserCountryCode
-	,''														AS DistributorIDNo2 --Required if Applicable
-	,ncsc.VendorReferenceNumber								AS VendorReferenceNumber
-	--,'>>'												
+	,''														AS DistributorIDNo2 
+	,ncsc.VendorReferenceNumber								AS VendorReferenceNumber											
 	,ifg.SALESORDERNUMBER									AS NavsionSalesOrderNumber
-	--,ifg.id												AS NavID 
-	--,nsl.INVENTDIMID										AS InventDimID
-	--,ncsc.NuviasSalesId									AS NuviasSalesOrderNumber
-	--,ifg.SALESORDERNUMBER									AS NavSalesOrderNumber
-	--,ncsc.NuviasPurchPrice								AS D365VendorPurchPrice
-	--,ifg.SHIPANDDEBIT										AS ShipAndDebit
-	,ncsc.DelveryNoteId										AS DeliveryNoteId -- Added this to removed the issue with split deleveries  (MW 20/12/2023)   
+	,ncsc.DelveryNoteId										AS DeliveryNoteId   
 FROM ifg.POSData ifg
 	LEFT JOIN NuviasCSCData ncsc ON ncsc.NuviasSoLink = ifg.SALESORDERNUMBER AND ncsc.NuviasNavLineNum = ifg.SALESORDERLINENO AND ncsc.DelveryNoteId = ifg.IGSSHIPMENTNO
-	--LEFT JOIN SAG_SalesTableStaging nsh ON nsh.SAG_NAVSONUMBER = ifg.SALESORDERNUMBER
-	--LEFT JOIN SAG_SalesLineV2Staging nsl ON nsl.LINENUM = ifg.SALESORDERLINENO
 WHERE ifg.CUSTOMERINVOICEDATE BETWEEN @from AND @to
 	AND ifg.VENDORRESELLERLEVEL LIKE 'Juniper%'
 	AND ncsc.NuviasWarehouse <> 'DD' 
 	AND ifg.SHIPANDDEBIT = 1
-	--AND ifg.INVOICENUMBER = 'PSI-23005278'
 GROUP BY
 	ncsc.NuviasEntity
 	,ncsc.NuviasWarehouse
@@ -111,8 +99,8 @@ GROUP BY
 	,ifg.ENDUSERZIPCODE
 	,ifg.ENDUSERCOUNTRYCODE
 	,ncsc.NuviasSalesId
-	,ncsc.VendorReferenceNumber --
+	,ncsc.VendorReferenceNumber 
 	,ifg.SALESORDERNUMBER
 	,ncsc.NuviasPurchPrice
 	,ifg.SHIPANDDEBIT
-	,ncsc.DelveryNoteId -- 
+	,ncsc.DelveryNoteId 

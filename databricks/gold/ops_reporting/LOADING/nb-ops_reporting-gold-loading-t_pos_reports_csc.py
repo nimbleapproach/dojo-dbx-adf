@@ -24,4 +24,4 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER VIEW t_pos_reports_csc OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE t_pos_reports_csc OWNER TO `az_edw_data_engineers_ext_db`

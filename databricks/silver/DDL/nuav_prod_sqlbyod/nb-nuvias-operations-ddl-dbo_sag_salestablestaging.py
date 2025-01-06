@@ -15,76 +15,49 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC
-# MAGIC CREATE OR REPLACE TABLE dbo_sag_salestablestaging
+# MAGIC create or replace table dbo_sag_salestablestaging
 # MAGIC   (
-# MAGIC     SID BIGINT GENERATED ALWAYS AS IDENTITY
-# MAGIC       COMMENT 'Surrogate Key'
-# MAGIC   , SALESID STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , DATAAREAID STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , CUSTACCOUNT STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , INVOICEACCOUNT STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , DELIVERYPOSTALADDRESS BIGINT
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , CUSTOMERREF STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_EMAIL STRING
-# MAGIC       COMMENT 'TODO'   
-# MAGIC   , SAG_EUADDRESS_CONTACT STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_COUNTRY  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_POSTCODE  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_CITY  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_STREET1  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_STREET2  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_NAME  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SALESNAME  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , PURCHORDERFORMNUM STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_EUADDRESS_COUNTY  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , CURRENCYCODE  STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SALESORDERTYPE STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_CREATEDDATETIME TIMESTAMP
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_NAVSONUMBER STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , SAG_NAVPONUMBER STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , NUV_NAVCUSTOMERREF STRING
-# MAGIC          COMMENT 'TODO'
-# MAGIC   , SAG_RESELLEREMAILADDRESS STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , NUV_RSADDRESS_CONTACT STRING
-# MAGIC       COMMENT 'TODO'
-# MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
-# MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
-# MAGIC   , Sys_Silver_InsertDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry landed in silver.'
-# MAGIC   , Sys_Silver_ModifedDateTime_UTC TIMESTAMP
-# MAGIC       DEFAULT current_timestamp()
-# MAGIC       COMMENT 'The timestamp when this entry was last modifed in silver.'
-# MAGIC   , Sys_Silver_HashKey BIGINT NOT NULL
-# MAGIC       COMMENT 'HashKey over all but Sys columns.'
-# MAGIC   , Sys_Silver_IsCurrent BOOLEAN
-# MAGIC   , CONSTRAINT dbo_sag_salestablestaging_pk PRIMARY KEY(SALESID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC     SID                             bigint generated always as identity    comment 'Surrogate Key'
+# MAGIC   , salesid                         string                                 comment 'TODO'
+# MAGIC   , dataareaid                      string                                 comment 'TODO'
+# MAGIC   , custaccount                     string                                 comment 'TODO'
+# MAGIC   , invoiceaccount                  string                                 comment 'TODO'
+# MAGIC   , deliverypostaladdress           bigint                                 comment 'TODO'
+# MAGIC   , customerref                     string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_email             string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_contact           string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_country           string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_postcode          string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_city              string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_street1           string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_street2           string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_name              string                                 comment 'TODO'
+# MAGIC   , salesname                       string                                 comment 'TODO'
+# MAGIC   , purchorderformnum               string                                 comment 'TODO'
+# MAGIC   , sag_euaddress_county            string                                 comment 'TODO'
+# MAGIC   , currencycode                    string                                 comment 'TODO'
+# MAGIC   , salesordertype                  string                                 comment 'TODO'
+# MAGIC   , sag_createddatetime             timestamp                              comment 'TODO'
+# MAGIC   , sag_navsonumber                 string                                 comment 'TODO'
+# MAGIC   , sag_navponumber                 string                                 comment 'TODO'
+# MAGIC   , nuv_navcustomerref              string                                 comment 'TODO'
+# MAGIC   , sag_reselleremailaddress        string                                 comment 'TODO'
+# MAGIC   , nuv_rsaddress_contact           string                                 comment 'TODO'
+# MAGIC   , sag_cpqaccountmanager           string                                 comment 'The account manager responsible for the CPQ (Configure, Price, Quote) process.'
+# MAGIC   , sag_cpqsalestaker               string                                 comment 'The column represents the sales taker associated with the sale in the SAG CPQ system.'
+# MAGIC   , sagtransactionnumber            string                                 comment 'Quote Reference'
+# MAGIC   , customer                        string                                 comment 'The name or identifier of the customer associated with the sale'
+# MAGIC   , fixedexchrate                   decimal(32,16)                         comment 'The fixed exchange rate for the transaction.'
+# MAGIC   , Sys_Bronze_InsertDateTime_UTC   timestamp                              comment 'The timestamp when this entry landed in bronze.'
+# MAGIC   , Sys_Silver_InsertDateTime_UTC   timestamp  default current_timestamp() comment 'The timestamp when this entry landed in silver.'
+# MAGIC   , Sys_Silver_ModifedDateTime_UTC  timestamp  default current_timestamp() comment 'The timestamp when this entry was last modifed in silver.'
+# MAGIC   , Sys_Silver_HashKey              bigint     not null                    comment 'HashKey over all but Sys columns.'
+# MAGIC   , Sys_Silver_IsCurrent            boolean
+# MAGIC   , constraint dbo_sag_salestablestaging_pk primary key(salesid, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the data from dbo_sag_salestablestaging. \n'
-# MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
+# MAGIC comment 'This table contains the data from dbo_sag_salestablestaging.'
+# MAGIC tblproperties ('delta.feature.allowColumnDefaults' = 'supported');
+# MAGIC
 
 # COMMAND ----------
 
@@ -98,4 +71,4 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE silver_dev.nuav_prod_sqlbyod.dbo_sag_salestablestaging OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE dbo_sag_salestablestaging OWNER TO `az_edw_data_engineers_ext_db`

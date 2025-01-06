@@ -106,20 +106,56 @@
         "source_key_columns" : ["reseller_group_fk","reseller_fk"],
         "active": 0
                  },
-    "link_vendor_to_vendor_master" : {
+    "link_vendor_to_master_vendor_pre_1" : {
         "type": "link",
-        "run_group": 2,
+        "run_group": 15,
         "run_order": 1,
-        "processing_notebook" : "{processing_notebook}",
-        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_vendor_master",  
-        "destination_key_columns" : ["master_vendor_fk","vendor_fk"],
-        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_vendor_to_vendor_master_staging" ,
-        "source_key_columns" : ["master_vendor_fk","vendor_fk"],
-        "active": 0
+        "processing_notebook" : "nb-orion-pre-process-link-vendor-to-master-vendor",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_master_vendor",  
+        "destination_key_columns" : ["master_vendor_fk","vendor_fk","vendor_fk","parent_vendor_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_master_vendor_pre1" ,
+        "source_key_columns" : ["master_vendor_fk","vendor_fk","parent_vendor_fk"],
+        "active": 1
                  },
+    "link_vendor_to_master_vendor" : {
+        "type": "link",
+        "run_group": 16,
+        "run_order": 2,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_master_vendor",  
+        "destination_key_columns" : ["master_vendor_fk","vendor_fk","vendor_fk","parent_vendor_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_master_vendor_pre1" ,
+        "source_key_columns" : ["master_vendor_fk","vendor_fk","parent_vendor_fk"],
+        "active": 1
+                 },
+                 
+    "link_vendor_to_vendor_group_pre_1" : {
+        "type": "link",
+        "run_group": 13,
+        "run_order": 1,
+        "processing_notebook" : "nb-orion-pre-process-vendor-to-vendor-group",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_vendor_group_stg",  
+        "destination_key_columns" : ["vendor_group_code","vendor_code"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_vendor_group_stg" ,
+        "source_key_columns" : ["vendor_group_code","vendor_code"],
+        "active": 1
+                 },
+    "link_vendor_to_vendor_group" : {
+        "type": "link",
+        "run_group": 14,
+        "run_order": 2,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_vendor_to_vendor_group",  
+        "destination_key_columns" : ["vendor_group_fk","vendor_fk"],
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_link_vendor_to_vendor_group_staging" ,
+        "source_key_columns" : ["vendor_fk","vendor_group_fk"],
+        "active": 1
+                 },
+
+
     "link_product_to_vendor_arr" : {
         "type": "link",
-        "run_group": 2,
+        "run_group": 17,
         "run_order": 1,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_product_to_vendor_arr",  
@@ -130,7 +166,7 @@
                  },
     "link_product_to_vendor_arr_stg2" : {
         "type": "link",
-        "run_group": 2,
+        "run_group": 18,
         "run_order": 1,
         "processing_notebook" : "{processing_notebook}",
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.link_product_to_vendor_arr",  
@@ -186,6 +222,28 @@
         "active": 1
                 },
 
+    "vendor_group_pre" : {
+        "type": "dim",
+        "run_group": 10,
+        "run_order": 1,
+        "processing_notebook" :  "nb-orion-pre-process-vendor-group-stg",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_vendor_group", 
+        "destination_key_columns" : ["vendor_group_code"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_vendor_group_stg" , 
+        "source_key_columns" : ["vendor_group_code"],
+        "active": 1
+                },
+    "vendor_group" : {
+        "type": "dim",
+        "run_group": 10,
+        "run_order": 2,
+        "processing_notebook" : "{processing_notebook}",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_vendor_group", 
+        "destination_key_columns" : ["vendor_group_code"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.dim_vendor_group_stg" , 
+        "source_key_columns" : ["vendor_group_code"],
+        "active": 1
+                },
     "reseller_group" : {
         "type": "dim",
         "run_group": 10,
@@ -242,6 +300,18 @@
         "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction_ig", 
         "destination_key_columns" : ["source_system_fk","local_fact_id","document_source"], 
         "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_sl_staging" , 
+        "source_key_columns" : ["source_system_fk","local_fact_id","document_source"],
+        "active": 1
+                },
+
+    "fact_sales_transaction_igcloud" : {
+        "type": "fact",
+        "run_group": 500,
+        "run_order": 1,
+        "processing_notebook" : "nb-orion-process-fact-sales-transactions",
+        "destination_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.fact_sales_transaction_ig", 
+        "destination_key_columns" : ["source_system_fk","local_fact_id","document_source"], 
+        "source_table_name" : "gold_{ENVIRONMENT}.{orion_schema}.vw_fact_sales_transaction_cloudblue_staging" , 
         "source_key_columns" : ["source_system_fk","local_fact_id","document_source"],
         "active": 1
                 },

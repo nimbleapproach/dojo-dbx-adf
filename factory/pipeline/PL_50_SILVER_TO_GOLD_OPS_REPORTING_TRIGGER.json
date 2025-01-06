@@ -1,0 +1,34 @@
+{
+	"name": "PL_50_SILVER_TO_GOLD_OPS_REPORTING_TRIGGER",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_99_TRIGGER_JOB",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_99_TRIGGER_JOB",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pm_JobID": {
+							"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Silver_to_Gold_ops_reporting",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "30 Gold"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -296,7 +296,7 @@
       "EnduserEmail": "end_customer_email",
       "EndUserPhoneNumber": "end_customer_phone_number",
       "ResellerPONumber": "reseller_po_to_infinigate",
-      "Amount": "claim_amount",
+      "Amount": "amount",
       "DistributorName": "distributor_name",
       "CountryOfPurchase": "country_of_purchase",
       "DistributorInvoiceNumber": "invoice_number",
@@ -619,7 +619,7 @@
       "QUANTITY": "quantity",
       "INVOICE CURRENCY": "sell_currency",
       "PURCHASE ORDER BUY PRICE - UNIT": "final_vendor_unit_buy_price",
-      "PURCHASE ORDER BUY PRICE - UNIT 2": "final_vendor_unit_buy_price_2",
+      "PURCHASE ORDER BUY PRICE - UNIT 2": "final_vendor_unit_buy_price2",
       "RESELLER (ACCOUNT NAME)": "reseller_name",
       "RESELLER (COUNTRY)": "reseller_country",
       "END CUSTOMER (ACCOUNT NAME)": "end_customer_name",
@@ -835,7 +835,7 @@
     },
     "column-mapping": {
       "Ship Date": "shipping_date",
-      "Product # ": "part_code",
+      "Product #": "part_code",
       "Quantity": "quantity",
       "S/N": "serial_number",
       "Purchase Price (USD)": "purchase_price_usd",
@@ -890,7 +890,7 @@
       "ReportingCompanyBillDate": "navision_invoice_date",
       "CambiumPartNumber": "navision_part_code_id",
       "QuantitySold": "navision_quantity",
-      "VendorReferenceNumber": "nuvias_vendor_promotion",
+      "ClaimID": "nuvias_vendor_promotion",
       "InvoiceCurrency": "navision_sell_currency",
       "PurchasePrice": "nuvias_purchase_price",
       "BillToName": "navision_reseller_name",
@@ -938,7 +938,7 @@
       "ResaleSalesOrderNumber": "nuvias_sales_order_number",
       "DistributorPurchaseOrder": "nuvias_purchase_order",
       "NavsionSalesOrderNumber": "navision_sales_order_number",
-      "ResaleInvoiceDate": "navision_invoice_date",
+      "ResaleInvoiceDate": "navision_invoice_date2",
       "ProductJuniperPartNumber": "navision_part_code_id",
       "JuniperVARID1": "nuvias_partner_id",
       "ProductQuantity": "navision_quantity",
@@ -1126,11 +1126,10 @@
       "object-layer": "gold",
       "object-schema": "ops_reporting",
       "object-name": "t_pos_reports_csc",
-      "predicate": "nuvias_vendor_name like 'SonicWall%' and navision_invoice_date between to_date('@from') and to_date('@to')"
+      "predicate": "UPPER(nuvias_vendor_name) like ('SONICWALL%') and navision_invoice_date between to_date('@from') and to_date('@to')"
     },
     "column-mapping": {
       "PoToSnwlNumber": "nuvias_purchase_order",
-      "(Used in SonicWall for filtering)": "nuvias_invoice_date",
       "InvoiceDate": "navision_invoice_date",
       "VendorPN": "navision_part_code_id",
       "ItemDesc": "nuvias_part_code_description",
@@ -1148,8 +1147,8 @@
       "BuyingCustomerPostalCode": "navision_reseller_postal_code",
       "BuyingCustomerCountry": "navision_reseller_country",
       "ShipToCustomerName": "navision_ship_to_name",
-      "ShipToCustomerPostalCode": "navision_ship_to_country",
-      "ShipToCustomerCountry": "navision_ship_to_postal_code",
+      "ShipToCustomerPostalCode": "navision_ship_to_postal_code",
+      "ShipToCustomerCountry": "navision_ship_to_country",
       "ShipToCustomerAddress1": "navision_ship_to_address1",
       "ShipToCustomerAddress2": "navision_ship_to_address2",
       "ShipToCustomerCity": "navision_ship_to_city",
@@ -1169,8 +1168,7 @@
       "SpecialPricingRequest(SPR-XXXXXXX)": "navision_vendor_claim_id",
       "InvoiceNumber": "navision_invoice_number",
       "LineItem": "navision_invoice_line_number",
-      "SnwlPnSku": "snwl_pn_sku",
-      "(used in group by statement)": "navision_sales_order_line_no"
+      "SnwlPnSku": "snwl_pn_sku"
     }
   },
   "WatchGuard POS (CSC Data Only) v2.1": {
@@ -1234,7 +1232,7 @@
     "ssrs-config": {
       "folder": "AddOnPOSCSCOnly",
       "cte-file": "AddOn.Cte.sql",
-      "main-query-file": "TODO",
+      "main-query-file": "AddOn POS CSC Only.sql",
       "database": "NUAV_Prod_SQLBYOD",
       "param-customizations": {
         "from": "cast('@from' as date)",
@@ -1249,7 +1247,7 @@
     },
     "column-mapping": {
       "CSCOrderNumber": "nuvias_sales_order_number",
-      "D365PurchasId": "nuvias_purchase_order",
+      "DistriPurchasOrder": "nuvias_purchase_order",
       "SalesOrderNumber": "navision_sales_order_number",
       "InvoiceDate": "navision_invoice_date",
       "NavisionInvoiceDate": "invoice_date",
@@ -1301,7 +1299,7 @@
       "D365Order": "nuvias_sales_order_number",
       "POR": "nuvias_purchase_order",
       "Nav SO": "navision_sales_order_number",
-      "Invoice": "navision_invoice_date",
+      "Invoice Date": "navision_invoice_date",
       "Part Number": "navision_part_code_id",
       "Part Number Description": "nuvias_part_code_description",
       "Quantity": "navision_quantity",

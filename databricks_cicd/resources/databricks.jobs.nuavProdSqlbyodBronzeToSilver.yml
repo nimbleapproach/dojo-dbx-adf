@@ -1,0 +1,386 @@
+resources:
+  jobs:
+    job_nuav_prod_sqlbyod_Bronze_to_Silver:
+      name: job-nuav_prod_sqlbyod_Bronze_to_Silver
+      tasks:
+        - task_key: dbo_v_distinctitems
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_truncate: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_v_distinctitems
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: ora_account
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_truncate: "false"
+              wg_tableSchema: nuav_prodtrans_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: ora_account
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_custcustomerv3staging
+          depends_on:
+            - task_key: dbo_v_distinctitems
+            - task_key: ora_account
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_custcustomerv3staging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_customerpostaladdressstaging
+          depends_on:
+            - task_key: dbo_custcustomerv3staging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_customerpostaladdressstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_exchangerateentitystaging
+          depends_on:
+            - task_key: dbo_customerpostaladdressstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_exchangerateentitystaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_financialdimensionvalueentitystaging
+          depends_on:
+            - task_key: dbo_exchangerateentitystaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_financialdimensionvalueentitystaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_logisticsaddresscountryregionstaging
+          depends_on:
+            - task_key: dbo_financialdimensionvalueentitystaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_logisticsaddresscountryregionstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_custinvoicetransstaging
+          depends_on:
+            - task_key: dbo_logisticsaddresscountryregionstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_custinvoicetransstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_custpackingslipjourstaging
+          depends_on:
+            - task_key: dbo_sag_custinvoicetransstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_custpackingslipjourstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_custpackingsliptransstaging
+          depends_on:
+            - task_key: dbo_sag_custpackingslipjourstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_custpackingsliptransstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_inventdimstaging
+          depends_on:
+            - task_key: dbo_sag_custpackingsliptransstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_inventdimstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_inventitemgroupstaging
+          depends_on:
+            - task_key: dbo_sag_inventdimstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_inventitemgroupstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_inventmodelgroupstaging
+          depends_on:
+            - task_key: dbo_sag_inventitemgroupstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_inventmodelgroupstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_inventtablestaging
+          depends_on:
+            - task_key: dbo_sag_inventmodelgroupstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_inventtablestaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_inventtransstaging
+          depends_on:
+            - task_key: dbo_sag_inventtablestaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_inventtransstaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_logisticspostaladdressbasestaging
+          depends_on:
+            - task_key: dbo_sag_inventtransstaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_logisticspostaladdressbasestaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_purchlinestaging
+          depends_on:
+            - task_key: dbo_sag_logisticspostaladdressbasestaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_purchlinestaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_purchtablestaging
+          depends_on:
+            - task_key: dbo_sag_purchlinestaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_purchtablestaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_saleslinev2staging
+          depends_on:
+            - task_key: dbo_sag_purchtablestaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_saleslinev2staging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_sag_salestablestaging
+          depends_on:
+            - task_key: dbo_sag_saleslinev2staging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_sag_salestablestaging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_vendvendorv2staging
+          depends_on:
+            - task_key: dbo_sag_salestablestaging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_vendvendorv2staging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: ifg_posdata
+          depends_on:
+            - task_key: dbo_vendvendorv2staging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prod_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: ifg_posdata
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: ora_oracle_contacts
+          depends_on:
+            - task_key: ifg_posdata
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prodtrans_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: ora_oracle_contacts
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: ora_oracle_opportunities
+          depends_on:
+            - task_key: ora_oracle_contacts
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prodtrans_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: ora_oracle_opportunities
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: ara_so_po_id_list
+          depends_on:
+            - task_key: dbo_custcustomerv3staging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prodtrans_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: ara_so_po_id_list
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
+        - task_key: dbo_ecoresproductv2staging
+          depends_on:
+            - task_key: dbo_custcustomerv3staging
+          notebook_task:
+            notebook_path: /Repos/ADO/inf-edw/databricks/silver/LOADING/nb-bronze-to-silver
+            base_parameters:
+              wg_DeltaLoadTable: most-recent
+              wg_forceMerge: "false"
+              wg_truncate: "false"
+              wg_replaceNulls: "false"
+              wg_tableSchema: nuav_prodtrans_sqlbyod
+              wg_watermarkColumn: Sys_Bronze_InsertDateTime_UTC
+              wg_tableName: dbo_ecoresproductv2staging
+            source: WORKSPACE
+          existing_cluster_id: ${var.existing_cluster_id}
