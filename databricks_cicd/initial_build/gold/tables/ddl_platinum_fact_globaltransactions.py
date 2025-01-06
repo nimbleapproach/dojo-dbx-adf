@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %run ./../../nb-build-common
+
+# COMMAND ----------
+
 # Importing Libraries
 import os
 spark = spark  # noqa
@@ -29,9 +33,7 @@ schema = 'obt'
 
 # COMMAND ----------
 
-spark.sql(f"""
-ALTER TABLE {catalog}.{schema}.globaltransactions ADD COLUMN
-  matched_arr_type STRING,
-  matched_type STRING,
-  is_matched INT
-""")
+
+add_column_if_not_exists(catalog, schema, "globaltransactions", "matched_arr_type", "STRING")
+add_column_if_not_exists(catalog, schema, "globaltransactions", "matched_type", "STRING")
+add_column_if_not_exists(catalog, schema, "globaltransactions", "is_matched", "INT")
