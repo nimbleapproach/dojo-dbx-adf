@@ -778,7 +778,7 @@ duplicate_records = check_duplicate_keys(df_source, key_cols)
 # COMMAND ----------
 
 # Convert to PySpark DataFrame
-df_source_manual = spark.table(f"silver_dev.masterdata.datanowarr")
+df_source_manual = spark.table(f"silver_{ENVIRONMENT}.masterdata.datanowarr")
 df_source_manual = df_source_manual.filter(col("Sys_Silver_IsCurrent") == True)
 # Example usage:
 key_cols=["SKU", "Vendor_Name"]
