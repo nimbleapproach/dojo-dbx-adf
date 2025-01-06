@@ -1,0 +1,41 @@
+{
+	"name": "DiscountRuns",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_IGCLOUD_INVOICE",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_database": "sqldb-azureinvoices-prod"
+			}
+		},
+		"folder": {
+			"name": "Sources/CLOUDBLUE/Invoice"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Tenant",
+				"type": "nvarchar"
+			},
+			{
+				"name": "UsageFile",
+				"type": "nvarchar"
+			},
+			{
+				"name": "StartTime",
+				"type": "datetime2",
+				"scale": 7
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "DiscountRuns"
+		}
+	}
+}
