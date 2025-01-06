@@ -77,8 +77,8 @@ targets:
         level: CAN_MANAGE
     variables: 
       existing_cluster_id: "1216-133954-8hl7aeag"
-      existing_silver_pool_id: :"1214-142409-tins207-pool-xydaktwy"
-      existing_gold_pool_id: :"1214-142437-cramp208-pool-ozomc2b6"
+      existing_silver_pool_id: "1214-142409-tins207-pool-xydaktwy"
+      existing_gold_pool_id: "1214-142437-cramp208-pool-ozomc2b6"
       existing_sqlwarehouse_id: "757a6e5552e30f16"
     
 
