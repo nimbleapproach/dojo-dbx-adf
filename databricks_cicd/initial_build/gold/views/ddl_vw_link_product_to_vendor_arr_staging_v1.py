@@ -34,7 +34,7 @@ with cte as (
   select row_number() over (partition by lower((concat(it.Vendor_Name, '|', it.sku)))
   order by it.Sys_Bronze_InsertDateTime_UTC desc) latest_rn
   ,* 
-  from silver_dev.masterdata.datanowarr it
+  from silver_{ENVIRONMENT}.masterdata.datanowarr it
  WHERE
   it.Sys_Silver_IsCurrent = true
   )
