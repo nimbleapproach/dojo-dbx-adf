@@ -94,7 +94,7 @@ targets:
         level: CAN_MANAGE
     variables: 
       existing_cluster_id: "1216-134132-rttgeb5l"
-      existing_silver_pool_id: :"0105-094342-lap253-pool-ax8orq2a"
-      existing_gold_pool_id: :"0105-094238-yawns255-pool-in0xryl2"
-      existing_sqlwarehouse_id: "757a6e5552e30f16"
+      existing_silver_pool_id: "0105-094342-lap253-pool-ax8orq2a"
+      existing_gold_pool_id: "0105-094238-yawns255-pool-in0xryl2"
+      existing_sqlwarehouse_id: "3a7a2316852ac513"
     
