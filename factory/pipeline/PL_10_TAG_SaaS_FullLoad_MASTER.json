@@ -79,11 +79,10 @@
 										"value": "@item().TABLE_NAME",
 										"type": "Expression"
 									},
-									"pm_UpdateDate": {
-										"value": "@variables('UpdateDate')",
+									"pm_FullLoad": {
+										"value": "@item().FULL_LOAD",
 										"type": "Expression"
-									},
-									"pm_FullLoad": "@item().FULL_LOAD"
+									}
 								}
 							}
 						}
