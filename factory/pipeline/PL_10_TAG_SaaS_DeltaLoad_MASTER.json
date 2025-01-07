@@ -108,7 +108,7 @@
 				"typeProperties": {
 					"variableName": "UpdateDate",
 					"value": {
-						"value": "@startOfDay(subtractFromTime(utcNow(), 1, 'Day'))",
+						"value": "@if(equals(dayOfWeek(utcNow()), 1), startOfDay(subtractFromTime(utcNow(), 3, 'Day')), startOfDay(subtractFromTime(utcNow(), 1, 'Day')))",
 						"type": "Expression"
 					}
 				}

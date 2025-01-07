@@ -1,0 +1,27 @@
+{
+	"name": "DS_SQL_VUZION_PORTAL_DYNAMIC",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_IGCLOUD_PORTAL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"pm_TableName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/VUZION"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "dbo",
+				"type": "Expression"
+			},
+			"table": "@dataset().pm_TableName"
+		}
+	}
+}
