@@ -1,0 +1,36 @@
+{
+	"name": "DS_SQL_VUZION_INVOICE_DYNAMIC",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_IGCLOUD_INVOICE",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"pm_database": {
+					"value": "@dataset().pm_Database",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"pm_TableName": {
+				"type": "string"
+			},
+			"pm_Database": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Sources/VUZION"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "dbo",
+				"type": "Expression"
+			},
+			"table": "@dataset().pm_TableName"
+		}
+	}
+}
