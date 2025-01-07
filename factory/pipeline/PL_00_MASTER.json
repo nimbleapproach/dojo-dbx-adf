@@ -433,7 +433,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "PL_20_DATANOW_ARR_LATEST_Load_Sheet",
+						"referenceName": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
