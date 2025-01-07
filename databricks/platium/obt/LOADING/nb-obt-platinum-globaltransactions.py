@@ -13,7 +13,6 @@ spark.catalog.setCurrentCatalog(f"platinum_{ENVIRONMENT}")
 # MAGIC Use SCHEMA obt
 
 # COMMAND ----------
-
 spark.sql(f"""
 Create or replace temporary view max_fx_rates as 
 SELECT
