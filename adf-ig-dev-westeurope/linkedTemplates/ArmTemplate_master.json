@@ -84,6 +84,30 @@
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-azureinvoices-prod.database.windows.net"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_database}"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adl_readonly_temp"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-development-dev.database.windows.net"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "Portal"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adl_readonly_temp"
+		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"metadata": "Secure string for 'baseUrl' of 'LS_KV'"
@@ -299,17 +323,29 @@
 					"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url')]"
 					},
+					"LS_IGCLOUD_INVOICE_properties_typeProperties_server": {
+						"value": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_server')]"
+					},
+					"LS_IGCLOUD_INVOICE_properties_typeProperties_database": {
+						"value": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_database')]"
+					},
+					"LS_IGCLOUD_INVOICE_properties_typeProperties_userName": {
+						"value": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_userName')]"
+					},
+					"LS_IGCLOUD_PORTAL_properties_typeProperties_server": {
+						"value": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_server')]"
+					},
+					"LS_IGCLOUD_PORTAL_properties_typeProperties_database": {
+						"value": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_database')]"
+					},
+					"LS_IGCLOUD_PORTAL_properties_typeProperties_userName": {
+						"value": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_userName')]"
+					},
 					"LS_Oracle_CX_properties_typeProperties_host": {
 						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_host')]"
 					},
 					"LS_Oracle_CX_properties_typeProperties_username": {
 						"value": "[parameters('LS_Oracle_CX_properties_typeProperties_username')]"
-					},
-					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
-					},
-					"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
-						"value": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					}
 				}
 			},
@@ -334,6 +370,12 @@
 					},
 					"LS_SQL_TEST_connectionString": {
 						"value": "[parameters('LS_SQL_TEST_connectionString')]"
+					},
+					"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
 					},
 					"LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LS_SQLDB_CRM_DYNAMIC_properties_typeProperties_connectionString_secretName')]"

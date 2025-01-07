@@ -84,6 +84,30 @@
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-azureinvoices-prod.database.windows.net"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_database}"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adl_readonly_temp"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-development-dev.database.windows.net"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "Portal"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adl_readonly_temp"
+		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"metadata": "Secure string for 'baseUrl' of 'LS_KV'"
@@ -2786,6 +2810,12 @@
 								"dependencyConditions": [
 									"Succeeded"
 								]
+							},
+							{
+								"activity": "PL_00_MASTERDATA_Load_File_ARR",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
 						"policy": {
@@ -2935,6 +2965,30 @@
 						}
 					},
 					{
+						"name": "PL_40_SILVER_TO_GOLD_OPS_REPORTING_MASTER",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "PL_00_BRONZE_TO_SILVER_MASTER",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_40_SILVER_TO_GOLD_OPS_REPORTING_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
 						"name": "PL_00_IGSQL01_Load_View_MASTER",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
@@ -2972,6 +3026,23 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
+					},
+					{
+						"name": "PL_00_MASTERDATA_Load_File_ARR",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -3004,8 +3075,10 @@
 				"[concat(variables('factoryId'), '/pipelines/PL_00_DCB_Load_File_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_NUAZ-SQLSERVER-01_Load_Table_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_20_SILVER_TO_GOLD_TAG02_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_40_SILVER_TO_GOLD_OPS_REPORTING_MASTER')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_00_IGSQL01_Load_Table_MASTER')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_10_TAG_SaaS_DeltaLoad_MASTER')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_10_TAG_SaaS_DeltaLoad_MASTER')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER')]"
 			]
 		},
 		{
@@ -9501,6 +9574,77 @@
 								}
 							}
 						]
+					},
+					{
+						"name": "move files",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Load Sheet",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": "datanow/arr/latest",
+									"wildcardFileName": "*.xlsx",
+									"deleteFilesAfterCompletion": true
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"copyBehavior": "PreserveHierarchy"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_DV_BINARY",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_Container": "external",
+									"pm_FilePath": "datanow/arr/latest"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_DV_BINARY",
+								"type": "DatasetReference",
+								"parameters": {
+									"pm_Environment": {
+										"value": "@pipeline().globalParameters.gpm_Environment",
+										"type": "Expression"
+									},
+									"pm_Container": "external",
+									"pm_FilePath": "datanow/arr/old"
+								}
+							}
+						]
 					}
 				],
 				"policy": {
@@ -9514,7 +9658,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_DATANOW_ARR_LATEST_EXCEL')]",
-				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]"
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_STATIC')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_DV_BINARY')]"
 			]
 		},
 		{
@@ -17084,6 +17229,83 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_40_SILVER_TO_GOLD_OPS_REPORTING_MASTER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_50_SILVER_TO_GOLD_OPS_REPORTING_TRIGGER",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_50_SILVER_TO_GOLD_OPS_REPORTING_TRIGGER",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_50_SILVER_TO_GOLD_OPS_REPORTING_TRIGGER')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_50_SILVER_TO_GOLD_OPS_REPORTING_TRIGGER')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "PL_99_TRIGGER_JOB",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "PL_99_TRIGGER_JOB",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pm_JobID": {
+									"value": "@pipeline().globalParameters.gpm_Databricks_JobID_Silver_to_Gold_ops_reporting",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "30 Gold"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_99_TRIGGER_JOB')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_99_IGSQL03_CREATE_EDW_LAYER')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -20302,6 +20524,68 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_IGCLOUD_INVOICE')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_database": {
+						"type": "string",
+						"defaultValue": "sqldb-azureinvoices-prod"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_server')]",
+					"database": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "scecret-sql-azureinvoices-prod-ig-cloud"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_IGCLOUD_PORTAL')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_server')]",
+					"database": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "secret-sql-development-dev-ig-cloud"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_KV')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -22478,7 +22762,7 @@
 				},
 				"gpm_Databricks_JobID_Silver_to_Gold_obt": {
 					"type": "string",
-					"value": "584896541836875"
+					"value": "934900058971998"
 				},
 				"gpm_Vuzion_CRM_Uri": {
 					"type": "string",
@@ -22491,6 +22775,10 @@
 				"gpm_Databricks_JobID_Silver_to_Gold_tag02": {
 					"type": "string",
 					"value": "13137093789100"
+				},
+				"gpm_Databricks_JobID_Silver_to_Gold_ops_reporting": {
+					"type": "string",
+					"value": "34820715430567"
 				}
 			},
 			"dependsOn": []

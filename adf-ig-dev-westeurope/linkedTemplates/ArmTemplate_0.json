@@ -109,6 +109,30 @@
 			"type": "string",
 			"defaultValue": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-azureinvoices-prod.database.windows.net"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "@{linkedService().pm_database}"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adl_readonly_temp"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sql-development-dev.database.windows.net"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "Portal"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adl_readonly_temp"
+		},
 		"LS_Oracle_CX_properties_typeProperties_host": {
 			"type": "string",
 			"defaultValue": "https://nuviastest1.bigmachines.com/"
@@ -116,14 +140,6 @@
 		"LS_Oracle_CX_properties_typeProperties_username": {
 			"type": "string",
 			"defaultValue": "CRM.Admin"
-		},
-		"LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-cloudblue-commerce-oss-connectionsstring"
-		},
-		"LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName": {
-			"type": "string",
-			"defaultValue": "secret-cloudblue-commerce-pba-connectionsstring"
 		}
 	},
 	"variables": {
@@ -157,7 +173,7 @@
 				},
 				"gpm_Databricks_JobID_Silver_to_Gold_obt": {
 					"type": "string",
-					"value": "584896541836875"
+					"value": "934900058971998"
 				},
 				"gpm_Vuzion_CRM_Uri": {
 					"type": "string",
@@ -170,6 +186,10 @@
 				"gpm_Databricks_JobID_Silver_to_Gold_tag02": {
 					"type": "string",
 					"value": "13137093789100"
+				},
+				"gpm_Databricks_JobID_Silver_to_Gold_ops_reporting": {
+					"type": "string",
+					"value": "34820715430567"
 				}
 			},
 			"dependsOn": []
@@ -735,6 +755,68 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_IGCLOUD_INVOICE')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"pm_database": {
+						"type": "string",
+						"defaultValue": "sqldb-azureinvoices-prod"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_server')]",
+					"database": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_IGCLOUD_INVOICE_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "scecret-sql-azureinvoices-prod-ig-cloud"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_IGCLOUD_PORTAL')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_server')]",
+					"database": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('LS_IGCLOUD_PORTAL_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "secret-sql-development-dev-ig-cloud"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_Oracle_CX')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -759,72 +841,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/ir-ig-managed-dev-westeurope')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_OSS')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "PostgreSql",
-				"typeProperties": {
-					"connectionString": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {}
-						},
-						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_OSS_properties_typeProperties_connectionString_secretName')]"
-					}
-				},
-				"connectVia": {
-					"referenceName": "shir-jumpbi01-shared",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_PGSQL_CLOUDBLUE_PBA')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"parameters": {
-					"pm_Environment": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "PostgreSql",
-				"typeProperties": {
-					"connectionString": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference",
-							"parameters": {}
-						},
-						"secretName": "[parameters('LS_PGSQL_CLOUDBLUE_PBA_properties_typeProperties_connectionString_secretName')]"
-					}
-				},
-				"connectVia": {
-					"referenceName": "shir-jumpbi01-shared",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/shir-jumpbi01-shared')]",
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
 			]
 		}
 	]

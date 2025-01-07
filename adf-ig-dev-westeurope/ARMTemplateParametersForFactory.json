@@ -62,6 +62,24 @@
 		"LS_ADLS_NUVIAS_DYNAMICS_properties_typeProperties_url": {
 			"value": "https://d365storageaccountdlhliv.dfs.core.windows.net"
 		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_server": {
+			"value": "sql-azureinvoices-prod.database.windows.net"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_database": {
+			"value": "@{linkedService().pm_database}"
+		},
+		"LS_IGCLOUD_INVOICE_properties_typeProperties_userName": {
+			"value": "adl_readonly_temp"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_server": {
+			"value": "sql-development-dev.database.windows.net"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_database": {
+			"value": "Portal"
+		},
+		"LS_IGCLOUD_PORTAL_properties_typeProperties_userName": {
+			"value": "adl_readonly_temp"
+		},
 		"LS_KV_properties_typeProperties_baseUrl": {
 			"value": ""
 		},
