@@ -112,16 +112,9 @@ resources:
             notebook_path: /Repos/ADO/inf-edw/databricks/platium/obt/LOADING/nb-obt-platinum-globaltransactions
             source: WORKSPACE
           job_cluster_key: job-cluster-gold-memory-optimized-photon
-        
-        - task_key: process_arr
-          depends_on:
-            - task_key: platinum_globaltransactions
-          run_if: ALL_DONE
-          run_job_task:
-            job_id: ${resources.jobs.inf_edw_model_job_product_vendor_arr.id}
         - task_key: test_globaltransactions
           depends_on:
-            - task_key: process_arr
+            - task_key: platinum_globaltransactions
           run_if: ALL_DONE
           notebook_task:
             notebook_path: /Repos/ADO/inf-edw/databricks/gold/obt/TESTING/nb-gold-testing-obt
