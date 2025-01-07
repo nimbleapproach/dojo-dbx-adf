@@ -92,7 +92,7 @@ for report_param_name in report_params:
 
 # COMMAND ----------
 
-from pyspark.sql.functions import *
+from pyspark.sql.functions import col, sum
 from pyspark.sql import Window
 
 column_mapping = dict((v, k) for k, v in column_mapping.items())
@@ -159,26 +159,82 @@ dataset = databricks_table.collect()
 
 from copy import copy
 from datetime import datetime
+from openpyxl.drawing.spreadsheet_drawing import TwoCellAnchor
 from openpyxl.reader.excel import load_workbook
 from openpyxl.styles import Alignment
+from openpyxl.utils import get_column_letter
 
 # Loading report template
 template = "template.xlsx"
 wb = load_workbook(working_folder + "/" + template)
 sheet = wb.active
+totals_row_count = len(report_totals)
+
+# Template-specific values
+report_name_cell_name = "A1"
+date_range_cell_name = "A3"
+
+total_template_first_cell_col = "A"
+total_template_last_cell_col = "C"
+total_template_cell_row = 4
+
+header_template_cell_col = "A"
+header_template_cell_row = 4
+
+sheet_header_row_count = total_template_cell_row + totals_row_count
+
+data_template_cell_col = "A"
+data_template_cell_row = header_template_cell_row + 1
+
+date_range_input_format = "%Y-%m-%d"
+date_range_print_format = "%d/%m/%Y"
+
+cell_date_format = '[$-en-US,1]dd/mm/yyyy'
+cell_number_format = '[$-en-US,1]#,##0.00'
+
+splitter_row_height = 5
+min_column_width = 10
+max_column_width = 70
+column_width_factor = 1.2
+
+logo_row = 0
+logo_row_offset = 60000 # in EMUs (EMU is equivalent to 1/360,000 of a centimeter)
+logo_length = 3 # in cells
+logo_height = 1 # in cells
+
+attachment_mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+header_template_cell_name = header_template_cell_col + str(header_template_cell_row)
+header_template_cell = sheet[header_template_cell_name]
+header_cell_font = copy(header_template_cell.font)
+header_cell_fill = copy(header_template_cell.fill)
+header_cell_border = copy(header_template_cell.border)
+
+data_template_cell_name = data_template_cell_col + str(data_template_cell_row)
+data_template_cell = sheet[data_template_cell_name]
+data_cell_font = copy(data_template_cell.font)
+data_cell_border = copy(data_template_cell.border)
+
+# Positioning logo
+image_ = sheet._images[0]
+
+anchor = TwoCellAnchor()
+anchor._from.row = logo_row
+anchor._from.rowOff = logo_row_offset
+anchor._from.col = len(report_columns) + 1
+anchor.to.row = logo_row + logo_height
+anchor.to.rowOff = logo_row_offset
+anchor.to.col = len(report_columns) + 1 + logo_length
+
+image_.anchor = anchor
 
 # Populating sheet name
 sheet.title = REPORT_NAME
 
 # Populating report name header
-report_name_cell_name = "A1"
 sheet[report_name_cell_name] = REPORT_NAME
 
 # Populating date range header
-date_range_cell_name = "A3"
-date_range_input_format = "%Y-%m-%d"
-date_range_print_format = "%d/%m/%Y"
-
 formatted_date_from = datetime.strftime(datetime.strptime(input_params["from"], date_range_input_format),
                                         date_range_print_format)
 formatted_date_to = datetime.strftime(datetime.strptime(input_params["to"], date_range_input_format),
@@ -187,52 +243,7 @@ formatted_date_to = datetime.strftime(datetime.strptime(input_params["to"], date
 date_range_header_text = f"Report Period From {formatted_date_from} To {formatted_date_to}"
 sheet[date_range_cell_name] = date_range_header_text
 
-# Populating data column headers
-header_template_cell_col = "A"
-header_template_cell_row = 4
-header_template_cell_name = header_template_cell_col + str(header_template_cell_row)
-header_template_cell = sheet[header_template_cell_name]
-header_cell_font = copy(header_template_cell.font)
-header_cell_fill = copy(header_template_cell.fill)
-header_cell_border = copy(header_template_cell.border)
-
-for i, col in enumerate(report_columns):
-    c = sheet.cell(row=header_template_cell_row, column=i + 1)
-    c.value = col
-    c.font = header_cell_font
-    c.fill = header_cell_fill
-    c.border = header_cell_border
-
-# Populating data cells
-data_template_cell_col = "A"
-data_template_cell_row = 5
-data_template_cell_name = data_template_cell_col + str(data_template_cell_row)
-data_template_cell = sheet[data_template_cell_name]
-data_cell_font = copy(data_template_cell.font)
-data_cell_border = copy(data_template_cell.border)
-
-cell_date_format = '[$-en-US,1]dd/mm/yyyy'
-cell_number_format = '[$-en-US,1]#,##0.00'
-
-for i, data_row in enumerate(dataset):
-    for j, data_col in enumerate(report_columns):
-        # print(data_row.asDict())
-        c = sheet.cell(row=header_template_cell_row + i + 1, column=j + 1)
-        c.value = data_row[data_col]
-        c.border = data_cell_border
-        c.font = data_cell_font
-
-        data_type = report_data_types[data_col]
-        if (data_type == "float") or (data_type == "double") or (data_type.startswith("decimal")):
-            c.number_format = cell_number_format
-        elif (data_type == "date") or (data_type == "timestamp") or (data_type == "timestampNTZ"):
-            c.number_format = cell_date_format
-
 # Populating totals
-total_template_first_cell_col = "A"
-total_template_last_cell_col = "C"
-total_template_cell_row = 4
-
 current_row = total_template_cell_row
 
 for total in report_totals:
@@ -254,10 +265,39 @@ for total in report_totals:
 
     current_row = current_row + 1
 
-# freezing header
-header_row_count = total_template_cell_row + len(report_totals)
+# Populating data column headers
+for i, col in enumerate(report_columns):
+    c = sheet.cell(row=sheet_header_row_count, column=i + 1)
+    c.value = col
+    c.font = header_cell_font
+    c.fill = header_cell_fill
+    c.border = header_cell_border
+
+# Populating data cells
+for i, data_row in enumerate(dataset):
+    for j, data_col in enumerate(report_columns):
+        # print(data_row.asDict())
+        c = sheet.cell(row=sheet_header_row_count + i + 1, column=j + 1)
+        c.value = data_row[data_col]
+        c.border = data_cell_border
+        c.font = data_cell_font
+
+        data_type = report_data_types[data_col]
+        if (data_type == "float") or (data_type == "double") or (data_type.startswith("decimal")):
+            c.number_format = cell_number_format
+        elif (data_type == "date") or (data_type == "timestamp") or (data_type == "timestampNTZ"):
+            c.number_format = cell_date_format
+        
+# Auto-sizing columns
+for column_cells in sheet.columns:
+    max_length = max(0 if cell.value is None else len(str(cell.value)) for cell in column_cells[sheet_header_row_count - 1:])    
+    column_letter = get_column_letter(column_cells[0].column)
+    sheet.column_dimensions[column_letter].width = max(min_column_width, min(max_column_width, max_length * column_width_factor))
+
+# Freezing header
+header_row_count = total_template_cell_row + totals_row_count
 sheet.insert_rows(header_row_count)
-sheet.row_dimensions[header_row_count].height = 5
+sheet.row_dimensions[header_row_count].height = splitter_row_height
 sheet.freeze_panes = total_template_first_cell_col + str(header_row_count + 2)
 
 # Saving result
@@ -289,4 +329,5 @@ smtp_port = 587
 subject = f"{REPORT_NAME} subscription"
 body = f"{REPORT_NAME} extract for the period from {input_params['from']} to {input_params['to']}"
 
-sendEmail(subject, sender_email, subscription_to, subscription_cc, subscription_bcc, body, [report_file_path], smtp_host, smtp_port, smtp_login, smtp_password)
+sendEmail(subject, sender_email, subscription_to, subscription_cc, subscription_bcc, body, {report_file_path : attachment_mime_type},
+          smtp_host, smtp_port, smtp_login, smtp_password)
