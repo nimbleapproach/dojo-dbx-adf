@@ -95,7 +95,7 @@ def get_sales_analysis_v2(period=None, full_year=False):
     Returns:
     pyspark.sql.DataFrame: Analysis results
     """
-    ENVIRONMENT = os.getenv('ENVIRONMENT', 'dev')
+    ENVIRONMENT = os.environ["__ENVIRONMENT__"]
     BASE_PATH = f"silver_{ENVIRONMENT}.igsql03"
     
     if period is None:
