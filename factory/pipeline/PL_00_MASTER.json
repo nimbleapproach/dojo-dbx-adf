@@ -216,6 +216,12 @@
 						"dependencyConditions": [
 							"Succeeded"
 						]
+					},
+					{
+						"activity": "PL_00_MASTERDATA_Load_File_ARR",
+						"dependencyConditions": [
+							"Succeeded"
+						]
 					}
 				],
 				"policy": {
@@ -412,6 +418,22 @@
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "PL_10_TAG_SaaS_DeltaLoad_MASTER",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_00_MASTERDATA_Load_File_ARR",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_00_DATANOW_ARR_LATEST_Load_Sheet_MASTER",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
