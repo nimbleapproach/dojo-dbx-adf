@@ -31,30 +31,6 @@ GROUP BY Currency
 
 # COMMAND ----------
 
-spark.sql(f"""
-Create or replace temporary view globaltransactions_arr_history as 
-SELECT
-SKUInternal
-,SKUMaster
-,VendorNameInternal
-,VendorNameMaster
-,(date_format(TransactionDate, 'yyyy-MM')) as TransactionDateYYYYMM
-,is_matched 
-,matched_type
-,matched_arr_type
-,ProductTypeMaster
-,CommitmentDuration1Master
-,CommitmentDuration2Master
-,BillingFrequencyMaster
-,ConsumptionModelMaster
-FROM gold_{ENVIRONMENT}.orion.globaltransactions_arr r
-  group by all
-  """)
- 
-
-
-# COMMAND ----------
-
 # IG
 spark.sql(f"""SELECT 
   CASE WHEN Sys_DatabaseName ='ReportsBE' AND TransactionDate >='2024-07-01'
@@ -699,67 +675,14 @@ FROM
 spark.sql(f"""
           
 CREATE OR REPLACE TABLE platinum_{ENVIRONMENT}.obt.globaltransactions as 
-with cte as (
-    SELECT * FROM IG
-    UNION ALL 
-    SELECT * FROM NU
-    UNION ALL 
-    SELECT * FROM NU_Journal
-    UNION ALL 
-    SELECT * FROM SL
-    UNION ALL
-    SELECT * FROM VU
-)
-select 
-a.GroupEntityCode
-,a.EntityCode
-,a.DocumentNo
-,a.TransactionDate
-,a.SalesOrderDate
-,a.SalesOrderID
-,a.SalesOrderItemID
-,a.SKUInternal
-,a.SKUMaster
-,a.Description
-,a.Technology
-,a.ProductTypeInternal
-,coalesce(b.ProductTypeMaster, a.ProductTypeMaster) ProductTypeMaster
-,coalesce(b.CommitmentDuration1Master, a.CommitmentDuration1Master) CommitmentDuration1Master
-,coalesce(b.CommitmentDuration2Master, a.CommitmentDuration2Master) CommitmentDuration2Master
-,coalesce(b.BillingFrequencyMaster, a.BillingFrequencyMaster) BillingFrequencyMaster
-,coalesce(b.ConsumptionModelMaster, a.ConsumptionModelMaster) ConsumptionModelMaster
-,a.VendorCode
-,a.VendorNameInternal
-,a.VendorNameMaster
-,a.VendorGeography
-,a.VendorStartDate
-,a.ResellerCode
-,a.ResellerNameInternal
-,a.ResellerGeographyInternal
-,a.ResellerStartDate
-,a.ResellerGroupCode
-,a.ResellerGroupName
-,a.ResellerGroupStartDate
-,a.EndCustomer
-,a.IndustryVertical
-,a.CurrencyCode
-,a.RevenueAmount
-,a.Period_FX_rate
-,a.RevenueAmount_Euro
-,a.GP1
-,a.GP1_Euro
-,a.COGS
-,a.COGS_Euro
-,a.GL_Group
-,a.TopCostFlag
-,b.is_matched 
-,b.matched_type
-,b.matched_arr_type
-from cte a
-left join globaltransactions_arr_history b on 
-    COALESCE(a.SKUInternal, 'NA') = COALESCE(b.SKUInternal, 'NA')
-    AND COALESCE(a.SKUMaster, 'NA') = COALESCE(b.SKUMaster, 'NA')
-    AND COALESCE(a.VendorNameInternal, 'NA') = COALESCE(b.VendorNameInternal, 'NA')
-    AND COALESCE(a.VendorNameMaster, 'NA') = COALESCE(b.VendorNameMaster, 'NA')
-    AND (date_format(a.TransactionDate, 'yyyy-MM')) = b.TransactionDateYYYYMM
+SELECT * FROM IG
+UNION ALL 
+SELECT * FROM NU
+UNION ALL 
+SELECT * FROM NU_Journal
+UNION ALL 
+SELECT * FROM SL
+UNION ALL
+SELECT * FROM VU
+
 """)
