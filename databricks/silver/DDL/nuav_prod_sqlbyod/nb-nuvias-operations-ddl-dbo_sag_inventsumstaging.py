@@ -16,19 +16,23 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE OR REPLACE TABLE dbo_sag_inventdimstaging
+# MAGIC CREATE OR REPLACE TABLE dbo_sag_inventsumstaging
 # MAGIC   (
 # MAGIC     SID BIGINT GENERATED ALWAYS AS IDENTITY
 # MAGIC       COMMENT 'Surrogate Key'
+# MAGIC   , RECID_ BIGINT
+# MAGIC       COMMENT 'TODO'
 # MAGIC   , INVENTDIMID STRING
+# MAGIC       COMMENT 'TODO'
+# MAGIC   , ITEMID STRING
 # MAGIC       COMMENT 'TODO'
 # MAGIC   , DATAAREAID STRING
 # MAGIC       COMMENT 'TODO'
-# MAGIC   , INVENTLOCATIONID STRING
+# MAGIC   , PHYSICALINVENT DECIMAL(32,6)
 # MAGIC       COMMENT 'TODO'
-# MAGIC   , WMSLOCATIONID STRING
+# MAGIC   , RESERVPHYSICAL DECIMAL(32,6)
 # MAGIC       COMMENT 'TODO'
-# MAGIC   , INVENTSERIALID STRING
+# MAGIC   , AVAILPHYSICAL DECIMAL(32,6)
 # MAGIC       COMMENT 'TODO'
 # MAGIC   , Sys_Bronze_InsertDateTime_UTC TIMESTAMP
 # MAGIC       COMMENT 'The timestamp when this entry landed in bronze.'
@@ -41,21 +45,21 @@ spark.catalog.setCurrentCatalog(f"silver_{ENVIRONMENT}")
 # MAGIC   , Sys_Silver_HashKey BIGINT NOT NULL
 # MAGIC       COMMENT 'HashKey over all but Sys columns.'
 # MAGIC   , Sys_Silver_IsCurrent BOOLEAN
-# MAGIC   , CONSTRAINT dbo_sag_inventdimstaging_pk PRIMARY KEY(INVENTDIMID, DATAAREAID, Sys_Bronze_InsertDateTime_UTC)
+# MAGIC   , CONSTRAINT dbo_sag_inventsumstaging_pk PRIMARY KEY(RECID_, Sys_Bronze_InsertDateTime_UTC)
 # MAGIC   )
-# MAGIC COMMENT 'This table contains the data from dbo_sag_inventdimstaging. \n'
+# MAGIC COMMENT 'This table contains the data from dbo_sag_inventsumstaging. \n'
 # MAGIC TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE dbo_sag_inventdimstaging ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE dbo_sag_inventdimstaging ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
-# MAGIC ALTER TABLE dbo_sag_inventdimstaging ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_sag_inventsumstaging ADD CONSTRAINT dateWithinRange_Bronze_InsertDateTime CHECK (Sys_Bronze_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_sag_inventsumstaging ADD CONSTRAINT dateWithinRange_Silver_InsertDateTime CHECK (Sys_Silver_InsertDateTime_UTC > '1900-01-01');
+# MAGIC ALTER TABLE dbo_sag_inventsumstaging ADD CONSTRAINT dateWithinRange_Silver_ModifedDateTime CHECK (Sys_Silver_ModifedDateTime_UTC > '1900-01-01');
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC
-# MAGIC ALTER TABLE dbo_sag_inventdimstaging OWNER TO `az_edw_data_engineers_ext_db`
+# MAGIC ALTER TABLE dbo_sag_inventsumstaging OWNER TO `az_edw_data_engineers_ext_db`
