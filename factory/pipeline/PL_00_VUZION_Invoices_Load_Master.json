@@ -1,0 +1,78 @@
+{
+	"name": "PL_00_VUZION_Invoices_Load_Master",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Invoice Data",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Get Pricelist Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_VUZION_Load_Invoices",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Get Measures Data",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Get Invoice Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_VUZION_Load_Measures",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Get Pricelist Data",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_10_VUZION_Load_Pricelist",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"variables": {
+			"UpdateDate": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "10 Bronze/VUZION/Invoices"
+		},
+		"annotations": []
+	}
+}
