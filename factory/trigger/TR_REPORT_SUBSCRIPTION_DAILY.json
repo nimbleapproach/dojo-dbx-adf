@@ -1,5 +1,5 @@
 {
-	"name": "TR_DAILY_REPORT_SUBSCRIPTION",
+	"name": "TR_REPORT_SUBSCRIPTION_DAILY",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Stopped",
