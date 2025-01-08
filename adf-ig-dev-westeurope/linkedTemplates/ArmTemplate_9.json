@@ -33,7 +33,7 @@
 						"typeProperties": {
 							"source": {
 								"type": "AzureSqlSource",
-								"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\nFROM [adf].[CT_TAG_SAAS_TABLES]\nWHERE FULL_LOAD = 0",
+								"sqlReaderQuery": "SELECT distinct [CODE],[TABLE_NAME],[FULL_LOAD]\nFROM [adf].[CT_TAG_SAAS_TABLES]\nWHERE TABLE_NAME in ('AZIENDA', 'DATI_CAMBIO', 'DATI_RETT_RIGA', 'DATI_SALDI_LORDI')",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
