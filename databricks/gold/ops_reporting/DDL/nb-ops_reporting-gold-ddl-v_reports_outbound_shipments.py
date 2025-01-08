@@ -5,10 +5,6 @@ ENVIRONMENT = os.environ["__ENVIRONMENT__"]
 
 # COMMAND ----------
 
-ENVIRONMENT = "dev"
-
-# COMMAND ----------
-
 spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 
 # COMMAND ----------
@@ -34,7 +30,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC          , ps.itemid                                         as Item
 # MAGIC          , sum(ps.weight)                                    as Weight
 # MAGIC          , sum(ps.qty)                                       as Qty
-# MAGIC          , id.inventlocationid                               as Warehouse
+# MAGIC          , upper(id.inventlocationid)                        as Warehouse
 # MAGIC          , di.itemgroupname                                  as ItemGroup
 # MAGIC          , pr.trackingdimensiongroupname                     as Serialized
 # MAGIC          , case when pr.trackingdimensiongroupname = 'SN'
@@ -68,7 +64,7 @@ spark.catalog.setCurrentCatalog(f"gold_{ENVIRONMENT}")
 # MAGIC         , upper(pj.intercompanycompanyid)
 # MAGIC         , pj.sag_trackingnumber
 # MAGIC         , ps.itemid
-# MAGIC         , id.inventlocationid
+# MAGIC         , upper(id.inventlocationid)
 # MAGIC         , di.itemgroupname
 # MAGIC         , pr.trackingdimensiongroupname
 # MAGIC         , di.primaryvendorname
