@@ -44,8 +44,6 @@
 						{
 							"name": "Load Dimension",
 							"type": "Copy",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
 							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
@@ -102,7 +100,7 @@
 										"pm_Environment": "@pipeline().globalParameters.gpm_Environment",
 										"pm_FileSystem": "bronze",
 										"pm_Directory": {
-											"value": "tag02_testing/@{pipeline().parameters.pm_Table}",
+											"value": "tag02/@{pipeline().parameters.pm_Table}",
 											"type": "Expression"
 										}
 									}
