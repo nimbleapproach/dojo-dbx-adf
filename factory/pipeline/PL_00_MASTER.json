@@ -448,6 +448,8 @@
 			{
 				"name": "PL_00_VUZION_INVOICES",
 				"type": "ExecutePipeline",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"secureInput": false
