@@ -17,7 +17,7 @@
 				"typeProperties": {
 					"notebookPath": "/Workspace/Users/vadim.galavanov@infinigate.com/inf-edw/databricks/report-distribution/nb-ops_reporting-gold-loading-report-generator",
 					"baseParameters": {
-						"wg_reportName": "AddOnPOSv2.0"
+						"wg_reportName": "AddOn POS v2.0"
 					}
 				},
 				"linkedServiceName": {
